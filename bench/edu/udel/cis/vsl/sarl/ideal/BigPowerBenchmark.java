@@ -15,7 +15,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 public class BigPowerBenchmark {
 
 	/** The exponent N */
-	public final static int N = 250;
+	public final static int N = 1000;
 
 	public final static SymbolicUniverse universe = SARL.newIdealUniverse();
 

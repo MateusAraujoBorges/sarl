@@ -9,7 +9,10 @@ import java.util.Map.Entry;
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.collections.IF.SortedSymbolicMap;
+import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
+import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.util.BinaryOperator;
 
 public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExpression>
 		extends CommonSortedMap<K, V> implements SortedSymbolicMap<K, V> {
@@ -26,6 +29,8 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 	// Static fields...
 
 	private static SimpleEntry[] emptyArray = new SimpleEntry[0];
+
+	// Instance fields...
 
 	private Comparator<? super K> comparator;
 
@@ -123,7 +128,8 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 					return this;
 
 				@SuppressWarnings("unchecked")
-				Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(key, value);
+				Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(key,
+						value);
 				// new version replacing old entry with new one at mid
 				@SuppressWarnings("unchecked")
 				Entry<K, V>[] newEntries = (Entry<K, V>[]) new SimpleEntry[entries.length];
@@ -145,7 +151,8 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 		@SuppressWarnings("unchecked")
 		Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(key, value);
 		@SuppressWarnings("unchecked")
-		Entry<K, V>[] newEntries = (Entry<K, V>[]) new SimpleEntry[entries.length + 1];
+		Entry<K, V>[] newEntries = (Entry<K, V>[]) new SimpleEntry[entries.length
+				+ 1];
 
 		System.arraycopy(entries, 0, newEntries, 0, lo);
 		newEntries[lo] = newEntry;
@@ -161,7 +168,8 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 			return this;
 		} else {
 			@SuppressWarnings("unchecked")
-			Entry<K, V>[] newEntries = (Entry<K, V>[]) new SimpleEntry[entries.length - 1];
+			Entry<K, V>[] newEntries = (Entry<K, V>[]) new SimpleEntry[entries.length
+					- 1];
 
 			System.arraycopy(entries, 0, newEntries, 0, index);
 			System.arraycopy(entries, index + 1, newEntries, index,
@@ -309,6 +317,154 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 		}
 	}
 
+	@Override
+	protected boolean collectionEquals(SymbolicCollection<V> o) {
+		if (o instanceof SimpleSortedMap<?, ?>) {
+			@SuppressWarnings("unchecked")
+			Entry<K, V>[] thoseEntries = ((SimpleSortedMap<K, V>) o).entries;
+			int n = entries.length;
+			// recall: they must have the same size
+
+			for (int i = 0; i < n; i++) {
+				if (!entries[i].getValue().equals(thoseEntries[i].getValue()))
+					return false;
+			}
+			return true;
+		}
+		return super.collectionEquals(o);
+	}
+
+	/**
+	 * @{inheritDoc} This is an optimized implementation. The order is
+	 *               completely determined by the keys, so can use a merge.
+	 * 
+	 * @param operator
+	 *            binary operator on values
+	 * @param map
+	 *            the other map
+	 * @return result of combining the two maps
+	 */
+	@Override
+	public SortedSymbolicMap<K, V> combine(BinaryOperator<V> operator,
+			SymbolicMap<K, V> map) {
+		SortedSymbolicMap<K, V> result;
+
+		if (map instanceof SimpleSortedMap<?, ?>) {
+			SimpleSortedMap<K, V> map2 = (SimpleSortedMap<K, V>) map;
+			Entry<K, V>[] entries1 = entries, entries2 = map2.entries;
+			int n1 = entries1.length, n2 = entries2.length;
+
+			if (n1 == 0) {
+				result = map2;
+			} else if (n2 == 0) {
+				result = this;
+			} else {
+				@SuppressWarnings("unchecked")
+				Entry<K, V>[] newEntries = (Entry<K, V>[]) new SimpleEntry[n1
+						+ n2];
+				int i1 = 0, i2 = 0, count = 0;
+				Entry<K, V> entry1 = entries1[0], entry2 = entries2[0];
+				K key1 = entry1.getKey(), key2 = entry2.getKey();
+				V val1 = entry1.getValue(), val2 = entry2.getValue();
+
+				while (i1 < n1 && i2 < n2) {
+					int c = comparator.compare(key1, key2);
+
+					if (c < 0) { // key1 comes first
+						@SuppressWarnings("unchecked")
+						Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
+								key1, val1);
+
+						newEntries[count] = newEntry;
+						count++;
+						i1++;
+						if (i1 < n1) {
+							entry1 = entries1[i1];
+							key1 = entry1.getKey();
+							val1 = entry1.getValue();
+						} else {
+							break;
+						}
+					} else if (c > 0) { // key2 comes first
+						@SuppressWarnings("unchecked")
+						Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
+								key2, val2);
+
+						newEntries[count] = newEntry;
+						count++;
+						i2++;
+						if (i2 < n2) {
+							entry2 = entries2[i2];
+							key2 = entry2.getKey();
+							val2 = entry2.getValue();
+						} else {
+							break;
+						}
+					} else {
+						V newValue = operator.apply(val1, val2);
+
+						if (newValue != null) {
+							@SuppressWarnings("unchecked")
+							Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
+									key1, newValue);
+
+							newEntries[count] = newEntry;
+							count++;
+						}
+						i1++;
+						i2++;
+						if (i1 < n1) {
+							entry1 = entries1[i1];
+							key1 = entry1.getKey();
+							val1 = entry1.getValue();
+						} else {
+							break;
+						}
+						if (i2 < n2) {
+							entry2 = entries2[i2];
+							key2 = entry2.getKey();
+							val2 = entry2.getValue();
+						} else {
+							break;
+						}
+					}
+				}
+				while (i1 < n1) {
+					entry1 = entries1[i1];
+
+					@SuppressWarnings("unchecked")
+					Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
+							entry1.getKey(), entry1.getValue());
+
+					newEntries[count] = newEntry;
+					count++;
+					i1++;
+				}
+				while (i2 < n2) {
+					entry2 = entries2[i2];
+
+					@SuppressWarnings("unchecked")
+					Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
+							entry2.getKey(), entry2.getValue());
+
+					newEntries[count] = newEntry;
+					count++;
+					i2++;
+				}
+				if (count < n1 + n2) {
+					@SuppressWarnings("unchecked")
+					Entry<K, V>[] tmp = (Entry<K, V>[]) new SimpleEntry[count];
+
+					System.arraycopy(newEntries, 0, tmp, 0, count);
+					newEntries = tmp;
+				}
+				result = new SimpleSortedMap<K, V>(comparator, newEntries);
+			}
+		} else {
+			result = super.combine(operator, map);
+		}
+		return result;
+	}
 }
 
 class SimpleEntry implements Entry<SymbolicExpression, SymbolicExpression> {

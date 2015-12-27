@@ -68,14 +68,13 @@ public class CommonCollectionFactory implements CollectionFactory {
 	@Override
 	public void init() {
 		assert elementComparator != null;
-		emptySortedMap = objectFactory
-				.canonic(new SimpleSortedMap<SymbolicExpression, SymbolicExpression>(
+		emptySortedMap = objectFactory.canonic(
+				new SimpleSortedMap<SymbolicExpression, SymbolicExpression>(
 						elementComparator));
 		emptySequence = objectFactory
 				.canonic(new SimpleSequence<SymbolicExpression>());
-		emptySortedSet = objectFactory
-				.canonic(new SimpleSortedSet<SymbolicExpression>(
-						elementComparator));
+		emptySortedSet = objectFactory.canonic(
+				new SimpleSortedSet<SymbolicExpression>(elementComparator));
 		emptyHashSet = emptySortedSet;
 		emptyHashMap = emptySortedMap;
 	}
@@ -192,7 +191,10 @@ public class CommonCollectionFactory implements CollectionFactory {
 	@Override
 	public <T extends SymbolicExpression> SortedSymbolicSet<T> singletonSortedSet(
 			T element, Comparator<? super T> comparator) {
-		return emptySortedSet(comparator).add(element);
+		SortedSymbolicSet<T> result = new SimpleSortedSet<T>(comparator);
+
+		result = result.add(element);
+		return result;
 	}
 
 	@Override
