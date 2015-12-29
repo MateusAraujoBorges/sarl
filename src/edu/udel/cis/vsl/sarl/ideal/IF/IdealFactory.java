@@ -102,23 +102,43 @@ import edu.udel.cis.vsl.sarl.ideal.common.One;
 public interface IdealFactory extends NumericExpressionFactory {
 
 	/**
-	 * The empty map from K to V, i.e., the map containing no entries.
-	 * 
+	 * The empty map from Primitive to V, i.e., the map containing no entries.
+	 *
 	 * @return the empty map
 	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> emptyMap();
+	<V extends SymbolicExpression> SymbolicMap<Primitive, V> emptyPrimitiveMap();
 
 	/**
-	 * The singleton map from K to V consisting of one entry (key,value).
+	 * The empty map from Monic to V, i.e., the map containing no entries.
+	 *
+	 * @return the empty map
+	 */
+	<V extends SymbolicExpression> SymbolicMap<Monic, V> emptyMonicMap();
+
+	/**
+	 * The singleton map from Monic to V consisting of one entry (key,value).
 	 * 
 	 * @param key
-	 *            an element of K
+	 *            a Monic
 	 * @param value
 	 *            an element of V
 	 * @return symbolic map consisting of one entry (key,value)
 	 */
-	<K extends NumericExpression, V extends SymbolicExpression> SymbolicMap<K, V> singletonMap(
-			K key, V value);
+	<V extends SymbolicExpression> SymbolicMap<Monic, V> monicSingletonMap(
+			Monic key, V value);
+
+	/**
+	 * The singleton map from Primitive to V consisting of one entry
+	 * (key,value).
+	 * 
+	 * @param key
+	 *            a Primitive
+	 * @param value
+	 *            an element of V
+	 * @return symbolic map consisting of one entry (key,value)
+	 */
+	<V extends SymbolicExpression> SymbolicMap<Primitive, V> primitiveSingletonMap(
+			Primitive key, V value);
 
 	/**
 	 * Returns an int-object wrapping the int 1.
@@ -144,8 +164,7 @@ public interface IdealFactory extends NumericExpressionFactory {
 	/**
 	 * Creates a zero integer constant
 	 * 
-	 * @return
-	 * 			a zero integer of type Constant
+	 * @return a zero integer of type Constant
 	 */
 	Constant zeroInt();
 
@@ -153,8 +172,7 @@ public interface IdealFactory extends NumericExpressionFactory {
 	/**
 	 * Creates a real zero constant
 	 * 
-	 * @return
-	 * 			a real zero of type Constant
+	 * @return a real zero of type Constant
 	 */
 	Constant zeroReal();
 
@@ -231,7 +249,7 @@ public interface IdealFactory extends NumericExpressionFactory {
 	 * 
 	 * @return Multiplication of two polynomials of type Polynomial
 	 */
-	Polynomial multiply(Polynomial poly1, Polynomial poly2);
+	Polynomial multiplyPolynomials(Polynomial poly1, Polynomial poly2);
 
 	/**
 	 * The symbolic map from a Monic to a Monomial consisting of one or many

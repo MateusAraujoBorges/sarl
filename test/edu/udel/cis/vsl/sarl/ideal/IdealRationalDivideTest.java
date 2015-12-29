@@ -190,7 +190,7 @@ public class IdealRationalDivideTest {
 		Polynomial x2 = (Polynomial) idealFactory.multiply(x, x); //x^2
 		NumericExpression y2 = idealFactory.multiply(y, y); //y^2
 		Polynomial monic = (Polynomial) idealFactory.multiply(x2, y); //x^2 * y
-		Polynomial monomial = (Polynomial) idealFactory.multiply(idealFactory.constant(realThree), 
+		Polynomial monomial = (Polynomial) idealFactory.multiplyPolynomials(idealFactory.constant(realThree), 
 				monic); //3x^2 * y
 		Polynomial polynomial = (Polynomial) idealFactory.add(idealFactory.
 				divide(monomial, idealFactory.constant(realThree)), x2); //x^2 * y + x^2
@@ -222,7 +222,7 @@ public class IdealRationalDivideTest {
 		Polynomial x2 = (Polynomial) idealFactory.multiply(x, x); //x^2
 		NumericExpression y2 = idealFactory.multiply(y, y); //y^2
 		Polynomial monic = (Polynomial) idealFactory.multiply(x2, y); //x^2 * y
-		Polynomial monomial = (Polynomial) idealFactory.multiply(idealFactory.constant(realThree), 
+		Polynomial monomial = (Polynomial) idealFactory.multiplyPolynomials(idealFactory.constant(realThree), 
 				monic); //3x^2 * y
 		NumericExpression result = idealFactory.multiply(y2, x); //(x*y^2) 
 				

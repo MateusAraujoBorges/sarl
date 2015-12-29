@@ -181,7 +181,7 @@ public class IdealSubtractTest {
 	 * 			the value of an expression consisting of multiplication of two polynomials
 	 */
 	public Polynomial multiply(Polynomial a, Polynomial b){
-		Polynomial p = idealFactory.multiply(a, b);
+		Polynomial p = idealFactory.multiplyPolynomials(a, b);
 		return p;
 	}
 	

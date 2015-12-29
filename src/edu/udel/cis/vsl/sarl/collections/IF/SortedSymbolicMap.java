@@ -19,6 +19,7 @@
 package edu.udel.cis.vsl.sarl.collections.IF;
 
 import java.util.Comparator;
+import java.util.Map.Entry;
 
 import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
@@ -77,5 +78,14 @@ public interface SortedSymbolicMap<K extends SymbolicExpression, V extends Symbo
 	 */
 	SortedSymbolicMap<K, V> combine(BinaryOperator<V> operator,
 			SymbolicMap<K, V> map);
+
+	/**
+	 * Gets the index-th entry from this map.
+	 * 
+	 * @param index
+	 *            int in range [0,size-1]
+	 * @return the key-value entry at position index
+	 */
+	Entry<K, V> getEntry(int index);
 
 }

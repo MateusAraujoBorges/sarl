@@ -73,11 +73,20 @@ public interface SymbolicMap<K extends SymbolicExpression, V extends SymbolicExp
 	Iterable<V> values();
 
 	/**
-	 * Returns the key-value paris ("entries") of the map.
+	 * Returns the key-value pairs ("entries") of the map.
 	 * 
 	 * @return the entries
 	 */
 	Iterable<Entry<K, V>> entries();
+
+	/**
+	 * Returns the key-value pairs ("entries") as an array in the same order as
+	 * that used by the iterator. This map may be backed by the array (or may
+	 * not), so the array should not be modified.
+	 * 
+	 * @return the entries of this map as an array
+	 */
+	Entry<K, V>[] entryArray();
 
 	/**
 	 * Is this map empty?
@@ -153,5 +162,6 @@ public interface SymbolicMap<K extends SymbolicExpression, V extends SymbolicExp
 	 *            a symbolic map
 	 * @return a map obtained by combining this map and the given map
 	 */
-	SymbolicMap<K, V> combine(BinaryOperator<V> operator, SymbolicMap<K, V> map);
+	SymbolicMap<K, V> combine(BinaryOperator<V> operator,
+			SymbolicMap<K, V> map);
 }

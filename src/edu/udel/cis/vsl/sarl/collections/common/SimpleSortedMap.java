@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.collections.IF.SimpleEntry;
 import edu.udel.cis.vsl.sarl.collections.IF.SortedSymbolicMap;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
@@ -465,32 +466,14 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 		}
 		return result;
 	}
-}
 
-class SimpleEntry implements Entry<SymbolicExpression, SymbolicExpression> {
-	SymbolicExpression key;
-	SymbolicExpression value;
-
-	SimpleEntry(SymbolicExpression key, SymbolicExpression value) {
-		this.key = key;
-		this.value = value;
+	@Override
+	public Entry<K, V> getEntry(int index) {
+		return entries[index];
 	}
 
 	@Override
-	public SymbolicExpression getKey() {
-		return key;
-	}
-
-	@Override
-	public SymbolicExpression getValue() {
-		return value;
-	}
-
-	@Override
-	public SymbolicExpression setValue(SymbolicExpression value) {
-		SymbolicExpression oldValue = this.value;
-
-		this.value = value;
-		return oldValue;
+	public Entry<K, V>[] entryArray() {
+		return entries;
 	}
 }

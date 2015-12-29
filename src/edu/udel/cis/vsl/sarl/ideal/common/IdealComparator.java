@@ -262,8 +262,15 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 * @return a negative integer if m1 precedes m2, 0 if they are equal, else a
 	 *         positive integer
 	 */
-	private int compareMonics(Monic m1, Monic m2) {
-		int result = m2.degree() - m1.degree();
+	public int compareMonics(Monic m1, Monic m2) {
+		int degree1 = m1.degree();
+		int degree2 = m2.degree();
+
+		if (degree1 == 0) {
+			return degree2;
+		}
+
+		int result = degree2 - degree1;
 
 		if (result != 0)
 			return result;
@@ -299,7 +306,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 * @return a negative integer if p1 precedes p2, 0 if they are equals, else
 	 *         a positive integer
 	 */
-	private int comparePrimitives(Primitive p1, Primitive p2) {
+	public int comparePrimitives(Primitive p1, Primitive p2) {
 		int result = p1.operator().compareTo(p2.operator());
 
 		if (result != 0)

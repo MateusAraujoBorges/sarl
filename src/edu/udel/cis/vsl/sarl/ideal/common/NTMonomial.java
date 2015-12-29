@@ -51,8 +51,7 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	/**
 	 * Creates a Monic expression
 	 * 
-	 * @return
-	 * 			a Monic
+	 * @return a Monic
 	 */
 	public Monic monic() {
 		return (Monic) argument(1);
@@ -61,8 +60,8 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	@Override
 	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
 		if (termMap == null)
-			termMap = factory
-					.singletonMap((Monic) argument(1), (Monomial) this);
+			termMap = factory.monicSingletonMap((Monic) argument(1),
+					(Monomial) this);
 		return termMap;
 	}
 
@@ -102,13 +101,13 @@ public class NTMonomial extends IdealExpression implements Monomial {
 
 		if (monic == expandedMonic)
 			return this;
-		return factory.multiply(monomialConstant(), expandedMonic);
+		return factory.multiplyPolynomials(monomialConstant(), expandedMonic);
 	}
 
-//	@Override
-//	public String toString() {
-//		return monomialConstant().toString() + monic().toString();
-//	}
+	// @Override
+	// public String toString() {
+	// return monomialConstant().toString() + monic().toString();
+	// }
 
 	@Override
 	public int degree() {

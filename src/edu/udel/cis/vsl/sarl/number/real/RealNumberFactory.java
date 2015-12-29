@@ -129,11 +129,10 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Returns a RealRational formed from given BigInteger numerator and denominator.
-	 * Detects and protects against zero valued denominators.
-	 * Moves any negation to the numerator.
-	 * Simplifies the RealRational
-	 * If numerator equals zero, simplifies to 0/1 regardless of denominator.
+	 * Returns a RealRational formed from given BigInteger numerator and
+	 * denominator. Detects and protects against zero valued denominators. Moves
+	 * any negation to the numerator. Simplifies the RealRational If numerator
+	 * equals zero, simplifies to 0/1 regardless of denominator.
 	 */
 	public RealRational rational(BigInteger numerator, BigInteger denominator) {
 		int signum = denominator.signum();
@@ -149,15 +148,16 @@ public class RealNumberFactory implements NumberFactory {
 			numerator = numerator.negate();
 			denominator = denominator.negate();
 		}
-		// interesting statement. replaces any denominator with one when
-		// numerator is zero.
+		// canonical form for 0 is 0/1 :
 		if (numerator.signum() == 0) {
 			denominator = BigInteger.ONE;
-		} else {
+		} else if (!denominator.equals(BigInteger.ONE)) {
 			BigInteger gcd = numerator.gcd(denominator);
 
-			numerator = numerator.divide(gcd);
-			denominator = denominator.divide(gcd);
+			if (!gcd.equals(BigInteger.ONE)) {
+				numerator = numerator.divide(gcd);
+				denominator = denominator.divide(gcd);
+			}
 		}
 		key = new RationalKey(numerator, denominator);
 		oldValue = rationalMap.get(key);
@@ -191,8 +191,8 @@ public class RealNumberFactory implements NumberFactory {
 
 		return rational(
 				x.numerator().multiply(y.denominator())
-						.add(x.denominator().multiply(y.numerator())), x
-						.denominator().multiply(y.denominator()));
+						.add(x.denominator().multiply(y.numerator())),
+				x.denominator().multiply(y.denominator()));
 	}
 
 	@Override
@@ -231,10 +231,9 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Determines the larger of two rationals
-	 * returns 1 when the first argument is greater
-	 * returns 0 when the rationals are equal
-	 * returns -1 when the second argument is greater
+	 * Determines the larger of two rationals returns 1 when the first argument
+	 * is greater returns 0 when the rationals are equal returns -1 when the
+	 * second argument is greater
 	 */
 	public int compare(RationalNumber arg0, RationalNumber arg1) {
 		return subtract(arg0, arg1).signum();
@@ -242,10 +241,9 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Determines the larger of two integers
-	 * returns 1 when first argument is greater
-	 * returns 0 when arguments are equal
-	 * returns -1 when second argument is greater
+	 * Determines the larger of two integers returns 1 when first argument is
+	 * greater returns 0 when arguments are equal returns -1 when second
+	 * argument is greater
 	 */
 	public int compare(IntegerNumber arg0, IntegerNumber arg1) {
 		return subtract(arg0, arg1).signum();
@@ -253,7 +251,8 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Takes two numbers as arguments and determines how to compare them based on their more specific identities.
+	 * Takes two numbers as arguments and determines how to compare them based
+	 * on their more specific identities.
 	 */
 	public int compare(Number arg0, Number arg1) {
 		if (arg0 instanceof IntegerNumber && arg1 instanceof IntegerNumber) {
@@ -282,8 +281,8 @@ public class RealNumberFactory implements NumberFactory {
 		RealRational x = (RealRational) arg0;
 		RealRational y = (RealRational) arg1;
 
-		return rational(x.numerator().multiply(y.denominator()), x
-				.denominator().multiply(y.numerator()));
+		return rational(x.numerator().multiply(y.denominator()),
+				x.denominator().multiply(y.numerator()));
 	}
 
 	@Override
@@ -299,8 +298,8 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Modulates arguuument one by argument two and returns the modulated integer
-	 * Protected against negative modulus
+	 * Modulates arguuument one by argument two and returns the modulated
+	 * integer Protected against negative modulus
 	 */
 	public IntegerNumber mod(IntegerNumber arg0, IntegerNumber arg1) {
 		RealInteger x = (RealInteger) arg0;
@@ -356,7 +355,8 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * creates and returns rationals from integers by giving them one as a denominator
+	 * creates and returns rationals from integers by giving them one as a
+	 * denominator
 	 */
 	public RationalNumber integerToRational(IntegerNumber integer) {
 		RealInteger x = (RealInteger) integer;
@@ -385,8 +385,8 @@ public class RealNumberFactory implements NumberFactory {
 		RealRational x = (RealRational) arg0;
 		RealRational y = (RealRational) arg1;
 
-		return rational(x.numerator().multiply(y.numerator()), x.denominator()
-				.multiply(y.denominator()));
+		return rational(x.numerator().multiply(y.numerator()),
+				x.denominator().multiply(y.denominator()));
 	}
 
 	@Override
@@ -422,9 +422,9 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Determines how to represent a given string based on decimal point position
-	 * returns an integer if a decimal point is not found
-	 * returns a rational if a decimal point is found
+	 * Determines how to represent a given string based on decimal point
+	 * position returns an integer if a decimal point is not found returns a
+	 * rational if a decimal point is found
 	 */
 	public Number number(String string) {
 		int decimalPosition = string.indexOf('.');
@@ -533,7 +533,8 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Determines how to represent two numbers as a RationalNumber based on their more specific classes
+	 * Determines how to represent two numbers as a RationalNumber based on
+	 * their more specific classes
 	 */
 	public RationalNumber rational(Number number) {
 		if (number instanceof RationalNumber) {
@@ -581,7 +582,8 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Determines if a rational is integral by seeing if its denominator equates to one
+	 * Determines if a rational is integral by seeing if its denominator equates
+	 * to one
 	 */
 	public boolean isIntegral(RationalNumber arg0) {
 		RealRational x = (RealRational) arg0;
@@ -599,7 +601,8 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Determines how to properly negate a number based on its more specific class
+	 * Determines how to properly negate a number based on its more specific
+	 * class
 	 */
 	public Number negate(Number arg0) {
 		if (arg0 instanceof IntegerNumber)
@@ -610,7 +613,8 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Determines how to properly add two numbers based on their more specific classes
+	 * Determines how to properly add two numbers based on their more specific
+	 * classes
 	 */
 	public Number add(Number arg0, Number arg1) {
 		if (arg0 instanceof IntegerNumber) {
@@ -626,14 +630,15 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return add((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException("Unknown type of number: "
-					+ arg0);
+			throw new IllegalArgumentException(
+					"Unknown type of number: " + arg0);
 		}
 	}
 
 	@Override
 	/**
-	 * Determines how to properly divide two numbers based on their more specific classes
+	 * Determines how to properly divide two numbers based on their more
+	 * specific classes
 	 */
 	public Number divide(Number arg0, Number arg1) {
 		if (arg0 instanceof IntegerNumber) {
@@ -649,14 +654,15 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return divide((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException("Unknown type of number: "
-					+ arg0);
+			throw new IllegalArgumentException(
+					"Unknown type of number: " + arg0);
 		}
 	}
 
 	@Override
 	/**
-	 * Determines how to properly multiply two numbers based on their more specific classes
+	 * Determines how to properly multiply two numbers based on their more
+	 * specific classes
 	 */
 	public Number multiply(Number arg0, Number arg1) {
 		if (arg0 instanceof IntegerNumber) {
@@ -672,14 +678,15 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return multiply((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException("Unknown type of number: "
-					+ arg0);
+			throw new IllegalArgumentException(
+					"Unknown type of number: " + arg0);
 		}
 	}
 
 	@Override
 	/**
-	 * Determines how to properly subtract two numbers based on their more specific classes
+	 * Determines how to properly subtract two numbers based on their more
+	 * specific classes
 	 */
 	public Number subtract(Number arg0, Number arg1) {
 		if (arg0 instanceof IntegerNumber) {
@@ -695,8 +702,8 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return subtract((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException("Unknown type of number: "
-					+ arg0);
+			throw new IllegalArgumentException(
+					"Unknown type of number: " + arg0);
 		}
 	}
 
@@ -718,7 +725,8 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Determines how to properly increment a number based on its more specific class
+	 * Determines how to properly increment a number based on its more specific
+	 * class
 	 */
 	public Number increment(Number arg) {
 		if (arg instanceof IntegerNumber)
@@ -744,7 +752,8 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Determines how to properly decrement a number based on its more specific class
+	 * Determines how to properly decrement a number based on its more specific
+	 * class
 	 */
 	public Number decrement(Number arg) {
 		if (arg instanceof IntegerNumber)
@@ -754,7 +763,8 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Sends BigInteger representations of given IntegerNumbers to the gcd function
+	 * Sends BigInteger representations of given IntegerNumbers to the gcd
+	 * function
 	 */
 	public IntegerNumber gcd(IntegerNumber arg0, IntegerNumber arg1) {
 		BigInteger value0 = ((RealInteger) arg0).value();
@@ -765,7 +775,8 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Determines and returns the lcm of two IntegerNumbers by dividing their product by their gcd
+	 * Determines and returns the lcm of two IntegerNumbers by dividing their
+	 * product by their gcd
 	 */
 	public IntegerNumber lcm(IntegerNumber arg0, IntegerNumber arg1) {
 		return divide(multiply(arg0, arg1), gcd(arg0, arg1));
@@ -796,7 +807,8 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	/**
 	 * Performs a gaussian elimination on the given RationalNumber matrix
-	 * Maintains a boolean 'debug' for easy troubleshooting due to its complex nature
+	 * Maintains a boolean 'debug' for easy troubleshooting due to its complex
+	 * nature
 	 */
 	public void gaussianElimination(RationalNumber[][] matrix) {
 		int numRows = matrix.length;
@@ -955,10 +967,10 @@ public class RealNumberFactory implements NumberFactory {
 
 		assert isIntegral == i2.isIntegral();
 
-		Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(), hi2 = i2
-				.upper();
-		boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(), su1 = i1
-				.strictUpper(), su2 = i2.strictUpper();
+		Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(),
+				hi2 = i2.upper();
+		boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(),
+				su1 = i1.strictUpper(), su2 = i2.strictUpper();
 		Number lo, hi;
 		boolean sl, su;
 
@@ -1010,7 +1022,8 @@ public class RealNumberFactory implements NumberFactory {
 			int compare = hi.compareTo(lo);
 
 			if (compare < 0) {
-				return isIntegral ? emptyIntegerInterval : emptyRationalInterval;
+				return isIntegral ? emptyIntegerInterval
+						: emptyRationalInterval;
 			} else if (compare == 0) {
 				if (sl || su) {
 					return isIntegral ? emptyIntegerInterval
@@ -1051,10 +1064,10 @@ public class RealNumberFactory implements NumberFactory {
 
 			assert isIntegral == i2.isIntegral();
 
-			Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(), hi2 = i2
-					.upper();
-			boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(), su1 = i1
-					.strictUpper(), su2 = i2.strictUpper();
+			Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(),
+					hi2 = i2.upper();
+			boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(),
+					su1 = i1.strictUpper(), su2 = i2.strictUpper();
 			Number lo = null, hi = null; // To set the result set as (-infi,
 											// +infi)
 			boolean sl = false, su = false;
@@ -1206,7 +1219,7 @@ public class RealNumberFactory implements NumberFactory {
 			up = b;
 			sl = false;
 			su = false;
-		}// if - else
+		} // if - else
 		return new CommonInterval(itv.isIntegral(), lo, sl, up, su);
 	}
 
@@ -1402,7 +1415,7 @@ public class RealNumberFactory implements NumberFactory {
 					} else if (!su1 && su2) {
 						// Right Intersect i1 contains i2
 						return contains2;
-					}// else Exactly Same
+					} // else Exactly Same
 				}
 			}
 		}

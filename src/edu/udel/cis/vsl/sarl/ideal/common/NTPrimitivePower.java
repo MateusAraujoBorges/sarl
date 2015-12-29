@@ -35,7 +35,8 @@ import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
  * @author siegel
  * 
  */
-public class NTPrimitivePower extends IdealExpression implements PrimitivePower {
+public class NTPrimitivePower extends IdealExpression
+		implements PrimitivePower {
 
 	protected NTPrimitivePower(Primitive primitive, IntObject exponent) {
 		super(SymbolicOperator.POWER, primitive.type(), primitive, exponent);
@@ -52,9 +53,10 @@ public class NTPrimitivePower extends IdealExpression implements PrimitivePower 
 	}
 
 	@Override
-	public SymbolicMap<NumericPrimitive, PrimitivePower> monicFactors(
+	public SymbolicMap<Primitive, PrimitivePower> monicFactors(
 			IdealFactory factory) {
-		return factory.singletonMap(primitive(), (PrimitivePower) this);
+		return factory.primitiveSingletonMap(primitive(),
+				(PrimitivePower) this);
 	}
 
 	@Override
@@ -69,7 +71,7 @@ public class NTPrimitivePower extends IdealExpression implements PrimitivePower 
 
 	@Override
 	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
-		return factory.singletonMap((Monic) this, (Monomial) this);
+		return factory.monicSingletonMap((Monic) this, (Monomial) this);
 	}
 
 	@Override
@@ -78,10 +80,11 @@ public class NTPrimitivePower extends IdealExpression implements PrimitivePower 
 	}
 
 	/**
-	 * The number that is raised as a power to any particular expression or any constants
-	 * This exponent number is of type intObject.
+	 * The number that is raised as a power to any particular expression or any
+	 * constants This exponent number is of type intObject.
 	 * 
-	 * @return - the value by multiplying the expression or any constant, number of times equal to the integer that is raised to the power.
+	 * @return - the value by multiplying the expression or any constant, number
+	 *         of times equal to the integer that is raised to the power.
 	 */
 	public IntObject exponent() {
 		return (IntObject) argument(1);

@@ -21,9 +21,11 @@ package edu.udel.cis.vsl.sarl.collections.common;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
+import edu.udel.cis.vsl.sarl.collections.IF.SimpleEntry;
 import edu.udel.cis.vsl.sarl.collections.IF.SortedSymbolicMap;
 import edu.udel.cis.vsl.sarl.collections.IF.SortedSymbolicSet;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
@@ -201,6 +203,17 @@ public class CommonCollectionFactory implements CollectionFactory {
 	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> emptySortedMap(
 			Comparator<? super K> comparator) {
 		return new SimpleSortedMap<K, V>(comparator);
+	}
+
+	@Override
+	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
+			Comparator<? super K> comparator, SimpleEntry[] entries) {
+		Entry<?, ?>[] e1 = (Entry<?, ?>[]) entries;
+		@SuppressWarnings("unchecked")
+		Entry<K, V>[] e2 = (Entry<K, V>[]) e1;
+		// TODO: fix above ridiculousness
+		
+		return new SimpleSortedMap<K, V>(comparator, e2);
 	}
 
 	@Override

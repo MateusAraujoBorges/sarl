@@ -3,18 +3,18 @@
  * 
  * This file is part of SARL.
  * 
- * SARL is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your
- * option) any later version.
+ * SARL is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
  * 
- * SARL is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
- * License for more details.
+ * SARL is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with SARL. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
@@ -27,6 +27,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
+import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 
 /**
@@ -54,7 +55,7 @@ public class One extends IdealExpression implements Constant, Monic {
 
 	@Override
 	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
-		return factory.singletonMap((Monic) this, (Monomial) this);
+		return factory.monicSingletonMap((Monic) this, (Monomial) this);
 	}
 
 	@Override
@@ -73,9 +74,9 @@ public class One extends IdealExpression implements Constant, Monic {
 	}
 
 	@Override
-	public SymbolicMap<NumericPrimitive, PrimitivePower> monicFactors(
+	public SymbolicMap<Primitive, PrimitivePower> monicFactors(
 			IdealFactory factory) {
-		return factory.emptyMap();
+		return factory.emptyPrimitiveMap();
 	}
 
 	@Override

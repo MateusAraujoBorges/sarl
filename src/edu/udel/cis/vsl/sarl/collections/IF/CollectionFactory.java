@@ -258,4 +258,20 @@ public interface CollectionFactory {
 	<K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> hashMap(
 			Map<K, V> javaMap);
 
+	/**
+	 * Returns a new sorted map backed by the given array of entries. The given
+	 * entries must be sorted according to the given comparator on the keys.
+	 * Failure to satisfy this precondition will result in unspecified behavior.
+	 * Use at your own risk!
+	 * 
+	 * @param comparator
+	 *            comparator on the key set <code>K</code>
+	 * @param entries
+	 *            list of entries for the new map, sorted with keys occurring in
+	 *            increasing order according to comparator
+	 * @return the new map
+	 */
+	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
+			Comparator<? super K> comparator, SimpleEntry[] entries);
+
 }

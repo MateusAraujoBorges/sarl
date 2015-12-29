@@ -198,7 +198,7 @@ public class IdealMultiplyTest {
 	 * 			the value of an expression consisting of multiplication of two polynomials
 	 */
 	public Polynomial multiply(Polynomial a, Polynomial b){
-		Polynomial p = idealFactory.multiply(a, b);
+		Polynomial p = idealFactory.multiplyPolynomials(a, b);
 		return p;
 	}
 	
@@ -225,7 +225,7 @@ public class IdealMultiplyTest {
 	 */	
 	@Test
 	public void constantMultiply() {
-		Constant result = (Constant) idealFactory.multiply(constOnePointFive, constNegPointTwoFive);
+		Constant result = (Constant) idealFactory.multiplyPolynomials(constOnePointFive, constNegPointTwoFive);
 		RationalNumber expected = numberFactory.rational("-.375");
 
 		out.println("constantMultiply: " + constOnePointFive + " * " + constNegPointTwoFive + " = " + result);
@@ -569,7 +569,7 @@ public class IdealMultiplyTest {
 		Polynomial xm1 = add(poly1, (Polynomial) idealFactory.minus(intOne));
 		Polynomial xp1xm1 = multiply(xp1, xm1);		
 		SymbolicExpression x2m1 = idealFactory.subtract(multiply(poly1, poly1),
-				idealFactory.multiply(intOne,intOne));
+				idealFactory.multiplyPolynomials(intOne,intOne));
 		
 		out.println("xp1xm1=" + xp1xm1);
 		out.println("x2m1=" + x2m1);

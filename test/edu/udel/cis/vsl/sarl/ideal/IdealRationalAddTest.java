@@ -136,7 +136,7 @@ public class IdealRationalAddTest {
 	public void addRationalToPolynomial() {
 		Polynomial x2 = (Polynomial) idealFactory.multiply(x, x); //x^2
 		Polynomial monic = (Polynomial) idealFactory.multiply(x2, y); //x^2 * y
-		Polynomial monomial = (Polynomial) idealFactory.multiply(idealFactory.constant(realThree), 
+		Polynomial monomial = (Polynomial) idealFactory.multiplyPolynomials(idealFactory.constant(realThree), 
 				monic); //3x^2 * y
 		Polynomial polynomial = (Polynomial) idealFactory.add(monomial, x2); //3x^2 * y + x^2
 		NumericExpression result = idealFactory.divide(idealFactory.
@@ -165,7 +165,7 @@ public class IdealRationalAddTest {
 	public void addRationalToMonomial() {
 		Polynomial x2 = (Polynomial) idealFactory.multiply(x, x); //x^2
 		Polynomial monic = (Polynomial) idealFactory.multiply(x2, y); //x^2 * y
-		Polynomial monomial = (Polynomial) idealFactory.multiply(idealFactory.constant(realThree), 
+		Polynomial monomial = (Polynomial) idealFactory.multiplyPolynomials(idealFactory.constant(realThree), 
 				monic); //3x^2 * y		
 		NumericExpression result = idealFactory.divide(idealFactory.
 				add(idealFactory.multiply(monomial, y), x), y); //(3*x^2*y^2 + x)/y 

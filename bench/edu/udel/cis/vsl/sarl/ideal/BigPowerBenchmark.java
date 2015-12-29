@@ -15,7 +15,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 public class BigPowerBenchmark {
 
 	/** The exponent N */
-	public final static int N = 1000;
+	public final static int N = 2000;
 
 	public final static SymbolicUniverse universe = SARL.newIdealUniverse();
 
@@ -39,9 +39,10 @@ public class BigPowerBenchmark {
 		long startTime = System.nanoTime(), stopTime;
 		double totalTime;
 
-		universe.power(xpy, N);
+		NumericExpression result = universe.power(xpy, N);
 		stopTime = System.nanoTime();
 		totalTime = ((double) (stopTime - startTime)) / 1000000000.0;
+		//System.out.println(result);
 		System.out.println("Time (s): " + totalTime);
 	}
 
