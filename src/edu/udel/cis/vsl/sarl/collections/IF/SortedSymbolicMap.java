@@ -32,19 +32,18 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  * @author siegel
  *
  * @param <K>
- *            the type of keys (a subtype of {@link SymbolicExpression}
+ *            the type of keys (a subtype of {@link SymbolicExpression})
  * @param <V>
  *            the type of the values (also a subtype of
- *            {@link SymbolicExpression}
+ *            {@link SymbolicExpression})
  */
 public interface SortedSymbolicMap<K extends SymbolicExpression, V extends SymbolicExpression>
 		extends SymbolicMap<K, V> {
 
 	/**
-	 * If this map is sorted, returns the comparator used to sort the keys,
-	 * otherwise returns null.
+	 * Returns the comparator used to sort the keys.
 	 * 
-	 * @return the key comparator or null
+	 * @return the key comparator
 	 */
 	Comparator<? super K> comparator();
 

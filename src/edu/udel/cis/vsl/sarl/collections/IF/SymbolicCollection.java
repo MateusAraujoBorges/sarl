@@ -137,7 +137,7 @@ public interface SymbolicCollection<T extends SymbolicExpression> extends
 	/**
 	 * The equals method is specified as follows: first, obj must be an instance
 	 * of {@link SymbolicCollectionKind}. Second, the kinds of the two
-	 * collections must be equal. For sets, the two sets must be equals as sets
+	 * collections must be equal. For sets, the two sets must be equal as sets
 	 * (using the "equals" method on the elements of the sets). For sequences,
 	 * the two sequences must be equal as sequences. For maps, the two maps must
 	 * be equal as maps: i.e., they each specify the same set of key-value

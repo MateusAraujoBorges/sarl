@@ -21,6 +21,7 @@ package edu.udel.cis.vsl.sarl.collections.IF;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 
@@ -259,6 +260,20 @@ public interface CollectionFactory {
 			Map<K, V> javaMap);
 
 	/**
+	 * Returns an {@link Entry} with the specified key and value. This can be
+	 * used to create a {@link SymbolicMap}, e.g., in method
+	 * {@link #sortedMap(Comparator, Entry[])}.
+	 * 
+	 * @param key
+	 *            the key for the entry
+	 * @param value
+	 *            the value for the entry
+	 * @return an entry with that key and value
+	 */
+	<K extends SymbolicExpression, V extends SymbolicExpression> Entry<K, V> entry(
+			K key, V value);
+
+	/**
 	 * Returns a new sorted map backed by the given array of entries. The given
 	 * entries must be sorted according to the given comparator on the keys.
 	 * Failure to satisfy this precondition will result in unspecified behavior.
@@ -272,6 +287,6 @@ public interface CollectionFactory {
 	 * @return the new map
 	 */
 	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
-			Comparator<? super K> comparator, SimpleEntry[] entries);
+			Comparator<? super K> comparator, Entry<K, V>[] entries);
 
 }

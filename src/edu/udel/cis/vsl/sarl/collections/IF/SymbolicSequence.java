@@ -21,16 +21,30 @@ package edu.udel.cis.vsl.sarl.collections.IF;
 import edu.udel.cis.vsl.sarl.IF.Transform;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 
-public interface SymbolicSequence<T extends SymbolicExpression> extends
-		SymbolicCollection<T> {
+/**
+ * A finite ordered immutable sequence of symbolic expressions.
+ * 
+ * @author siegel
+ *
+ * @param <T>
+ *            the element type
+ */
+public interface SymbolicSequence<T extends SymbolicExpression>
+		extends SymbolicCollection<T> {
 
 	/**
-	 * The number of elements the Sequence contains.
+	 * Returns the number of elements in this sequence.
+	 * 
+	 * @return the number of elements in this sequence
 	 */
 	int size();
 
 	/**
-	 * The arguments of a sequence expression are always symbolic expressions.
+	 * Gets the <code>index</code>-th element of this sequence
+	 * 
+	 * @return the <code>index</code>-th element of this sequence
+	 * @throws RuntimeException
+	 *             if index is negative or greater than or equal to the size
 	 */
 	T get(int index);
 
@@ -45,21 +59,24 @@ public interface SymbolicSequence<T extends SymbolicExpression> extends
 	SymbolicSequence<T> add(T element);
 
 	/**
-	 * Sets the element at specified position. Sequence must have length at
-	 * least index+1.
+	 * "Sets" the element at specified position, or, more precisely, returns a
+	 * new sequence identical to this except with the element at the specified
+	 * index set to the given element. Sequence must have length at least
+	 * index+1.
 	 * 
 	 * @param index
 	 *            integer in range [0,n-1], where n is length of sequence
 	 * @param element
 	 *            a symbolic expression
-	 * @return a sequence identical to old except that element in position index
-	 *         now has value element
+	 * @return a sequence identical to this except that element in position
+	 *         <code>index</code> now has value <code>element</code>
 	 */
 	SymbolicSequence<T> set(int index, T element);
 
 	/**
-	 * Removes the element at position index, shifting all subsequent elements
-	 * down one.
+	 * "Removes" the element at position index, shifting all subsequent elements
+	 * down one; more precisely, returns a new sequence obtained by removing
+	 * that element from this sequence.
 	 * 
 	 * @param index
 	 *            integer in range [0,n-1], where n is length of sequence
@@ -114,15 +131,15 @@ public interface SymbolicSequence<T extends SymbolicExpression> extends
 	SymbolicSequence<T> subSequence(int start, int end);
 
 	/**
-	 * Takes in an anonymous class that contains an apply method that will
-	 * transform a SymbolicObject into a different SymbolicObject. The
-	 * Collections apply method will iterate over all elements in it and call
-	 * the passed in classes apply method on the SymbolicObject
+	 * Returns a sequence obtained by applying a function to every element of
+	 * this sequence; also known as "map".
 	 * 
-	 * @param Transform
-	 *            <T, U>
-	 * @return Returns a new Sequence with all of the original collections
-	 *         elements transformed.
+	 * @param <U>
+	 *            target type of transformation
+	 * @param transform
+	 *            a function from <code>T</code> to <code>U</code>
+	 * @return a sequence of same length as this one obtained by applying
+	 *         <code>transform</code> to each element
 	 */
 	<U extends SymbolicExpression> SymbolicSequence<U> apply(
 			Transform<T, U> transform);
@@ -135,5 +152,4 @@ public interface SymbolicSequence<T extends SymbolicExpression> extends
 	 * @return number of NULL symbolic expressions in this sequence
 	 */
 	int getNumNull();
-
 }

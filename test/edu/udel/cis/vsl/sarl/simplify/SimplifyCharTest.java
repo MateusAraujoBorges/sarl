@@ -1,5 +1,7 @@
 package edu.udel.cis.vsl.sarl.simplify;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -20,8 +22,8 @@ public class SimplifyCharTest {
 
 	private static SymbolicExpression a = universe.character('a');
 
-	private static SymbolicConstant X = universe.symbolicConstant(
-			universe.stringObject("X"), charType);
+	private static SymbolicConstant X = universe
+			.symbolicConstant(universe.stringObject("X"), charType);
 
 	@Test
 	public void simplifyChar() {
@@ -31,6 +33,6 @@ public class SimplifyCharTest {
 
 		if (debug)
 			System.out.println(result);
-		assert (result.equals(a));
+		assertEquals(a, result);
 	}
 }

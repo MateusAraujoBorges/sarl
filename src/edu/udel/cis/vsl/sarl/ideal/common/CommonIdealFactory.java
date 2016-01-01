@@ -19,12 +19,13 @@
 package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
@@ -45,8 +46,6 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.SimpleEntry;
-import edu.udel.cis.vsl.sarl.collections.IF.SortedSymbolicMap;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
@@ -164,6 +163,11 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * @author Stephen F. Siegel
  */
 public class CommonIdealFactory implements IdealFactory {
+
+	/**
+	 * Threshold after which polynomial term maps are not computed.
+	 */
+	public final static int POLYMULT_THRESHOLD = 1000000;
 
 	/**
 	 * The number factory used by this ideal factory to create and manipulate
@@ -885,19 +889,28 @@ public class CommonIdealFactory implements IdealFactory {
 	private SymbolicMap<Monic, Monomial> multiplyTermMaps(
 			SymbolicMap<Monic, Monomial> termMap1,
 			SymbolicMap<Monic, Monomial> termMap2) {
+		int n1 = termMap1.size(), n2 = termMap2.size();
+		SymbolicMap<Monic, Monomial> result;
 
-		// System.out.println("Debug: multiplying maps of size: " +
-		// termMap1.size()
-		// + ", " + termMap2.size());
-		// System.out.flush();
+		System.out
+				.println("Debug: multiplying maps of size: " + n1 + ", " + n2);
+		System.out.flush();
 
-		SymbolicMap<Monic, Monomial> result = multiplyTermMaps2(termMap1,
-				termMap2);
+		if (n1 * n2 >= POLYMULT_THRESHOLD) {
+			SymbolicType type = termMap1.getFirst().monic(this).type();
+			Primitive poly1 = reducedPolynomial(type, termMap1);
+			Primitive poly2 = reducedPolynomial(type, termMap2);
+			Monic monic = multiplyMonics(poly1, poly2);
 
-		// System.out.println("Debug: completed multiplication with result size:
-		// "
-		// + result.size());
-		// System.out.flush();
+			result = collectionFactory.singletonSortedMap(monicComparator,
+					monic, monic);
+		} else { // currently 2 is best...
+			result = multiplyTermMaps2(termMap1, termMap2);
+		}
+
+		System.out.println("Debug: completed multiplication with result size: "
+				+ result.size());
+		System.out.flush();
 		return result;
 	}
 
@@ -921,10 +934,12 @@ public class CommonIdealFactory implements IdealFactory {
 	 *         if they both were sums, which results in a term map using the
 	 *         distributive property
 	 */
+	@SuppressWarnings("unused")
 	private SymbolicMap<Monic, Monomial> multiplyTermMaps1(
 			SymbolicMap<Monic, Monomial> termMap1,
 			SymbolicMap<Monic, Monomial> termMap2) {
-		Map<Monic, Number> productMap = new TreeMap<>(monicComparator);
+		// Map<Monic, Number> productMap = new TreeMap<>(monicComparator);
+		Map<Monic, Number> productMap = new HashMap<>();
 		int n2 = termMap2.size();
 
 		@SuppressWarnings("unchecked")
@@ -961,16 +976,27 @@ public class CommonIdealFactory implements IdealFactory {
 		}
 
 		int size = productMap.size();
-		SimpleEntry[] entries = new SimpleEntry[size];
+		@SuppressWarnings("unchecked")
+		Entry<Monic, Monomial>[] entries = (Entry<Monic, Monomial>[]) (new Entry<?, ?>[size]);
 		int count = 0;
 
 		for (Entry<Monic, Number> pair : productMap.entrySet()) {
 			Monic monic = pair.getKey();
 			Monomial monomial = monomial(constant(pair.getValue()), monic);
 
-			entries[count] = new SimpleEntry(monic, monomial);
+			entries[count] = collectionFactory.entry(monic, monomial);
 			count++;
 		}
+
+		Arrays.sort(entries, new Comparator<Entry<Monic, Monomial>>() {
+
+			@Override
+			public int compare(Entry<Monic, Monomial> o1,
+					Entry<Monic, Monomial> o2) {
+				return monicComparator.compare(o1.getKey(), o2.getKey());
+			}
+
+		});
 
 		SymbolicMap<Monic, Monomial> result = collectionFactory
 				.sortedMap(monicComparator, entries);
@@ -978,12 +1004,26 @@ public class CommonIdealFactory implements IdealFactory {
 		return result;
 	}
 
+	/**
+	 * Multiplies a monomial with every element in a term map, producing a new
+	 * term map. If the given term map is sorted using the
+	 * {@link #monicComparator}, so will the new one be.
+	 * 
+	 * @param monomial
+	 *            a non-zero monomial
+	 * @param termMap
+	 *            a term map: map from Monic to Monomial such that each monic m
+	 *            is mapped to a non-zero constant times m
+	 * @return the term map obtained by multiplying the monic by every element
+	 *         of the given term map
+	 */
 	private SymbolicMap<Monic, Monomial> multiplyMonomialTermMap(
 			Monomial monomial, SymbolicMap<Monic, Monomial> termMap) {
 		Number number = monomial.monomialConstant(this).number();
 		Monic monic = monomial.monic(this);
 		int size = termMap.size();
-		SimpleEntry[] resultArray = new SimpleEntry[size];
+		@SuppressWarnings("unchecked")
+		Entry<Monic, Monomial>[] resultArray = (Entry<Monic, Monomial>[]) (new Entry<?, ?>[size]);
 		int count = 0;
 
 		for (Entry<Monic, Monomial> entry : termMap.entries()) {
@@ -993,12 +1033,23 @@ public class CommonIdealFactory implements IdealFactory {
 			Monic newMonic = multiplyMonics(monic, oldMonic);
 			Monomial newMonomial = monomial(constant(newNumber), newMonic);
 
-			resultArray[count] = new SimpleEntry(newMonic, newMonomial);
+			resultArray[count] = collectionFactory.entry(newMonic, newMonomial);
 			count++;
 		}
 		return collectionFactory.sortedMap(monicComparator, resultArray);
 	}
 
+	/**
+	 * Multiplies two term maps using methods
+	 * {@link #multiplyMonomialTermMap(Monomial, SymbolicMap)} and
+	 * {@link #add(SymbolicMap, SymbolicMap)}.
+	 * 
+	 * @param termMap1
+	 *            a non-empty term map
+	 * @param termMap2
+	 *            a non-empty term map of same type
+	 * @return result of multiplying the two term maps
+	 */
 	private SymbolicMap<Monic, Monomial> multiplyTermMaps2(
 			SymbolicMap<Monic, Monomial> termMap1,
 			SymbolicMap<Monic, Monomial> termMap2) {
@@ -1138,6 +1189,15 @@ public class CommonIdealFactory implements IdealFactory {
 		return result;
 	}
 
+	/**
+	 * An attempt at optimizing multiplication of term maps by using a binary
+	 * merging scheme---doesn't seem to improve anything.
+	 * 
+	 * @param termMap1
+	 * @param termMap2
+	 * @return
+	 */
+	@SuppressWarnings("unused")
 	private SymbolicMap<Monic, Monomial> multiplyTermMaps3(
 			SymbolicMap<Monic, Monomial> termMap1,
 			SymbolicMap<Monic, Monomial> termMap2) {
@@ -1145,11 +1205,12 @@ public class CommonIdealFactory implements IdealFactory {
 				termMap1.entryArray(), 0, termMap1.size(),
 				termMap2.entryArray());
 		int size = pairs.size();
-		SimpleEntry[] entries = new SimpleEntry[size];
+		@SuppressWarnings("unchecked")
+		Entry<Monic, Monomial>[] entries = (Entry<Monic, Monomial>[]) new Entry<?, ?>[size];
 		int i = 0;
 
 		for (Pair<Monic, Number> pair : pairs) {
-			entries[i] = new SimpleEntry(pair.left,
+			entries[i] = collectionFactory.entry(pair.left,
 					monomial(constant(pair.right), pair.left));
 			i++;
 		}

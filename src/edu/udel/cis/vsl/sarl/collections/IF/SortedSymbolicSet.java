@@ -22,14 +22,21 @@ import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 
-public interface SortedSymbolicSet<T extends SymbolicExpression> extends
-		SymbolicSet<T> {
+/**
+ * An immutable, ordered set of symbolic expressions.
+ * 
+ * @author siegel
+ *
+ * @param <T>
+ *            the element type
+ */
+public interface SortedSymbolicSet<T extends SymbolicExpression>
+		extends SymbolicSet<T> {
 
 	/**
-	 * If the set is sorted, returns the comparator used for sorting, else
-	 * returns null.
+	 * Returns the comparator used to order this set.
 	 *
-	 * @return the comparator or null
+	 * @return the comparator
 	 */
 	Comparator<T> comparator();
 

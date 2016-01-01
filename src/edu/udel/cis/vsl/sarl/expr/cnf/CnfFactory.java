@@ -269,6 +269,7 @@ public class CnfFactory implements BooleanExpressionFactory {
 	@Override
 	public BooleanExpression or(Iterable<? extends BooleanExpression> args) {
 		BooleanExpression result = falseExpr;
+		
 		for (BooleanExpression arg : args)
 			result = or(result, arg);
 		return result;

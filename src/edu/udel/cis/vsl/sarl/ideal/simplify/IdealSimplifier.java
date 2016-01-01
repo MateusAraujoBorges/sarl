@@ -846,6 +846,10 @@ public class IdealSimplifier extends CommonSimplifier {
 		if (operator == SymbolicOperator.CONCRETE)
 			return ((BooleanObject) basic.argument(0)).getBoolean();
 		if (isRelational(operator)) {
+			// TODO: what about CHAR?
+			// would like to add something to bound map? or boolean map?
+			
+			
 			Polynomial arg = (Polynomial) basic.argument(1);
 
 			switch (operator) {

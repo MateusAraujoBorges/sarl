@@ -42,7 +42,7 @@ public class BigPowerBenchmark {
 		NumericExpression result = universe.power(xpy, N);
 		stopTime = System.nanoTime();
 		totalTime = ((double) (stopTime - startTime)) / 1000000000.0;
-		//System.out.println(result);
+		System.out.println(result);
 		System.out.println("Time (s): " + totalTime);
 	}
 

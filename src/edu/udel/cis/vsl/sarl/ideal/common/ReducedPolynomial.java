@@ -43,8 +43,6 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
  * @author siegel
  * 
  */
-// TODO: problem: this object will appear "equal" to a Polynomial with
-// the same term map. They should be unequal.
 public class ReducedPolynomial extends NumericPrimitive {
 
 	public ReducedPolynomial(SymbolicType type,

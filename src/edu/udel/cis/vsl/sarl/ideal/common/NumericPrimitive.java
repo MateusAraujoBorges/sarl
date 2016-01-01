@@ -38,7 +38,6 @@ import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
  * when those have numeric type.
  * 
  * @author siegel
- * 
  */
 public class NumericPrimitive extends IdealExpression implements Primitive {
 

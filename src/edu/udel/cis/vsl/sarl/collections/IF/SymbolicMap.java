@@ -25,25 +25,29 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.util.BinaryOperator;
 
 /**
- * Map is interpreted as a collection of values. The keys are used for other
- * purposes. So, for example, ADD followed by map argument represents sum of
- * values in the map.
+ * <p>
+ * A {@link SymbolicMap} is a collection of values that happen to be indexed by
+ * keys. It differs from the java.util Map in that it is considered to be a
+ * collection consisting of its values, i.e., it is a
+ * <code>{@link SymbolicCollection}&lt;V&gt;</code>. Like all symbolic
+ * collections, it is immutable.
+ * </p>
  * 
  * Examples of use:
  * 
- * Keys: monics, values: monomials. ADD applied to this represents a polynomial.
- * The polynomial allows fast lookup of coefficient for any given monomial
+ * <ul>
+ * <li>Keys: monics, values: monomials. The operator ADD applied to this
+ * represents a polynomial. This representation of a polynomial allows for fast
+ * lookup of the coefficient of any monomial</li>
  * 
- * Keys:primitives, values: primitive-powers. MULTIPLY applied to this map
- * represents a monic.
+ * <li>Keys:primitives, values: primitive-powers. MULTIPLY applied to this map
+ * represents a monic.</li>
  * 
- * Keys: polynomials, values: polynomial-powers. MULTIPLY applies to this map
- * represents a factorization of a polynomial.
- * 
- * Just need efficient ways to modify in immutable way!
+ * <li>Keys: polynomials, values: polynomial-powers. MULTIPLY applies to this
+ * map represents a factorization of a polynomial.</li>
+ * </ul>
  * 
  * @author siegel
- * 
  */
 public interface SymbolicMap<K extends SymbolicExpression, V extends SymbolicExpression>
 		extends SymbolicCollection<V> {
@@ -73,7 +77,8 @@ public interface SymbolicMap<K extends SymbolicExpression, V extends SymbolicExp
 	Iterable<V> values();
 
 	/**
-	 * Returns the key-value pairs ("entries") of the map.
+	 * Returns the key-value pairs ("entries") of the map as an {@link Iterable}
+	 * object.
 	 * 
 	 * @return the entries
 	 */
@@ -133,6 +138,7 @@ public interface SymbolicMap<K extends SymbolicExpression, V extends SymbolicExp
 	SymbolicMap<K, V> apply(UnaryOperator<V> operator);
 
 	/**
+	 * <p>
 	 * Combines that map with this one using the given binary operator. Iterates
 	 * over the union of the key sets of the two maps. If a given key exists in
 	 * only one map, the value associated to it in the new map is the same as
@@ -140,6 +146,7 @@ public interface SymbolicMap<K extends SymbolicExpression, V extends SymbolicExp
 	 * applying the binary operator to the two old values. If the result of
 	 * applying the binary operator is null, the element is removed from the
 	 * map.
+	 * </p>
 	 * 
 	 * Examples:
 	 * <ul>
@@ -152,8 +159,6 @@ public interface SymbolicMap<K extends SymbolicExpression, V extends SymbolicExp
 	 * 
 	 * <li>multiplying polynomial factorizations: like above</li>
 	 * </ul>
-	 * 
-	 * Eventually would like efficient persistent implementation as in Clojure.
 	 * 
 	 * @param operator
 	 *            a binary operator which can be applied to the values in the

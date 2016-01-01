@@ -24,6 +24,11 @@ public class SimpleEntry
 		return value;
 	}
 
+	/**
+	 * Sets the value component of this entry. We need this because of the
+	 * canonicalization process, which replaces the value with the canonical
+	 * version of the value.
+	 */
 	@Override
 	public SymbolicExpression setValue(SymbolicExpression value) {
 		SymbolicExpression oldValue = this.value;

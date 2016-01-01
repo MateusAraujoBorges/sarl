@@ -207,13 +207,8 @@ public class CommonCollectionFactory implements CollectionFactory {
 
 	@Override
 	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
-			Comparator<? super K> comparator, SimpleEntry[] entries) {
-		Entry<?, ?>[] e1 = (Entry<?, ?>[]) entries;
-		@SuppressWarnings("unchecked")
-		Entry<K, V>[] e2 = (Entry<K, V>[]) e1;
-		// TODO: fix above ridiculousness
-		
-		return new SimpleSortedMap<K, V>(comparator, e2);
+			Comparator<? super K> comparator, Entry<K, V>[] entries) {
+		return new SimpleSortedMap<K, V>(comparator, entries);
 	}
 
 	@Override
@@ -229,6 +224,15 @@ public class CommonCollectionFactory implements CollectionFactory {
 	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
 			Comparator<? super K> comparator, Map<K, V> javaMap) {
 		return new SimpleSortedMap<K, V>(javaMap, comparator);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <K extends SymbolicExpression, V extends SymbolicExpression> Entry<K, V> entry(
+			K key, V value) {
+		Entry<?,?> e1 = new SimpleEntry(key,value);
+		
+		return (Entry<K, V>) e1;
 	}
 
 }

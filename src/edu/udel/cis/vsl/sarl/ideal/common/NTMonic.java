@@ -30,19 +30,30 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 
 /**
- * A non-trivial monic is the product of at least two primitive powers. The set
- * of primitive powers comprising this product is represented as a map.
+ * <p>
+ * A non-trivial monic ("NTMonic") is the product of at least two
+ * {@link PrimitivePower}s. The set of primitive powers comprising this product
+ * is represented as a {@link SymbolicMap}.
+ * </p>
  * 
- * A key in the map is primitive. The value associated to that key is a
- * PrimitivePower.
+ * <p>
+ * A key in the map is a {@link Primitive}. The value associated to that key is
+ * a {@link PrimitivePower}.
+ * </p>
  * 
  * @author siegel
  * 
  */
 public class NTMonic extends IdealExpression implements Monic {
 
+	/**
+	 * Cached value returned by method {@link #termMap(IdealFactory)}.
+	 */
 	private SymbolicMap<Monic, Monomial> polynomialMap = null;
 
+	/**
+	 * Cached value returned by method {@link #degree()}.
+	 */
 	private int degree = -1;
 
 	protected NTMonic(SymbolicType type,
@@ -122,11 +133,6 @@ public class NTMonic extends IdealExpression implements Monic {
 			buffer.append(expr.atomString());
 		return buffer;
 	}
-
-	// @Override
-	// public String toString() {
-	// return toStringBuffer().toString();
-	// }
 
 	@Override
 	public IdealKind idealKind() {

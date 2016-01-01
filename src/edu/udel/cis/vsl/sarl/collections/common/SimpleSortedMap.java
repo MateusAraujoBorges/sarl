@@ -15,6 +15,10 @@ import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
 import edu.udel.cis.vsl.sarl.util.BinaryOperator;
 
+/**
+ * An implementation of {@link SortedMap} that uses an ordered array to store
+ * the sequence of {@link Entry}s making up the map.
+ */
 public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExpression>
 		extends CommonSortedMap<K, V> implements SortedSymbolicMap<K, V> {
 
@@ -29,16 +33,38 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 
 	// Static fields...
 
+	/**
+	 * An empty array (array of length 0) that can be used for any types K and V
+	 * because of immutability.
+	 */
 	private static SimpleEntry[] emptyArray = new SimpleEntry[0];
 
 	// Instance fields...
 
+	/**
+	 * The comparator on keys used to order this map. It is sort of inefficient
+	 * to store this in every map---might be better to make it another argument
+	 * to all of the methods that operate on the map.
+	 */
 	private Comparator<? super K> comparator;
 
+	/**
+	 * The entries of this map, ordered from "least" to "greatest" by key.
+	 */
 	private Entry<K, V>[] entries;
 
 	// Constructors...
 
+	/**
+	 * Constructs new sorted map with given comparator and entries. The entries
+	 * are assumed to be ordered. This is not checked.
+	 * 
+	 * @param comparator
+	 *            a comparator on keys
+	 * @param entries
+	 *            the entries that will become a field of this map; must be
+	 *            ordered by increasing key
+	 */
 	protected SimpleSortedMap(Comparator<? super K> comparator,
 			Entry<K, V>[] entries) {
 		super();
@@ -46,13 +72,22 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 		this.entries = entries;
 	}
 
+	/**
+	 * Constructs new empty map with given comparator.
+	 * 
+	 * @param comparator
+	 *            the comparator on keys that will be associated to the new map.
+	 *            It may seem this is not necessary for an empty map, but
+	 *            operations on this map will produce new maps that may not be
+	 *            empty, and those new maps will inherit this comparator.
+	 */
 	@SuppressWarnings("unchecked")
 	protected SimpleSortedMap(Comparator<? super K> comparator) {
 		this(comparator, (Entry<K, V>[]) emptyArray);
 	}
 
 	/**
-	 * Constructs new instance from the given Java map. The new instances is
+	 * Constructs new instance from the given Java map. The new instance is
 	 * backed by the Java map, i.e., if you modify the Java map you could mess
 	 * up this new instance.
 	 * 
@@ -105,6 +140,193 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 			}
 		}
 		return -1;
+	}
+
+	/**
+	 * Combines the given map with this one using a basic merge of sorted lists.
+	 * 
+	 * <p>
+	 * Preconditions: both maps are non-empty. Both maps use the same
+	 * comparator.
+	 * </p>
+	 * 
+	 * @param operator
+	 *            binary operator on values
+	 * @param map
+	 *            the other map
+	 * @return result of combining the two maps
+	 */
+	private SortedSymbolicMap<K, V> combine2(BinaryOperator<V> operator,
+			SimpleSortedMap<K, V> map) {
+		Entry<K, V>[] entries1 = entries, entries2 = map.entries;
+		int n1 = entries1.length, n2 = entries2.length;
+		@SuppressWarnings("unchecked")
+		Entry<K, V>[] newEntries = (Entry<K, V>[]) new SimpleEntry[n1 + n2];
+		int i1 = 0, i2 = 0, count = 0;
+		Entry<K, V> entry1 = entries1[0], entry2 = entries2[0];
+		K key1 = entry1.getKey(), key2 = entry2.getKey();
+	
+		while (true) {
+			int c = comparator.compare(key1, key2);
+	
+			if (c < 0) { // key1 comes first
+				newEntries[count] = entry1;
+				count++;
+				i1++;
+				if (i1 >= n1)
+					break;
+				entry1 = entries1[i1];
+				key1 = entry1.getKey();
+			} else if (c > 0) { // key2 comes first
+				newEntries[count] = entry2;
+				count++;
+				i2++;
+				if (i2 >= n2)
+					break;
+				entry2 = entries2[i2];
+				key2 = entry2.getKey();
+			} else {
+				V newValue = operator.apply(entry1.getValue(),
+						entry2.getValue());
+	
+				if (newValue != null) {
+					@SuppressWarnings("unchecked")
+					Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(key1,
+							newValue);
+	
+					newEntries[count] = newEntry;
+					count++;
+				}
+				i1++;
+				i2++;
+				if (i1 >= n1 || i2 >= n2)
+					break;
+				entry1 = entries1[i1];
+				key1 = entry1.getKey();
+				entry2 = entries2[i2];
+				key2 = entry2.getKey();
+			}
+		}
+	
+		int delta1 = n1 - i1, delta2 = n2 - i2,
+				newLength = count + delta1 + delta2;
+	
+		if (newLength < n1 + n2) {
+			@SuppressWarnings("unchecked")
+			Entry<K, V>[] tmp = (Entry<K, V>[]) new SimpleEntry[newLength];
+	
+			System.arraycopy(newEntries, 0, tmp, 0, count);
+			newEntries = tmp;
+		}
+		if (i1 < n1)
+			System.arraycopy(entries1, i1, newEntries, count, delta1);
+		else if (i2 < n2)
+			System.arraycopy(entries2, i2, newEntries, count, delta2);
+		return new SimpleSortedMap<K, V>(comparator, newEntries);
+	}
+
+	/**
+	 * Combines the given map with this one. In this implementation, the smaller
+	 * map is merged with the bigger one and at each point an attempt is made to
+	 * do a minimal number of comparisons by finding the exact index in the
+	 * bigger array where the next element should be inserted. However, it
+	 * doesn't seem to improve performance over the basic merge.
+	 * 
+	 * <p>
+	 * Preconditions: both maps are non-empty. Both maps use the same
+	 * comparator.
+	 * </p>
+	 * 
+	 * @param operator
+	 *            binary operator on values
+	 * @param map
+	 *            the map to combine with this one
+	 * @return the combined map
+	 */
+	@SuppressWarnings("unused")
+	private SortedSymbolicMap<K, V> combine3(BinaryOperator<V> operator,
+			SimpleSortedMap<K, V> map) {
+		Entry<K, V>[] entries1 = entries, entries2 = map.entries;
+		int n1 = entries1.length, n2 = entries2.length;
+		@SuppressWarnings("unchecked")
+		Entry<K, V>[] newEntries = (Entry<K, V>[]) new SimpleEntry[n1 + n2];
+	
+		if (n1 < n2) {
+			Entry<K, V>[] tmp = entries1;
+	
+			entries1 = entries2;
+			entries2 = tmp;
+	
+			int tmp2 = n1;
+	
+			n1 = n2;
+			n2 = tmp2;
+		}
+		assert (n1 >= n2);
+	
+		// merge entries2 into entries1...
+	
+		int i1 = 0, count = 0;
+	
+		// invariant: entries[i]<entry2 forall i<i1.
+		for (Entry<K, V> entry2 : entries2) {
+			K key2 = entry2.getKey();
+			boolean eq = false;
+			int lo = i1, hi = n1 - 1;
+	
+			// Goals:
+			// 1. lo is greatest in [i1,n1] s.t. entries1[i]<entry2 forall i<lo
+			// 2. eq iff (lo<n1 && entries1[lo]=entry2)
+	
+			while (lo <= hi) {
+				int mid = (lo + hi) / 2;
+				int compare = comparator.compare(entries1[mid].getKey(), key2);
+	
+				if (compare == 0) {
+					eq = true;
+					lo = mid;
+					break;
+				} else if (compare < 0) { // entries1[mid]<entry2
+					lo = mid + 1;
+				} else {
+					hi = mid - 1;
+				}
+			}
+			if (lo > i1) { // [i1,lo) gets shifted from entries1 to newEntries
+				System.arraycopy(entries1, i1, newEntries, count, lo - i1);
+				count += lo - i1;
+				i1 = lo;
+			}
+			if (eq) { // combine entries1[lo] and entry2
+				V newValue = operator.apply(entries1[lo].getValue(),
+						entry2.getValue());
+	
+				if (newValue != null) {
+					@SuppressWarnings("unchecked")
+					Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
+							entry2.getKey(), newValue);
+	
+					newEntries[count] = newEntry;
+					count++;
+				}
+				i1++;
+			} else { // shift entry2 only
+				newEntries[count] = entry2;
+				count++;
+			}
+		}
+		if (i1 < n1) {
+			System.arraycopy(entries1, i1, newEntries, count, n1 - i1);
+			count += n1 - i1;
+		}
+		if (count < n1 + n2) {
+			@SuppressWarnings("unchecked")
+			Entry<K, V>[] tmp = (Entry<K, V>[]) new SimpleEntry[count];
+	
+			System.arraycopy(newEntries, 0, tmp, 0, count);
+			newEntries = tmp;
+		}
+		return new SimpleSortedMap<K, V>(comparator, newEntries);
 	}
 
 	@Override
@@ -335,138 +557,6 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 		return super.collectionEquals(o);
 	}
 
-	/**
-	 * @{inheritDoc} This is an optimized implementation. The order is
-	 *               completely determined by the keys, so can use a merge.
-	 * 
-	 * @param operator
-	 *            binary operator on values
-	 * @param map
-	 *            the other map
-	 * @return result of combining the two maps
-	 */
-	@Override
-	public SortedSymbolicMap<K, V> combine(BinaryOperator<V> operator,
-			SymbolicMap<K, V> map) {
-		SortedSymbolicMap<K, V> result;
-
-		if (map instanceof SimpleSortedMap<?, ?>) {
-			SimpleSortedMap<K, V> map2 = (SimpleSortedMap<K, V>) map;
-			Entry<K, V>[] entries1 = entries, entries2 = map2.entries;
-			int n1 = entries1.length, n2 = entries2.length;
-
-			if (n1 == 0) {
-				result = map2;
-			} else if (n2 == 0) {
-				result = this;
-			} else {
-				@SuppressWarnings("unchecked")
-				Entry<K, V>[] newEntries = (Entry<K, V>[]) new SimpleEntry[n1
-						+ n2];
-				int i1 = 0, i2 = 0, count = 0;
-				Entry<K, V> entry1 = entries1[0], entry2 = entries2[0];
-				K key1 = entry1.getKey(), key2 = entry2.getKey();
-				V val1 = entry1.getValue(), val2 = entry2.getValue();
-
-				while (i1 < n1 && i2 < n2) {
-					int c = comparator.compare(key1, key2);
-
-					if (c < 0) { // key1 comes first
-						@SuppressWarnings("unchecked")
-						Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
-								key1, val1);
-
-						newEntries[count] = newEntry;
-						count++;
-						i1++;
-						if (i1 < n1) {
-							entry1 = entries1[i1];
-							key1 = entry1.getKey();
-							val1 = entry1.getValue();
-						} else {
-							break;
-						}
-					} else if (c > 0) { // key2 comes first
-						@SuppressWarnings("unchecked")
-						Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
-								key2, val2);
-
-						newEntries[count] = newEntry;
-						count++;
-						i2++;
-						if (i2 < n2) {
-							entry2 = entries2[i2];
-							key2 = entry2.getKey();
-							val2 = entry2.getValue();
-						} else {
-							break;
-						}
-					} else {
-						V newValue = operator.apply(val1, val2);
-
-						if (newValue != null) {
-							@SuppressWarnings("unchecked")
-							Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
-									key1, newValue);
-
-							newEntries[count] = newEntry;
-							count++;
-						}
-						i1++;
-						i2++;
-						if (i1 < n1) {
-							entry1 = entries1[i1];
-							key1 = entry1.getKey();
-							val1 = entry1.getValue();
-						} else {
-							break;
-						}
-						if (i2 < n2) {
-							entry2 = entries2[i2];
-							key2 = entry2.getKey();
-							val2 = entry2.getValue();
-						} else {
-							break;
-						}
-					}
-				}
-				while (i1 < n1) {
-					entry1 = entries1[i1];
-
-					@SuppressWarnings("unchecked")
-					Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
-							entry1.getKey(), entry1.getValue());
-
-					newEntries[count] = newEntry;
-					count++;
-					i1++;
-				}
-				while (i2 < n2) {
-					entry2 = entries2[i2];
-
-					@SuppressWarnings("unchecked")
-					Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
-							entry2.getKey(), entry2.getValue());
-
-					newEntries[count] = newEntry;
-					count++;
-					i2++;
-				}
-				if (count < n1 + n2) {
-					@SuppressWarnings("unchecked")
-					Entry<K, V>[] tmp = (Entry<K, V>[]) new SimpleEntry[count];
-
-					System.arraycopy(newEntries, 0, tmp, 0, count);
-					newEntries = tmp;
-				}
-				result = new SimpleSortedMap<K, V>(comparator, newEntries);
-			}
-		} else {
-			result = super.combine(operator, map);
-		}
-		return result;
-	}
-
 	@Override
 	public Entry<K, V> getEntry(int index) {
 		return entries[index];
@@ -475,5 +565,25 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 	@Override
 	public Entry<K, V>[] entryArray() {
 		return entries;
+	}
+
+	@Override
+	public SortedSymbolicMap<K, V> combine(BinaryOperator<V> operator,
+			SymbolicMap<K, V> map) {
+		int n2 = map.size();
+
+		if (n2 == 0)
+			return this;
+		if (map instanceof SimpleSortedMap<?, ?>) {
+			int n1 = this.size();
+			SimpleSortedMap<K, V> map2 = (SimpleSortedMap<K, V>) map;
+
+			if (n1 == 0)
+				return map2;
+			// currently, combine2 is best in all cases...
+			return combine2(operator, map2);
+		} else {
+			return super.combine(operator, map);
+		}
 	}
 }
