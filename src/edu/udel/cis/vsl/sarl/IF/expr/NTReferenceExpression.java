@@ -1,8 +1,8 @@
 package edu.udel.cis.vsl.sarl.IF.expr;
 
 /**
- * A non-trivial reference expression, i.e., one which is not the null reference
- * or the identity reference.
+ * A non-trivial {@link ReferenceExpression}, i.e., one which is not the null
+ * reference or the identity reference.
  * 
  * @author siegel
  * 
@@ -15,5 +15,4 @@ public interface NTReferenceExpression extends ReferenceExpression {
 	 * i.e., the array, tuple, union, or the other reference, resp.
 	 */
 	ReferenceExpression getParent();
-
 }
