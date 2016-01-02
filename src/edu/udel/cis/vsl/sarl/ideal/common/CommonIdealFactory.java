@@ -892,9 +892,9 @@ public class CommonIdealFactory implements IdealFactory {
 		int n1 = termMap1.size(), n2 = termMap2.size();
 		SymbolicMap<Monic, Monomial> result;
 
-		System.out
-				.println("Debug: multiplying maps of size: " + n1 + ", " + n2);
-		System.out.flush();
+//		System.out
+//				.println("Debug: multiplying maps of size: " + n1 + ", " + n2);
+//		System.out.flush();
 
 		if (n1 * n2 >= POLYMULT_THRESHOLD) {
 			SymbolicType type = termMap1.getFirst().monic(this).type();
@@ -908,9 +908,9 @@ public class CommonIdealFactory implements IdealFactory {
 			result = multiplyTermMaps2(termMap1, termMap2);
 		}
 
-		System.out.println("Debug: completed multiplication with result size: "
-				+ result.size());
-		System.out.flush();
+//		System.out.println("Debug: completed multiplication with result size: "
+//				+ result.size());
+//		System.out.flush();
 		return result;
 	}
 

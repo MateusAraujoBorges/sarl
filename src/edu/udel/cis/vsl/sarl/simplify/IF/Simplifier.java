@@ -80,16 +80,17 @@ public interface Simplifier extends UnaryOperator<SymbolicExpression> {
 	 * Returns the pre-universe associated to this simplifier
 	 * 
 	 * @return the associated pre-universe
-	 * */
+	 */
 	PreUniverse universe();
 
 	/**
-	 * In the process of simplifying the initial context, this simplier may have
-	 * "solved" for some of the symbolic constants occurring in the context.
-	 * This method returns a map in which the keys are those symbolic constants
-	 * and the value associated to a key is the "solved" value. The solved value
-	 * will be substituted for the symbolic constants in any expression given to
-	 * the {@link Transform#apply} method of this simplifier.
+	 * In the process of simplifying the initial context, this simplifier may
+	 * have "solved" for some of the symbolic constants occurring in the
+	 * context. This method returns a map in which the keys are those symbolic
+	 * constants and the value associated to a key is the "solved" value. The
+	 * solved value will be substituted for the symbolic constants in any
+	 * expression given to the {@link Transform#apply} method of this
+	 * simplifier.
 	 * 
 	 * @return a mapping from some symbolic constants occurring in original
 	 *         context to their solved values
@@ -105,7 +106,7 @@ public interface Simplifier extends UnaryOperator<SymbolicExpression> {
 	 * {@link #getFullContext}). This context will not change after creation.
 	 * 
 	 * @return the reduced context associated to this Reasoner
-	 * */
+	 */
 	BooleanExpression getReducedContext();
 
 	/**
@@ -124,7 +125,7 @@ public interface Simplifier extends UnaryOperator<SymbolicExpression> {
 	 * </p>
 	 * 
 	 * @return the reduced context associated to this Reasoner
-	 * */
+	 */
 	BooleanExpression getFullContext();
 
 	/**

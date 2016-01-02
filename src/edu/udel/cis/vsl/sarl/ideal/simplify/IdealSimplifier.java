@@ -94,23 +94,28 @@ public class IdealSimplifier extends CommonSimplifier {
 	/**
 	 * A map that assigns bounds to pseudo primitive factored polynomials.
 	 */
-	private Map<Polynomial, BoundsObject> boundMap = new HashMap<Polynomial, BoundsObject>();
+	private Map<Polynomial, BoundsObject> boundMap = new HashMap<>();
 
 	/**
 	 * A map that assigns concrete boolean values to boolean primitive
 	 * expressions.
 	 */
-	private Map<BooleanExpression, Boolean> booleanMap = new HashMap<BooleanExpression, Boolean>();
+	private Map<BooleanExpression, Boolean> booleanMap = new HashMap<>();
 
 	/**
 	 * The keys in this map are pseudo-primitive factored polynomials. See
 	 * {@link AffineExpression} for the definition. The value is the constant
 	 * value that has been determined to be the value of that pseudo.
 	 */
-	private Map<Polynomial, Number> constantMap = new HashMap<Polynomial, Number>();
+	private Map<Polynomial, Number> constantMap = new HashMap<>();
+
+	/**
+	 * Non-numeric constants.
+	 */
+	private Map<SymbolicExpression, SymbolicExpression> otherConstantMap = new HashMap<>();
 
 	// TODO: if it is determined that p=0, then all primitives occurring
-	// in the factorization of of p are 0:
+	// in the factorization of p are 0:
 	// put all of these into the constantMap. If it is determined that
 	// p!=0, then all primitives occurring in a factorization of p are non-0.
 	// Put these facts into the booleanMap.
@@ -202,8 +207,8 @@ public class IdealSimplifier extends CommonSimplifier {
 		Number pseudoValue = constantMap.get(pseudo);
 
 		if (pseudoValue != null)
-			return info.idealFactory.constant(info.affineFactory.affineValue(
-					affine, pseudoValue));
+			return info.idealFactory.constant(
+					info.affineFactory.affineValue(affine, pseudoValue));
 		else
 			return null;
 	}
@@ -261,16 +266,12 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * These are simplified according to the following rules:
 	 * 
 	 * <ul>
-	 * <li>
-	 * 0&lt;p/q &lt;=&gt; (0&lt;p &amp;&amp; 0&lt;q) || (0&lt;-p &amp;&amp;
+	 * <li>0&lt;p/q &lt;=&gt; (0&lt;p &amp;&amp; 0&lt;q) || (0&lt;-p &amp;&amp;
 	 * 0&lt;-q)</li>
-	 * <li>
-	 * 0&lt;=p/q &lt;=&gt; (0&lt;=p &amp;&amp; 0&lt;q) || (0&lt;=-p &amp;&amp;
-	 * 0&lt;-q)</li>
-	 * <li>
-	 * 0==p/q &lt;=&gt; 0==p</li>
-	 * <li>
-	 * 0!=p/q &lt;=&gt; 0!=p</li>
+	 * <li>0&lt;=p/q &lt;=&gt; (0&lt;=p &amp;&amp; 0&lt;q) || (0&lt;=-p
+	 * &amp;&amp; 0&lt;-q)</li>
+	 * <li>0==p/q &lt;=&gt; 0==p</li>
+	 * <li>0!=p/q &lt;=&gt; 0!=p</li>
 	 * </ul>
 	 * 
 	 * @param expression
@@ -317,7 +318,8 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *         expression
 	 */
 	private BooleanExpression simplifyRelational(BooleanExpression expression) {
-		BooleanExpression result1 = (BooleanExpression) simplifyGenericExpression(expression);
+		BooleanExpression result1 = (BooleanExpression) simplifyGenericExpression(
+				expression);
 		BooleanExpression result2 = null;
 
 		if (result1 != expression) {
@@ -350,21 +352,22 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		if (pseudoValue != null)
 			// substitute known constant value for pseudo...
-			return info.affineFactory.affineValue(affine, pseudoValue).isZero() ? info.trueExpr
-					: info.falseExpr;
+			return info.affineFactory.affineValue(affine, pseudoValue).isZero()
+					? info.trueExpr : info.falseExpr;
 
 		Number offset = affine.offset();
 		Number coefficient = affine.coefficient();
 
 		// aX+b=0 => -b/a=X is an integer
 		if (type.isInteger()
-				&& !info.numberFactory.mod(
-						(IntegerNumber) offset,
-						(IntegerNumber) info.numberFactory
-								.abs((IntegerNumber) coefficient)).isZero())
+				&& !info.numberFactory
+						.mod((IntegerNumber) offset,
+								(IntegerNumber) info.numberFactory
+										.abs((IntegerNumber) coefficient))
+						.isZero())
 			return info.falseExpr;
-		pseudoValue = info.numberFactory.negate(info.numberFactory.divide(
-				offset, coefficient));
+		pseudoValue = info.numberFactory
+				.negate(info.numberFactory.divide(offset, coefficient));
 
 		BoundsObject oldBounds = boundMap.get(pseudo);
 
@@ -483,13 +486,11 @@ public class IdealSimplifier extends CommonSimplifier {
 			// if left=0 && (strictleft || strict): true
 			// if right<0: false
 			// if right=0 && (strictright || strict): false
-			if (leftSign > 0
-					|| (leftSign == 0 && (!strictBound || oldBounds
-							.strictLower())))
+			if (leftSign > 0 || (leftSign == 0
+					&& (!strictBound || oldBounds.strictLower())))
 				return info.trueExpr;
-			if (rightSign < 0
-					|| (rightSign == 0 && (strictBound || oldBounds
-							.strictUpper())))
+			if (rightSign < 0 || (rightSign == 0
+					&& (strictBound || oldBounds.strictUpper())))
 				return info.falseExpr;
 			if (rightSign == 0 && !strictBound && !oldBounds.strictUpper())
 				// X'=0, where X'=X-newBound.
@@ -503,13 +504,11 @@ public class IdealSimplifier extends CommonSimplifier {
 			// if left=0 && (strict || strictleft): false
 			// if right<0: true
 			// if right=0 && (strictright || strict): true
-			if (leftSign > 0
-					|| (leftSign == 0 && (strictBound || oldBounds
-							.strictLower())))
+			if (leftSign > 0 || (leftSign == 0
+					&& (strictBound || oldBounds.strictLower())))
 				return info.falseExpr;
-			if (rightSign < 0
-					|| (rightSign == 0 && (!strictBound || oldBounds
-							.strictUpper())))
+			if (rightSign < 0 || (rightSign == 0
+					&& (!strictBound || oldBounds.strictUpper())))
 				return info.trueExpr;
 			if (leftSign == 0 && !strictBound && !oldBounds.strictLower())
 				// X'=0, where X'=X-newBound.
@@ -535,8 +534,8 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		if (lower != null) {
 			if (bound.strictLower())
-				result = info.idealFactory.lessThan(
-						info.idealFactory.constant(lower), ideal);
+				result = info.idealFactory
+						.lessThan(info.idealFactory.constant(lower), ideal);
 			else
 				result = info.idealFactory.lessThanEquals(
 						info.idealFactory.constant(lower), ideal);
@@ -575,7 +574,8 @@ public class IdealSimplifier extends CommonSimplifier {
 			} else {
 				// need to substitute into assumption new value of symbolic
 				// constants.
-				BooleanExpression newAssumption = (BooleanExpression) simplifyExpression(assumption);
+				BooleanExpression newAssumption = (BooleanExpression) simplifyExpression(
+						assumption);
 
 				rawAssumption = newAssumption;
 				// at this point, rawAssumption contains only those facts that
@@ -611,14 +611,30 @@ public class IdealSimplifier extends CommonSimplifier {
 					if (fp instanceof SymbolicConstant) {
 						// symbolic constant: will be entirely eliminated
 					} else {
-						BooleanExpression constraint = info.idealFactory
-								.equals(fp, info.idealFactory.constant(entry
-										.getValue()));
+						BooleanExpression constraint = info.idealFactory.equals(
+								fp,
+								info.idealFactory.constant(entry.getValue()));
 
 						newAssumption = info.booleanFactory.and(newAssumption,
 								constraint);
 					}
 				}
+
+				for (Entry<SymbolicExpression, SymbolicExpression> entry : otherConstantMap
+						.entrySet()) {
+					SymbolicExpression key = entry.getKey();
+
+					if (key instanceof SymbolicConstant) {
+						// symbolic constant: will be entirely eliminated
+					} else {
+						BooleanExpression constraint = info.universe.equals(key,
+								entry.getValue());
+
+						newAssumption = info.booleanFactory.and(newAssumption,
+								constraint);
+					}
+				}
+
 				for (Entry<BooleanExpression, Boolean> entry : booleanMap
 						.entrySet()) {
 					BooleanExpression primitive = entry.getKey();
@@ -643,8 +659,15 @@ public class IdealSimplifier extends CommonSimplifier {
 						substitutionMap.put(key,
 								universe.number(entry.getValue()));
 				}
-				newAssumption = (BooleanExpression) universe.mapSubstituter(
-						substitutionMap).apply(newAssumption);
+				for (Entry<SymbolicExpression, SymbolicExpression> entry : otherConstantMap
+						.entrySet()) {
+					SymbolicExpression key = entry.getKey();
+
+					if (key.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
+						substitutionMap.put(key, entry.getValue());
+				}
+				newAssumption = (BooleanExpression) universe
+						.mapSubstituter(substitutionMap).apply(newAssumption);
 
 				if (assumption.equals(newAssumption))
 					break;
@@ -677,8 +700,8 @@ public class IdealSimplifier extends CommonSimplifier {
 			SymbolicType originalType = original.type();
 
 			if (originalType.isHerbrand() && originalType.isInteger()
-					&& type.isInteger() || originalType.isReal()
-					&& type.isReal()) {
+					&& type.isInteger()
+					|| originalType.isReal() && type.isReal()) {
 				SymbolicExpression constant = universe.cast(originalType,
 						universe.number(value));
 
@@ -772,12 +795,16 @@ public class IdealSimplifier extends CommonSimplifier {
 	private boolean extractBoundsOr(BooleanExpression or,
 			Map<Polynomial, BoundsObject> aBoundMap,
 			Map<BooleanExpression, Boolean> aBooleanMap) {
-		if (or.operator() == SymbolicOperator.OR) {
+		SymbolicOperator op = or.operator();
+
+		if (op == SymbolicOperator.OR) {
 			// p & (q0 | ... | qn) = (p & q0) | ... | (p & qn)
 			// copies of original maps, corresponding to p. these never
 			// change...
-			Map<Polynomial, BoundsObject> originalBoundMap = copyBoundMap(aBoundMap);
-			Map<BooleanExpression, Boolean> originalBooleanMap = copyBooleanMap(aBooleanMap);
+			Map<Polynomial, BoundsObject> originalBoundMap = copyBoundMap(
+					aBoundMap);
+			Map<BooleanExpression, Boolean> originalBooleanMap = copyBooleanMap(
+					aBooleanMap);
 			Iterator<? extends BooleanExpression> clauses = or
 					.booleanCollectionArg(0).iterator();
 			boolean satisfiable = extractBoundsBasic(clauses.next(), aBoundMap,
@@ -786,11 +813,13 @@ public class IdealSimplifier extends CommonSimplifier {
 			// result <- result | ((p & q1) | ... | (p & qn)) :
 			while (clauses.hasNext()) {
 				BooleanExpression clause = clauses.next();
-				Map<Polynomial, BoundsObject> newBoundMap = copyBoundMap(originalBoundMap);
-				Map<BooleanExpression, Boolean> newBooleanMap = copyBooleanMap(originalBooleanMap);
+				Map<Polynomial, BoundsObject> newBoundMap = copyBoundMap(
+						originalBoundMap);
+				Map<BooleanExpression, Boolean> newBooleanMap = copyBooleanMap(
+						originalBooleanMap);
 				// compute p & q_i:
-				boolean newSatisfiable = extractBoundsBasic(clause,
-						newBoundMap, newBooleanMap);
+				boolean newSatisfiable = extractBoundsBasic(clause, newBoundMap,
+						newBooleanMap);
 
 				// result <- result | (p & q_i) where result is (aBoundMap,
 				// aBooleanMap)....
@@ -830,6 +859,32 @@ public class IdealSimplifier extends CommonSimplifier {
 			}
 			return satisfiable;
 		} else { // 1 clause
+			// if this is of the form EQ x,y where y is a constant and
+			// x and y are not-numeric, add to otherConstantMap
+			if (op == SymbolicOperator.EQUALS) {
+				SymbolicExpression arg0 = (SymbolicExpression) or.argument(0),
+						arg1 = (SymbolicExpression) or.argument(1);
+				SymbolicType type = arg0.type();
+
+				if (!type.isNumeric()) {
+					boolean const0 = arg0
+							.operator() == SymbolicOperator.CONCRETE;
+					boolean const1 = (arg1
+							.operator() == SymbolicOperator.CONCRETE);
+
+					if (const1 && !const0) {
+						otherConstantMap.put(arg0, arg1);
+						return true;
+					} else if (const0 && !const1) {
+						otherConstantMap.put(arg1, arg0);
+						return true;
+					} else if (const0 && const1) {
+						return arg0.equals(arg1);
+					} else {
+						return true;
+					}
+				}
+			}
 			return extractBoundsBasic(or, aBoundMap, aBooleanMap);
 		}
 	}
@@ -846,27 +901,28 @@ public class IdealSimplifier extends CommonSimplifier {
 		if (operator == SymbolicOperator.CONCRETE)
 			return ((BooleanObject) basic.argument(0)).getBoolean();
 		if (isRelational(operator)) {
-			// TODO: what about CHAR?
-			// would like to add something to bound map? or boolean map?
-			
-			
-			Polynomial arg = (Polynomial) basic.argument(1);
+			SymbolicExpression arg = (SymbolicExpression) basic.argument(1);
 
-			switch (operator) {
-			case EQUALS: // 0==x
-				return extractEQ0Bounds(arg, aBoundMap, aBooleanMap);
-			case NEQ: {
-				return extractNEQ0Bounds(arg, aBoundMap, aBooleanMap);
+			if (arg.type().isNumeric()) {
+				Polynomial poly = (Polynomial) arg;
+
+				switch (operator) {
+				case EQUALS: // 0==x
+					return extractEQ0Bounds(poly, aBoundMap, aBooleanMap);
+				case NEQ: {
+					return extractNEQ0Bounds(poly, aBoundMap, aBooleanMap);
+				}
+				case LESS_THAN: // 0<x
+					return extractGT0Bounds(true, poly, aBoundMap, aBooleanMap);
+				case LESS_THAN_EQUALS: // 0<=x
+					return extractGT0Bounds(false, poly, aBoundMap,
+							aBooleanMap);
+				default:
+					throw new RuntimeException(
+							"Unknown RelationKind: " + operator);
+				}
 			}
-			case LESS_THAN: // 0<x
-				return extractGT0Bounds(true, arg, aBoundMap, aBooleanMap);
-			case LESS_THAN_EQUALS: // 0<=x
-				return extractGT0Bounds(false, arg, aBoundMap, aBooleanMap);
-			default:
-				throw new RuntimeException("Unknown RelationKind: " + operator);
-			}
-		}
-		if (operator == SymbolicOperator.EXISTS
+		} else if (operator == SymbolicOperator.EXISTS
 				|| operator == SymbolicOperator.FORALL) {
 			// forall or exists: difficult
 			// forall x: ()bounds: can substitute whatever you want for x
@@ -874,8 +930,7 @@ public class IdealSimplifier extends CommonSimplifier {
 			// example: forall i: a[i]<7. Look for all occurrence of a[*]
 			// and add bounds
 			return true;
-		}
-		if (operator == SymbolicOperator.NOT) {
+		} else if (operator == SymbolicOperator.NOT) {
 			BooleanExpression primitive = basic.booleanArg(0);
 			Boolean value = aBooleanMap.get(primitive);
 
@@ -884,14 +939,13 @@ public class IdealSimplifier extends CommonSimplifier {
 			aBooleanMap.put(primitive, false);
 			return true;
 		}
-		{
-			Boolean value = aBooleanMap.get(basic);
 
-			if (value != null)
-				return value;
-			aBooleanMap.put(basic, true);
-			return true;
-		}
+		Boolean value = aBooleanMap.get(basic);
+
+		if (value != null)
+			return value;
+		aBooleanMap.put(basic, true);
+		return true;
 	}
 
 	/**
@@ -918,8 +972,8 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Polynomial pseudo = affine.pseudo();
-		RationalNumber coefficient = info.numberFactory.rational(affine
-				.coefficient());
+		RationalNumber coefficient = info.numberFactory
+				.rational(affine.coefficient());
 		RationalNumber offset = info.numberFactory.rational(affine.offset());
 		RationalNumber rationalValue = info.numberFactory
 				.negate(info.numberFactory.divide(offset, coefficient));
@@ -940,9 +994,10 @@ public class IdealSimplifier extends CommonSimplifier {
 			bound = BoundsObject.newTightBound(pseudo, value);
 			aBoundMap.put(pseudo, bound);
 		} else {
-			if ((bound.lower != null && info.numberFactory.compare(bound.lower,
-					value) > 0)
-					|| (bound.upper != null && value.compareTo(bound.upper) > 0))
+			if ((bound.lower != null
+					&& info.numberFactory.compare(bound.lower, value) > 0)
+					|| (bound.upper != null
+							&& value.compareTo(bound.upper) > 0))
 				return false;
 			bound.makeConstant(value);
 		}
@@ -975,8 +1030,8 @@ public class IdealSimplifier extends CommonSimplifier {
 		SymbolicType type = poly.type();
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Polynomial pseudo = affine.pseudo();
-		RationalNumber coefficient = info.numberFactory.rational(affine
-				.coefficient());
+		RationalNumber coefficient = info.numberFactory
+				.rational(affine.coefficient());
 		RationalNumber offset = info.numberFactory.rational(affine.offset());
 		RationalNumber rationalValue = info.numberFactory
 				.negate(info.numberFactory.divide(offset, coefficient));
@@ -1066,11 +1121,12 @@ public class IdealSimplifier extends CommonSimplifier {
 			}
 			return true;
 		}
-		return (strict ? affine.offset().signum() > 0 : affine.offset()
-				.signum() >= 0);
+		return (strict ? affine.offset().signum() > 0
+				: affine.offset().signum() >= 0);
 	}
 
-	private void declareFact(SymbolicExpression booleanExpression, boolean truth) {
+	private void declareFact(SymbolicExpression booleanExpression,
+			boolean truth) {
 		BooleanExpression value = truth ? info.trueExpr : info.falseExpr;
 
 		cacheSimplification(booleanExpression, value);
@@ -1129,18 +1185,28 @@ public class IdealSimplifier extends CommonSimplifier {
 			return expression;
 		if (expression instanceof Polynomial)
 			return simplifyPolynomial((Polynomial) expression);
-		if (expression.type() != null && expression.type().isBoolean()) {
-			if (expression.isTrue() || expression.isFalse())
-				return expression;
 
-			Boolean booleanResult = booleanMap.get(expression);
+		SymbolicType type = expression.type();
 
-			if (booleanResult != null) {
-				return booleanResult ? universe.trueExpression() : universe
-						.falseExpression();
+		if (type != null) {
+			if (type.isBoolean()) {
+				if (expression.isTrue() || expression.isFalse())
+					return expression;
+
+				Boolean booleanResult = booleanMap.get(expression);
+
+				if (booleanResult != null) {
+					return booleanResult ? universe.trueExpression()
+							: universe.falseExpression();
+				}
+				if (isNumericRelational(expression))
+					return simplifyRelational((BooleanExpression) expression);
+			} else if (!type.isNumeric()) {
+				SymbolicExpression constant = otherConstantMap.get(expression);
+
+				if (constant != null)
+					return constant;
 			}
-			if (isNumericRelational(expression))
-				return simplifyRelational((BooleanExpression) expression);
 		}
 		return simplifyGenericExpression(expression);
 	}
@@ -1197,6 +1263,14 @@ public class IdealSimplifier extends CommonSimplifier {
 				if (fp instanceof SymbolicConstant)
 					substitutionMap.put((SymbolicConstant) fp,
 							universe.number(entry.getValue()));
+			}
+			for (Entry<SymbolicExpression, SymbolicExpression> entry : otherConstantMap
+					.entrySet()) {
+				SymbolicExpression expr = entry.getKey();
+
+				if (expr instanceof SymbolicConstant)
+					substitutionMap.put((SymbolicConstant) expr,
+							entry.getValue());
 			}
 			for (Entry<BooleanExpression, Boolean> entry : booleanMap
 					.entrySet()) {
