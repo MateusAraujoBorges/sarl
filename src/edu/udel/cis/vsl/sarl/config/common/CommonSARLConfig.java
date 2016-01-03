@@ -10,6 +10,14 @@ import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind;
 import edu.udel.cis.vsl.sarl.IF.config.SARLConfig;
 
+/**
+ * An implementation of {@link SARLConfig} using an array for the
+ * {@link ProverInfo}s as well as a map from the prover names to the
+ * {@link ProverInfo}s for fast lookup.
+ * 
+ * @author siegel
+ *
+ */
 public class CommonSARLConfig implements SARLConfig {
 
 	private ProverInfo[] provers;
