@@ -9,6 +9,7 @@ import java.util.Set;
 
 import edu.udel.cis.vsl.sarl.IF.expr.ArrayElementReference;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.BooleanSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.OffsetReference;
@@ -18,6 +19,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.TupleComponentReference;
 import edu.udel.cis.vsl.sarl.IF.expr.UnionMemberReference;
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
@@ -37,43 +39,65 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.util.Pair;
 
+/**
+ * A {@link CoreUniverse} provides most of the functionality of a
+ * {@link SymbolicUniverse}, including the mechanisms to create and manipulate
+ * {@link SymbolicExpression}s and other {@link SymbolicObject}s. The part that
+ * is missing deals with "reasoning", i.e., the ability to determine the
+ * validity of formulas and to simplify expressions within a "context".
+ * 
+ * @author siegel
+ */
 public interface CoreUniverse {
 
 	// General...
 
 	/**
-	 * Gets the show queries flag: if true, SARL theorem prover queries will be
-	 * printed to the output stream.
+	 * Gets the <code>showQueries</code> flag: if <code>true</code>, SARL
+	 * theorem prover queries will be printed to the output stream.
 	 * 
-	 * @return current value of the show queries flag
+	 * @return current value of the <code>showQueries</code> flag
+	 * @see #setShowQueries(boolean)
+	 * @see #getShowProverQueries()
+	 * @see #setShowProverQueries(boolean)
 	 */
 	boolean getShowQueries();
 
 	/**
-	 * Sets the show queries flag. If this is set to true, SARL theorem prover
-	 * queries will be printed to the output stream.
+	 * Sets the <code>showQueries</code> flag. If this is set to
+	 * <code>true</code>, SARL theorem prover queries will be printed to the
+	 * output stream.
 	 * 
 	 * @param value
-	 *            new value for the show queries flag.
+	 *            new value for the <code>showQueries</code> flag.
+	 * @see #getShowQueries()
+	 * @see #getShowProverQueries()
+	 * @see #setShowProverQueries(boolean)
 	 */
 	void setShowQueries(boolean value);
 
 	/**
-	 * Gets the show prover queries flag: if true, the theorem prover queries
-	 * processed by the underlying theorem prover(s) will be printed to the
-	 * output stream.
+	 * Gets the <code>showProverQueries</code> flag: if <code>true</code>, the
+	 * theorem prover queries processed by the underlying theorem prover(s) will
+	 * be printed to the output stream.
 	 * 
-	 * @return current value of the show prover queries flag
+	 * @return current value of the <code>showProverQueries</code> flag
+	 * @see #setShowProverQueries(boolean)
+	 * @see #getShowQueries()
+	 * @see #setShowQueries(boolean)
 	 */
 	boolean getShowProverQueries();
 
 	/**
-	 * Sets the show prover queries flag. If set to true, the theorem prover
-	 * queries processed by the underlying theorem prover(s) will be printed to
-	 * the output stream.
+	 * Sets the <code>showProverQueries</code> flag. If set to <code>true</code>
+	 * , the theorem prover queries processed by the underlying theorem
+	 * prover(s) will be printed to the output stream.
 	 * 
 	 * @param value
-	 *            new value for the show theorem prover queries flag
+	 *            new value for the <code>showProverQueries</code> flag
+	 * @see #getShowProverQueries()
+	 * @see #getShowQueries()
+	 * @see #setShowQueries(boolean)
 	 */
 	void setShowProverQueries(boolean value);
 
@@ -82,6 +106,7 @@ public interface CoreUniverse {
 	 * printed. By default, standard out.
 	 * 
 	 * @return current output stream
+	 * @see #setOutputStream(PrintStream)
 	 */
 	PrintStream getOutputStream();
 
@@ -91,6 +116,7 @@ public interface CoreUniverse {
 	 * 
 	 * @param out
 	 *            new value for output stream
+	 * @see #getOutputStream()
 	 */
 	void setOutputStream(PrintStream out);
 
@@ -103,33 +129,51 @@ public interface CoreUniverse {
 	Comparator<SymbolicObject> comparator();
 
 	/**
+	 * <p>
 	 * Returns the unique representative instance from the given object's
-	 * equivalence class, where the equivalence relation is determined by
-	 * "equals". (Refer to the "Flyweight Pattern".)
+	 * equivalence class, where the equivalence relation is determined by the
+	 * "equals" method. (Refer to the "Flyweight Pattern".)
+	 * </p>
 	 * 
+	 * <p>
 	 * A symbolic universe does not necessarily use the Flyweight Pattern on the
 	 * symbolic objects it creates, but this method gives the user the option to
 	 * use that pattern, in full or in part.
+	 * </p>
 	 * 
+	 * <p>
 	 * The methods in this universe which return symbolic expressions may return
 	 * distinct instances which are equivalent (under "equals"). However,
 	 * canonic is guaranteed to return a unique instance from each equivalence
-	 * class, i.e., if a.equals(b) then canonic(a)==canonic(b).
+	 * class, i.e., if <code>a.equals(b)</code> then
+	 * <code>canonic(a)==canonic(b)</code>.
+	 * </p>
 	 * 
 	 * @param object
 	 *            a symbolic object
-	 * @return canonical representative equal to object
+	 * @return canonical representative equal to <code>object</code>
+	 * @see #canonic(SymbolicExpression)
 	 */
 	SymbolicObject canonic(SymbolicObject object);
 
 	/**
-	 * The result is the same as that of canonic on objects, but since the
-	 * result of canonic on a SymbolicExpression must be a SymbolicExpression,
-	 * this method is provided so that users don't have to cast.
+	 * <p>
+	 * Returns the unique representative instance from the given expression's
+	 * equivalence class, where the equivalence relation is determined by the
+	 * "equals" method.
+	 * </p>
+	 * 
+	 * <p>
+	 * The result is the same as that of {@link #canonic(SymbolicObject)}, but
+	 * since the result of {@link #canonic(SymbolicObject)} on a
+	 * {@link SymbolicExpression} must be a {@link SymbolicExpression}, this
+	 * method is provided so that callers don't have to cast.
+	 * </p>
 	 * 
 	 * @param expression
-	 *            any symbolic expression belonging to this universe
-	 * @return the canonic representative equal to that expression
+	 *            any {@link SymbolicExpression} belonging to this universe
+	 * @return the canonic representative equal to <code>expression</code>
+	 * @see #canonic(SymbolicObject)
 	 */
 	SymbolicExpression canonic(SymbolicExpression expression);
 
@@ -142,17 +186,28 @@ public interface CoreUniverse {
 	int numObjects();
 
 	/**
+	 * <p>
+	 * Gets the canonic {@link SymbolicObject} belonging to this universe with
+	 * the given ID number.
+	 * </p>
+	 * 
+	 * <p>
 	 * Each canonic symbolic object is assigned a unique ID number. The numbers
 	 * start from 0 and there are no gaps, i.e., they are in the range
 	 * 0..numExpressions-1.
+	 * </p>
+	 * 
+	 * @param id
+	 *            the ID number of a {@link SymbolicObject} belonging to this
+	 *            universe
 	 * 
 	 * @return the canonic symbolic object with the given ID number.
 	 */
 	SymbolicObject objectWithId(int id);
 
 	/**
-	 * Returns the set of all canonic symbolic objects controlled by this
-	 * universe as a Java Collection.
+	 * Returns the set of all canonic {@link SymbolicObject}s controlled by this
+	 * universe as a Java {@link Collection}.
 	 * 
 	 * @return the set of all canonic symbolic objects
 	 */
@@ -164,21 +219,28 @@ public interface CoreUniverse {
 	 * Returns a boolean expression which holds iff the two types are
 	 * compatible. Two types are compatible if it is possible for them to have a
 	 * value in common. For the most part, this is the same as saying they are
-	 * the same type. The exception is that an incomplete array type and a
-	 * complete array type with compatible element types are compatible.
+	 * the same type. The exception is that an incomplete
+	 * {@link SymbolicArrayType} and a {@link SymbolicCompleteArrayType} with
+	 * compatible element types are compatible.
 	 * 
 	 * @param type0
-	 *            a type
+	 *            a non-<code>null</code> symbolic type
 	 * @param type1
-	 *            a type
+	 *            a non-<code>null</code> symbolic type
 	 * @return a boolean expression which holds iff the two types are compatible
+	 * 
+	 * @see #pureType(SymbolicType)
 	 */
 	BooleanExpression compatible(SymbolicType type0, SymbolicType type1);
 
 	/**
-	 * Returns the "pure" version of the type, i.e., the type obtained by making
-	 * every array type incomplete. This is applied recusively down all
-	 * components of the type tree.
+	 * Returns the "pure" version of the type, i.e., the compatible
+	 * {@link SymbolicType} that contains no {@link SymbolicExpression}s. It is
+	 * obtained by making every array type incomplete, i.e., by removing the
+	 * length expressions from complete array types. This is applied recursively
+	 * down all components of the type tree.
+	 * 
+	 * @see #compatible(SymbolicType, SymbolicType)
 	 */
 	SymbolicType pureType(SymbolicType type);
 
@@ -186,43 +248,59 @@ public interface CoreUniverse {
 	 * The boolean type.
 	 * 
 	 * @return the boolean type
-	 * */
+	 */
 	SymbolicType booleanType();
 
 	/**
 	 * The "ideal" integer type, representing the set of mathematical integers.
 	 * 
 	 * @return the integer type
-	 * */
+	 * @see #herbrandIntegerType()
+	 * @see #boundedIntegerType(NumericExpression, NumericExpression, boolean)
+	 */
 	SymbolicIntegerType integerType();
 
 	/**
+	 * <p>
 	 * Returns the Herbrand integer type. All operations in which at least one
 	 * argument has Herbrand integer type will be treated as uninterpreted
 	 * functions: no simplifications or other transformations will be performed.
+	 * </p>
 	 * 
+	 * <p>
 	 * Note: to create a concrete number of Herbrand integer type, create an
 	 * ideal concrete integer then cast it to the Herbrand type.
+	 * </p>
 	 * 
 	 * @return the Herbrand integer type
+	 * @see #integerType()
+	 * @see #boundedIntegerType(NumericExpression, NumericExpression, boolean)
 	 */
 	SymbolicIntegerType herbrandIntegerType();
 
 	/**
+	 * <p>
 	 * Returns the bounded integer types with specified upper and lower bounds.
-	 * Either of the bounds may be null, indication no bound (i.e., + or -
-	 * infinity). If cyclic is true, then all operations treat the domain
-	 * cyclically (i.e., max+1 = min).
+	 * Either of the bounds may be <code>null</code>, indicating there is no
+	 * bound (i.e., the bound is + or - infinity). If <code>cyclic</code> is
+	 * <code>true</code>, then all operations treat the domain cyclically (i.e.,
+	 * max+1 = min).
+	 * </p>
 	 * 
-	 * NOTE: NOT YET IMPLEMENTED
+	 * <p>
+	 * <strong>NOTE: THIS IS NOT YET IMPLEMENTED.</strong>
+	 * </p>
 	 * 
 	 * @param min
-	 *            smallest integer value in the domain or null
+	 *            smallest integer value in the domain or <code>null</code>
 	 * @param max
-	 *            largest integer value in the domain or null
+	 *            largest integer value in the domain or <code>null</code>
 	 * @param cyclic
 	 *            should operations treat the domain cyclically?
 	 * @return the bounded integer type as specified
+	 * 
+	 * @see #integerType()
+	 * @see #herbrandIntegerType()
 	 */
 	SymbolicIntegerType boundedIntegerType(NumericExpression min,
 			NumericExpression max, boolean cyclic);
@@ -231,24 +309,32 @@ public interface CoreUniverse {
 	 * The "ideal" real type, representing the set of mathematical real numbers.
 	 * 
 	 * @return the real type
-	 * */
+	 * @see #herbrandRealType()
+	 */
 	SymbolicRealType realType();
 
 	/**
+	 * <p>
 	 * Returns the Herbrand real type. All operations in which at least one
 	 * argument has Herbrand real type will be treated as uninterpreted
 	 * functions: no simplifications or other transformations will be performed.
 	 * Operations may involve mixed real and Herbrand real types, but the result
 	 * will always be a Herbrand expression as long as at least one argument is
 	 * Herbrand.
+	 * </p>
 	 * 
+	 * <p>
 	 * A Herbrand value and non-Herbrand value are always considered to be not
 	 * equal, even if they are concrete expressions.
+	 * </p>
 	 * 
+	 * <p>
 	 * Note: to create a concrete number of herbrand real type, create an ideal
 	 * concrete real then cast it to the herbrand type.
+	 * </p>
 	 * 
 	 * @return the Herbrand real type
+	 * @see #realType()
 	 */
 	SymbolicRealType herbrandRealType();
 
@@ -263,37 +349,61 @@ public interface CoreUniverse {
 
 	/**
 	 * Returns the complete array type with the given element type and extent
-	 * (array length). Neither argument can be null.
+	 * (array length). Neither argument can be <code>null</code>.
 	 * 
-	 * @return the complete array type
+	 * @param elementType
+	 *            the type of the elements of the array
+	 * @param the
+	 *            length of the array
+	 * 
+	 * @return the complete array type as specified
+	 * @see #arrayType(SymbolicType)
 	 */
 	SymbolicCompleteArrayType arrayType(SymbolicType elementType,
 			NumericExpression extent);
 
 	/**
 	 * Returns the incomplete array type with the given element type. The
-	 * element type cannot be null.
+	 * element type cannot be <code>null</code>.
 	 * 
 	 * @return the incomplete array type
+	 * @see #arrayType(SymbolicType, NumericExpression)
 	 */
 	SymbolicArrayType arrayType(SymbolicType elementType);
 
 	/**
-	 * Returns the dimension of a given array and the base type of that array.
-	 * Note that a non-array type object will be taken as an one dimensional
-	 * array of length one.
+	 * <p>
+	 * Returns the dimension and base type of an array type.
+	 * </p>
 	 * 
-	 * @param array
-	 * @return A {@link Pair} consists of dimension (left) and base type
+	 * <p>
+	 * The dimension and base type of an array type <i>T</i>[] are defined as
+	 * follows: if <i>T</i> is an array type, the dimension of <i>T</i>[] is one
+	 * plus the dimension of <i>T</i>, and the base type of <i>T</i>[] is the
+	 * base type of <i>T</i> . Otherwise, the dimension of <i>T</i>[] is 1 and
+	 * the base type is <i>T</i>.
+	 * </p>
+	 * 
+	 * @param type
+	 *            a non-<code>null</code> array type
+	 * @return A {@link Pair} consisting of dimension (left) and base type
 	 *         (right).
 	 */
-	Pair<Integer, SymbolicType> arrayDimensionAndBaseType(SymbolicType type);
+	Pair<Integer, SymbolicType> arrayDimensionAndBaseType(
+			SymbolicArrayType type);
 
 	/**
-	 * The tuple type defined by the given sequence of component types. The
-	 * tuple type consists of all tuples of values (x_0,...,x_{n-1}), where
-	 * x_{i} has type fieldsTypes_i. A tuple type also has a name, and two tuple
-	 * types are not equal if they have unequal names.
+	 * Returns the tuple type defined by the given sequence of component types.
+	 * The tuple type consists of all tuples of values (<i>x</i><sub>0</sub>,
+	 * ..., <i>x</i><sub>n-1</sub>), where <i>x</i><sub><i>i</i></sub> has type
+	 * <code>fieldsTypes</code><sub><i>i</i></sub>. A tuple type also has a
+	 * name, and two tuple types are not equal if they have unequal names.
+	 * 
+	 * @param name
+	 *            the name of the tuple type
+	 * @param fieldTypes
+	 *            an iterable object specifying the sequence of component types
+	 *            for the tuple type
 	 * 
 	 * @return the tuple type specified by the given name and field types
 	 */
@@ -302,7 +412,7 @@ public interface CoreUniverse {
 
 	/**
 	 * Returns the specified function type. A function type is specified by a
-	 * sequence of inputs types, and an output type.
+	 * sequence of input types, and an output type.
 	 * 
 	 * @param inputTypes
 	 *            sequence of input types
@@ -311,16 +421,36 @@ public interface CoreUniverse {
 	 * @return the function type
 	 */
 	SymbolicFunctionType functionType(
-			Iterable<? extends SymbolicType> inputTypes, SymbolicType outputType);
+			Iterable<? extends SymbolicType> inputTypes,
+			SymbolicType outputType);
+
+	// 	@formatter:off
 
 	/**
-	 * The type which is the union of the given member types. Say the member
-	 * types are t_0,...,t_{n-1} and call the union type u. For 0<=i<n, there
-	 * are functions inject_i: t_i -> u, extract_i: u -> t_i, and test_i: u ->
-	 * {true,false}. The domain of u consists of all expressions of the form
-	 * inject_i(x_i). extract_i(inject_i(x))=x and extract_i is undefined on any
-	 * element of u that is not in the image of inject_i. test_i(x) is true iff
-	 * x=inject_i(x_i) for some x_i in t_i.
+	 * <p>
+	 * Returns the type which is the union of the given member types.
+	 * </p>
+	 * 
+	 * <p>
+	 * Say the member types are <i>t</i><sub>0</sub>,...,<i>t</i><sub>n-1</sub> and call
+	 * the union type <i>u</i>. For 0 &le; <i>i</i> &lt; <i>n</i>, there are
+	 * functions inject<sub>i</sub>: <i>t</i><sub><i>i</i></sub> &rarr; <i>u</i>,
+	 * extract<sub><i>i</i></sub>: <i>u</i> &rarr; <i>t</i><sub><i>i</i></sub>,
+	 * and
+	 * test<sub><i>i</i></sub>: <i>u</i>  &rarr; {<i>true</i>,<i>false</i>}.
+	 * The domain of <i>u</i> consists of all expressions of the form 
+	 * inject<sub><i>i</i></sub>(<i>x<sub>i</sub></i>).
+	 * </p>
+	 * 
+	 * <p>
+	 * We have
+	 * extract<sub><i>i</i></sub>(inject<sub><i>i</i></sub>(<i>x</i>))=<i>x</i>
+	 * and extract<sub><i>i</i></sub> is undefined on any element of
+	 * <i>u</i> that is not in the image of inject<sub><i>i</i></sub>.
+	 * test<sub><i>i</i></sub>(<i>x</i>) is <i>true</i> iff
+	 * x=inject<sub><i>i</i></sub>(<i>x<sub>i</sub></i>)
+	 * for some <i>x<sub>i</sub></i> in <i>t<sub>i</sub></i>.
+	 * </p>
 	 * 
 	 * @param name
 	 *            the name of the union type
@@ -330,12 +460,15 @@ public interface CoreUniverse {
 	 */
 	SymbolicUnionType unionType(StringObject name,
 			Iterable<? extends SymbolicType> memberTypes);
+	
+	// @formatter:on
 
 	/**
-	 * Under construction.
+	 * Returns the type for "set of T"; not yet implemented.
 	 * 
 	 * @param elementType
-	 * @return
+	 *            type of elements of the set
+	 * @return the type "set of <code>elementType</code>"
 	 */
 	SymbolicSetType setType(SymbolicType elementType);
 
@@ -366,7 +499,7 @@ public interface CoreUniverse {
 	/**
 	 * Returns a substituter for which the base substitutions are specified by
 	 * an explicit Java {@link Map}. The map specifies a set of key-value pairs.
-	 * The substituter will replace and key with its corresponding value; all
+	 * The substituter will replace any key with its corresponding value; all
 	 * other substitutions are determined from those "base" cases by recursive
 	 * application of substitution.
 	 * 
@@ -410,19 +543,18 @@ public interface CoreUniverse {
 	/**
 	 * <p>
 	 * Returns an operator on {@link SymbolicExpression}s that replaces all
-	 * symbolic constants with (including bound ones) with symbolic constants
-	 * with unique canonical names. The names are formed by appending the
-	 * integers 0, 1, ..., to <code>root</code>. The renamer has state, so it
-	 * can be used repeatedly (applied to multiple symbolic expressions) and
-	 * will continue to generate new names for the new symbolic constants it
-	 * encounters if they have not been encountered before. Every fresh binding
-	 * of a bound variable is considered to be new, so is given a unique new
-	 * name.
+	 * symbolic constants (including bound ones) with symbolic constants with
+	 * unique canonical names. The names are formed by appending the integers 0,
+	 * 1, ..., to <code>root</code>. The renamer has state, so it can be used
+	 * repeatedly (applied to multiple symbolic expressions) and will continue
+	 * to generate new names for the new symbolic constants it encounters if
+	 * they have not been encountered before. Every fresh binding of a bound
+	 * variable is considered to be new, so is given a unique new name.
 	 * </p>
 	 * 
 	 * <p>
 	 * The parameter <code>ignore</code> also provides a way to specify that
-	 * certain symbolic constants should be ignored, i.e., they should be
+	 * certain symbolic constants should be ignored, i.e., they should not be
 	 * renamed.
 	 * </p>
 	 * 
@@ -436,21 +568,22 @@ public interface CoreUniverse {
 	 *            symbolic constant should <strong>not</strong> be renamed
 	 * @return a unary operator which take a symbolic expression and returns a
 	 *         symbolic expression in which the symbolic constants have been
-	 *         assigned canonial names
+	 *         assigned canonical names
 	 */
 	UnaryOperator<SymbolicExpression> canonicalRenamer(String root,
 			Predicate<SymbolicConstant> ignore);
 
 	/**
+	 * <p>
 	 * Returns an operator on {@link SymbolicExpression}s that replaces all
-	 * symbolic constants with (including bound ones) with symbolic constants
-	 * with unique canonical names. The names are formed by appending the
-	 * integers 0, 1, ..., to <code>root</code>. The renamer has state, so it
-	 * can be used repeatedly (applied to multiple symbolic expressions) and
-	 * will continue to generate new names for the new symbolic constants it
-	 * encounters if they have not been encountered before. Every fresh binding
-	 * of a bound variable is considered to be new, so is given a unique new
-	 * name.
+	 * symbolic constants (including bound ones) with symbolic constants with
+	 * unique canonical names. The names are formed by appending the integers 0,
+	 * 1, ..., to <code>root</code>. The renamer has state, so it can be used
+	 * repeatedly (applied to multiple symbolic expressions) and will continue
+	 * to generate new names for the new symbolic constants it encounters if
+	 * they have not been encountered before. Every fresh binding of a bound
+	 * variable is considered to be new, so is given a unique new name.
+	 * </p>
 	 * 
 	 * <p>
 	 * Equivalent to invoking {@link #canonicalRenamer(String, Predicate)} with
@@ -462,7 +595,7 @@ public interface CoreUniverse {
 	 *            symbolic constants
 	 * @return a unary operator which take a symbolic expression and returns a
 	 *         symbolic expression in which the symbolic constants have been
-	 *         assigned canonial names
+	 *         assigned canonical names
 	 */
 	UnaryOperator<SymbolicExpression> canonicalRenamer(String root);
 
@@ -470,8 +603,10 @@ public interface CoreUniverse {
 	 * Applies the given operator to the arguments and returns the resulting
 	 * expression in the form used by this universe. The arguments should have
 	 * the form required by the operator; see the documentation in the
-	 * SymbolicExpression interface. The result returned should be identical to
-	 * what would be returned by calling the specific methods (e.g., add(...)).
+	 * {@link SymbolicExpression} interface, especially for the
+	 * {@link SymbolicOperator}s. The result returned should be identical to
+	 * what would be returned by calling the specific methods (e.g.,
+	 * {@link #add(Iterable)}).
 	 * 
 	 * @param operator
 	 *            a symbolic operator
@@ -486,7 +621,7 @@ public interface CoreUniverse {
 			SymbolicObject[] arguments);
 
 	/**
-	 * The total number of calls made to methods
+	 * Retruns the total number of calls made to methods
 	 * {@link Reasoner#valid(BooleanExpression)} and
 	 * {@link Reasoner#validOrModel(BooleanExpression)}.
 	 * 
@@ -495,10 +630,10 @@ public interface CoreUniverse {
 	int numValidCalls();
 
 	/**
-	 * The total number of calls made to the validity method in the underlying
-	 * automated theorem prover. This is in general smaller than that returned
-	 * by {@link #numValidCalls}, as not every valid call requires a call to the
-	 * prover.
+	 * Returns the total number of calls made to the validity method in the
+	 * underlying automated theorem prover. This is in general smaller than that
+	 * returned by {@link #numValidCalls()}, as not every valid call requires a
+	 * call to the prover.
 	 * 
 	 * @return the total number of theorem prover validity calls
 	 */
@@ -508,80 +643,91 @@ public interface CoreUniverse {
 	// Note: these are not symbolic expressions, just symbolic objects!
 
 	/**
-	 * Returns the BooleanObject wrapping the given boolean value. A
-	 * BooleanObject is a SymbolicObject so can be used as an argument of a
-	 * SymbolicExpression.
+	 * Returns the {@link BooleanObject} wrapping the given boolean value. A
+	 * {@link BooleanObject} is a {@link SymbolicObject}, so can be used as an
+	 * argument of a {@link SymbolicExpression}.
 	 * 
 	 * @param value
-	 *            true or false
-	 * @return the corresponding BooleanObject
+	 *            <code>true</code> or <code>false</code>, the boolean value to
+	 *            wrap
+	 * @return the corresponding {@link BooleanObject}
 	 */
 	BooleanObject booleanObject(boolean value);
 
 	/**
-	 * Returns the IntObject wrapping the given Java int value. An IntObject is
-	 * a SymbolicObject so can be used as an argument of a symbolic expression.
-	 * It is used in cases where a "small" concrete integer is needed. For
-	 * concrete integers of arbitrary size, use IntegerNumber instead and create
-	 * a NumberObject.
+	 * Returns the {@link IntObject} wrapping the given Java <code>int</code>
+	 * value. An {@link IntObject} is a {@link SymbolicObject} so can be used as
+	 * an argument of a {@link SymbolicExpression}. It is used in cases where a
+	 * "small" concrete integer is needed. For concrete integers of arbitrary
+	 * size, use {@link IntegerNumber} instead and create a {@link NumberObject}
+	 * .
 	 * 
 	 * @param value
-	 *            any Java int
-	 * @return an IntObject wrapping that value
+	 *            any Java <code>int</code>
+	 * @return an {@link IntObject} wrapping <code>value</code>
 	 */
 	IntObject intObject(int value);
 
 	/**
-	 * Returns the NumberObject wrapping the given Number value. These are SARL
-	 * Numbers, not Java Numbers. They are used to represent infinite precision,
-	 * unbounded integers and rational numbers.
+	 * Returns the {@link NumberObject} wrapping the given {@link Number} value.
+	 * These are SARL {@link Number}s, not {@link java.lang.Number}s. They are
+	 * used to represent infinite precision, unbounded integers and rational
+	 * numbers.
 	 * 
 	 * @param value
 	 *            a SARL Number
-	 * @return the NumberObject wrapping that Number
+	 * @return the {@link NumberObject} wrapping <code>value</code>
 	 */
 	NumberObject numberObject(Number value);
 
 	/**
-	 * Returns the StringObject wrapping the given String value. A StringObject
-	 * is a SymbolicObject so can be used as an argument to a SymbolicExpression
+	 * Returns the {@link StringObject} wrapping the given {@link String} value.
+	 * A {@link StringObject} is a {@link SymbolicObject} so can be used as an
+	 * argument to a {@link SymbolicExpression}.
 	 * 
 	 * @param string
-	 *            any Java String
-	 * @return the StringObject wrapping that string
+	 *            any Java {@link String}
+	 * @return the {@link StringObject} wrapping <code>string</code>
 	 */
 	StringObject stringObject(String string);
 
 	// The "null" expression...
 
 	/**
-	 * Returns the "null" expression. This is a non-null (in the Java sense of
-	 * "null") symbolic expression for which the method "isNull()" returns true.
-	 * Its type is null.
+	 * Returns the "NULL" expression. This is a non-<code>null</code> (in the
+	 * Java sense of "<code>null</code>") {@link SymbolicExpression} for which
+	 * the method {@link SymbolicExpression#isNull()} returns <code>true</code>.
+	 * Its type is <code>null</code>, and it has 0 arguments.
 	 * 
-	 * @return the null expression
+	 * @return the NULL expression
 	 */
 	SymbolicExpression nullExpression();
 
 	// Symbolic constants...
 
 	/**
-	 * Returns the symbolic constant with the given name and type. Two symbolic
-	 * constants are equal iff they have the same name and type. This method may
-	 * use a Flyweight Pattern to return the same object if called twice with
-	 * the same arguments. Or it may create a new object each time. These
-	 * details are unimportant because symbolic constants are immutable.
+	 * <p>
+	 * Returns the {@link SymbolicConstant} with the given name and type. Two
+	 * {@link SymbolicConstant}s are equal iff they have the same name and type.
+	 * This method may use a Flyweight Pattern to return the same object if
+	 * called twice with the same arguments. Or it may create a new object each
+	 * time. These details are unimportant because symbolic constants are
+	 * immutable.
+	 * </p>
 	 * 
-	 * This method will return the right kind of SymbolicConstant based on the
-	 * type: if the type is numeric (integer or real), an instance of
-	 * NumericSymbolicConstant will be returned. If the type is boolean, a
-	 * BooleanSymbolicConstant will be returned.
+	 * <p>
+	 * This method will return the right kind of {@link SymbolicConstant} based
+	 * on the type. For example, if the type is numeric (
+	 * {@link SymbolicIntegerType} or {@link SymbolicRealType}), an instance of
+	 * {@link NumericSymbolicConstant} will be returned. If the type is boolean,
+	 * a {@link BooleanSymbolicConstant} will be returned.
+	 * </p>
 	 * 
 	 * @param name
 	 *            the name to give to this symbolic constant; it will be used to
 	 *            identify the object and for printing
 	 * @param type
-	 *            the type of this symbolic constant
+	 *            the type of the symbolic constant
 	 */
 	SymbolicConstant symbolicConstant(StringObject name, SymbolicType type);
 
@@ -602,31 +748,33 @@ public interface CoreUniverse {
 	NumericExpression oneInt();
 
 	/**
-	 * Returns the integer symbolic expression with given int value.
+	 * Returns the integer symbolic expression with the given <code>int</code>
+	 * value.
 	 * 
 	 * @param value
-	 *            a Java int
-	 * @return the symbolic expression of integer type representing with that
-	 *         value
+	 *            a Java <code>int</code>
+	 * @return the symbolic expression of integer type representing that
+	 *         concrete value
 	 */
 	NumericExpression integer(int value);
 
 	/**
-	 * Returns the numeric symbolic expression with the given long value.
+	 * Returns the numeric symbolic expression with the given <code>long</code>
+	 * value.
 	 * 
 	 * @param value
-	 *            any Java long
+	 *            any Java <code>long</code>
 	 * @return the symbolic expression of integer type with that value
 	 */
 	NumericExpression integer(long value);
 
 	/**
-	 * Returns the numeric symbolic expression with the given BigIntger value.
-	 * The BigInteger class is a standard Java class for represeting integers of
-	 * any size.
+	 * Returns the numeric symbolic expression with the given {@link BigInteger}
+	 * value. The {@link BigInteger} class is a standard Java class for
+	 * representing integers of any size.
 	 * 
 	 * @param value
-	 *            any BigInteger
+	 *            any {@link BigInteger}
 	 * @return the symbolic expression of integer type with that value
 	 */
 	NumericExpression integer(BigInteger value);
@@ -634,75 +782,96 @@ public interface CoreUniverse {
 	// Rationals...
 
 	/**
-	 * The symbolic expression representing the real number 0. Note that this is
-	 * NOT equal to the integer number 0, since they have different types.
+	 * Returns the symbolic expression representing the real number 0. Note that
+	 * this is NOT equal to the integer number 0, since they have different
+	 * types.
+	 * 
+	 * @return the real number 0 as a symbolic expression
 	 */
 	NumericExpression zeroReal();
 
-	/** The symbolic expression representing the real number 1. */
+	/**
+	 * Returns the symbolic expression representing the real number 1.
+	 * 
+	 * @return the real number 1 as a symbolic expression
+	 */
 	NumericExpression oneReal();
 
 	/**
+	 * Returns the symbolic expression of real type ({@link SymbolicRealType})
+	 * representing the given <code>int</code> value. This is sometimes referred
+	 * to as a "rational integer".
 	 * 
 	 * @param value
-	 *            an Java int
-	 * @return a concrete rational representation of this integer value.
-	 *         basically returns (value/1), which is a rational
+	 *            an Java <code>int</code>
+	 * @return a concrete rational representation of this integer value;
+	 *         essentially, the rational number (value/1)
 	 */
 	NumericExpression rational(int value);
 
 	/**
+	 * Returns the symbolic expression of real type ({@link SymbolicRealType})
+	 * representing the given <code>long</code> value. This is sometimes
+	 * referred to as a "rational integer".
 	 * 
 	 * @param value
-	 *            a Java long
-	 * @return a concrete rational representation of this long value. basically
-	 *         returns (value/1), which is a rational
+	 *            a Java <code>long</code>
+	 * @return a concrete rational representation of this <code>long</code>
+	 *         value; essentially the rational number (value/1)
 	 */
 	NumericExpression rational(long value);
 
 	/**
+	 * Returns the symbolic expression of real type ({@link SymbolicRealType})
+	 * representing the given {@link BigInteger} value. This is sometimes
+	 * referred to as a "rational integer"
 	 * 
 	 * @param value
-	 *            a Java BigInteger
-	 * @return a concrete rational representation of this BigInteger value.
-	 *         basically returns (value/1), which is a rational
+	 *            a Java {@link BigInteger}
+	 * @return a concrete rational representation of this {@link BigInteger}
+	 *         value; essentially, the rational number (value/1)
 	 */
 	NumericExpression rational(BigInteger value);
 
 	/**
+	 * Returns the symbolic expression of real type ({@link SymbolicRealType})
+	 * representing the given <code>float</code> value.
 	 * 
 	 * @param value
-	 *            a Java float
-	 * @return a concrete rational representation of this float value. basically
-	 *         returns (value/1), which is a rational
+	 *            a Java <code>float</code>
+	 * @return a concrete rational representation of this <code>float</code>
+	 *         value
 	 */
 	NumericExpression rational(float value);
 
 	/**
-	 * Creates a concrete expression from the given double based on the string
-	 * representation of the double. Since the double is a finite-precision
-	 * floating-point value, be aware that this translation might not yield the
-	 * exact real number you expect.
+	 * Returns the symbolic expression of real type ({@link SymbolicRealType})
+	 * representing the given <code>double</code> value.
 	 * 
 	 * @param value
-	 *            a Java double
+	 *            a Java <code>double</code>
 	 * @return a concrete symbolic expression of real type representing the
-	 *         double
+	 *         <code>value</code>
 	 */
 	NumericExpression rational(double value);
 
 	/**
-	 * Returns the symbolic concrete real number numerator/denominator (real
-	 * division).
+	 * Returns the rational number <code>numerator</code>/
+	 * <code>denominator</code> as a symbolic expression of
+	 * {@link SymbolicRealType}. Note that this universe is free to transform
+	 * the expression into an equivalent form, for example, by canceling any
+	 * common factors.
 	 * 
 	 * @param numerator
-	 *            a Java int
+	 *            a Java <code>int</code>
 	 * @param denominator
-	 *            a Java int
-	 * @return the real number formed by dividing numerator by denominator, as a
-	 *         symbolic expression
+	 *            a non-0 Java <code>int</code>
+	 * @return the real number formed by dividing <code>numerator</code> by
+	 *         <code>denominator</code>, as a symbolic expression of real type
 	 */
 	NumericExpression rational(int numerator, int denominator);
+
+	// TODO: continue editing Java-docs from this point.....
 
 	/**
 	 * Returns the symbolic concrete real number numerator/denominator (real
@@ -958,7 +1127,8 @@ public interface CoreUniverse {
 	 * created. Default is false. Setting to true will decrease performance in
 	 * certain CnfFactory methods.
 	 * 
-	 * @param boolean value: false = default
+	 * @param boolean
+	 *            value: false = default
 	 * 
 	 * @return void
 	 */
@@ -1253,7 +1423,8 @@ public interface CoreUniverse {
 	 * @return a boolean expression telling whether the object belongs to the
 	 *         specified member type
 	 */
-	BooleanExpression unionTest(IntObject memberIndex, SymbolicExpression object);
+	BooleanExpression unionTest(IntObject memberIndex,
+			SymbolicExpression object);
 
 	/**
 	 * Casts an object whose type is a union type to a representation whose type
@@ -1314,7 +1485,7 @@ public interface CoreUniverse {
 	 * Appends an element to the end of a concrete symbolic array. Returns a new
 	 * array expression which is same as old with new element appended to end.
 	 * 
-	 * TODO: extend to arbitrary arrays, not just symbolic
+	 * TODO: extend to arbitrary arrays, not just concrete
 	 * 
 	 * @param concreteArray
 	 *            a concrete array
@@ -1332,7 +1503,7 @@ public interface CoreUniverse {
 	 * removed and the remaining elements have been shifted down to remove the
 	 * gap. The resulting array has length 1 less than the original one.
 	 * 
-	 * TODO: extend to arbitrary arrays, not just symbolic
+	 * TODO: extend to arbitrary arrays, not just concrete
 	 * 
 	 * @param concreteArray
 	 *            a concrete array
@@ -1491,7 +1662,8 @@ public interface CoreUniverse {
 	SymbolicExpression setRemove(SymbolicExpression set,
 			SymbolicExpression value);
 
-	SymbolicExpression setUnion(SymbolicExpression set1, SymbolicExpression set2);
+	SymbolicExpression setUnion(SymbolicExpression set1,
+			SymbolicExpression set2);
 
 	SymbolicExpression setIntersection(SymbolicExpression set1,
 			SymbolicExpression set2);
@@ -1539,7 +1711,8 @@ public interface CoreUniverse {
 	 *            a symbolic expression
 	 * @return symbolic expression cast to new type
 	 */
-	SymbolicExpression cast(SymbolicType newType, SymbolicExpression expression);
+	SymbolicExpression cast(SymbolicType newType,
+			SymbolicExpression expression);
 
 	/**
 	 * "If-then-else" expression. Note that trueCase and falseCase must have the
@@ -1621,7 +1794,8 @@ public interface CoreUniverse {
 	 * @return the component of the given type which is referenced by the given
 	 *         reference
 	 */
-	SymbolicType referencedType(SymbolicType type, ReferenceExpression reference);
+	SymbolicType referencedType(SymbolicType type,
+			ReferenceExpression reference);
 
 	/**
 	 * Returns the identity (or "trivial") reference <code>I</code>. This is the
