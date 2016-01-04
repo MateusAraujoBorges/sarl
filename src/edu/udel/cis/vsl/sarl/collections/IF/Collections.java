@@ -16,9 +16,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package edu.udel.cis.vsl.sarl.collections;
+package edu.udel.cis.vsl.sarl.collections.IF;
 
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.collections.common.CommonCollectionFactory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 

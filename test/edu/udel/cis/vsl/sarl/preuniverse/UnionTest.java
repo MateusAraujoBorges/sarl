@@ -39,6 +39,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 import edu.udel.cis.vsl.sarl.preuniverse.common.CommonPreUniverse;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 import edu.udel.cis.vsl.sarl.universe.IF.Universes;

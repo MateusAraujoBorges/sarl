@@ -27,7 +27,7 @@ import org.junit.Test;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
-import edu.udel.cis.vsl.sarl.ideal.Ideal;
+import edu.udel.cis.vsl.sarl.ideal.IF.Ideal;
 
 /**
  * Testing on IdealSimplifier based on Polynomials for both assumptions and

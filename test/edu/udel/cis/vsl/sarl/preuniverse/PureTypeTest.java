@@ -19,6 +19,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 import edu.udel.cis.vsl.sarl.preuniverse.common.CommonPreUniverse;
 
 public class PureTypeTest {

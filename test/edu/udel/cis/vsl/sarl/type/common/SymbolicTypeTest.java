@@ -13,7 +13,7 @@ import org.junit.Test;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType.IntegerKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType.RealKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
-import edu.udel.cis.vsl.sarl.number.Numbers;
+import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.object.IF.Objects;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;

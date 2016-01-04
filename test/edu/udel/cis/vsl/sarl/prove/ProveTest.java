@@ -8,8 +8,9 @@ import org.junit.Test;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.config.Configurations;
-import edu.udel.cis.vsl.sarl.preuniverse.PreUniverses;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
+import edu.udel.cis.vsl.sarl.prove.IF.Prove;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 
 public class ProveTest {
