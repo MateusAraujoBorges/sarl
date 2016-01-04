@@ -29,19 +29,21 @@ import edu.udel.cis.vsl.sarl.IF.number.Number;
 
 /**
  * <p>
- * A reasoner provides methods to simplify symbolic expressions and prove or
- * disprove certain theorems, all under an over-arching assumption known as the
- * "context". The context is a BooleanExpression which is assumed to hold. The
- * context cannot change after the instantiation of the Reasoner.
+ * A reasoner provides methods to simplify {@link SymbolicExpression}s and prove
+ * or disprove certain theorems, all under an over-arching assumption known as
+ * the "context". The context is a {@link BooleanExpression} which is assumed to
+ * hold. The context cannot change after the instantiation of the
+ * {@link Reasoner}.
  * </p>
  * 
  * <p>
- * Example: if the context used to create this Reasoner was N>=0 && N>=1, the
- * actual context may become simply N>=1.
+ * Note that the context may be simplified to an equivalent form when the
+ * reasoner is instantiated. Example: if the context used to create this
+ * {@link Reasoner} was <code>N>=0 &&
+ * N>=1</code>, the actual context may become simply <code>N>=1</code>.
  * </p>
  * 
  * @author siegel
- * 
  */
 public interface Reasoner {
 
