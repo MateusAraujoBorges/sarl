@@ -19,7 +19,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
-import edu.udel.cis.vsl.sarl.universe.Universes;
+import edu.udel.cis.vsl.sarl.universe.IF.Universes;
 
 public class SimplifyTest {
 

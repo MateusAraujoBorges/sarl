@@ -24,7 +24,7 @@ import java.util.Collection;
 import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.universe.Universes;
+import edu.udel.cis.vsl.sarl.universe.IF.Universes;
 /**
  * Benchmarks for large Not Expressions
  * @author schivi

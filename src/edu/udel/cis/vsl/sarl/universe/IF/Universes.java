@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package edu.udel.cis.vsl.sarl.universe;
+package edu.udel.cis.vsl.sarl.universe.IF;
 
 import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
 import edu.udel.cis.vsl.sarl.IF.config.Configurations;
@@ -30,18 +30,18 @@ import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal.Ideal;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.number.Numbers;
-import edu.udel.cis.vsl.sarl.object.Objects;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.Objects;
 import edu.udel.cis.vsl.sarl.preuniverse.PreUniverses;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.prove.Prove;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
-import edu.udel.cis.vsl.sarl.reason.Reason;
+import edu.udel.cis.vsl.sarl.reason.IF.Reason;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
-import edu.udel.cis.vsl.sarl.simplify.Simplify;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
-import edu.udel.cis.vsl.sarl.type.Types;
+import edu.udel.cis.vsl.sarl.simplify.IF.Simplify;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
+import edu.udel.cis.vsl.sarl.type.IF.Types;
 import edu.udel.cis.vsl.sarl.universe.common.CommonSymbolicUniverse;
 import edu.udel.cis.vsl.sarl.universe.common.MathUniverse;
 

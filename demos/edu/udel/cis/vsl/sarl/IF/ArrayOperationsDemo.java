@@ -15,7 +15,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.universe.Universes;
+import edu.udel.cis.vsl.sarl.universe.IF.Universes;
 
 /**
  * This is a Demo class to demonstrate Array Operations in SARL:

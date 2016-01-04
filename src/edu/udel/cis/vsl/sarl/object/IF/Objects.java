@@ -16,15 +16,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package edu.udel.cis.vsl.sarl.type;
+package edu.udel.cis.vsl.sarl.object.IF;
 
-import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
-import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
-import edu.udel.cis.vsl.sarl.type.common.CommonSymbolicTypeFactory;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
 
-public class Types {
+public class Objects {
 
-	public static SymbolicTypeFactory newTypeFactory(ObjectFactory objectFactory) {
-		return new CommonSymbolicTypeFactory(objectFactory);
+	public static ObjectFactory newObjectFactory(NumberFactory numberFactory) {
+		return new CommonObjectFactory(numberFactory);
 	}
 }

@@ -27,7 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
-import edu.udel.cis.vsl.sarl.universe.Universes;
+import edu.udel.cis.vsl.sarl.universe.IF.Universes;
 
 public class HerbrandTest {
 

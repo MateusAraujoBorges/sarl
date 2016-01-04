@@ -16,14 +16,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package edu.udel.cis.vsl.sarl.simplify;
+package edu.udel.cis.vsl.sarl.simplify.IF;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
-import edu.udel.cis.vsl.sarl.simplify.IF.ContextPartition;
-import edu.udel.cis.vsl.sarl.simplify.IF.RangeFactory;
-import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
-import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 import edu.udel.cis.vsl.sarl.simplify.common.CommonContextPartition;
 import edu.udel.cis.vsl.sarl.simplify.common.IdentitySimplifier;
 import edu.udel.cis.vsl.sarl.simplify.common.IdentitySimplifierFactory;

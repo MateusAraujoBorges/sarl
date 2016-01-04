@@ -19,9 +19,9 @@ import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.Prove;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
-import edu.udel.cis.vsl.sarl.simplify.Simplify;
 import edu.udel.cis.vsl.sarl.simplify.IF.ContextPartition;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
+import edu.udel.cis.vsl.sarl.simplify.IF.Simplify;
 import edu.udel.cis.vsl.sarl.util.Pair;
 
 /**
