@@ -16,19 +16,16 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package edu.udel.cis.vsl.sarl.expr;
+package edu.udel.cis.vsl.sarl.expr.IF;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
-import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
-import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.cnf.CnfFactory;
 import edu.udel.cis.vsl.sarl.expr.common.CommonExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.common.CommonNumericExpressionFactory;
-import edu.udel.cis.vsl.sarl.herbrand.Herbrand;
-import edu.udel.cis.vsl.sarl.ideal.Ideal;
+import edu.udel.cis.vsl.sarl.herbrand.IF.Herbrand;
+import edu.udel.cis.vsl.sarl.ideal.IF.Ideal;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
