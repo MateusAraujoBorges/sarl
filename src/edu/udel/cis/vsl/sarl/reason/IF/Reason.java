@@ -23,6 +23,12 @@ import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 import edu.udel.cis.vsl.sarl.reason.common.ContextMinimizingReasonerFactory;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 
+/**
+ * Provides a static method for producing a new {@link ReasonerFactory}.
+ * 
+ * @author siegel
+ *
+ */
 public class Reason {
 
 	public static ReasonerFactory newReasonerFactory(PreUniverse universe,

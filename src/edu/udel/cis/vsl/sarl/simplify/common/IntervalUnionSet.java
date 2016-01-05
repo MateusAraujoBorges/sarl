@@ -15,33 +15,43 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
 
 /**
+ * <p>
  * Implementation of {@link Range} in which a set is represented as a finite
- * union of intervals. This class is immutable. Under construction.
+ * union of intervals. This class is immutable.
+ * </p>
  * 
+ * <p>
  * The following are invariants. They force there to be a unique representation
  * for each set of numbers:
  * 
- * 1. All intervals in the array are non-<code>null</code> {@link Interval}s.
+ * <ol>
  * 
- * 2. An empty interval cannot occur in the array.
+ * <li>All intervals in the array are non-<code>null</code> {@link Interval}s.
+ * </li>
  * 
- * 3. All of the intervals in the array are disjoint.
+ * <li>An empty interval cannot occur in the array.</li>
  * 
- * 4. The intervals in the array are ordered from least to greatest.
+ * <li>All of the intervals in the array are disjoint.</li>
  * 
- * 5. If an interval has the form {a,+infty}, then it is open on the right. If
- * an interval has the form {-infty,a}, then it is open on the left.
+ * <li>The intervals in the array are ordered from least to greatest.</li>
  * 
- * 6. If {a,b} and {b,c} are two consecutive intervals in the list, the first
+ * <li>If an interval has the form {a,+infty}, then it is open on the right. If
+ * an interval has the form {-infty,a}, then it is open on the left.</li>
+ * 
+ * <li>If {a,b} and {b,c} are two consecutive intervals in the list, the first
  * one must be open on the right and the second one must be open on the left.
+ * </li>
  * 
- * 7. If the range set has integer type, all of the intervals are integer
- * intervals. If it has real type, all of the intervals are real intervals.
+ * <li>If the range set has integer type, all of the intervals are integer
+ * intervals. If it has real type, all of the intervals are real intervals.</li>
  * 
- * 8. If the range set has integer type, all of the intervals are closed, except
- * for +infty and -infty.
+ * <li>If the range set has integer type, all of the intervals are closed,
+ * except for +infty and -infty.</li>
  * 
- * @author siegel
+ * </ol>
+ * </p>
+ * 
+ * @author Wenhao Wu
  *
  */
 public class IntervalUnionSet implements Range {
@@ -208,7 +218,8 @@ public class IntervalUnionSet implements Range {
 	 * @return
 	 */
 	private Interval createIntervalwithInvariants(boolean isIntegral,
-			Number lower, boolean strictLower, Number upper, boolean strictUpper) {
+			Number lower, boolean strictLower, Number upper,
+			boolean strictUpper) {
 		Number zeroRational = numberFactory.rational(BigInteger.ZERO,
 				BigInteger.ONE);
 		Number zeroInteger = numberFactory.integer(BigInteger.ZERO);
@@ -338,7 +349,8 @@ public class IntervalUnionSet implements Range {
 				int compareJoint = 0;
 				int compare = temp.compare(lower);
 
-				if (lower == temp.lower() && strictLower && temp.strictLower()) {
+				if (lower == temp.lower() && strictLower
+						&& temp.strictLower()) {
 					compare = 0;
 				}
 				if (compare > 0) {
@@ -421,7 +433,8 @@ public class IntervalUnionSet implements Range {
 				int compareJoint = 0;
 				int compare = temp.compare(upper);
 
-				if (upper == temp.upper() && strictUpper && temp.strictUpper()) {
+				if (upper == temp.upper() && strictUpper
+						&& temp.strictUpper()) {
 					compare = 0;
 				}
 				if (compare > 0) {
@@ -466,10 +479,8 @@ public class IntervalUnionSet implements Range {
 			start = start < 0 ? 0 : start;
 			end = end < size ? end : (size - 1);
 			list.subList(start, end + 1).clear();
-			list.add(
-					start,
-					createIntervalwithInvariants(isInt, lower, strictLower,
-							upper, strictUpper));
+			list.add(start, createIntervalwithInvariants(isInt, lower,
+					strictLower, upper, strictUpper));
 
 		}
 	}
@@ -736,10 +747,10 @@ public class IntervalUnionSet implements Range {
 				Number rightUp = intervalArray[rightIndex].upper();
 				Number leftDiff = numberFactory.subtract(number, leftUp);
 				Number rightDiff = numberFactory.subtract(rightLo, number);
-				boolean leftJoint = isInt ? leftDiff.isOne() : leftDiff
-						.isZero();
-				boolean rightJoint = isInt ? rightDiff.isOne() : rightDiff
-						.isZero();
+				boolean leftJoint = isInt ? leftDiff.isOne()
+						: leftDiff.isZero();
+				boolean rightJoint = isInt ? rightDiff.isOne()
+						: rightDiff.isZero();
 
 				if (leftJoint && rightJoint) {
 					// The number connects two disjointed interval
@@ -751,8 +762,8 @@ public class IntervalUnionSet implements Range {
 					result.intervalArray[leftIndex] = createIntervalwithInvariants(
 							isInt, leftLo, leftSl, rightUp, rightSu);
 					System.arraycopy(intervalArray, rightIndex + 1,
-							result.intervalArray, rightIndex, size - rightIndex
-									- 1);
+							result.intervalArray, rightIndex,
+							size - rightIndex - 1);
 					return result;
 				} else if (leftJoint) {
 					// The number changes an interval's lower condition
@@ -799,13 +810,13 @@ public class IntervalUnionSet implements Range {
 						}
 					} else {
 						// To insert the number to the body
-						System.arraycopy(intervalArray, 0,
-								result.intervalArray, 0, rightIndex);
+						System.arraycopy(intervalArray, 0, result.intervalArray,
+								0, rightIndex);
 						result.intervalArray[rightIndex] = createIntervalwithInvariants(
 								isInt, number, false, number, false);
 						System.arraycopy(intervalArray, rightIndex,
-								result.intervalArray, rightIndex + 1, size
-										- rightIndex);
+								result.intervalArray, rightIndex + 1,
+								size - rightIndex);
 					}
 					return result;
 				}
@@ -888,7 +899,8 @@ public class IntervalUnionSet implements Range {
 				if (compareLower < 0) {
 					return false;
 				} else if (compareLower > 0) {
-					int compareJoint = compareJoint(thisInterval, otherInterval);
+					int compareJoint = compareJoint(thisInterval,
+							otherInterval);
 
 					if (compareJoint > 0) {
 						int compareUpper = compareUp(otherInterval,
@@ -946,7 +958,7 @@ public class IntervalUnionSet implements Range {
 
 		if (thisSize == 0 || otherSize == 0) {
 			return false;
-		}// An empty set could not intersect with any sets.
+		} // An empty set could not intersect with any sets.
 		while (thisIndex < thisSize && otherIndex < otherSize) {
 			Interval thisInterval = thisArray[thisIndex];
 			Interval otherInterval = otherArray[otherIndex];
@@ -955,7 +967,8 @@ public class IntervalUnionSet implements Range {
 
 			if (compareLower > 0) {
 				if (compareUpper > 0) {
-					int compareJoint = compareJoint(thisInterval, otherInterval);
+					int compareJoint = compareJoint(thisInterval,
+							otherInterval);
 
 					if (compareJoint <= 0) { // No intersection
 						thisIndex++;
@@ -965,7 +978,8 @@ public class IntervalUnionSet implements Range {
 				return true;
 			} else if (compareLower < 0) {
 				if (compareUpper < 0) {
-					int compareJoint = compareJoint(otherInterval, thisInterval);
+					int compareJoint = compareJoint(otherInterval,
+							thisInterval);
 
 					if (compareJoint <= 0) { // No intersection
 						otherIndex++;
@@ -1035,7 +1049,7 @@ public class IntervalUnionSet implements Range {
 		} else {
 			temp = thisInterval;
 			thisIndex++;
-		}// To find the left-most interval in two sets.
+		} // To find the left-most interval in two sets.
 		while (isChanged || thisIndex < thisSize || otherIndex < otherSize) {
 			isChanged = false;
 			while (thisIndex < thisSize) {
@@ -1049,13 +1063,13 @@ public class IntervalUnionSet implements Range {
 					int compareUpper = compareUp(temp, next);
 
 					if (compareUpper < 0) {
-						temp = createIntervalwithInvariants(isInt,
-								temp.lower(), temp.strictLower(), next.upper(),
+						temp = createIntervalwithInvariants(isInt, temp.lower(),
+								temp.strictLower(), next.upper(),
 								next.strictUpper());
 						isChanged = true;
 						thisIndex++;
 						break;
-					}// else temp Contains next, then skip
+					} // else temp Contains next, then skip
 					thisIndex++;
 				}
 			}
@@ -1070,13 +1084,13 @@ public class IntervalUnionSet implements Range {
 					int compareUpper = compareUp(temp, next);
 
 					if (compareUpper < 0) {
-						temp = createIntervalwithInvariants(isInt,
-								temp.lower(), temp.strictLower(), next.upper(),
+						temp = createIntervalwithInvariants(isInt, temp.lower(),
+								temp.strictLower(), next.upper(),
 								next.strictUpper());
 						isChanged = true;
 						otherIndex++;
 						break;
-					}// else temp Contains next, then skip
+					} // else temp Contains next, then skip
 					otherIndex++;
 				}
 			}
@@ -1144,7 +1158,8 @@ public class IntervalUnionSet implements Range {
 
 			if (compareLower < 0) {
 				if (compareUpper < 0) {
-					int compareJoint = compareJoint(otherInterval, thisInterval);
+					int compareJoint = compareJoint(otherInterval,
+							thisInterval);
 
 					if (compareJoint > 0) {
 						list.add(createIntervalwithInvariants(isInt,
@@ -1171,12 +1186,12 @@ public class IntervalUnionSet implements Range {
 				if (compareUpper < 0) {
 					list.add(otherInterval);
 					thisInterval = createIntervalwithInvariants(isInt,
-							otherInterval.upper(),
-							!otherInterval.strictUpper(), thisInterval.upper(),
-							thisInterval.strictUpper());
+							otherInterval.upper(), !otherInterval.strictUpper(),
+							thisInterval.upper(), thisInterval.strictUpper());
 					otherIndex++;
 				} else if (compareUpper > 0) {
-					int compareJoint = compareJoint(thisInterval, otherInterval);
+					int compareJoint = compareJoint(thisInterval,
+							otherInterval);
 
 					if (compareJoint > 0) {
 						list.add(createIntervalwithInvariants(isInt,
@@ -1195,9 +1210,8 @@ public class IntervalUnionSet implements Range {
 				if (compareUpper < 0) {
 					list.add(otherInterval);
 					thisInterval = createIntervalwithInvariants(isInt,
-							otherInterval.upper(),
-							!otherInterval.strictUpper(), thisInterval.upper(),
-							thisInterval.strictUpper());
+							otherInterval.upper(), !otherInterval.strictUpper(),
+							thisInterval.upper(), thisInterval.strictUpper());
 					otherIndex++;
 				} else if (compareUpper > 0) {
 					list.add(thisInterval);
@@ -1375,8 +1389,8 @@ public class IntervalUnionSet implements Range {
 			return new IntervalUnionSet(this);
 		}
 		if (a.signum() == 0) {
-			return new IntervalUnionSet(createIntervalwithInvariants(isInt, b,
-					false, b, false));
+			return new IntervalUnionSet(
+					createIntervalwithInvariants(isInt, b, false, b, false));
 		} else if (a.signum() > 0) {
 			while (index < size) {
 				current = intervalArray[index];
@@ -1441,28 +1455,28 @@ public class IntervalUnionSet implements Range {
 				return result;
 			} else if (lower == null) {
 				upperExpression = universe.number(upper);
-				resultExpression = strictUpper ? universe.lessThan(symbolX,
-						upperExpression) : universe.lessThanEquals(symbolX,
-						upperExpression);
+				resultExpression = strictUpper
+						? universe.lessThan(symbolX, upperExpression)
+						: universe.lessThanEquals(symbolX, upperExpression);
 			} else if (upper == null) {
 				lowerExpression = universe.number(lower);
-				resultExpression = strictLower ? universe.lessThan(
-						lowerExpression, symbolX) : universe.lessThanEquals(
-						lowerExpression, symbolX);
+				resultExpression = strictLower
+						? universe.lessThan(lowerExpression, symbolX)
+						: universe.lessThanEquals(lowerExpression, symbolX);
 			} else {
 				lowerExpression = universe.number(lower);
 				upperExpression = universe.number(upper);
-				temp1 = strictLower ? universe.lessThan(lowerExpression,
-						symbolX) : universe.lessThanEquals(lowerExpression,
-						symbolX);
-				temp2 = strictUpper ? universe.lessThan(symbolX,
-						upperExpression) : universe.lessThanEquals(symbolX,
-						upperExpression);
+				temp1 = strictLower
+						? universe.lessThan(lowerExpression, symbolX)
+						: universe.lessThanEquals(lowerExpression, symbolX);
+				temp2 = strictUpper
+						? universe.lessThan(symbolX, upperExpression)
+						: universe.lessThanEquals(symbolX, upperExpression);
 				resultExpression = universe.and(temp1, temp2);
 				if (lower.compareTo(upper) == 0) {
 					// assert !strictLower && !strictUpper;
-					resultExpression = universe
-							.equals(symbolX, lowerExpression);
+					resultExpression = universe.equals(symbolX,
+							lowerExpression);
 				}
 			}
 			result = universe.or(result, resultExpression);
