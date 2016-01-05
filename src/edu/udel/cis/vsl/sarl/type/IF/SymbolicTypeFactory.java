@@ -39,14 +39,7 @@ import edu.udel.cis.vsl.sarl.type.common.TypeComparator;
 import edu.udel.cis.vsl.sarl.type.common.TypeSequenceComparator;
 
 /**
- * A SymbolicTypeFactory interface that sets fields and methods for creating all
- * different types: - CommonSymbolicIntegerType - CommonSymbolicRealType -
- * CommonSymbolicCompleteArrayType - CommonSymbolicArrayType -
- * CommonSymbolicPrimitiveType - CommonSymbolicFunctionType -
- * CommonSymbolicTypeSequence - TypeComparator
- * 
- * @author alali
- * 
+ * A factory used to produce {@link SymbolicType}s and other related objects.
  */
 public interface SymbolicTypeFactory {
 

@@ -45,6 +45,12 @@ import edu.udel.cis.vsl.sarl.type.IF.Types;
 import edu.udel.cis.vsl.sarl.universe.common.CommonSymbolicUniverse;
 import edu.udel.cis.vsl.sarl.universe.common.MathUniverse;
 
+/**
+ * This class provides static methods for the creation of new
+ * {@link SymbolicUniverse}s.
+ * 
+ * @author siegel
+ */
 public class Universes {
 
 	// you can specify specific prover or entire config
@@ -55,9 +61,9 @@ public class Universes {
 		CommonSymbolicUniverse universe = new CommonSymbolicUniverse(system);
 		SimplifierFactory simplifierFactory = Ideal.newIdealSimplifierFactory(
 				(IdealFactory) system.numericFactory(), universe);
-		TheoremProverFactory proverFactory = prover == null ? Prove
-				.newMultiProverFactory(universe, config) : Prove
-				.newProverFactory(universe, prover);
+		TheoremProverFactory proverFactory = prover == null
+				? Prove.newMultiProverFactory(universe, config)
+				: Prove.newProverFactory(universe, prover);
 		ReasonerFactory reasonerFactory = Reason.newReasonerFactory(universe,
 				simplifierFactory, proverFactory);
 
@@ -75,9 +81,9 @@ public class Universes {
 		MathUniverse universe = new MathUniverse(system);
 		SimplifierFactory simplifierFactory = Ideal.newIdealSimplifierFactory(
 				(IdealFactory) system.numericFactory(), universe);
-		TheoremProverFactory proverFactory = prover == null ? Prove
-				.newMultiProverFactory(universe, config) : Prove
-				.newProverFactory(universe, prover);
+		TheoremProverFactory proverFactory = prover == null
+				? Prove.newMultiProverFactory(universe, config)
+				: Prove.newProverFactory(universe, prover);
 		ReasonerFactory reasonerFactory = Reason.newReasonerFactory(universe,
 				simplifierFactory, proverFactory);
 
@@ -95,9 +101,9 @@ public class Universes {
 		CommonSymbolicUniverse universe = new CommonSymbolicUniverse(system);
 		SimplifierFactory simplifierFactory = Simplify
 				.newIdentitySimplifierFactory(universe);
-		TheoremProverFactory proverFactory = prover == null ? Prove
-				.newMultiProverFactory(universe, config) : Prove
-				.newProverFactory(universe, prover);
+		TheoremProverFactory proverFactory = prover == null
+				? Prove.newMultiProverFactory(universe, config)
+				: Prove.newProverFactory(universe, prover);
 		ReasonerFactory reasonerFactory = Reason.newReasonerFactory(universe,
 				simplifierFactory, proverFactory);
 
@@ -125,9 +131,9 @@ public class Universes {
 		CommonSymbolicUniverse universe = new CommonSymbolicUniverse(system);
 		SimplifierFactory simplifierFactory = Expressions
 				.standardSimplifierFactory(expressionFactory, universe);
-		TheoremProverFactory proverFactory = prover == null ? Prove
-				.newMultiProverFactory(universe, config) : Prove
-				.newProverFactory(universe, prover);
+		TheoremProverFactory proverFactory = prover == null
+				? Prove.newMultiProverFactory(universe, config)
+				: Prove.newProverFactory(universe, prover);
 		ReasonerFactory reasonerFactory = Reason.newReasonerFactory(universe,
 				simplifierFactory, proverFactory);
 
