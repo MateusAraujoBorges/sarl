@@ -22,6 +22,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.UnionMemberReference;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
@@ -856,11 +857,11 @@ public interface CoreUniverse {
 	NumericExpression rational(double value);
 
 	/**
-	 * Returns the rational number <code>numerator</code>/
-	 * <code>denominator</code> as a symbolic expression of
-	 * {@link SymbolicRealType}. Note that this universe is free to transform
-	 * the expression into an equivalent form, for example, by canceling any
-	 * common factors.
+	 * Returns the rational number obtained by dividing two integers,
+	 * <code>numerator</code> and <code>denominator</code>. The result is a
+	 * symbolic expression of {@link SymbolicRealType}. Note that this universe
+	 * is free to transform the expression into an equivalent form, for example,
+	 * by canceling any common factors.
 	 * 
 	 * @param numerator
 	 *            a Java <code>int</code>
@@ -871,60 +872,77 @@ public interface CoreUniverse {
 	 */
 	NumericExpression rational(int numerator, int denominator);
 
-	// TODO: continue editing Java-docs from this point.....
-
 	/**
-	 * Returns the symbolic concrete real number numerator/denominator (real
-	 * division).
+	 * Returns the rational number obtained by dividing two long integers. The
+	 * result will have {@link SymbolicRealType}.
 	 * 
 	 * @param numerator
-	 *            a Java long
+	 *            a Java <code>long</code>
 	 * @param denominator
-	 *            a Java long
-	 * @return the real number formed by dividing numerator by denominator, as a
-	 *         symbolic expression
+	 *            a non-0 Java <code>long</code>
+	 * @return the real number formed by dividing <code>numerator</code> by
+	 *         <code>denominator</code>, as a {@link NumericExpression}
 	 */
 	NumericExpression rational(long numerator, long denominator);
 
 	/**
-	 * Returns the symbolic concrete real number numerator/denominator (real
-	 * division).
+	 * Returns the rational number obtained by dividing two {@link BigInteger}s.
+	 * The result will have {@link SymbolicRealType}.
 	 * 
 	 * @param numerator
-	 *            a Java BigInteger
+	 *            an integer, the numerator
 	 * @param denominator
-	 *            a Java BigInteger
-	 * @return the real number formed by dividing numerator by denominator, as a
-	 *         symbolic expression
+	 *            a non-0 integer, the denominator
+	 * @return the rational number formed by dividing <code>numerator</code> by
+	 *         <code>denominator</code>, as a symbolic expression
 	 */
 	NumericExpression rational(BigInteger numerator, BigInteger denominator);
 
 	// General Numbers...
 
-	/** The number factory used by this universe. */
+	/**
+	 * Returns the number factory used by this universe.
+	 * 
+	 * @return the number factory used by this universe
+	 */
 	NumberFactory numberFactory();
 
 	/**
-	 * The concrete symbolic expression wrapping the given number. The type of
-	 * the expression will be the ideal integer or real type, determined by the
-	 * kind of number (IntegerNumber or RationalNumber).
+	 * Returns the concrete symbolic expression wrapping the given number. The
+	 * type of the expression will be the "ideal" {@link SymbolicIntegerType} if
+	 * <code>number</code> is an {@link IntegerNumber}, or the "ideal"
+	 * {@link SymbolicRealType} if <code>number</code> is a
+	 * {@link RationalNumber}.
 	 * 
 	 * @param number
-	 *            any sarl Number
-	 * @return the symbolic expression wrapping that number
+	 *            any non-<code>null</code> SARL {@link Number}
+	 * @return the concrete symbolic expression wrapping that number
+	 * @see #number(NumberObject)
 	 */
 	NumericExpression number(Number number);
 
-	/** The symbolic expression wrapping the given concrete number object. */
+	/**
+	 * Returns the concrete symbolic expression wrapping the given number
+	 * object. The type of the expression will be the "ideal"
+	 * {@link SymbolicIntegerType} if <code>numberObject.getNumber()</code> is
+	 * an {@link IntegerNumber}, or the "ideal" {@link SymbolicRealType} if it
+	 * is a {@link RationalNumber}.
+	 * 
+	 * @param numberObject
+	 *            any non-<code>null</code> {@link NumberObject}
+	 * 
+	 * @see #number(Number)
+	 * @see #numberObject(Number)
+	 */
 	NumericExpression number(NumberObject numberObject);
 
 	/**
-	 * Returns the Number value if the given symbolic expression has a concrete
-	 * numerical value, else returns null.
+	 * Returns the {@link Number} value if the given symbolic expression has a
+	 * concrete numerical value, else returns <code>null</code>.
 	 * 
 	 * @param expression
-	 *            a symbolic expression
-	 * @return Number value or null
+	 *            any non-<code>null</code> numeric expression
+	 * @return the {@link Number} value or <code>null</code>
 	 */
 	Number extractNumber(NumericExpression expression);
 
@@ -934,30 +952,42 @@ public interface CoreUniverse {
 	 * Returns a concrete symbolic expression of character type which wraps the
 	 * given Java char.
 	 * 
+	 * 
 	 * @param theChar
 	 *            the Java char
-	 * @return symbolic expression wrapping theChar
+	 * @return symbolic expression wrapping <code>theChar</code>
+	 * 
+	 * @see SymbolicType.SymbolicTypeKind#CHAR
+	 * @see #characterType()
 	 */
 	SymbolicExpression character(char theChar);
 
 	/**
 	 * If the given expression is a concrete character expression, this returns
-	 * the character value, else it returns null.
+	 * the character value, else it returns <code>null</code>.
 	 * 
 	 * @param expression
 	 *            a symbolic expression
-	 * @return the character is wraps or null
+	 * @return the character it wraps or <code>null</code>
+	 * 
+	 * @see #characterType()
+	 * @see #character(char)
 	 */
 	Character extractCharacter(SymbolicExpression expression);
 
 	/**
-	 * Returns a symbolic expression of type array of char which is a literal
+	 * Returns a symbolic expression of type array-of-char which is a literal
 	 * array consisting of the sequence of characters in the given string.
 	 * 
 	 * @param theString
 	 *            a Java string
-	 * @return the string represented as a symbolic expression of type
-	 *         array-of-char
+	 * @return <code>theString</code> represented as a symbolic expression of
+	 *         type array-of-char
+	 * 
+	 * @see SymbolicArrayType
+	 * @see SymbolicType.SymbolicTypeKind#CHAR
+	 * @see #character(char)
+	 * @see #characterType()
 	 */
 	SymbolicExpression stringExpression(String theString);
 
@@ -972,7 +1002,10 @@ public interface CoreUniverse {
 	 *            a symbolic expression of a numeric type
 	 * @param arg1
 	 *            a symbolic expression of the same numeric type
-	 * @return arg0+arg1
+	 * @return the sum arg0+arg1
+	 * 
+	 * @see SymbolicIntegerType
+	 * @see SymbolicRealType
 	 */
 	NumericExpression add(NumericExpression arg0, NumericExpression arg1);
 
@@ -984,6 +1017,10 @@ public interface CoreUniverse {
 	 *            a sequence of symbolic expressions of numeric type. They must
 	 *            all have the same type.
 	 * @return expression representing the sum
+	 * 
+	 * @see #add(NumericExpression, NumericExpression)
+	 * @see SymbolicIntegerType
+	 * @see SymbolicRealType
 	 */
 	NumericExpression add(Iterable<? extends NumericExpression> args);
 
@@ -996,7 +1033,11 @@ public interface CoreUniverse {
 	 *            a symbolic expression of a numeric type
 	 * @param arg1
 	 *            a symbolic expression of the same numeric type
-	 * @return arg0-arg1
+	 * @return the difference, arg0-arg1
+	 * 
+	 * @see #add(NumericExpression, NumericExpression)
+	 * @see SymbolicIntegerType
+	 * @see SymbolicRealType
 	 */
 	NumericExpression subtract(NumericExpression arg0, NumericExpression arg1);
 
@@ -1010,6 +1051,10 @@ public interface CoreUniverse {
 	 * @param arg1
 	 *            a symbolic expression of the same numeric type
 	 * @return arg0 * arg1, the product of arg0 and arg1.
+	 * 
+	 * @see #add(NumericExpression, NumericExpression)
+	 * @see SymbolicIntegerType
+	 * @see SymbolicRealType
 	 */
 	NumericExpression multiply(NumericExpression arg0, NumericExpression arg1);
 
@@ -1021,6 +1066,10 @@ public interface CoreUniverse {
 	 *            symbolic expression sequence; all elements have the same
 	 *            numeric type
 	 * @return a symbolic expression representing the product
+	 * 
+	 * @see #multiply(NumericExpression, NumericExpression)
+	 * @see SymbolicIntegerType
+	 * @see SymbolicRealType
 	 */
 	NumericExpression multiply(Iterable<? extends NumericExpression> args);
 
@@ -1034,7 +1083,9 @@ public interface CoreUniverse {
 	 *            a symbolic expression of a numeric type
 	 * @param arg1
 	 *            a symbolic expression of the same numeric type
-	 * @return arg0 / arg1
+	 * @return the quotient, arg0 / arg1
+	 * @see SymbolicIntegerType
+	 * @see SymbolicRealType
 	 */
 	NumericExpression divide(NumericExpression arg0, NumericExpression arg1);
 
@@ -1047,7 +1098,10 @@ public interface CoreUniverse {
 	 *            a symbolic expression of integer type
 	 * @param arg1
 	 *            a symbolic expression of integer type
-	 * @return arg0 % arg1
+	 * @return the modulus, arg0 % arg1
+	 * @see SymbolicIntegerType
+	 * @see #divide(NumericExpression, NumericExpression)
+	 * @see #divides(NumericExpression, NumericExpression)
 	 */
 	NumericExpression modulo(NumericExpression arg0, NumericExpression arg1);
 
@@ -1058,14 +1112,17 @@ public interface CoreUniverse {
 	 * 
 	 * @param arg
 	 *            a symbolic expression of integer or real type
-	 * @return -arg
+	 * @return negation: &minus; <code>arg</code>
+	 * @see SymbolicIntegerType
+	 * @see SymbolicRealType
 	 */
 	NumericExpression minus(NumericExpression arg);
 
 	/**
-	 * Concrete power operator: e^b, where b is a concrete non-negative integer.
-	 * This method might actually multiply out the expression, i.e., it does not
-	 * necessarily return an expression with operator POWER.
+	 * Concrete power operator: <i>e</i><sup><i>b</i></sup>, where <i>b</i> is a
+	 * concrete non-negative integer. This method might actually multiply out
+	 * the expression, i.e., it does not necessarily return an expression with
+	 * operator {@link SymbolicOperator#POWER}.
 	 * 
 	 * @param base
 	 *            the base expression in the power expression
@@ -1075,19 +1132,19 @@ public interface CoreUniverse {
 	NumericExpression power(NumericExpression base, IntObject exponent);
 
 	/**
-	 * Shorthand for power(base, intObject(exponent)).
+	 * Equivalent to <code>power(base, intObject(exponent))</code>.
 	 * 
 	 * @param base
-	 *            he base expression in the power expression
-	 * 
+	 *            the base expression in the power expression
 	 * @param exponent
 	 *            a non-negative concrete integer exponent
-	 * @return power(base, intObject(exponent))
+	 * @return <code>power(base, intObject(exponent))</code>
 	 */
 	NumericExpression power(NumericExpression base, int exponent);
 
 	/**
-	 * General power operator: e^b. Both e and b are numeric expressions.
+	 * General power operator: <i>e</i><sup><i>b</i></sup>. Both <i>e</i> and
+	 * <i>b</i> are numeric expressions.
 	 * 
 	 * @param base
 	 *            the base expression in the power expression
@@ -1099,40 +1156,44 @@ public interface CoreUniverse {
 	// Booleans...
 
 	/**
-	 * If the given expression has a concrete boolean value, this returns it,
-	 * else it returns null.
+	 * If the given expression has a concrete {@link Boolean} value, this
+	 * returns it, else it returns <code>null</code>.
 	 * 
 	 * @param expression
-	 *            any BooleanExpression
-	 * @return one of the two concrete Boolean values, if possible, else false
+	 *            any {@link BooleanExpression}
+	 * @return one of the two concrete {@link Boolean} values if
+	 *         <code>expression</code> is concrete, else <code>null</code>
 	 */
 	Boolean extractBoolean(BooleanExpression expression);
 
 	/**
-	 * Returns the boolean literal "true".
+	 * Returns the boolean literal <i>true</i>.
 	 * 
-	 * @return the symbolic expression "true"
+	 * @return the symbolic expression <i>true</i>
 	 */
 	BooleanExpression trueExpression();
 
 	/**
-	 * Returns the boolean literal "false".
+	 * Returns the boolean literal <i>false</i>.
 	 * 
-	 * @return the symbolic expression "false"
+	 * @return the symbolic expression <i>false</i>
 	 */
 	BooleanExpression falseExpression();
 
 	/**
-	 * Allows CnfFactory to simplify expensive (p || !p) expressions as they are
-	 * created. Default is false. Setting to true will decrease performance in
-	 * certain CnfFactory methods.
+	 * Notifies this universe to attempt to simplify boolean expressions as they
+	 * are created, for example, by searching for clauses of the form
+	 * <code>(p || !p)</code> and replacing with <code>true</code>. This can be
+	 * expensive. Default is <code>false</code>.
 	 * 
-	 * @param boolean
-	 *            value: false = default
-	 * 
-	 * @return void
+	 * @param value
+	 *            if <code>true</code>, from now on start trying to simplify
+	 *            boolean expressions; if <code>false</code>, from now on do not
+	 *            attempt to do so
 	 */
 	void setBooleanExpressionSimplification(boolean value);
+
+	// TODO: continue editing Java-docs from this point.....
 
 	/**
 	 * Whether or not CnfFactory methods are allowed to simplify expensive (p ||
