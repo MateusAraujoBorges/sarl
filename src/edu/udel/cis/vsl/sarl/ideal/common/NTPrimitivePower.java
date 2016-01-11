@@ -105,10 +105,10 @@ public class NTPrimitivePower extends IdealExpression
 		return factory.one(type());
 	}
 
-	@Override
-	public Monomial leadingTerm() {
-		return this;
-	}
+//	@Override
+//	public Monomial leadingTerm() {
+//		return this;
+//	}
 
 	@Override
 	public NumericPrimitive primitive(IdealFactory factory) {

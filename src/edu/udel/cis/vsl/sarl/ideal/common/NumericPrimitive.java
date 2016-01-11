@@ -120,10 +120,10 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 		return factory.one(type());
 	}
 
-	@Override
-	public Monomial leadingTerm() {
-		return this;
-	}
+//	@Override
+//	public Monomial leadingTerm() {
+//		return this;
+//	}
 
 	@Override
 	public boolean isTrivialMonic() {

@@ -58,10 +58,10 @@ public class One extends IdealExpression implements Constant, Monic {
 		return factory.monicSingletonMap((Monic) this, (Monomial) this);
 	}
 
-	@Override
-	public Monomial leadingTerm() {
-		return this;
-	}
+//	@Override
+//	public Monomial leadingTerm() {
+//		return this;
+//	}
 
 	@Override
 	public Polynomial numerator(IdealFactory factory) {

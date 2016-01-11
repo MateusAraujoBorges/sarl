@@ -106,10 +106,10 @@ public class NTMonic extends IdealExpression implements Monic {
 		return factory.one(type());
 	}
 
-	@Override
-	public Monomial leadingTerm() {
-		return this;
-	}
+//	@Override
+//	public Monomial leadingTerm() {
+//		return this;
+//	}
 
 	@Override
 	public boolean isTrivialMonic() {

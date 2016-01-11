@@ -22,10 +22,13 @@ import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 
 /**
+ * <p>
  * Represents an expression of the form aX+b, where X is a
  * "pseudo primitive polynomial", and a and b are concrete numbers.
+ * </p>
  * 
- * A FactoredPolynomial X is a pseudo-primitive polynomial if all of the
+ * <p>
+ * A {@link Polynomial} X is a pseudo-primitive polynomial if all of the
  * following hold:
  * 
  * <ol>
@@ -35,7 +38,8 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
  * <li>if X is int: the gcd of the absolute values of the coefficients of X is 1
  * </ol>
  * 
- * If aX=0, then X is null and coefficient is 0.
+ * If aX=0, then X is <code>null</code> and coefficient is 0.
+ * </p>
  */
 public class AffineExpression {
 
@@ -56,7 +60,8 @@ public class AffineExpression {
 	 *            offset number
 	 */
 
-	public AffineExpression(Polynomial pseudo, Number coefficient, Number offset) {
+	public AffineExpression(Polynomial pseudo, Number coefficient,
+			Number offset) {
 		assert coefficient != null;
 		assert offset != null;
 		assert iff(pseudo == null, coefficient.signum() == 0);

@@ -92,10 +92,10 @@ public class NTConstant extends IdealExpression implements Constant {
 		return factory.one(type());
 	}
 
-	@Override
-	public Monomial leadingTerm() {
-		return this;
-	}
+//	@Override
+//	public Monomial leadingTerm() {
+//		return this;
+//	}
 
 	@Override
 	public Polynomial expand(IdealFactory factory) {

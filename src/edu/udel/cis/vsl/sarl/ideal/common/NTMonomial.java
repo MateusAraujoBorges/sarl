@@ -89,10 +89,10 @@ public class NTMonomial extends IdealExpression implements Monomial {
 		return factory.one(type());
 	}
 
-	@Override
-	public Monomial leadingTerm() {
-		return this;
-	}
+//	@Override
+//	public Monomial leadingTerm() {
+//		return this;
+//	}
 
 	@Override
 	public Polynomial expand(IdealFactory factory) {

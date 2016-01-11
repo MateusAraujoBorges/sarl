@@ -92,7 +92,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	private BooleanExpression fullContext = null;
 
 	/**
-	 * A map that assigns bounds to pseudo primitive factored polynomials.
+	 * A map that assigns bounds to pseudo primitive polynomials.
 	 */
 	private Map<Polynomial, BoundsObject> boundMap = new HashMap<>();
 
@@ -559,7 +559,7 @@ public class IdealSimplifier extends CommonSimplifier {
 
 	private void initialize() {
 		while (true) {
-			boundMap.clear();
+			boundMap.clear(); // why? and why not boolean map?
 			clearSimplificationCache(); // why?
 
 			boolean satisfiable = extractBounds();
