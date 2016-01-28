@@ -23,6 +23,7 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.common.CommonContextPartition;
 import edu.udel.cis.vsl.sarl.simplify.common.IdentitySimplifier;
 import edu.udel.cis.vsl.sarl.simplify.common.IdentitySimplifierFactory;
+import edu.udel.cis.vsl.sarl.simplify.common.IntervalUnionFactory;
 
 /**
  * Entry point for module "simplify", providing static method to create basic
@@ -61,9 +62,8 @@ public class Simplify {
 	}
 
 	public static RangeFactory newIntervalUnionFactory() {
-		// under construction
-		return null;
-	}
+		return new IntervalUnionFactory();
+	}// Under testing
 
 	public static ContextPartition newContextPartition(PreUniverse universe,
 			BooleanExpression context) {
