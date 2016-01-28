@@ -445,8 +445,8 @@ public interface NumberFactory {
 	int compare(Interval i1, Interval i2);
 
 	/**
-	 * To calculate the sum of two non-<code>null</code> {@link Interval} with
-	 * same type (real/integer)
+	 * To calculate the sum of two non-<code>null</code> and not empty
+	 * {@link Interval} with same type (real/integer)
 	 * 
 	 * @param i1
 	 *            a non-<code>null</code> {@link Interval} with same type of the
@@ -459,8 +459,8 @@ public interface NumberFactory {
 	Interval add(Interval i1, Interval i2);
 
 	/**
-	 * To calculate the product of two non-<code>null</code> {@link Interval}
-	 * with same type (real/integer)
+	 * To calculate the product of two non-<code>null</code> and not empty
+	 * {@link Interval} with same type (real/integer)
 	 * 
 	 * @param i1
 	 *            a non-<code>null</code> {@link Interval} with same type of the
@@ -473,8 +473,8 @@ public interface NumberFactory {
 	Interval multiple(Interval i1, Interval i2);
 
 	/**
-	 * To calculate the power-result of a given non-<code>null</code>
-	 * {@link Interval} with a given natural number.
+	 * To calculate the power-result of a given non-<code>null</code> and not
+	 * empty {@link Interval} with a given natural number.
 	 * 
 	 * @param interval
 	 *            a non-<code>null</code> {@link Interval}
@@ -483,4 +483,30 @@ public interface NumberFactory {
 	 * @return the power result of the {@link Interval} with the given integer
 	 */
 	Interval power(Interval interval, int exp);
+
+	/**
+	 * Calculate the given number powering a given exponent and returns result.
+	 * The exponent must be a natural number.
+	 * 
+	 * @return the power result of the {@link Number} with the given integer
+	 */
+	Number power(Number number, int exp);
+
+	/**
+	 * Calculate the given integer number powering a given exponent and returns
+	 * result. The exponent must be a natural number.
+	 * 
+	 * @return the power result of the {@link IntegerNumber} with the given
+	 *         integer
+	 */
+	IntegerNumber power(IntegerNumber number, int exp);
+
+	/**
+	 * Calculate the given rational number powering a given exponent and returns
+	 * result. The exponent must be a natural number.
+	 * 
+	 * @return the power result of the {@link RationalNumber} with the given
+	 *         integer
+	 */
+	RationalNumber power(RationalNumber number, int exp);
 }

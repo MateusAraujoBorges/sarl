@@ -191,8 +191,8 @@ public class RealNumberFactory implements NumberFactory {
 
 		return rational(
 				x.numerator().multiply(y.denominator())
-						.add(x.denominator().multiply(y.numerator())),
-				x.denominator().multiply(y.denominator()));
+						.add(x.denominator().multiply(y.numerator())), x
+						.denominator().multiply(y.denominator()));
 	}
 
 	@Override
@@ -281,8 +281,8 @@ public class RealNumberFactory implements NumberFactory {
 		RealRational x = (RealRational) arg0;
 		RealRational y = (RealRational) arg1;
 
-		return rational(x.numerator().multiply(y.denominator()),
-				x.denominator().multiply(y.numerator()));
+		return rational(x.numerator().multiply(y.denominator()), x
+				.denominator().multiply(y.numerator()));
 	}
 
 	@Override
@@ -385,8 +385,8 @@ public class RealNumberFactory implements NumberFactory {
 		RealRational x = (RealRational) arg0;
 		RealRational y = (RealRational) arg1;
 
-		return rational(x.numerator().multiply(y.numerator()),
-				x.denominator().multiply(y.denominator()));
+		return rational(x.numerator().multiply(y.numerator()), x.denominator()
+				.multiply(y.denominator()));
 	}
 
 	@Override
@@ -630,8 +630,8 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return add((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException(
-					"Unknown type of number: " + arg0);
+			throw new IllegalArgumentException("Unknown type of number: "
+					+ arg0);
 		}
 	}
 
@@ -654,8 +654,8 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return divide((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException(
-					"Unknown type of number: " + arg0);
+			throw new IllegalArgumentException("Unknown type of number: "
+					+ arg0);
 		}
 	}
 
@@ -678,8 +678,8 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return multiply((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException(
-					"Unknown type of number: " + arg0);
+			throw new IllegalArgumentException("Unknown type of number: "
+					+ arg0);
 		}
 	}
 
@@ -702,8 +702,8 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return subtract((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException(
-					"Unknown type of number: " + arg0);
+			throw new IllegalArgumentException("Unknown type of number: "
+					+ arg0);
 		}
 	}
 
@@ -967,10 +967,10 @@ public class RealNumberFactory implements NumberFactory {
 
 		assert isIntegral == i2.isIntegral();
 
-		Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(),
-				hi2 = i2.upper();
-		boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(),
-				su1 = i1.strictUpper(), su2 = i2.strictUpper();
+		Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(), hi2 = i2
+				.upper();
+		boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(), su1 = i1
+				.strictUpper(), su2 = i2.strictUpper();
 		Number lo, hi;
 		boolean sl, su;
 
@@ -1064,10 +1064,10 @@ public class RealNumberFactory implements NumberFactory {
 
 			assert isIntegral == i2.isIntegral();
 
-			Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(),
-					hi2 = i2.upper();
-			boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(),
-					su1 = i1.strictUpper(), su2 = i2.strictUpper();
+			Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(), hi2 = i2
+					.upper();
+			boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(), su1 = i1
+					.strictUpper(), su2 = i2.strictUpper();
 			Number lo = null, hi = null; // To set the result set as (-infi,
 											// +infi)
 			boolean sl = false, su = false;
@@ -1425,26 +1425,231 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	public Interval add(Interval i1, Interval i2) {
-		// TODO Auto-generated method stub
-		return null;
+		assert !i1.isEmpty() && !i2.isEmpty();
+		assert i1.isIntegral() == i2.isIntegral();
+
+		Number lo1 = i1.lower();
+		Number up1 = i1.upper();
+		Number lo2 = i2.lower();
+		Number up2 = i2.upper();
+		boolean sl1 = i1.strictLower();
+		boolean su1 = i1.strictUpper();
+		boolean sl2 = i2.strictLower();
+		boolean su2 = i2.strictUpper();
+		boolean isIntegral = i1.isIntegral();
+
+		if (i1.isUniversal() || i2.isUniversal()) {
+			return newInterval(isIntegral, null, true, null, true);
+		} else {
+			Number lo = null;
+			Number up = null;
+			boolean sl = true;
+			boolean su = true;
+
+			if (lo1 != null && lo2 != null) {
+				if (!sl1 && !sl2) {
+					sl = false;
+				}
+				lo = add(lo1, lo2);
+			}
+			if (up1 != null && up2 != null) {
+				if (!su1 && !su2) {
+					su = false;
+				}
+				up = add(up1, up2);
+			}
+			return newInterval(isIntegral, lo, sl, up, su);
+		}
 	}
 
 	@Override
 	public Interval multiple(Interval i1, Interval i2) {
-		// TODO Auto-generated method stub
-		return null;
+		assert !i1.isEmpty() && !i2.isEmpty();
+		assert i1.isIntegral() == i2.isIntegral();
+
+		Number lo1 = i1.lower();
+		Number up1 = i1.upper();
+		Number lo2 = i2.lower();
+		Number up2 = i2.upper();
+		Number lo = null;
+		Number up = null;
+		boolean sl1 = i1.strictLower();
+		boolean su1 = i1.strictUpper();
+		boolean sl2 = i2.strictLower();
+		boolean su2 = i2.strictUpper();
+		boolean sl = true;
+		boolean su = true;
+		boolean isIntegral = i1.isIntegral();
+
+		if (i1.isZero() || i2.isZero()) {
+			Number zeroNum = isIntegral ? zeroInteger : zeroRational;
+
+			return newInterval(isIntegral, zeroNum, false, zeroNum, false);
+		} else if (i1.isUniversal() || i2.isUniversal()) {
+			return newInterval(isIntegral, lo, sl, up, su);
+		} else if (lo1 == null && lo2 == null) {
+			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
+			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
+
+			if (signumUp1 > 0 || signumUp2 > 0) {
+				return newInterval(isIntegral, lo, sl, up, su);
+			} else {
+				sl = su1 || su2;
+				lo = multiply(up1, up2);
+				return newInterval(isIntegral, lo, sl, up, su);
+			}
+		} else if (lo1 == null && up2 == null) {
+			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
+			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
+
+			if (signumUp1 > 0 || signumLo2 < 0) {
+				return newInterval(isIntegral, lo, sl, up, su);
+			} else {
+				su = su1 || sl2;
+				up = multiply(up1, lo2);
+				return newInterval(isIntegral, lo, sl, up, su);
+			}
+		} else if (up1 == null && lo2 == null) {
+			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
+			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
+
+			if (signumLo1 < 0 || signumUp2 > 0) {
+				return newInterval(isIntegral, lo, sl, up, su);
+			} else {
+				su = sl1 || su2;
+				up = multiply(lo1, up2);
+				return newInterval(isIntegral, lo, sl, up, su);
+			}
+		} else if (up1 == null && up2 == null) {
+			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
+			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
+
+			if (signumLo1 < 0 || signumLo2 < 0) {
+				return newInterval(isIntegral, lo, sl, up, su);
+			} else {
+				sl = sl1 || sl2;
+				lo = multiply(lo1, lo2);
+				return newInterval(isIntegral, lo, sl, up, su);
+			}
+		} else if (lo1 == null) {
+
+		} else if (up1 == null) {
+
+		} else if (lo2 == null) {
+
+		} else if (up2 == null) {
+
+		} else {
+			Number lo1lo2 = null;
+			Number lo1up2 = null;
+			Number up1lo2 = null;
+			Number up1up2 = null;
+			boolean slo1lo2 = true;
+			boolean slo1up2 = true;
+			boolean slo2lo2 = true;
+			boolean slo2up2 = true;
+			boolean isPosInfi = false;
+			boolean isNegInfi = false;
+
+			if (lo1 == null && lo2 == null) {
+				isPosInfi = true;
+			} else if (lo1 != null && lo2 != null) {
+				if (!sl1 && !sl2) {
+					slo1lo2 = false;
+				}
+				lo1lo2 = multiply(lo1, lo2);
+			} else {
+
+			}
+			if (lo1 == null && up2 == null) {
+				isNegInfi = true;
+			} else if (lo1 != null && lo2 != null) {
+				if (!sl1 && !sl2) {
+					slo1lo2 = false;
+				}
+				lo1lo2 = multiply(lo1, lo2);
+			}
+
+			if (up1 != null && up2 != null) {
+				if (!su1 && !su2) {
+					su = false;
+				}
+				up = add(up1, up2);
+			}
+			return newInterval(isIntegral, lo, sl, up, su);
+		}
+		return null; // TODO: implement
 	}
 
 	@Override
 	public Interval power(Interval interval, int exp) {
 		assert interval != null;
-		
-		Number expNumber = integer(exp);
+
 		Number lower = interval.lower();
 		Number upper = interval.upper();
 		boolean strictLower = interval.strictLower();
 		boolean strictUpper = interval.strictUpper();
 		boolean isIntegral = interval.isIntegral();
-		return null;
+		Number expNumber = isIntegral ? integer(exp) : rational(exp + "");
+
+		if (interval.isUniversal()) {
+			return newInterval(isIntegral, lower, strictLower, upper,
+					strictUpper);
+		} else if (lower == null) {
+
+		} else if (upper == null) {
+
+		} else {
+
+		}
+		return null; // TODO: implement
+	}
+
+	@Override
+	public Number power(Number number, int exp) {
+		if (number instanceof IntegerNumber) {
+			return power((IntegerNumber) number, exp);
+		} else if (number instanceof RationalNumber) {
+			return power((RationalNumber) number, exp);
+		} else {
+			throw new IllegalArgumentException("Unknown type of number: "
+					+ number);
+		}
+	}
+
+	@Override
+	public IntegerNumber power(IntegerNumber number, int exp) {
+		RealInteger base = (RealInteger) number;
+		int baseValue = base.value().intValue();
+		int result = baseValue;
+
+		assert baseValue != 0 || exp != 0;
+		while (exp > 1) {
+			result = result * baseValue;
+		}
+		if (exp == 0) {
+			result = 1;
+		}
+		return integer(result);
+	}
+
+	@Override
+	public RationalNumber power(RationalNumber number, int exp) {
+		RealRational base = (RealRational) number;
+		int baseNumerator = base.numerator().intValue();
+		int baseDenominator = base.denominator().intValue();
+		int resultNumerator = baseNumerator;
+		int resultDenominator = baseDenominator;
+		
+		assert baseDenominator != 0 && (baseNumerator != 0 || exp != 0);
+		while (exp > 1){
+			resultNumerator = resultNumerator * baseNumerator;
+			resultDenominator = resultDenominator * baseDenominator;
+		}
+		if (exp == 0) {
+			resultNumerator = 1;
+			resultDenominator = 1;
+		}
+		return fraction(integer(resultNumerator), integer(resultDenominator));
 	}
 }
