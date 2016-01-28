@@ -1584,25 +1584,98 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	public Interval power(Interval interval, int exp) {
 		assert interval != null;
+		assert !(interval.isZero() && exp == 0);
 
-		Number lower = interval.lower();
-		Number upper = interval.upper();
 		boolean strictLower = interval.strictLower();
 		boolean strictUpper = interval.strictUpper();
+		boolean newSl = true;
+		boolean newSu = true;
 		boolean isIntegral = interval.isIntegral();
-		Number expNumber = isIntegral ? integer(exp) : rational(exp + "");
+		Number lower = interval.lower();
+		Number upper = interval.upper();
+		Number newLo = null;
+		Number newUp = null;
+		Number oneNumber = isIntegral ? oneInteger : oneRational;
+		Number zeroNumber = isIntegral ? zeroInteger : zeroRational;
 
-		if (interval.isUniversal()) {
+		if (exp == 0) {
+			return newInterval(isIntegral, oneNumber, false, oneNumber, false);
+		} else if (interval.isUniversal()) {
 			return newInterval(isIntegral, lower, strictLower, upper,
 					strictUpper);
 		} else if (lower == null) {
+			int signumUp = strictUpper ? upper.signum() - 1 : upper.signum();
 
+			if (signumUp < 0) {
+				if (exp % 2 == 0) {
+					newLo = power(abs(upper), exp);
+					newSl = strictUpper;
+				}else{
+					newUp = power(upper, exp);
+					newSu = strictUpper;
+				}
+			} else {
+				if (exp % 2 == 0) {
+					newLo = zeroNumber;
+					newSl = false;
+				}else{
+					newUp = power(upper, exp);
+					newSu = strictUpper;
+				}
+			}
+			return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 		} else if (upper == null) {
+			int signumLo = strictLower ? lower.signum() + 1 : lower.signum();
 
+			if (signumLo > 0) {
+				newLo = power(upper, exp);
+				newSl = strictUpper;
+			} else {
+				if (exp % 2 == 0) {
+					newLo = zeroNumber;
+					newSl = false;
+				}else{
+					newLo = power(upper, exp);
+					newSl = strictUpper;
+				}
+			}
+			return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 		} else {
+			int signumLo = strictLower ? lower.signum() + 1 : lower.signum();
+			int signumUp = strictUpper ? upper.signum() - 1 : upper.signum();
 
+			newUp = power(upper, exp);
+			newSu = strictUpper;
+			newLo = power(lower, exp);
+			newSl = strictLower;
+			if (signumLo >= 0) {
+				assert signumUp >= 0;
+				//Do nothing
+			}else if (signumUp <= 0) {
+				assert signumLo <= 0;
+				if (exp % 2 == 0) {
+					newUp = power(abs(lower), exp);
+					newSu = strictLower;
+					newLo = power(abs(upper), exp);
+					newSl = strictUpper;
+				}
+			}else{
+				if (exp % 2 == 0) {
+					Number tempUpFromLo = power(abs(lower), exp);
+					Number tempUpFromUp = power(upper, exp);
+					if (tempUpFromLo.compareTo(tempUpFromUp) < 0) {
+						newUp = tempUpFromUp;
+						newSu = strictUpper;
+					}else{
+						newUp = tempUpFromLo;
+						newSu = strictLower;
+					}
+					newLo = zeroNumber;
+					newSl = false;
+				}
+			}
+			return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 		}
-		return null; // TODO: implement
 	}
 
 	@Override
@@ -1640,9 +1713,9 @@ public class RealNumberFactory implements NumberFactory {
 		int baseDenominator = base.denominator().intValue();
 		int resultNumerator = baseNumerator;
 		int resultDenominator = baseDenominator;
-		
+
 		assert baseDenominator != 0 && (baseNumerator != 0 || exp != 0);
-		while (exp > 1){
+		while (exp > 1) {
 			resultNumerator = resultNumerator * baseNumerator;
 			resultDenominator = resultDenominator * baseDenominator;
 		}
