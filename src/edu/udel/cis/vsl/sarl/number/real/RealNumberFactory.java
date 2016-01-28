@@ -1422,4 +1422,29 @@ public class RealNumberFactory implements NumberFactory {
 		// Exactly Same
 		return exactlySame;
 	}
+
+	@Override
+	public Interval add(Interval i1, Interval i2) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Interval multiple(Interval i1, Interval i2) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Interval power(Interval interval, int exp) {
+		assert interval != null;
+		
+		Number expNumber = integer(exp);
+		Number lower = interval.lower();
+		Number upper = interval.upper();
+		boolean strictLower = interval.strictLower();
+		boolean strictUpper = interval.strictUpper();
+		boolean isIntegral = interval.isIntegral();
+		return null;
+	}
 }

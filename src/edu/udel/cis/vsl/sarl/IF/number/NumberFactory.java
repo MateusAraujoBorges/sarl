@@ -443,4 +443,44 @@ public interface NumberFactory {
 	 *            <code>i1</code>
 	 */
 	int compare(Interval i1, Interval i2);
+
+	/**
+	 * To calculate the sum of two non-<code>null</code> {@link Interval} with
+	 * same type (real/integer)
+	 * 
+	 * @param i1
+	 *            a non-<code>null</code> {@link Interval} with same type of the
+	 *            other one
+	 * @param i2
+	 *            a non-<code>null</code> {@link Interval} with same type of the
+	 *            other one
+	 * @return the sum of two {@link Interval}.
+	 */
+	Interval add(Interval i1, Interval i2);
+
+	/**
+	 * To calculate the product of two non-<code>null</code> {@link Interval}
+	 * with same type (real/integer)
+	 * 
+	 * @param i1
+	 *            a non-<code>null</code> {@link Interval} with same type of the
+	 *            other one
+	 * @param i2
+	 *            a non-<code>null</code> {@link Interval} with same type of the
+	 *            other one
+	 * @return the product of two {@link Interval}.
+	 */
+	Interval multiple(Interval i1, Interval i2);
+
+	/**
+	 * To calculate the power-result of a given non-<code>null</code>
+	 * {@link Interval} with a given natural number.
+	 * 
+	 * @param interval
+	 *            a non-<code>null</code> {@link Interval}
+	 * @param exp
+	 *            an integer of natural number
+	 * @return the power result of the {@link Interval} with the given integer
+	 */
+	Interval power(Interval interval, int exp);
 }
