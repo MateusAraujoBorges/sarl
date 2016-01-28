@@ -18,29 +18,44 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
+import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.util.BinaryOperator;
 
 /**
- * Multiply p^i*p^j, where p is a NumericPrimitive and i and j are positive
- * IntObjects. The answer is p^{i+j}.
+ * Divides: <i>p<sup>i</sup></i> / <i>p<sup>j</sup></i>, where <i>p</i> is a
+ * {@link Primitive} and <i>i</i> and <i>j</i> are positive {@link IntObject}s
+ * with <i>i</i> &ge; <i>j</i>. The answer is <i>p<sup>i-j</sup></i> if <i>i</i>
+ * &gt; <i>j</i>, or <code>null</code> if <i>i</i> = <i>j</i>.
  * 
  * @author siegel
  * 
  */
-class PrimitivePowerMultiplier implements BinaryOperator<PrimitivePower> {
-	
-	private IdealFactory factory;
+class PrimitivePowerDivider implements BinaryOperator<PrimitivePower> {
 
-	public PrimitivePowerMultiplier(IdealFactory factory) {
-		this.factory = factory;
+	private IdealFactory idealFactory;
+
+	private ObjectFactory objectFactory;
+
+	public PrimitivePowerDivider(IdealFactory idealFactory) {
+		this.idealFactory = idealFactory;
+		this.objectFactory = idealFactory.objectFactory();
 	}
 
 	@Override
 	public PrimitivePower apply(PrimitivePower arg0, PrimitivePower arg1) {
-		return factory.primitivePower(arg0.primitive(factory),
-				arg0.primitivePowerExponent(factory)
-						.plus(arg1.primitivePowerExponent(factory)));
+		int exp0 = arg0.primitivePowerExponent(idealFactory).getInt(),
+				exp1 = arg1.primitivePowerExponent(idealFactory).getInt();
+		int difference = exp0 - exp1;
+
+		if (difference == 0)
+			return null;
+		else
+			return idealFactory.primitivePower(arg0.primitive(idealFactory),
+					objectFactory.intObject(difference));
+
 	}
 }

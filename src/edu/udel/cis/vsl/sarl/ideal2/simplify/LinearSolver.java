@@ -35,22 +35,47 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
 
 /**
+ * <p>
  * Simplifies a constant map. This take as input a map which associates constant
- * values to factored polynomials. The factored polynomials should be in pseudo
- * primitive form. It simplifies this map by performing Gaussian elimination on
- * the coefficient matrix formed by the monic monomials. Specifically, it
- * separates out the integer and the real entries and works on each separately.
- * In each case, it constructs a matrix in which the rows correspond to map
- * entries and columns correspond to the monics (of the appropriate type) which
- * occur anywhere in the map. The entry in a column is the coefficient of that
- * monic in the factored polynomial which occurs as the key in the map entry. It
- * then performs Gaussian elimination on these matrices to reduce to reduced row
- * echelon form. It then re-constructs the maps in this reduced form.
+ * values to {@link Monic}s. Some of these monics may be instances of
+ * {@link Polynomial}, in which case they will be in pseudo-primitive form: no
+ * constant term, leading coefficient is positive, leading coefficient is 1 (for
+ * real type), or GCD of absolute value of coefficients is 1 (for integer type).
+ * We will use the word "polynomial" to refer to all entries in the map, whether
+ * or not they are instances of {@link Polynomial}. The {@link Monic}s which are
+ * not instances of {@link Polynomial} may be considered a polynomial with one
+ * term which has a coefficient of 1.
+ * </p>
  * 
+ * <p>
+ * It simplifies this map by performing Gaussian elimination (aka, Gauss-Jordan
+ * elimination) on the coefficient matrix formed by the terms, i.e., the
+ * "variables" are considered to be the {@link Monic}s which occur in the terms
+ * and the "coefficients" are the monomial coefficients of those {@link Monic}s.
+ * </p>
+ * 
+ * <p>
+ * Specifically, it separates out the integer and the real entries and works on
+ * each separately. In each case, it constructs a matrix in which the rows
+ * correspond to map entries and columns correspond to the monics of the terms
+ * (of the appropriate type) which occur anywhere in the map. The entry in a
+ * column is the coefficient of that monic in the polynomial which occurs as the
+ * key in the map entry. It then performs Gaussian elimination on these matrices
+ * to reduce to reduced row echelon form. It then re-constructs the maps in this
+ * reduced form.
+ * </p>
+ * 
+ * <p>
+ * There is an extra column on the right of the matrix for the constant
+ * associated to the polynomial.
+ * </p>
+ * 
+ * <p>
  * If an inconsistency exists ( for example, X+Y maps to 0, X maps to 0, Y maps
  * to 1) in the map, this will be discovered in the elimination. In this case,
  * the boolean value false is returned by method reduce. True is returned if
  * there are no problems.
+ * </p>
  */
 public class LinearSolver {
 
@@ -66,7 +91,10 @@ public class LinearSolver {
 
 	private Set<Monic> realMonicSet = new HashSet<Monic>();
 
-	private Map<Polynomial, Number> map;
+	// this has to change. the map now maps Monic to Numbers.
+	// Some of those Monics may be Polynomials...
+
+	private Map<Monic, Number> map;
 
 	private Monic[] intMonics, realMonics;
 
@@ -85,10 +113,10 @@ public class LinearSolver {
 	private void extractMonics() {
 		int numIntMonics, numRealMonics, i;
 
-		for (Polynomial fp : map.keySet()) {
+		for (Monic key : map.keySet()) {
 			Set<Monic> monics;
 
-			if (fp.type().isInteger()) {
+			if (key.type().isInteger()) {
 				numIntConstraints++;
 				monics = intMonicSet;
 
@@ -96,9 +124,10 @@ public class LinearSolver {
 				numRealConstraints++;
 				monics = realMonicSet;
 			}
-			for (Monic monic : fp.termMap(idealFactory).keys()) {
-				assert !monic.isOne();
-				monics.add(monic);
+			for (Monic term : key.termMap(idealFactory).keys()) {
+				// polynomials should not have constant term:
+				assert !term.isOne();
+				monics.add(term);
 			}
 		}
 		numIntMonics = intMonicSet.size();
@@ -114,8 +143,8 @@ public class LinearSolver {
 		i = 0;
 		for (Monic monic : realMonicSet)
 			realMonics[i++] = monic;
-		Arrays.sort(intMonics, idealFactory.comparator());
-		Arrays.sort(realMonics, idealFactory.comparator());
+		Arrays.sort(intMonics, idealFactory.monicComparator());
+		Arrays.sort(realMonics, idealFactory.monicComparator());
 		for (i = 0; i < numIntMonics; i++)
 			intIdMap.put(intMonics[i], i);
 		for (i = 0; i < numRealMonics; i++)
@@ -142,14 +171,14 @@ public class LinearSolver {
 		for (int i = 0; i < numRealConstraints; i++)
 			for (int j = 0; j < numRealMonics; j++)
 				realMatrix[i][j] = numberFactory.zeroRational();
-		for (Entry<Polynomial, Number> entry : map.entrySet()) {
-			Polynomial fp = entry.getKey();
+		for (Entry<Monic, Number> entry : map.entrySet()) {
+			Monic key = entry.getKey();
 			Number value = entry.getValue();
 
-			if (fp.type().isInteger()) {
+			if (key.type().isInteger()) {
 				intMatrix[intConstraintId][numIntMonics] = numberFactory
 						.rational(value);
-				for (Entry<Monic, Monomial> term : fp.termMap(idealFactory)
+				for (Entry<Monic, Monomial> term : key.termMap(idealFactory)
 						.entries()) {
 					Monomial monomial = term.getValue();
 					Monic monic = term.getKey();
@@ -163,7 +192,7 @@ public class LinearSolver {
 			} else {
 				realMatrix[realConstraintId][numRealMonics] = (RationalNumber) value;
 
-				for (Entry<Monic, Monomial> term : fp.termMap(idealFactory)
+				for (Entry<Monic, Monomial> term : key.termMap(idealFactory)
 						.entries()) {
 					Monomial monomial = term.getValue();
 					Monic monic = term.getKey();
@@ -182,13 +211,15 @@ public class LinearSolver {
 		int numIntMonics = intMonics.length;
 
 		for (int i = 0; i < numIntConstraints; i++) {
-			Polynomial fp = idealFactory.zeroInt();
+			Monomial poly = idealFactory.zeroInt();
 			IntegerNumber lcm = numberFactory.oneInteger();
 
+			// clear the denominators in row i by multiplying
+			// every entry in the row by the LCM
 			for (int j = 0; j <= numIntMonics; j++) {
 				RationalNumber a = intMatrix[i][j];
 
-				if (a.signum() != 0) {
+				if (!a.isZero()) {
 					IntegerNumber denominator = numberFactory.denominator(a);
 
 					if (!denominator.isOne())
@@ -198,27 +229,46 @@ public class LinearSolver {
 			for (int j = 0; j < numIntMonics; j++) {
 				RationalNumber a = intMatrix[i][j];
 
-				if (a.signum() != 0) {
+				if (!a.isZero()) {
 					IntegerNumber coefficient = numberFactory
 							.multiply(numberFactory.numerator(a), numberFactory
 									.divide(lcm, numberFactory.denominator(a)));
 
-					fp = idealFactory.add(fp, idealFactory.monomial(
-							idealFactory.constant(coefficient), intMonics[j]));
+					poly = idealFactory.addMonomials(poly,
+							idealFactory.monomial(
+									idealFactory.constant(coefficient),
+									intMonics[j]));
 				}
 			}
+
 			IntegerNumber value = numberFactory.multiply(
 					numberFactory.numerator(intMatrix[i][numIntMonics]),
 					numberFactory.divide(lcm, numberFactory
 							.denominator(intMatrix[i][numIntMonics])));
-			// TODO: check this.
-			// is fp in pseudo primitive form? i think so
-			if (fp.isZero()) {
+
+			if (poly.isZero()) {
 				if (!value.isZero()) { // inconsistency
 					return false;
 				}
 			} else {
-				map.put(fp, value);
+				Monic key;
+
+				if (poly instanceof Monic) {
+					key = (Monic) poly;
+				} else {
+					IntegerNumber c = (IntegerNumber) poly
+							.monomialConstant(idealFactory).number();
+
+					if (!numberFactory
+							.mod((IntegerNumber) numberFactory.abs(value),
+									(IntegerNumber) numberFactory.abs(c))
+							.isZero()) {
+						return false; // inconsistency
+					}
+					key = poly.monic(idealFactory);
+					value = numberFactory.divide(value, c);
+				}
+				map.put(key, value);
 			}
 		}
 		return true;
@@ -228,30 +278,41 @@ public class LinearSolver {
 		int numRealMonics = realMonics.length;
 
 		for (int i = 0; i < numRealConstraints; i++) {
-			Polynomial fp = idealFactory.zeroReal();
+			Monomial poly = idealFactory.zeroReal();
 			RationalNumber value = realMatrix[i][numRealMonics];
 
 			for (int j = 0; j < numRealMonics; j++) {
 				RationalNumber a = realMatrix[i][j];
 
 				if (a.signum() != 0) {
-					fp = idealFactory.add(fp, idealFactory
+					poly = idealFactory.addMonomials(poly, idealFactory
 							.monomial(idealFactory.constant(a), realMonics[j]));
 				}
 			}
-			if (fp.isZero()) {
+			if (poly.isZero()) {
 				if (!value.isZero()) { // inconsistency
 					return false;
 				}
 			} else {
-				map.put(fp, value);
-			}
+				// leading coefficient is 1 because of reduced row-echelon form
+				// there is no constant term, so poly is in pseudo-primitive
+				// form
+				Monic key;
 
+				if (poly instanceof Monic) {
+					key = (Monic) poly;
+				} else {
+					key = poly.monic(idealFactory);
+					value = (RationalNumber) numberFactory.divide(value,
+							poly.monomialConstant(idealFactory).number());
+				}
+				map.put(key, value);
+			}
 		}
 		return true;
 	}
 
-	boolean reduce(Map<Polynomial, Number> map) {
+	boolean reduce(Map<Monic, Number> map) {
 		this.map = map;
 
 		// Step 1: extract monics. Uses map. Yields intIdMap, realIdMap,
@@ -260,7 +321,7 @@ public class LinearSolver {
 		// Step 2: build matrices. Uses intIdMap, realIdMap, intMonics,
 		// realMonics, map. Yields intMatrix[][], realMatrix[][].
 
-		// Step 3. perform gaussian elim on matrices.
+		// Step 3. perform Gauss-Jordan elimination on matrices.
 
 		// Step 4. re-build map. Uses map, intMonics, realMonics, intMatrix,
 		// realMatrix. Modifies map.
@@ -278,7 +339,7 @@ public class LinearSolver {
 	}
 
 	public static boolean reduceConstantMap(IdealFactory idealFactory,
-			Map<Polynomial, Number> map) {
+			Map<Monic, Number> map) {
 		LinearSolver solver = new LinearSolver(idealFactory);
 
 		return solver.reduce(map);

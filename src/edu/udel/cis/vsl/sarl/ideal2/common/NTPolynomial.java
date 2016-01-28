@@ -37,30 +37,18 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
  * @author siegel
  * 
  */
-public class NTPolynomial extends IdealExpression implements Polynomial {
+public class NTPolynomial extends NumericPrimitive implements Polynomial {
 
-	/**
-	 * The factorization is extrinsic data: not used in hashCode or equals.
-	 */
-	private Monomial factorization;
+	// /**
+	// * The degree of the polynomial, or -1 if the degree has not yet been
+	// * computed.
+	// */
+	// private int degree = -1;
 
-	/**
-	 * The degree of the polynomial, or -1 if the degree has not yet been
-	 * computed.
-	 */
-	private int degree = -1;
-
-	/**
-	 * Constructs new NTPolynomial with given term map and factoriation. The
-	 * term map must have at least 2 entries. The factorization must be a valid
-	 * factorization of the polynomial represented by the termMap; this is not
-	 * checked.
-	 */
-	protected NTPolynomial(SymbolicMap<Monic, Monomial> termMap,
-			Monomial factorization) {
-		super(SymbolicOperator.ADD, factorization.type(), termMap);
+	protected NTPolynomial(SymbolicType type,
+			SymbolicMap<Monic, Monomial> termMap) {
+		super(SymbolicOperator.ADD, type, termMap);
 		assert termMap.size() >= 2;
-		this.factorization = factorization;
 	}
 
 	@Override
@@ -71,30 +59,6 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 	@SuppressWarnings("unchecked")
 	public SymbolicMap<Monic, Monomial> termMap() {
 		return (SymbolicMap<Monic, Monomial>) argument(0);
-	}
-
-	// @Override
-	// public Monomial leadingTerm() {
-	// SymbolicMap<Monic, Monomial> map = termMap();
-	//
-	// if (map.isEmpty())
-	// return null;
-	// return map.getFirst();
-	// }
-
-	@Override
-	public Monomial factorization(IdealFactory factory) {
-		return factorization;
-	}
-
-	@Override
-	public Polynomial numerator(IdealFactory factory) {
-		return this;
-	}
-
-	@Override
-	public Polynomial denominator(IdealFactory factory) {
-		return factory.one(type());
 	}
 
 	public StringBuffer toStringBuffer() {
@@ -117,19 +81,10 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 	}
 
 	@Override
-	public int degree() {
-		if (degree < 0) {
-			degree = 0;
-			// TODO? aren't these ordered by decreasing degree, in which case,
-			// you can make this faster?
-			for (Monic expr : termMap().keys()) {
-				int termDegree = expr.degree();
-
-				if (termDegree > degree)
-					degree = termDegree;
-			}
-		}
-		return degree;
+	public int polynomialDegree() {
+		// since the monics are ordered by decreasing degree,
+		// the first one should be the degree of this polynomial:
+		return termMap().getFirst().monomialDegree();
 	}
 
 	@Override
@@ -143,6 +98,33 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 		Constant constant = (Constant) termMap().get(factory.one(type));
 
 		return constant == null ? factory.zero(type) : constant;
+	}
+
+	@Override
+	public SymbolicMap<Monic, Monomial> expand(IdealFactory factory) {
+		SymbolicMap<Monic, Monomial> termMap = termMap();
+		int numTerms = termMap.size();
+		@SuppressWarnings("unchecked")
+		SymbolicMap<Monic, Monomial>[] newTerms = (SymbolicMap<Monic, Monomial>[]) new SymbolicMap<?, ?>[numTerms];
+		int count = 0;
+		boolean change = false;
+
+		for (Monomial oldTerm : termMap.values()) {
+			SymbolicMap<Monic, Monomial> newTerm = oldTerm.expand(factory);
+
+			newTerms[count] = newTerm;
+			count++;
+			change = change || newTerm.size() != 1;
+		}
+		if (change) {
+			SymbolicMap<Monic, Monomial> result = factory.emptyMonicMap();
+
+			for (SymbolicMap<Monic, Monomial> newTerm : newTerms)
+				result = factory.addTermMaps(result, newTerm);
+			return result;
+		} else {
+			return this.termMap();
+		}
 	}
 
 }

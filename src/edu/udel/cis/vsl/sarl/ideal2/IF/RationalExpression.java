@@ -20,15 +20,7 @@ package edu.udel.cis.vsl.sarl.ideal2.IF;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 
-/**
- * A quotient of two polynomials. The second polynomial (the denominator) must
- * be monic-like: if real, the leading coefficient is 1; if integer, the leading
- * coefficient is positive and the GCD of the absolute values of the
- * coefficients is 1.
- * 
- * @author siegel
- * 
- */
+
 public interface RationalExpression extends NumericExpression {
 
 	/**
@@ -39,7 +31,7 @@ public interface RationalExpression extends NumericExpression {
 	 * 
 	 * @return the numerator of this rational expression
 	 */
-	Polynomial numerator(IdealFactory factory);
+	Monomial numerator(IdealFactory factory);
 
 	/**
 	 * Returns the denominator of this rational expression.
@@ -49,6 +41,6 @@ public interface RationalExpression extends NumericExpression {
 	 * 
 	 * @return the denominator of this rational expression
 	 */
-	Polynomial denominator(IdealFactory factory);
+	Monomial denominator(IdealFactory factory);
 
 }

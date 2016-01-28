@@ -25,7 +25,6 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
-import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 
@@ -47,14 +46,14 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 public class NTMonic extends IdealExpression implements Monic {
 
 	/**
-	 * Cached value returned by method {@link #termMap(IdealFactory)}.
-	 */
-	private SymbolicMap<Monic, Monomial> polynomialMap = null;
-
-	/**
 	 * Cached value returned by method {@link #degree()}.
 	 */
 	private int degree = -1;
+
+	/**
+	 * Cached result of {@link #expand(IdealFactory)}.
+	 */
+	private SymbolicMap<Monic, Monomial> expansion = null;
 
 	protected NTMonic(SymbolicType type,
 			SymbolicMap<Primitive, PrimitivePower> factorMap) {
@@ -73,14 +72,6 @@ public class NTMonic extends IdealExpression implements Monic {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
-		if (polynomialMap == null)
-			polynomialMap = factory.monicSingletonMap((Monic) this,
-					(Monomial) this);
-		return polynomialMap;
-	}
-
-	@Override
 	public SymbolicMap<Primitive, PrimitivePower> monicFactors(
 			IdealFactory factory) {
 		return monicFactors();
@@ -92,24 +83,14 @@ public class NTMonic extends IdealExpression implements Monic {
 	}
 
 	@Override
-	public Monomial factorization(IdealFactory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Polynomial numerator(IdealFactory factory) {
-		return this;
-	}
-
-	@Override
-	public Polynomial denominator(IdealFactory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return factory.one(type());
 	}
-
-	// @Override
-	// public Monomial leadingTerm() {
-	// return this;
-	// }
 
 	@Override
 	public boolean isTrivialMonic() {
@@ -117,13 +98,15 @@ public class NTMonic extends IdealExpression implements Monic {
 	}
 
 	@Override
-	public Polynomial expand(IdealFactory factory) {
-		Polynomial result = factory.one(type());
+	public SymbolicMap<Monic, Monomial> expand(IdealFactory factory) {
+		if (expansion == null) {
+			expansion = factory.oneTermMap(type());
 
-		for (PrimitivePower ppower : monicFactors())
-			result = factory.multiplyPolynomials(result,
-					ppower.expand(factory));
-		return result;
+			for (PrimitivePower ppower : monicFactors())
+				expansion = factory.multiplyTermMaps(expansion,
+						ppower.expand(factory));
+		}
+		return expansion;
 	}
 
 	public StringBuffer toStringBuffer() {
@@ -140,18 +123,18 @@ public class NTMonic extends IdealExpression implements Monic {
 	}
 
 	@Override
-	public int degree() {
+	public int monomialDegree() {
 		if (degree < 0) {
 			degree = 0;
 			for (PrimitivePower expr : monicFactors())
-				degree += expr.degree();
+				degree += expr.monomialDegree();
 		}
 		return degree;
 	}
 
 	@Override
-	public Constant constantTerm(IdealFactory factory) {
-		return factory.zero(type());
+	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
+		return factory.monicSingletonMap(this, this);
 	}
 
 }

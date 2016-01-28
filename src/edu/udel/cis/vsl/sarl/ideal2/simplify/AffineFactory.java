@@ -25,6 +25,8 @@ import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
@@ -38,9 +40,9 @@ public class AffineFactory {
 
 	private IntegerNumber ZERO_INT, ONE_INT;
 
-	private RationalNumber ZERO_REAL;
+	private RationalNumber ZERO_REAL, ONE_REAL;
 
-	private AffineExpression zeroIntAffine, zeroRealAffine;
+	//private AffineExpression zeroIntAffine, zeroRealAffine;
 
 	private SymbolicType integerType, realType;
 
@@ -51,16 +53,17 @@ public class AffineFactory {
 		ZERO_INT = numberFactory.zeroInteger();
 		ZERO_REAL = numberFactory.zeroRational();
 		ONE_INT = numberFactory.oneInteger();
+		ONE_REAL = numberFactory.oneRational();
 		integerType = typeFactory.integerType();
 		realType = typeFactory.realType();
-		zeroIntAffine = affine(null, ZERO_INT, ZERO_INT);
-		zeroRealAffine = affine(null, ZERO_REAL, ZERO_REAL);
+		// zeroIntAffine = affine(null, ZERO_INT, ZERO_INT);
+		// zeroRealAffine = affine(null, ZERO_REAL, ZERO_REAL);
 	}
 
-	public AffineExpression affine(Polynomial pseudo, Number coefficient,
+	public AffineExpression affine(Monic pseudo, Number coefficient,
 			Number offset) {
-		SymbolicType type = (coefficient instanceof IntegerNumber ? integerType
-				: realType);
+		SymbolicType type = coefficient instanceof IntegerNumber ? integerType
+				: realType;
 
 		// assert pseudo == null || type.equals(pseudo.type());
 		assert type.isInteger() && offset instanceof IntegerNumber
@@ -70,11 +73,13 @@ public class AffineFactory {
 
 	public AffineExpression affine(Polynomial fp) {
 		SymbolicType type = fp.type();
-		int degree = fp.degree();
+		int degree = fp.polynomialDegree();
 
-		if (degree < 0) { // fp=0
-			return type.isInteger() ? zeroIntAffine : zeroRealAffine;
-		} else if (degree == 0) { // fp is constant
+		// any instance of Polynomial has nonnegative degree.
+		// The termmap must be non-empty.
+		// if (degree < 0) { // fp=0
+		// return type.isInteger() ? zeroIntAffine : zeroRealAffine;
+		if (degree == 0) { // fp is constant
 			return affine(null, type.isInteger() ? ZERO_INT : ZERO_REAL,
 					((Constant) fp).number());
 		} else {
@@ -84,18 +89,28 @@ public class AffineFactory {
 			// if int: take gcd of coefficients and factor that out (unless it
 			// is 1)
 			Number constantTerm = fp.constantTerm(idealFactory).number();
-			Polynomial difference = idealFactory.subtractConstantTerm(fp); // fp-constantTerm
-			Constant coefficientConcrete = difference
-					.factorization(idealFactory).monomialConstant(idealFactory);
-			Polynomial pseudo = idealFactory.divide(difference,
-					coefficientConcrete);
+			Number coefficient;
+			Monic pseudo;
 
-			return affine(pseudo, coefficientConcrete.number(), constantTerm);
+			if (constantTerm.isZero()) {
+				// the polynomial is already normal, so nothing to do
+				coefficient = type.isInteger() ? ONE_INT : ONE_REAL;
+				pseudo = fp;
+			} else {
+				// better: one must be last, so remove last element
+				Monomial difference = idealFactory.factorTermMap(fp
+						.termMap(idealFactory).remove(idealFactory.one(type)));
+
+				pseudo = difference.monic(idealFactory);
+				coefficient = difference.monomialConstant(idealFactory)
+						.number();
+			}
+			return affine(pseudo, coefficient, constantTerm);
 		}
 	}
 
 	/**
-	 * Determines a bound on the psuedo primitive polynomial X, assuming the
+	 * Determines a bound on the pseudo primitive polynomial X, assuming the
 	 * predicate aX+b>0 holds (if strict is true), or aX+b>=0 (if strict is
 	 * false).
 	 * 
@@ -129,7 +144,7 @@ public class AffineFactory {
 	public Number bound(AffineExpression affine, boolean strict) {
 		RationalNumber rationalBound = null;
 		Number result = null;
-		Polynomial pseudo = affine.pseudo();
+		Monic pseudo = affine.pseudo();
 		RationalNumber offset = numberFactory.rational(affine.offset());
 		RationalNumber coefficient = numberFactory
 				.rational(affine.coefficient());

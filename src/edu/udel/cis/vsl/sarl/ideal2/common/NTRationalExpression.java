@@ -19,7 +19,7 @@
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
 import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
-import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.RationalExpression;
 
 /**
@@ -32,8 +32,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.RationalExpression;
 public class NTRationalExpression extends IdealExpression
 		implements RationalExpression {
 
-	protected NTRationalExpression(Polynomial numerator,
-			Polynomial denominator) {
+	protected NTRationalExpression(Monomial numerator, Monomial denominator) {
 		super(SymbolicOperator.DIVIDE, numerator.type(), numerator,
 				denominator);
 		assert !denominator.isOne();
@@ -42,20 +41,20 @@ public class NTRationalExpression extends IdealExpression
 		assert !numerator.equals(denominator);
 	}
 
-	public Polynomial numerator(IdealFactory factory) {
-		return (Polynomial) argument(0);
+	public Monomial numerator(IdealFactory factory) {
+		return (Monomial) argument(0);
 	}
 
-	public Polynomial numerator() {
-		return (Polynomial) argument(0);
+	public Monomial numerator() {
+		return (Monomial) argument(0);
 	}
 
-	public Polynomial denominator(IdealFactory factory) {
-		return (Polynomial) argument(1);
+	public Monomial denominator(IdealFactory factory) {
+		return (Monomial) argument(1);
 	}
 
-	public Polynomial denominator() {
-		return (Polynomial) argument(1);
+	public Monomial denominator() {
+		return (Monomial) argument(1);
 	}
 
 	@Override

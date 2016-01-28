@@ -24,7 +24,6 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
-import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 
@@ -37,6 +36,11 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
  */
 public class NTPrimitivePower extends IdealExpression
 		implements PrimitivePower {
+
+	/**
+	 * Cached result of {@link #expand(IdealFactory)}.
+	 */
+	private SymbolicMap<Monic, Monomial> expansion = null;
 
 	protected NTPrimitivePower(Primitive primitive, IntObject exponent) {
 		super(SymbolicOperator.POWER, primitive.type(), primitive, exponent);
@@ -70,11 +74,6 @@ public class NTPrimitivePower extends IdealExpression
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
-		return factory.monicSingletonMap((Monic) this, (Monomial) this);
-	}
-
-	@Override
 	public IntObject primitivePowerExponent(IdealFactory factory) {
 		return exponent();
 	}
@@ -91,24 +90,14 @@ public class NTPrimitivePower extends IdealExpression
 	}
 
 	@Override
-	public Monomial factorization(IdealFactory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Polynomial numerator(IdealFactory factory) {
-		return this;
-	}
-
-	@Override
-	public Polynomial denominator(IdealFactory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return factory.one(type());
 	}
-
-	// @Override
-	// public Monomial leadingTerm() {
-	// return this;
-	// }
 
 	@Override
 	public NumericPrimitive primitive(IdealFactory factory) {
@@ -121,13 +110,19 @@ public class NTPrimitivePower extends IdealExpression
 	}
 
 	@Override
-	public Polynomial expand(IdealFactory factory) {
-		NumericPrimitive primitive = primitive();
-		Polynomial expandedPrimitive = primitive.expand(factory);
+	public SymbolicMap<Monic, Monomial> expand(IdealFactory factory) {
+		if (expansion == null) {
+			NumericPrimitive primitive = primitive();
+			SymbolicMap<Monic, Monomial> expandedPrimitive = primitive
+					.expand(factory);
 
-		if (primitive.equals(expandedPrimitive))
-			return this;
-		return (Polynomial) factory.power(expandedPrimitive, exponent());
+			if (primitive.equals(expandedPrimitive))
+				expansion = factory.monicSingletonMap(this, this);
+			else
+				expansion = factory.powerTermMap(type(), expandedPrimitive,
+						exponent());
+		}
+		return expansion;
 	}
 
 	@Override
@@ -136,7 +131,7 @@ public class NTPrimitivePower extends IdealExpression
 	}
 
 	@Override
-	public int degree() {
+	public int monomialDegree() {
 		return exponent().getInt();
 	}
 
@@ -146,8 +141,8 @@ public class NTPrimitivePower extends IdealExpression
 	}
 
 	@Override
-	public Constant constantTerm(IdealFactory factory) {
-		return factory.zero(type());
+	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
+		return factory.monicSingletonMap(this, this);
 	}
 
 }

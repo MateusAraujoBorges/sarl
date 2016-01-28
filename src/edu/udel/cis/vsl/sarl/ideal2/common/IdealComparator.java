@@ -175,7 +175,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 			if (o1 instanceof Monic && o2 instanceof Monic)
 				return compareMonics((Monic) o1, (Monic) o2);
 			else
-				return comparePolynomials((Polynomial) e1, (Polynomial) e2);
+				return compareMonomials((Monomial) e1, (Monomial) e2);
 		} else {
 			return compareRationals((RationalExpression) e1,
 					(RationalExpression) e2);
@@ -195,7 +195,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *         otherwise a positive integer
 	 */
 	private int comparePolynomials(Polynomial p1, Polynomial p2) {
-		int result = p2.degree() - p1.degree();
+		int result = p2.polynomialDegree() - p1.polynomialDegree();
 
 		if (result != 0)
 			return result;
@@ -236,7 +236,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *         otherwise a positive integer
 	 */
 	private int compareMonomials(Monomial m1, Monomial m2) {
-		int result = m2.degree() - m1.degree();
+		int result = m2.monomialDegree() - m1.monomialDegree();
 
 		if (result != 0)
 			return result;
@@ -248,7 +248,10 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	}
 
 	/**
-	 * Compares two {@link Monic}s of the same type.
+	 * Compares two {@link Monic}s of the same type. A {@link Monic} of higher
+	 * degree always precedes any {@link Monic} of lower degree. If they have
+	 * the same degree, the dictionary order on their {@link Primitive} factors
+	 * is used.
 	 * 
 	 * @param m1
 	 *            a non-<code>null</code> {@link Monic}
@@ -259,11 +262,11 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *         positive integer
 	 */
 	public int compareMonics(Monic m1, Monic m2) {
-		int degree1 = m1.degree();
-		int degree2 = m2.degree();
+		int degree1 = m1.monomialDegree();
+		int degree2 = m2.monomialDegree();
 
-		if (degree1 == 0) {
-			return degree2;
+		if (degree1 == 0) { // the only constant monic is 1
+			return degree2; // if 0, both are 1, else m2 has higher degree
 		}
 
 		int result = degree2 - degree1;
@@ -284,7 +287,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 					ppower2.primitive(idealFactory));
 			if (result != 0)
 				return result;
-			result = ppower2.degree() - ppower1.degree();
+			result = ppower2.monomialDegree() - ppower1.monomialDegree();
 			if (result != 0)
 				return result;
 		}
@@ -292,7 +295,8 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	}
 
 	/**
-	 * Compares two {@link Primitive}s of the same type.
+	 * Compares two {@link Primitive}s of the same type. All polynomials come
+	 * before everything else.
 	 * 
 	 * @param p1
 	 *            a non-<code>null</code> {@link Primitive}
@@ -303,23 +307,35 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *         a positive integer
 	 */
 	public int comparePrimitives(Primitive p1, Primitive p2) {
-		int result = p1.operator().compareTo(p2.operator());
+		if (p1 instanceof Polynomial) {
+			if (p2 instanceof Polynomial) {
+				return comparePolynomials((Polynomial) p1, (Polynomial) p2);
+			} else {
+				return -1;
+			}
+		} else {
+			if (p2 instanceof Polynomial) {
+				return 1;
+			} else {
+				int result = p1.operator().compareTo(p2.operator());
 
-		if (result != 0)
-			return result;
-		else {
-			int numArgs = p1.numArguments();
-
-			result = numArgs - p2.numArguments();
-			if (result != 0)
-				return result;
-			for (int i = 0; i < numArgs; i++) {
-				result = objectComparator.compare(p1.argument(i),
-						p2.argument(i));
 				if (result != 0)
 					return result;
+				else {
+					int numArgs = p1.numArguments();
+
+					result = numArgs - p2.numArguments();
+					if (result != 0)
+						return result;
+					for (int i = 0; i < numArgs; i++) {
+						result = objectComparator.compare(p1.argument(i),
+								p2.argument(i));
+						if (result != 0)
+							return result;
+					}
+					return 0;
+				}
 			}
-			return 0;
 		}
 	}
 
@@ -352,12 +368,12 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *         integer.
 	 */
 	private int compareRationals(RationalExpression e1, RationalExpression e2) {
-		int result = comparePolynomials(e1.numerator(idealFactory),
+		int result = compareMonomials(e1.numerator(idealFactory),
 				e2.numerator(idealFactory));
 
 		if (result != 0)
 			return result;
-		return comparePolynomials(e1.denominator(idealFactory),
+		return compareMonomials(e1.denominator(idealFactory),
 				e2.denominator(idealFactory));
 	}
 

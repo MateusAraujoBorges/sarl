@@ -26,7 +26,6 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
-import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
 
 /**
  * A constant which is not 1.
@@ -62,12 +61,6 @@ public class NTConstant extends IdealExpression implements Constant {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
-		return factory.monicSingletonMap((Monic) factory.one(type()),
-				(Monomial) this);
-	}
-
-	@Override
 	public Constant monomialConstant(IdealFactory factory) {
 		return this;
 	}
@@ -78,28 +71,18 @@ public class NTConstant extends IdealExpression implements Constant {
 	}
 
 	@Override
-	public Monomial factorization(IdealFactory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Polynomial numerator(IdealFactory factory) {
-		return this;
-	}
-
-	@Override
-	public Polynomial denominator(IdealFactory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return factory.one(type());
 	}
 
-	// @Override
-	// public Monomial leadingTerm() {
-	// return this;
-	// }
-
 	@Override
-	public Polynomial expand(IdealFactory factory) {
-		return this;
+	public SymbolicMap<Monic, Monomial> expand(IdealFactory factory) {
+		return factory.monicSingletonMap(factory.one(type()), this);
 	}
 
 	@Override
@@ -108,13 +91,13 @@ public class NTConstant extends IdealExpression implements Constant {
 	}
 
 	@Override
-	public int degree() {
+	public int monomialDegree() {
 		return isZero() ? -1 : 0;
 	}
 
 	@Override
-	public Constant constantTerm(IdealFactory factory) {
-		return this;
+	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
+		return factory.monicSingletonMap(factory.one(type()), this);
 	}
 
 }

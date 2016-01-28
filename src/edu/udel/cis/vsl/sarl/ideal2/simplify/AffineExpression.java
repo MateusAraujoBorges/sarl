@@ -19,6 +19,7 @@
 package edu.udel.cis.vsl.sarl.ideal2.simplify;
 
 import edu.udel.cis.vsl.sarl.IF.number.Number;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
 
 /**
@@ -45,23 +46,13 @@ public class AffineExpression {
 
 	private final static int classCode = AffineExpression.class.hashCode();
 
-	private Polynomial pseudo; /* maybe null */
+	private Monic pseudo; /* maybe null */
 
 	private Number coefficient; /* not null */
 
 	private Number offset; /* not null */
 
-	/**
-	 * @param pseudo
-	 *            Polynomial
-	 * @param coefficient
-	 *            leading coefficient number
-	 * @param offset
-	 *            offset number
-	 */
-
-	public AffineExpression(Polynomial pseudo, Number coefficient,
-			Number offset) {
+	public AffineExpression(Monic pseudo, Number coefficient, Number offset) {
 		assert coefficient != null;
 		assert offset != null;
 		assert iff(pseudo == null, coefficient.signum() == 0);
@@ -70,9 +61,6 @@ public class AffineExpression {
 		this.offset = offset;
 	}
 
-	/**
-	 * @return coefficient * pseudo
-	 */
 	public String toString() {
 		String result = "";
 
@@ -87,12 +75,7 @@ public class AffineExpression {
 		return result;
 	}
 
-	/**
-	 * 
-	 * @return Polynomial
-	 */
-
-	public Polynomial pseudo() {
+	public Monic pseudo() {
 		return pseudo;
 	}
 
@@ -115,14 +98,6 @@ public class AffineExpression {
 	boolean iff(boolean p, boolean q) {
 		return (p && q) || ((!p) && !q);
 	}
-
-	/**
-	 * Equals compares an affineExpression to another
-	 * 
-	 * @return boolean true if equal false if not equal
-	 * @param object
-	 *            an AffineExpression
-	 */
 
 	@Override
 	public boolean equals(Object object) {

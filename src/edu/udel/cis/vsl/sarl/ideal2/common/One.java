@@ -26,7 +26,6 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
-import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 
@@ -54,22 +53,12 @@ public class One extends IdealExpression implements Constant, Monic {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
-		return factory.monicSingletonMap((Monic) this, (Monomial) this);
-	}
-
-	// @Override
-	// public Monomial leadingTerm() {
-	// return this;
-	// }
-
-	@Override
-	public Polynomial numerator(IdealFactory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Polynomial denominator(IdealFactory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return this;
 	}
 
@@ -85,13 +74,8 @@ public class One extends IdealExpression implements Constant, Monic {
 	}
 
 	@Override
-	public Monomial factorization(IdealFactory factory) {
-		return this;
-	}
-
-	@Override
-	public Polynomial expand(IdealFactory factory) {
-		return this;
+	public SymbolicMap<Monic, Monomial> expand(IdealFactory factory) {
+		return factory.monicSingletonMap(this, this);
 	}
 
 	@Override
@@ -115,7 +99,7 @@ public class One extends IdealExpression implements Constant, Monic {
 	}
 
 	@Override
-	public int degree() {
+	public int monomialDegree() {
 		return 0;
 	}
 
@@ -125,8 +109,8 @@ public class One extends IdealExpression implements Constant, Monic {
 	}
 
 	@Override
-	public Constant constantTerm(IdealFactory factory) {
-		return this;
+	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
+		return factory.monicSingletonMap(this, this);
 	}
 
 }

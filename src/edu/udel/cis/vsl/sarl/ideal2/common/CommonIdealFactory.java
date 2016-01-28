@@ -18,17 +18,18 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
+import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
@@ -50,6 +51,7 @@ import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
+import edu.udel.cis.vsl.sarl.ideal.common.ReducedPolynomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
@@ -62,12 +64,12 @@ import edu.udel.cis.vsl.sarl.number.real.Exponentiator;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 import edu.udel.cis.vsl.sarl.util.BinaryOperator;
-import edu.udel.cis.vsl.sarl.util.Pair;
 
 /**
  * <p>
  * Implementation of a {@link NumericExpressionFactory} based on the theories of
- * mathematical real and integer arithmetic.
+ * mathematical real and integer arithmetic, with factored polynomials forming
+ * the core canonical form.
  * </p>
  *
  * <p>
@@ -243,6 +245,10 @@ public class CommonIdealFactory implements IdealFactory {
 	 */
 	private One oneInt;
 
+	private Constant negOneInt;
+
+	private Constant negOneReal;
+
 	/**
 	 * The real number 1, which in the ideal factory is represented as an
 	 * instance of {@link One}. A special class is needed here because 1 is both
@@ -266,6 +272,10 @@ public class CommonIdealFactory implements IdealFactory {
 	 * is an instance of {@link Constant}.
 	 */
 	private Constant zeroReal;
+
+	SymbolicMap<Monic, Monomial> oneTermMapInt;
+
+	SymbolicMap<Monic, Monomial> oneTermMapReal;
 
 	/**
 	 * The boolean symbolic expression "true".
@@ -292,6 +302,8 @@ public class CommonIdealFactory implements IdealFactory {
 	 * base.
 	 */
 	private PrimitivePowerMultiplier primitivePowerMultiplier;
+
+	private PrimitivePowerDivider primitivePowerDivider;
 
 	/**
 	 * An object used to raise integer numeric expressions to some concrete
@@ -353,19 +365,25 @@ public class CommonIdealFactory implements IdealFactory {
 				objectFactory.numberObject(numberFactory.oneInteger())));
 		this.oneReal = objectFactory.canonic(new One(realType,
 				objectFactory.numberObject(numberFactory.oneRational())));
+		this.negOneInt = canonicIntConstant(-1);
+		this.negOneReal = canonicRealConstant(-1);
 		this.zeroInt = canonicIntConstant(0);
 		this.zeroReal = canonicRealConstant(0);
+		this.oneTermMapInt = objectFactory
+				.canonic(monicSingletonMap(oneInt, oneInt));
+		this.oneTermMapReal = objectFactory
+				.canonic(monicSingletonMap(oneReal, oneReal));
 		this.monomialAdder = new MonomialAdder(this);
 		this.monomialNegater = new MonomialNegater(this);
 		this.primitivePowerMultiplier = new PrimitivePowerMultiplier(this);
+		this.primitivePowerDivider = new PrimitivePowerDivider(this);
 		this.integerExponentiator = new Exponentiator<NumericExpression>(
 				new BinaryOperator<NumericExpression>() {
 
 					@Override
 					public NumericExpression apply(NumericExpression x,
 							NumericExpression y) {
-						return multiplyPolynomials((Polynomial) x,
-								(Polynomial) y);
+						return multiplyMonomials((Monomial) x, (Monomial) y);
 					}
 
 				}, oneInt);
@@ -512,24 +530,6 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	/**
-	 * Returns a new reduced polynomial from the given type and term map. The
-	 * precondition is that the polynomial specified by the sum of the monomials
-	 * of the term map is reduced. This will not be checked.
-	 * 
-	 * @param type
-	 *            the numeric type of the polynomial
-	 * @param termMap
-	 *            the terms of the polynomial expressed as a map in which a
-	 *            monic maps to the unique monomial term involving that monic;
-	 *            all of the terms must have the specified type
-	 * @return the reduced polynomial as specified
-	 */
-	private ReducedPolynomial reducedPolynomial(SymbolicType type,
-			SymbolicMap<Monic, Monomial> termMap) {
-		return new ReducedPolynomial(type, termMap);
-	}
-
-	/**
 	 * Constructs new instance of {@link NTPolynomial}. Precondition:
 	 * <code>termMap</code> contains at least two terms; the factorization is
 	 * indeed a factorization of the polynomial.
@@ -538,13 +538,13 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            the terms of the polynomial expressed as a map in which a
 	 *            monic maps to the unique monomial term involving that monic;
 	 *            all of the terms must have the specified type
-	 * @param factorization
-	 *            a factorization of the polynomial
+	 * 
 	 * @return new instance of {@link NTPolynomial} as specified
 	 */
-	private NTPolynomial ntPolynomial(SymbolicMap<Monic, Monomial> termMap,
-			Monomial factorization) {
-		return new NTPolynomial(termMap, factorization);
+	@Override
+	public NTPolynomial polynomial(SymbolicType type,
+			SymbolicMap<Monic, Monomial> termMap) {
+		return new NTPolynomial(type, termMap);
 	}
 
 	/**
@@ -582,33 +582,6 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	/**
-	 * Constructs a {@link Polynomial} based on the given term map, using a
-	 * "trivial" factorization. The constant factor c in the trivial
-	 * factorization is obtained in the real type by taking the leading
-	 * coefficient; in the integer case by taking the GCD of the absolute values
-	 * of the coefficients. The factorization is then "c (p/c)^1", where p is
-	 * the polynomial defined by the <code>termMap</code>.
-	 * 
-	 * @param type
-	 *            integer or real type
-	 * @param termMap
-	 *            term map consistent with type
-	 * @return polynomial with trivial factorization
-	 */
-	private Polynomial polynomialWithTrivialFactorization(SymbolicType type,
-			SymbolicMap<Monic, Monomial> termMap) {
-		Monomial factorization;
-		Constant c = getConstantFactor(type, termMap);
-
-		if (c.isOne())
-			factorization = reducedPolynomial(type, termMap);
-		else
-			factorization = monomial(c,
-					reducedPolynomial(type, divide(termMap, c)));
-		return polynomial(termMap, factorization);
-	}
-
-	/**
 	 * Constructs new instance of {@link NTRationalExpression}. Nothing is
 	 * checked.
 	 * 
@@ -624,8 +597,8 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            the polynomial to use as denominator
 	 * @return rational expression p/q
 	 */
-	private NTRationalExpression ntRationalExpression(Polynomial numerator,
-			Polynomial denominator) {
+	private NTRationalExpression ntRationalExpression(Monomial numerator,
+			Monomial denominator) {
 		return new NTRationalExpression(numerator, denominator);
 	}
 
@@ -715,42 +688,24 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            <code>termMap1</code>
 	 * @return
 	 */
-	private SymbolicMap<Monic, Monomial> add(
+	@Override
+	public SymbolicMap<Monic, Monomial> addTermMaps(
 			SymbolicMap<Monic, Monomial> termMap1,
 			SymbolicMap<Monic, Monomial> termMap2) {
 		return termMap1.combine(monomialAdder, termMap2);
 	}
 
 	/**
-	 * Adds two polynomials that have no common primitives in their
-	 * factorizations.
-	 * 
-	 * @param p1
-	 *            a non-<code>null</code> {@link Polynomial}
-	 * @param p2
-	 *            a non-<code>null</code> {@link Polynomial} of same type as
-	 *            <code>p1</code> and such that the factorizations of
-	 *            <code>p1</code> and <code>p2</code> have no primitives in
-	 *            common
-	 * @return the sum p1+p2, with the trivial factorization
-	 */
-	private Polynomial addNoCommon(Polynomial p1, Polynomial p2) {
-		SymbolicType type = p1.type();
-		SymbolicMap<Monic, Monomial> newMap = add(p1.termMap(this),
-				p2.termMap(this));
-
-		if (newMap.isEmpty())
-			return zero(type);
-		if (newMap.size() == 1)
-			return newMap.getFirst();
-		else
-			return polynomialWithTrivialFactorization(type, newMap);
-	}
-
-	/**
+	 * <p>
 	 * Adds two rational expressions. The factorizations are used so that in the
 	 * resulting rational expression, the numerator and denominator have not
 	 * common factors.
+	 * </p>
+	 * 
+	 * <p>
+	 * Note: result = a1/b1 + a2/b2 = (a1*b2 + a2*b1)/(b1*b2). Let d=gcd(b1,b2).
+	 * Then result = (a1*(b2/d)+a2*(b1/d))/(b1*b2/d)
+	 * </p>
 	 * 
 	 * @param r1
 	 *            a non-<code>null</code> rational expression
@@ -761,22 +716,13 @@ public class CommonIdealFactory implements IdealFactory {
 	 */
 	private RationalExpression addRational(RationalExpression r1,
 			RationalExpression r2) {
-		Polynomial num1 = r1.numerator(this);
-		Polynomial num2 = r2.numerator(this);
-		Polynomial den1 = r1.denominator(this);
-		Polynomial den2 = r2.denominator(this);
-		Monomial fact1 = den1.factorization(this);
-		Monomial fact2 = den2.factorization(this);
-		Monomial[] triple = extractCommonality(fact1, fact2);
-		// [a,g1,g2]: f1=a*g1, f2=a*g2
-		// n1/d1+n2/d2=n1/rd1+n2/rd2=(n1d2+n2d1)/rd1d2
-		Polynomial common = triple[0].expand(this);
-		Polynomial d1 = triple[1].expand(this);
-		Polynomial d2 = triple[2].expand(this);
-		Polynomial denominator = multiplyPolynomials(common,
-				multiplyPolynomials(d1, d2));
-		Polynomial numerator = add(multiplyPolynomials(num1, d2),
-				multiplyPolynomials(num2, d1));
+		Monomial a1 = r1.numerator(this), a2 = r2.numerator(this);
+		Monomial b1 = r1.denominator(this), b2 = r2.denominator(this);
+		Monomial[] triple = extractCommonality(b1, b2);
+		Monomial b1divgcd = triple[1], b2divgcd = triple[2];
+		Monomial numerator = addMonomials(multiplyMonomials(a1, b2divgcd),
+				multiplyMonomials(a2, b1divgcd));
+		Monomial denominator = multiplyMonomials(b1, b2divgcd);
 
 		return divide(numerator, denominator);
 	}
@@ -809,43 +755,13 @@ public class CommonIdealFactory implements IdealFactory {
 	 * @return the term map obtained by multiplying each term by
 	 *         <code>constant</code>
 	 */
-	private SymbolicMap<Monic, Monomial> multiplyConstantMap(Constant constant,
-			SymbolicMap<Monic, Monomial> termMap) {
+	@Override
+	public SymbolicMap<Monic, Monomial> multiplyConstantTermMap(
+			Constant constant, SymbolicMap<Monic, Monomial> termMap) {
 		MonomialMultiplier multiplier = new MonomialMultiplier(this,
 				constant.number());
 
 		return termMap.apply(multiplier);
-	}
-
-	/**
-	 * Multiplies a {@link Constant} and a {@link Polynomial}.
-	 * 
-	 * @param constant
-	 *            a non-<code>null</code> {@link Constant}
-	 * @param polynomial
-	 *            a non-<code>null</code> {@link Polynomial} of the same type as
-	 *            <code>constant</code>
-	 * @return the polynomial resulting from multiplying each term by the
-	 *         constant
-	 */
-	private Polynomial multiplyConstantPolynomial(Constant constant,
-			Polynomial polynomial) {
-		if (constant.isZero())
-			return constant;
-		if (constant.isOne())
-			return polynomial;
-		else {
-			SymbolicMap<Monic, Monomial> oldTermMap = polynomial.termMap(this);
-			SymbolicMap<Monic, Monomial> newTermMap = multiplyConstantMap(
-					constant, oldTermMap);
-			Monomial oldFactorization = polynomial.factorization(this);
-			Monomial newFactorization = monomial(
-					multiplyConstants(constant,
-							oldFactorization.monomialConstant(this)),
-					oldFactorization.monic(this));
-
-			return polynomial(newTermMap, newFactorization);
-		}
 	}
 
 	/**
@@ -873,7 +789,8 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            <code>m1</code>
 	 * @return the product of the two monomials
 	 */
-	private Monomial multiplyMonomials(Monomial m1, Monomial m2) {
+	@Override
+	public Monomial multiplyMonomials(Monomial m1, Monomial m2) {
 		return monomial(
 				multiplyConstants(m1.monomialConstant(this),
 						m2.monomialConstant(this)),
@@ -886,7 +803,8 @@ public class CommonIdealFactory implements IdealFactory {
 	 * maps is defined by considering each to be a sum its entries.
 	 * </p>
 	 */
-	private SymbolicMap<Monic, Monomial> multiplyTermMaps(
+	@Override
+	public SymbolicMap<Monic, Monomial> multiplyTermMaps(
 			SymbolicMap<Monic, Monomial> termMap1,
 			SymbolicMap<Monic, Monomial> termMap2) {
 		int n1 = termMap1.size(), n2 = termMap2.size();
@@ -896,112 +814,12 @@ public class CommonIdealFactory implements IdealFactory {
 		// .println("Debug: multiplying maps of size: " + n1 + ", " + n2);
 		// System.out.flush();
 
-		if (n1 * n2 >= POLYMULT_THRESHOLD) {
-			SymbolicType type = termMap1.getFirst().monic(this).type();
-			Primitive poly1 = reducedPolynomial(type, termMap1);
-			Primitive poly2 = reducedPolynomial(type, termMap2);
-			Monic monic = multiplyMonics(poly1, poly2);
-
-			result = collectionFactory.singletonSortedMap(monicComparator,
-					monic, (Monomial) monic);
-		} else { // currently 2 is best...
-			result = multiplyTermMaps2(termMap1, termMap2);
-		}
+		result = multiplyTermMaps2(termMap1, termMap2);
 
 		// System.out.println("Debug: completed multiplication with result size:
 		// "
 		// + result.size());
 		// System.out.flush();
-		return result;
-	}
-
-	/**
-	 * <p>
-	 * Multiplies two term maps, returning a term map. The product of two term
-	 * maps is defined by considering each to be a sum its entries.
-	 * </p>
-	 * 
-	 * <p>
-	 * Implementation note: the trick to performance is to do perform all
-	 * intermediate computations using mutable data structures, and only wrap
-	 * things up into the immutable structures at the end.
-	 * </p>
-	 * 
-	 * @param termMap1
-	 *            a polynomial term map
-	 * @param termMap2
-	 *            a polynomial term map of same type as <code>termMap1</code>
-	 * @return the term map that results from multiplying the two given ones as
-	 *         if they both were sums, which results in a term map using the
-	 *         distributive property
-	 */
-	@SuppressWarnings("unused")
-	private SymbolicMap<Monic, Monomial> multiplyTermMaps1(
-			SymbolicMap<Monic, Monomial> termMap1,
-			SymbolicMap<Monic, Monomial> termMap2) {
-		// Map<Monic, Number> productMap = new TreeMap<>(monicComparator);
-		Map<Monic, Number> productMap = new HashMap<>();
-		int n2 = termMap2.size();
-
-		@SuppressWarnings("unchecked")
-		Pair<Monic, Number>[] pairs2 = (Pair<Monic, Number>[]) new Pair<?, ?>[n2];
-		Iterator<Entry<Monic, Monomial>> entries2 = termMap2.entries()
-				.iterator();
-
-		for (int i = 0; i < n2; i++) {
-			Entry<Monic, Monomial> entry = entries2.next();
-
-			pairs2[i] = new Pair<Monic, Number>(entry.getKey(), entry.getValue()
-					.monomialConstant(this).value().getNumber());
-		}
-
-		for (Entry<Monic, Monomial> entry1 : termMap1.entries()) {
-			Monic monic1 = entry1.getKey();
-			Number number1 = entry1.getValue().monomialConstant(this).value()
-					.getNumber();
-
-			for (Pair<Monic, Number> pair2 : pairs2) {
-				Monic monic2 = pair2.left;
-				Number number2 = pair2.right;
-				Monic monicProduct = multiplyMonics(monic1, monic2);
-				Number numberProduct = numberFactory.multiply(number1, number2);
-				Number oldNumber = productMap.get(monicProduct);
-				Number newNumber = oldNumber == null ? numberProduct
-						: numberFactory.add(oldNumber, numberProduct);
-
-				if (newNumber.isZero())
-					productMap.remove(monicProduct);
-				else
-					productMap.put(monicProduct, newNumber);
-			}
-		}
-
-		int size = productMap.size();
-		@SuppressWarnings("unchecked")
-		Entry<Monic, Monomial>[] entries = (Entry<Monic, Monomial>[]) (new Entry<?, ?>[size]);
-		int count = 0;
-
-		for (Entry<Monic, Number> pair : productMap.entrySet()) {
-			Monic monic = pair.getKey();
-			Monomial monomial = monomial(constant(pair.getValue()), monic);
-
-			entries[count] = collectionFactory.entry(monic, monomial);
-			count++;
-		}
-
-		Arrays.sort(entries, new Comparator<Entry<Monic, Monomial>>() {
-
-			@Override
-			public int compare(Entry<Monic, Monomial> o1,
-					Entry<Monic, Monomial> o2) {
-				return monicComparator.compare(o1.getKey(), o2.getKey());
-			}
-
-		});
-
-		SymbolicMap<Monic, Monomial> result = collectionFactory
-				.sortedMap(monicComparator, entries);
-
 		return result;
 	}
 
@@ -1060,163 +878,165 @@ public class CommonIdealFactory implements IdealFactory {
 			SymbolicMap<Monic, Monomial> productMap = multiplyMonomialTermMap(
 					monomial1, termMap2);
 
-			result = add(result, productMap);
+			result = addTermMaps(result, productMap);
 		}
 		return result;
 	}
 
-	/**
-	 * Merges the two sorted lists, possibly modifying either or both in the
-	 * process.
-	 * 
-	 * @param vec1
-	 * @param vec2
-	 * @return
-	 */
-	private ArrayList<Pair<Monic, Number>> merge(
-			ArrayList<Pair<Monic, Number>> vec1,
-			ArrayList<Pair<Monic, Number>> vec2) {
-		int n1 = vec1.size();
-
-		if (n1 == 0)
-			return vec2;
-
-		int n2 = vec2.size();
-
-		if (n2 == 0)
-			return vec1;
-
-		int i1 = 0, i2 = 0;
-		Pair<Monic, Number> pair1 = vec1.get(i1), pair2 = vec2.get(i2);
-		Monic monic1 = pair1.left, monic2 = pair2.left;
-		ArrayList<Pair<Monic, Number>> result = new ArrayList<>(n1 + n2);
-
-		while (true) {
-			int c = monicComparator.compare(monic1, monic2);
-
-			if (c < 0) {
-				result.add(pair1);
-				i1++;
-				if (i1 == n1)
-					break;
-				pair1 = vec1.get(i1);
-				monic1 = pair1.left;
-			} else if (c > 0) {
-				result.add(pair2);
-				i2++;
-				if (i2 == n2)
-					break;
-				pair2 = vec2.get(i2);
-				monic2 = pair2.left;
-			} else if (c == 0) {
-				Number sum = numberFactory.add(pair1.right, pair2.right);
-
-				if (!sum.isZero()) {
-					pair1.right = sum;
-					result.add(pair1);
-				}
-				i1++;
-				i2++;
-				if (i1 == n1 || i2 == n2)
-					break;
-				pair1 = vec1.get(i1);
-				monic1 = pair1.left;
-				pair2 = vec2.get(i2);
-				monic2 = pair2.left;
-			}
-		}
-		while (i1 < n1) {
-			result.add(vec1.get(i1));
-			i1++;
-		}
-		while (i2 < n2) {
-			result.add(vec2.get(i2));
-			i2++;
-		}
-		return result;
-	}
-
-	/**
-	 * Computes the product of the sum of a slice of terms in one term map with
-	 * the sum of all the terms in a second term map. The slice of terms is
-	 * specified by giving the first index and the number of terms. The slice
-	 * consists of the terms in positions index, index+1, ..., index+count-1.
-	 * 
-	 * @param termMap1
-	 *            the first term map
-	 * @param start
-	 *            starting index in termMap1 specifying the beginning of the
-	 *            slice
-	 * @param count
-	 *            the number of terms in termMap1 to include in the slice
-	 * @param termMap2
-	 *            the second term map
-	 * @return
-	 */
-	private ArrayList<Pair<Monic, Number>> multiplyAux(
-			Entry<Monic, Monomial>[] entries1, int start, int count,
-			Entry<Monic, Monomial>[] entries2) {
-		ArrayList<Pair<Monic, Number>> result;
-
-		if (count == 0) {
-			assert (false);
-			result = new ArrayList<Pair<Monic, Number>>(0);
-		} else if (count == 1) {
-			Entry<Monic, Monomial> entry1 = entries1[start];
-			Monic monic1 = entry1.getKey();
-			Number number1 = entry1.getValue().monomialConstant(this).number();
-			int size2 = entries2.length;
-
-			result = new ArrayList<>(size2);
-			for (int i = 0; i < size2; i++) {
-				Entry<Monic, Monomial> entry2 = entries2[i];
-				Monic monic2 = entry2.getKey();
-				Number number2 = entry2.getValue().monomialConstant(this)
-						.number();
-
-				result.add(
-						new Pair<Monic, Number>(multiplyMonics(monic1, monic2),
-								numberFactory.multiply(number1, number2)));
-			}
-		} else { // count > 1
-			int n2 = count / 2, n1 = count - n2;
-			ArrayList<Pair<Monic, Number>> result1 = multiplyAux(entries1,
-					start, n1, entries2);
-			ArrayList<Pair<Monic, Number>> result2 = multiplyAux(entries1,
-					start + n1, n2, entries2);
-
-			result = merge(result1, result2);
-		}
-		return result;
-	}
-
-	/**
-	 * An attempt at optimizing multiplication of term maps by using a binary
-	 * merging scheme---doesn't seem to improve anything.
-	 * 
-	 * @param termMap1
-	 * @param termMap2
-	 * @return
-	 */
-	@SuppressWarnings("unused")
-	private SymbolicMap<Monic, Monomial> multiplyTermMaps3(
-			SymbolicMap<Monic, Monomial> termMap1,
-			SymbolicMap<Monic, Monomial> termMap2) {
-		ArrayList<Pair<Monic, Number>> pairs = multiplyAux(
-				termMap1.entryArray(), 0, termMap1.size(),
-				termMap2.entryArray());
-		int size = pairs.size();
-		@SuppressWarnings("unchecked")
-		Entry<Monic, Monomial>[] entries = (Entry<Monic, Monomial>[]) new Entry<?, ?>[size];
-		int i = 0;
-
-		for (Pair<Monic, Number> pair : pairs) {
-			entries[i] = collectionFactory.entry(pair.left,
-					monomial(constant(pair.right), pair.left));
-			i++;
-		}
-		return collectionFactory.sortedMap(monicComparator, entries);
-	}
+	// /**
+	// * Merges the two sorted lists, possibly modifying either or both in the
+	// * process.
+	// *
+	// * @param vec1
+	// * @param vec2
+	// * @return
+	// */
+	// private ArrayList<Pair<Monic, Number>> merge(
+	// ArrayList<Pair<Monic, Number>> vec1,
+	// ArrayList<Pair<Monic, Number>> vec2) {
+	// int n1 = vec1.size();
+	//
+	// if (n1 == 0)
+	// return vec2;
+	//
+	// int n2 = vec2.size();
+	//
+	// if (n2 == 0)
+	// return vec1;
+	//
+	// int i1 = 0, i2 = 0;
+	// Pair<Monic, Number> pair1 = vec1.get(i1), pair2 = vec2.get(i2);
+	// Monic monic1 = pair1.left, monic2 = pair2.left;
+	// ArrayList<Pair<Monic, Number>> result = new ArrayList<>(n1 + n2);
+	//
+	// while (true) {
+	// int c = monicComparator.compare(monic1, monic2);
+	//
+	// if (c < 0) {
+	// result.add(pair1);
+	// i1++;
+	// if (i1 == n1)
+	// break;
+	// pair1 = vec1.get(i1);
+	// monic1 = pair1.left;
+	// } else if (c > 0) {
+	// result.add(pair2);
+	// i2++;
+	// if (i2 == n2)
+	// break;
+	// pair2 = vec2.get(i2);
+	// monic2 = pair2.left;
+	// } else if (c == 0) {
+	// Number sum = numberFactory.add(pair1.right, pair2.right);
+	//
+	// if (!sum.isZero()) {
+	// pair1.right = sum;
+	// result.add(pair1);
+	// }
+	// i1++;
+	// i2++;
+	// if (i1 == n1 || i2 == n2)
+	// break;
+	// pair1 = vec1.get(i1);
+	// monic1 = pair1.left;
+	// pair2 = vec2.get(i2);
+	// monic2 = pair2.left;
+	// }
+	// }
+	// while (i1 < n1) {
+	// result.add(vec1.get(i1));
+	// i1++;
+	// }
+	// while (i2 < n2) {
+	// result.add(vec2.get(i2));
+	// i2++;
+	// }
+	// return result;
+	// }
+	//
+	// /**
+	// * Computes the product of the sum of a slice of terms in one term map
+	// with
+	// * the sum of all the terms in a second term map. The slice of terms is
+	// * specified by giving the first index and the number of terms. The slice
+	// * consists of the terms in positions index, index+1, ..., index+count-1.
+	// *
+	// * @param termMap1
+	// * the first term map
+	// * @param start
+	// * starting index in termMap1 specifying the beginning of the
+	// * slice
+	// * @param count
+	// * the number of terms in termMap1 to include in the slice
+	// * @param termMap2
+	// * the second term map
+	// * @return
+	// */
+	// private ArrayList<Pair<Monic, Number>> multiplyAux(
+	// Entry<Monic, Monomial>[] entries1, int start, int count,
+	// Entry<Monic, Monomial>[] entries2) {
+	// ArrayList<Pair<Monic, Number>> result;
+	//
+	// if (count == 0) {
+	// assert (false);
+	// result = new ArrayList<Pair<Monic, Number>>(0);
+	// } else if (count == 1) {
+	// Entry<Monic, Monomial> entry1 = entries1[start];
+	// Monic monic1 = entry1.getKey();
+	// Number number1 = entry1.getValue().monomialConstant(this).number();
+	// int size2 = entries2.length;
+	//
+	// result = new ArrayList<>(size2);
+	// for (int i = 0; i < size2; i++) {
+	// Entry<Monic, Monomial> entry2 = entries2[i];
+	// Monic monic2 = entry2.getKey();
+	// Number number2 = entry2.getValue().monomialConstant(this)
+	// .number();
+	//
+	// result.add(
+	// new Pair<Monic, Number>(multiplyMonics(monic1, monic2),
+	// numberFactory.multiply(number1, number2)));
+	// }
+	// } else { // count > 1
+	// int n2 = count / 2, n1 = count - n2;
+	// ArrayList<Pair<Monic, Number>> result1 = multiplyAux(entries1,
+	// start, n1, entries2);
+	// ArrayList<Pair<Monic, Number>> result2 = multiplyAux(entries1,
+	// start + n1, n2, entries2);
+	//
+	// result = merge(result1, result2);
+	// }
+	// return result;
+	// }
+	//
+	// /**
+	// * An attempt at optimizing multiplication of term maps by using a binary
+	// * merging scheme---doesn't seem to improve anything.
+	// *
+	// * @param termMap1
+	// * @param termMap2
+	// * @return
+	// */
+	// @SuppressWarnings("unused")
+	// private SymbolicMap<Monic, Monomial> multiplyTermMaps3(
+	// SymbolicMap<Monic, Monomial> termMap1,
+	// SymbolicMap<Monic, Monomial> termMap2) {
+	// ArrayList<Pair<Monic, Number>> pairs = multiplyAux(
+	// termMap1.entryArray(), 0, termMap1.size(),
+	// termMap2.entryArray());
+	// int size = pairs.size();
+	// @SuppressWarnings("unchecked")
+	// Entry<Monic, Monomial>[] entries = (Entry<Monic, Monomial>[]) new
+	// Entry<?, ?>[size];
+	// int i = 0;
+	//
+	// for (Pair<Monic, Number> pair : pairs) {
+	// entries[i] = collectionFactory.entry(pair.left,
+	// monomial(constant(pair.right), pair.left));
+	// i++;
+	// }
+	// return collectionFactory.sortedMap(monicComparator, entries);
+	// }
 
 	/**
 	 * Multiplies two rational expressions.
@@ -1244,10 +1064,8 @@ public class CommonIdealFactory implements IdealFactory {
 		// r1 = objectFactory.canonic(r1);
 		// r2 = objectFactory.canonic(r2);
 
-		return divide(
-				multiplyPolynomials(r1.numerator(this), r2.numerator(this)),
-				multiplyPolynomials(r1.denominator(this),
-						r2.denominator(this)));
+		return divide(multiplyMonomials(r1.numerator(this), r2.numerator(this)),
+				multiplyMonomials(r1.denominator(this), r2.denominator(this)));
 	}
 
 	/**
@@ -1276,7 +1094,7 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            a constant
 	 * @return termMap resulting from dividing all monomials by the constant
 	 */
-	private SymbolicMap<Monic, Monomial> divide(
+	private SymbolicMap<Monic, Monomial> divideTermMapConstant(
 			SymbolicMap<Monic, Monomial> termMap, Constant constant) {
 		MonomialDivider divider = new MonomialDivider(this, constant.number());
 
@@ -1354,13 +1172,17 @@ public class CommonIdealFactory implements IdealFactory {
 				(IntegerNumber) c2.number()));
 	}
 
+	// following is how to do integer division and modulus operations
+	// on monomials. no need to factor now that we are dealing
+	// with monomials instead of polynomials.
+
 	/**
-	 * Given two non-zero polynomials p1 and p2 of integer type, factor out
-	 * common factors, including a positive constant. Returns a triple (r,q1,q2)
-	 * of Polynomials such that:
+	 * Given two non-zero {@link Monomial}s m1 and m2 of integer type, factor
+	 * out common factors, including a positive constant. Returns a triple
+	 * (r,q1,q2) of {@link Monomial}s such that:
 	 * 
 	 * <ul>
-	 * <li>p1=r*q1 and p2=r*q2</li>
+	 * <li>m1=r*q1 and m2=r*q2</li>
 	 * <li>the GCD of the absolute values of all the coefficients in q1 and q2
 	 * together is 1</li>
 	 * <li>the factorizations of q1 and q2 have no common factors</li>
@@ -1368,36 +1190,32 @@ public class CommonIdealFactory implements IdealFactory {
 	 * </ul>
 	 * 
 	 * This is used in integer division and modulus operations. For integer
-	 * division: p1/p2 = q1/q2. For modulus: p1%p2 = r*(q1%q2).
+	 * division: m1/m2 = q1/q2. For modulus: m1%m2 = r*(q1%q2).
 	 * 
-	 * @param poly1
-	 *            a non-0 polynomial of integer type
-	 * @param poly2
-	 *            a non-0 polynomial of integer type
+	 * @param m1
+	 *            a non-0 {@link Monomial} of integer type
+	 * @param m2
+	 *            a non-0 {@link Monomial} of integer type
 	 * @return the triple (r,q1,q2) described above
 	 */
-	private Polynomial[] intFactor(Polynomial poly1, Polynomial poly2) {
-		Monomial fact1 = poly1.factorization(this);
-		Monomial fact2 = poly2.factorization(this);
-		Monomial[] triple = extractCommonality(fact1, fact2);
-		Polynomial r, q1, q2;
+	private Monomial[] intFactor(Monomial m1, Monomial m2) {
+		Monomial[] triple = extractCommonality(m1, m2);
+		Monomial r, q1, q2;
 		IntegerNumber c1, c2;
 
 		if (triple[0].isOne()) {
-			q1 = poly1;
-			q2 = poly2;
+			q1 = m1;
+			q2 = m2;
 			r = oneInt;
 		} else {
-			q1 = triple[1].expand(this);
-			fact1 = q1.factorization(this);
-			q2 = triple[2].expand(this);
-			fact2 = q2.factorization(this);
-			r = triple[0].expand(this);
+			q1 = triple[1];
+			q2 = triple[2];
+			r = triple[0];
 		}
 		c1 = (IntegerNumber) numberFactory
-				.abs(fact1.monomialConstant(this).number());
+				.abs(m2.monomialConstant(this).number());
 		c2 = (IntegerNumber) numberFactory
-				.abs(fact2.monomialConstant(this).number());
+				.abs(m2.monomialConstant(this).number());
 		if (!c1.isOne() && !c2.isOne()) {
 			IntegerNumber gcd = numberFactory.gcd(c1, c2);
 
@@ -1406,30 +1224,34 @@ public class CommonIdealFactory implements IdealFactory {
 
 				q1 = divide(q1, gcdConstant);
 				q2 = divide(q2, gcdConstant);
-				r = multiplyConstantPolynomial(gcdConstant, r);
+				r = multiplyConstantMonomial(gcdConstant, r);
 			}
 		}
-		return new Polynomial[] { r, q1, q2 };
+		return new Monomial[] { r, q1, q2 };
 	}
 
 	/**
-	 * Divides two polynomials of integer type. This will always return a
-	 * {@link Polynomial}, never a non-polynomial {@link RationalExpression}. In
-	 * the worst case (if the denominator does not evenly divide the numerator),
-	 * the result will be a primitive expression ({@link NumericPrimitive}) in
-	 * which the operator is {@link SymbolicOperator#INT_DIVIDE}.
+	 * <p>
+	 * Divides two {@link Monomial}s of integer type. This will always return a
+	 * {@link Monomial}, never a non-monomial {@link RationalExpression}. In the
+	 * worst case (if the denominator does not evenly divide the numerator), the
+	 * result will be a primitive expression ({@link NumericPrimitive}) in which
+	 * the operator is {@link SymbolicOperator#INT_DIVIDE}.
+	 * </p>
 	 * 
-	 * Integer division D: assume all terms positive. (ad)/(bd) = a/b
+	 * <p>
+	 * Note on integer division: assume all terms positive. (ad)/(bd) = a/b
+	 * </p>
 	 * 
 	 * @param numerator
 	 *            polynomial of integer type
 	 * @param denominator
 	 *            polynomial of integer type
-	 * @return result of division as Polynomial, which might be a new primitive
-	 *         expression
+	 * @return result of division as {@link Monomial}, which might be a new
+	 *         primitive expression
 	 */
-	private Polynomial intDividePolynomials(Polynomial numerator,
-			Polynomial denominator) {
+	private Monomial intDivideMonomials(Monomial numerator,
+			Monomial denominator) {
 		assert numerator.type().isInteger();
 		assert denominator.type().isInteger();
 		if (numerator.isZero())
@@ -1440,7 +1262,7 @@ public class CommonIdealFactory implements IdealFactory {
 			return intDivideConstants((Constant) numerator,
 					(Constant) denominator);
 		else {
-			Polynomial[] triple = intFactor(numerator, denominator);
+			Monomial[] triple = intFactor(numerator, denominator);
 
 			numerator = triple[1];
 			denominator = triple[2];
@@ -1457,7 +1279,7 @@ public class CommonIdealFactory implements IdealFactory {
 
 	/**
 	 * <p>
-	 * Computes the integer modulus of two polynomials of integer type.
+	 * Computes the integer modulus of two {@link Monomial}s of integer type.
 	 * </p>
 	 * 
 	 * <p>
@@ -1476,13 +1298,13 @@ public class CommonIdealFactory implements IdealFactory {
 	 * </p>
 	 * 
 	 * @param numerator
-	 *            an integer polynomial assumed to be nonnegative
+	 *            an integer monomial assumed to be nonnegative
 	 * @param denominator
-	 *            an integer polynomial assumed to be positive
-	 * @return the polynomial representing numerator%denominator
+	 *            an integer monomial assumed to be positive
+	 * @return the monomial representing numerator%denominator
 	 */
-	private Polynomial intModulusPolynomials(Polynomial numerator,
-			Polynomial denominator) {
+	private Monomial intModulusMonomials(Monomial numerator,
+			Monomial denominator) {
 		if (numerator.isZero())
 			return numerator;
 		if (denominator.isOne())
@@ -1491,7 +1313,7 @@ public class CommonIdealFactory implements IdealFactory {
 			return intModuloConstants((Constant) numerator,
 					(Constant) denominator);
 		else {
-			Polynomial[] triple = intFactor(numerator, denominator);
+			Monomial[] triple = intFactor(numerator, denominator);
 
 			numerator = triple[1];
 			denominator = triple[2];
@@ -1499,12 +1321,12 @@ public class CommonIdealFactory implements IdealFactory {
 				return zeroInt;
 			if (numerator instanceof Constant
 					&& denominator instanceof Constant)
-				return multiplyConstantPolynomial(
+				return multiplyConstantMonomial(
 						intModuloConstants((Constant) numerator,
 								(Constant) denominator),
 						triple[0]);
 			else
-				return multiplyPolynomials(triple[0],
+				return multiplyMonomials(triple[0],
 						expression(SymbolicOperator.MODULO, integerType,
 								numerator, denominator));
 		}
@@ -1523,18 +1345,18 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	/**
-	 * Divides two polynomials of real type. Result is a
+	 * Divides two {@link Monomial}s of real type. Result is a
 	 * {@link RationalExpression}. Simplifications are performed by canceling
 	 * common factors as possible.
 	 * 
 	 * @param numerator
-	 *            a non-<code>null</code> polynomial of real type
+	 *            a non-<code>null</code> monomial of real type
 	 * @param denominator
-	 *            a non-<code>null</code> non-0 polynomial of real type
+	 *            a non-<code>null</code> non-0 monomial of real type
 	 * @return numerator/denominator
 	 */
-	private RationalExpression divide(Polynomial numerator,
-			Polynomial denominator) {
+	private RationalExpression divide(Monomial numerator,
+			Monomial denominator) {
 		assert numerator.type().isReal();
 		assert denominator.type().isReal();
 		if (numerator.isZero())
@@ -1542,17 +1364,15 @@ public class CommonIdealFactory implements IdealFactory {
 		if (denominator.isOne())
 			return numerator;
 		else { // cancel common factors...
-			Monomial[] triple = extractCommonality(
-					numerator.factorization(this),
-					denominator.factorization(this));
-			Constant denomConstant;
+			Monomial[] triple = extractCommonality(numerator, denominator);
 
 			if (!triple[0].isOne()) {
-				numerator = triple[1].expand(this);
-				denominator = triple[2].expand(this);
+				numerator = triple[1];
+				denominator = triple[2];
 			}
-			denomConstant = denominator.factorization(this)
-					.monomialConstant(this);
+
+			Constant denomConstant = denominator.monomialConstant(this);
+
 			if (!denomConstant.isOne()) {
 				denominator = divide(denominator, denomConstant);
 				numerator = divide(numerator, denomConstant);
@@ -1578,19 +1398,6 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	/**
-	 * Negates a polynomial, i.e., given a polynomial p, returns the polynomial
-	 * -p.
-	 * 
-	 * @param polynomial
-	 *            a non-<code>null</code> polynomial
-	 * @return negation of that polynomial
-	 */
-	private Polynomial negate(Polynomial polynomial) {
-		return polynomial(negate(polynomial.termMap(this)),
-				negate(polynomial.factorization(this)));
-	}
-
-	/**
 	 * Negates a rational expression, i.e., given a rational expression p/q,
 	 * returns the rational expression -p/q.
 	 * 
@@ -1599,8 +1406,6 @@ public class CommonIdealFactory implements IdealFactory {
 	 * @return negation of that rational expression in normal form
 	 */
 	private RationalExpression negate(RationalExpression rational) {
-		// TODO: here NO NEED TO go through all division checks, factorizations,
-		// etc. just need to negate numerator. Need divideNoCommon...
 		return divide(negate(rational.numerator(this)),
 				rational.denominator(this));
 	}
@@ -1767,82 +1572,229 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	/**
-	 * Given a <code>polynomial</code>, returns an expression equivalent to
-	 * <code>polynomial&gt;0</code>. Basic simplifications are performed, e.g.,
-	 * if <code>polynomial</code> is concrete, a concrete boolean expression is
+	 * Given a {@link Monomial} <i>m</i>, returns an expression equivalent to
+	 * <i>m</i>&gt;0. Basic simplifications are performed, e.g., if
+	 * <code>polynomial</code> is concrete, a concrete boolean expression is
 	 * returned.
 	 * 
-	 * @param polynomial
-	 *            a non-<code>null</code> {@link Polynomial}
-	 * @return an expression equivalent to <code>polynomial&gt;0</code>
+	 * @param monomkal
+	 *            a non-<code>null</code> {@link Monomial}
+	 * @return an expression equivalent to <code>monomial&gt;0</code>
 	 */
-	private BooleanExpression isPositive(Polynomial polynomial) {
-		Number number = extractNumber(polynomial);
+	private BooleanExpression isPositive(Monomial monomial) {
+		Number number = extractNumber(monomial);
 
-		if (number == null) {
-			return booleanFactory.booleanExpression(SymbolicOperator.LESS_THAN,
-					zero(polynomial.type()), polynomial);
+		if (number != null)
+			return number.signum() > 0 ? trueExpr : falseExpr;
+
+		SymbolicType type = monomial.type();
+		Constant zero = zero(type);
+		Monic monic = monomial.monic(this);
+		int signum = monomial.monomialConstant(this).number().signum();
+		SymbolicMap<Primitive, PrimitivePower> factorMap = monic
+				.monicFactors(this);
+		List<Primitive> positives = new LinkedList<>(),
+				nonzeros = new LinkedList<>();
+
+		for (Entry<Primitive, PrimitivePower> entry : factorMap.entries()) {
+			PrimitivePower primitivePower = entry.getValue();
+			int exponent = primitivePower.primitivePowerExponent(this).getInt();
+
+			if (exponent % 2 == 0)
+				nonzeros.add(entry.getKey());
+			else
+				positives.add(entry.getKey());
 		}
-		return number.signum() > 0 ? trueExpr : falseExpr;
+
+		BooleanExpression result;
+		int numPositives = positives.size();
+
+		if (numPositives == 0) {
+			if (signum < 0)
+				return falseExpr;
+			result = trueExpr;
+		} else {
+			@SuppressWarnings("unchecked")
+			Entry<Primitive, PrimitivePower>[] reducedEntries = (Entry<Primitive, PrimitivePower>[]) new Entry<?, ?>[numPositives];
+			int count = 0;
+
+			for (Primitive p : positives) {
+				reducedEntries[count] = collectionFactory.entry(p, p);
+				count++;
+			}
+
+			Monic reducedMonic = monic(type, collectionFactory
+					.sortedMap(primitiveComparator, reducedEntries));
+
+			result = signum > 0
+					? booleanFactory.booleanExpression(
+							SymbolicOperator.LESS_THAN, zero, reducedMonic)
+					: booleanFactory.booleanExpression(
+							SymbolicOperator.LESS_THAN, reducedMonic, zero);
+		}
+		for (Primitive p : nonzeros) {
+			result = booleanFactory.and(result, booleanFactory
+					.booleanExpression(SymbolicOperator.NEQ, zero, p));
+		}
+		return result;
 	}
 
 	/**
-	 * Given a <code>polynomial</code>, returns an expression equivalent to
-	 * <code>polynomial&lt;0</code>. Basic simplifications are performed, e.g.,
-	 * if <code>polynomial</code> is concrete, a concrete boolean expression is
+	 * Given a <code>monomial</code>, returns an expression equivalent to
+	 * <code>monomial&lt;0</code>. Basic simplifications are performed, e.g., if
+	 * <code>monomial</code> is concrete, a concrete boolean expression is
 	 * returned.
 	 * 
-	 * @param polynomial
-	 *            a non-<code>null</code> {@link Polynomial}
+	 * @param monomial
+	 *            a non-<code>null</code> {@link Monomial}
 	 * @return an expression equivalent to <code>polynomial&lt;0</code>
 	 */
-	private BooleanExpression isNegative(Polynomial polynomial) {
-		return isPositive(negate(polynomial));
+	private BooleanExpression isNegative(Monomial monomial) {
+		return isPositive(negate(monomial));
 	}
 
 	/**
-	 * Given a <code>polynomial</code>, returns an expression equivalent to
-	 * <code>0&le;polynomial</code>. Basic simplifications are performed, e.g.,
-	 * if <code>polynomial</code> is concrete, a concrete boolean expression is
+	 * Given a <code>monomial</code>, returns an expression equivalent to
+	 * <code>0&le;monomial</code>. Basic simplifications are performed, e.g., if
+	 * <code>monomial</code> is concrete, a concrete boolean expression is
 	 * returned.
 	 * 
-	 * @param polynomial
-	 *            a non-<code>null</code> {@link Polynomial}
-	 * @return an expression equivalent to <code>0&le;polynomial</code>
+	 * @param monomial
+	 *            a non-<code>null</code> {@link Monomial}
+	 * @return an expression equivalent to <code>0&le;monomial</code>
 	 */
-	private BooleanExpression isNonnegative(Polynomial polynomial) {
-		Number number = extractNumber(polynomial);
+	private BooleanExpression isNonnegative(Monomial monomial) {
+		// X1^2n * X2^2n * Y1^(2n+1) * Y2^(2n+1) >= 0 IFF
+		// X1=0 || X2=0 || Y1*Y2>=0
+		Number number = extractNumber(monomial);
 
-		if (number == null) {
-			return booleanFactory.booleanExpression(
-					SymbolicOperator.LESS_THAN_EQUALS, zero(polynomial.type()),
-					polynomial);
+		if (number != null)
+			return number.signum() >= 0 ? trueExpr : falseExpr;
+
+		SymbolicType type = monomial.type();
+		Constant zero = zero(type);
+		Monic monic = monomial.monic(this);
+		int signum = monomial.monomialConstant(this).number().signum();
+		SymbolicMap<Primitive, PrimitivePower> factorMap = monic
+				.monicFactors(this);
+		List<Primitive> evens = new LinkedList<>(), odds = new LinkedList<>();
+
+		for (Entry<Primitive, PrimitivePower> entry : factorMap.entries()) {
+			PrimitivePower primitivePower = entry.getValue();
+			Primitive p = entry.getKey();
+			int exponent = primitivePower.primitivePowerExponent(this).getInt();
+
+			if (exponent % 2 != 0)
+				odds.add(p);
+			else
+				evens.add(p);
 		}
-		return number.signum() >= 0 ? trueExpr : falseExpr;
+
+		int numOdds = odds.size();
+
+		if (numOdds == 0 && signum >= 0)
+			return trueExpr;
+
+		BooleanExpression result = falseExpr;
+
+		for (Primitive p : evens)
+			result = booleanFactory.or(result, booleanFactory
+					.booleanExpression(SymbolicOperator.EQUALS, zero, p));
+		if (numOdds > 0) {
+			@SuppressWarnings("unchecked")
+			Entry<Primitive, PrimitivePower>[] reducedEntries = (Entry<Primitive, PrimitivePower>[]) new Entry<?, ?>[numOdds];
+			int count = 0;
+
+			for (Primitive p : odds) {
+				reducedEntries[count] = collectionFactory.entry(p, p);
+				count++;
+			}
+
+			Monic reducedMonic = monic(type, collectionFactory
+					.sortedMap(primitiveComparator, reducedEntries));
+
+			result = booleanFactory.or(result,
+					signum > 0
+							? booleanFactory.booleanExpression(
+									SymbolicOperator.LESS_THAN_EQUALS, zero,
+									reducedMonic)
+							: booleanFactory.booleanExpression(
+									SymbolicOperator.LESS_THAN_EQUALS,
+									reducedMonic, zero));
+		}
+		return result;
+	}
+
+	private BooleanExpression isZero(Monomial monomial) {
+		// X1^n1...Xn^nr =0 iff X1=0 || ... || Xn=0
+		Number number = extractNumber(monomial);
+
+		if (number != null)
+			return number.isZero() ? trueExpr : falseExpr;
+
+		SymbolicType type = monomial.type();
+		Constant zero = zero(type);
+		Monic monic = monomial.monic(this);
+		BooleanExpression result = falseExpr;
+
+		for (Primitive p : monic.monicFactors(this).keys()) {
+			// consider expanding p
+			result = booleanFactory.or(result, booleanFactory
+					.booleanExpression(SymbolicOperator.EQUALS, zero, p));
+		}
+		return result;
+	}
+
+	private BooleanExpression isNonZero(Monomial monomial) {
+		// X1^n1...Xn^nr !=0 iff X1!=0 && ... && Xn!=0
+		Number number = extractNumber(monomial);
+
+		if (number != null)
+			return number.isZero() ? falseExpr : trueExpr;
+
+		SymbolicType type = monomial.type();
+		Constant zero = zero(type);
+		Monic monic = monomial.monic(this);
+		BooleanExpression result = trueExpr;
+
+		for (Primitive p : monic.monicFactors(this).keys()) {
+			// consider expanding p
+			result = booleanFactory.and(result, booleanFactory
+					.booleanExpression(SymbolicOperator.NEQ, zero, p));
+		}
+		return result;
 	}
 
 	// 4 relations: 0<, 0<=, 0==, 0!=
-
+	//
 	// 0<p/q <=> (0<p && 0<q) || (0<-p && 0<-q)
-
-	// 0<=p/q <=> (0<=p && 0<q) || (0<=-p && 0<-q)
-
+	//
+	// 0<=p/q <=> 0<=pq <=> (0<=p && 0<q) || (0<=-p && 0<-q)
+	//
 	// 0==p/q <=> 0==p
+	//
+	// 0!=p/q <=> 0!=p
 
-	// 0!=p/q <=> 0!=
+	private BooleanExpression isZero(RationalExpression rational) {
+		return isZero(rational.numerator(this));
+	}
+
+	private BooleanExpression isNonZero(RationalExpression rational) {
+		return isNonZero(rational.numerator(this));
+	}
 
 	/**
-	 * Given two polynomials <code>p1</code> and <code>p2</code>, returns an
+	 * Given two monomials <code>p1</code> and <code>p2</code>, returns an
 	 * expression equivalent to <code>p1&gt;0 && p2&gt;0</code>.
 	 * 
 	 * @param p1
-	 *            a non-<code>null</code> {@link Polynomial}
+	 *            a non-<code>null</code> {@link Monomial}
 	 * @param p2
-	 *            a non-<code>null</code> {@link Polynomial} of same type as
+	 *            a non-<code>null</code> {@link Monomial} of same type as
 	 *            <code>p1</code>
 	 * @return an expression equivalent to <code>p1&gt;0 && p2&gt;0</code>
 	 */
-	private BooleanExpression arePositive(Polynomial p1, Polynomial p2) {
+	private BooleanExpression arePositive(Monomial p1, Monomial p2) {
 		BooleanExpression result = isPositive(p1);
 
 		if (result.isFalse())
@@ -1855,13 +1807,13 @@ public class CommonIdealFactory implements IdealFactory {
 	 * expression equivalent to <code>p1&lt;0 && p2&lt;0</code>.
 	 * 
 	 * @param p1
-	 *            a non-<code>null</code> {@link Polynomial}
+	 *            a non-<code>null</code> {@link Monomial}
 	 * @param p2
-	 *            a non-<code>null</code> {@link Polynomial} of same type as
+	 *            a non-<code>null</code> {@link Monomial} of same type as
 	 *            <code>p1</code>
 	 * @return an expression equivalent to <code>p1&lt;0 && p2&lt;0</code>
 	 */
-	private BooleanExpression areNegative(Polynomial p1, Polynomial p2) {
+	private BooleanExpression areNegative(Monomial p1, Monomial p2) {
 		BooleanExpression result = isNegative(p1);
 
 		if (result.isFalse())
@@ -1884,8 +1836,8 @@ public class CommonIdealFactory implements IdealFactory {
 		Number number = extractNumber(rational);
 
 		if (number == null) {
-			Polynomial numerator = rational.numerator(this);
-			Polynomial denominator = rational.denominator(this);
+			Monomial numerator = rational.numerator(this);
+			Monomial denominator = rational.denominator(this);
 			BooleanExpression result = arePositive(numerator, denominator);
 
 			if (result.isTrue())
@@ -1911,8 +1863,8 @@ public class CommonIdealFactory implements IdealFactory {
 		Number number = extractNumber(rational);
 
 		if (number == null) {
-			Polynomial numerator = rational.numerator(this);
-			Polynomial denominator = rational.denominator(this);
+			Monomial numerator = rational.numerator(this);
+			Monomial denominator = rational.denominator(this);
 			BooleanExpression result = booleanFactory
 					.and(isNonnegative(numerator), isPositive(denominator));
 
@@ -1960,7 +1912,9 @@ public class CommonIdealFactory implements IdealFactory {
 	 * @return result of raising <code>primitive</code> to the
 	 *         <code>exponent</code> power, in ideal normal form
 	 */
-	PrimitivePower primitivePower(Primitive primitive, IntObject exponent) {
+	@Override
+	public PrimitivePower primitivePower(Primitive primitive,
+			IntObject exponent) {
 		if (exponent.isZero())
 			throw new IllegalArgumentException(
 					"Exponent to primitive power must be positive: "
@@ -2067,7 +2021,7 @@ public class CommonIdealFactory implements IdealFactory {
 		if (arg0 instanceof Constant && arg1 instanceof Constant)
 			return add((Constant) arg0, (Constant) arg1);
 		if (arg0.type().isInteger())
-			return add((Polynomial) arg0, (Polynomial) arg1);
+			return addMonomials((Monomial) arg0, (Monomial) arg1);
 		else
 			return addRational((RationalExpression) arg0,
 					(RationalExpression) arg1);
@@ -2085,7 +2039,7 @@ public class CommonIdealFactory implements IdealFactory {
 		if (arg0 instanceof Constant && arg1 instanceof Constant)
 			return multiplyConstants((Constant) arg0, (Constant) arg1);
 		if (arg0.type().isInteger())
-			return multiplyPolynomials((Polynomial) arg0, (Polynomial) arg1);
+			return multiplyMonomials((Monomial) arg0, (Monomial) arg1);
 		else
 			return multiplyRational((RationalExpression) arg0,
 					(RationalExpression) arg1);
@@ -2097,16 +2051,16 @@ public class CommonIdealFactory implements IdealFactory {
 		if (arg0 instanceof Constant && arg1 instanceof Constant)
 			return divide((Constant) arg0, (Constant) arg1);
 		if (arg0.type().isInteger())
-			return intDividePolynomials((Polynomial) arg0, (Polynomial) arg1);
-		if (arg0 instanceof Polynomial && arg1 instanceof Polynomial)
-			return divide((Polynomial) arg0, (Polynomial) arg1);
+			return intDivideMonomials((Monomial) arg0, (Monomial) arg1);
+		if (arg0 instanceof Monomial && arg1 instanceof Monomial)
+			return divide((Monomial) arg0, (Monomial) arg1);
 		return divide((RationalExpression) arg0, (RationalExpression) arg1);
 	}
 
 	@Override
 	public NumericExpression modulo(NumericExpression arg0,
 			NumericExpression arg1) {
-		return intModulusPolynomials((Polynomial) arg0, (Polynomial) arg1);
+		return intModulusMonomials((Monomial) arg0, (Monomial) arg1);
 	}
 
 	@Override
@@ -2115,31 +2069,44 @@ public class CommonIdealFactory implements IdealFactory {
 			return arg;
 		if (arg instanceof Constant)
 			return negate((Constant) arg);
-		if (arg instanceof Polynomial)
-			return negate((Polynomial) arg);
+		if (arg instanceof Monomial)
+			return negate((Monomial) arg);
 		else
 			return negate((RationalExpression) arg);
 	}
 
+	private PrimitivePower power(PrimitivePower base, int exponent) {
+		return primitivePower(base.primitive(this), objectFactory.intObject(
+				base.primitivePowerExponent(this).getInt() * exponent));
+	}
+
+	private Monic power(Monic base, int exponent) {
+		UnaryOperator<PrimitivePower> powerOp = new UnaryOperator<PrimitivePower>() {
+			@Override
+			public PrimitivePower apply(PrimitivePower x) {
+				return power(x, exponent);
+			}
+		};
+
+		return monic(base.type(), base.monicFactors(this).apply(powerOp));
+	}
+
+	private Monomial power(Monomial base, int exponent) {
+		return monomial(powerConstant(base.monomialConstant(this), exponent),
+				power(base.monic(this), exponent));
+	}
+
 	@Override
 	public NumericExpression power(NumericExpression base, IntObject exponent) {
-		NumericExpression result = one(base.type());
 		int n = exponent.getInt();
 
-		assert n >= 0;
-		if (n > 0) {
-			while (true) {
-				if (n % 2 != 0) {
-					result = multiply(result, base);
-					n -= 1;
-					if (n == 0)
-						break;
-				}
-				base = multiply(base, base);
-				n /= 2;
-			}
-		}
-		return result;
+		if (base instanceof Monomial)
+			return power((Monomial) base, n);
+
+		Monomial num = ((RationalExpression) base).numerator(this);
+		Monomial den = ((RationalExpression) base).denominator(this);
+
+		return ntRationalExpression(power(num, n), power(den, n));
 	}
 
 	/**
@@ -2238,14 +2205,14 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	// 4 relations: 0<, 0<=, 0==, 0!=
-
+	//
 	// 0<p/q <=> (0<p && 0<q) || (0<-p && 0<-q)
-
+	//
 	// 0<=p/q <=> (0<=p && 0<q) || (0<=-p && 0<-q)
-
+	//
 	// 0==p/q <=> 0==p
-
-	// 0!=p/q <=> 0!=
+	//
+	// 0!=p/q <=> 0!=p
 
 	@Override
 	public BooleanExpression lessThan(NumericExpression arg0,
@@ -2262,15 +2229,10 @@ public class CommonIdealFactory implements IdealFactory {
 
 		NumericExpression difference = subtract(arg1, arg0);
 
-		return difference instanceof Polynomial
-				? isPositive((Polynomial) difference)
+		return difference instanceof Monomial
+				? isPositive((Monomial) difference)
 				: isPositive((RationalExpression) difference);
 	}
-
-	// public BooleanExpression integerLessThan(NumericExpression arg0,
-	// NumericExpression arg1) {
-	// return lessThanEquals(add(arg0, oneInt), arg1);
-	// }
 
 	@Override
 	public BooleanExpression lessThanEquals(NumericExpression arg0,
@@ -2309,13 +2271,8 @@ public class CommonIdealFactory implements IdealFactory {
 			return falseExpr;
 
 		NumericExpression difference = subtract(arg1, arg0);
-		Number number = extractNumber(difference);
 
-		if (number == null)
-			return booleanFactory.booleanExpression(SymbolicOperator.EQUALS,
-					zero(arg0.type()), zeroEssence(difference));
-		else
-			return number.signum() == 0 ? trueExpr : falseExpr;
+		return isZero((RationalExpression) difference);
 	}
 
 	@Override
@@ -2327,39 +2284,34 @@ public class CommonIdealFactory implements IdealFactory {
 			return trueExpr;
 
 		NumericExpression difference = subtract(arg1, arg0);
-		Number number = extractNumber(difference);
 
-		if (number == null)
-			return booleanFactory.booleanExpression(SymbolicOperator.NEQ,
-					zero(arg0.type()), zeroEssence(difference));
-		else
-			return number.signum() != 0 ? trueExpr : falseExpr;
+		return isNonZero((RationalExpression) difference);
 	}
 
 	// ***************** Methods specified in IdealFactory ******************
 
-	@Override
-	public Polynomial zeroEssence(NumericExpression expr) {
-		Polynomial result = expr instanceof Polynomial ? (Polynomial) expr
-				: ((RationalExpression) expr).numerator(this);
-
-		if (result instanceof Monomial) {
-			Monic monic = ((Monomial) result).monic(this);
-
-			result = monic instanceof PrimitivePower
-					? ((PrimitivePower) monic).primitive(this) : monic;
-		} else {
-			Monomial factorization = result.factorization(this);
-			Monic monic = factorization.monic(this);
-
-			if (monic instanceof PrimitivePower)
-				monic = ((PrimitivePower) monic).primitive(this);
-			// in monic, the primitives may be instances of
-			// ReducedPolynomial. Need to expand them...
-			result = monic.expand(this);
-		}
-		return result;
-	}
+	// @Override
+	// public Polynomial zeroEssence(NumericExpression expr) {
+	// Polynomial result = expr instanceof Polynomial ? (Polynomial) expr
+	// : ((RationalExpression) expr).numerator(this);
+	//
+	// if (result instanceof Monomial) {
+	// Monic monic = ((Monomial) result).monic(this);
+	//
+	// result = monic instanceof PrimitivePower
+	// ? ((PrimitivePower) monic).primitive(this) : monic;
+	// } else {
+	// Monomial factorization = result.factorization(this);
+	// Monic monic = factorization.monic(this);
+	//
+	// if (monic instanceof PrimitivePower)
+	// monic = ((PrimitivePower) monic).primitive(this);
+	// // in monic, the primitives may be instances of
+	// // ReducedPolynomial. Need to expand them...
+	// result = monic.expand(this);
+	// }
+	// return result;
+	// }
 
 	@Override
 	public IntObject oneIntObject() {
@@ -2423,89 +2375,259 @@ public class CommonIdealFactory implements IdealFactory {
 		return ntMonomial(constant, monic);
 	}
 
-	@Override
-	public Polynomial polynomial(SymbolicMap<Monic, Monomial> termMap,
-			Monomial factorization) {
-		if (termMap.size() == 0)
-			return zero(factorization.type());
-		if (termMap.size() == 1)
-			return termMap.getFirst();
-		return ntPolynomial(termMap, factorization);
-	}
+	// @Override
+	// public Polynomial subtractConstantTerm(Polynomial polynomial) {
+	// SymbolicType type = polynomial.type();
+	//
+	// if (polynomial instanceof Constant)
+	// return zero(type);
+	// else {
+	// Constant constant = polynomial.constantTerm(this);
+	//
+	// if (constant.isZero())
+	// return polynomial;
+	// if (polynomial instanceof NTPolynomial) {
+	// SymbolicMap<Monic, Monomial> termMap = polynomial.termMap(this)
+	// .remove(one(type));
+	//
+	// if (termMap.size() == 1)
+	// return termMap.getFirst();
+	// assert termMap.size() > 1;
+	// return polynomialWithTrivialFactorization(type, termMap);
+	// } else
+	// throw new SARLInternalException("unreachable");
+	// }
+	// }
 
-	@Override
-	public Polynomial subtractConstantTerm(Polynomial polynomial) {
-		SymbolicType type = polynomial.type();
+	private Monic getMonicFactor(SymbolicMap<Monic, Monomial> termMap) {
+		int size = termMap.size();
 
-		if (polynomial instanceof Constant)
-			return zero(type);
-		else {
-			Constant constant = polynomial.constantTerm(this);
+		assert size != 0;
+		if (size == 1)
+			return termMap.getFirst().monic(this);
 
-			if (constant.isZero())
-				return polynomial;
-			if (polynomial instanceof NTPolynomial) {
-				SymbolicMap<Monic, Monomial> termMap = polynomial.termMap(this)
-						.remove(one(type));
+		// Find the minimum power of each primitive...
 
-				if (termMap.size() == 1)
-					return termMap.getFirst();
-				assert termMap.size() > 1;
-				return polynomialWithTrivialFactorization(type, termMap);
-			} else
-				throw new SARLInternalException("unreachable");
+		Iterator<Monic> monicIter = termMap.keys().iterator();
+		Monic firstMonic = monicIter.next();
+		SymbolicType type = firstMonic.type();
+		Map<Primitive, IntObject> minPowerMap = new TreeMap<>(
+				primitiveComparator);
+
+		for (Entry<Primitive, PrimitivePower> entry : firstMonic
+				.monicFactors(this).entries()) {
+			minPowerMap.put(entry.getKey(),
+					entry.getValue().primitivePowerExponent(this));
 		}
+		while (monicIter.hasNext()) {
+			Monic monic = monicIter.next();
+			SymbolicMap<Primitive, PrimitivePower> monicMap = monic
+					.monicFactors(this);
+			List<Primitive> removeList = new LinkedList<>();
+
+			for (Entry<Primitive, IntObject> entry : minPowerMap.entrySet()) {
+				Primitive primitive = entry.getKey();
+				PrimitivePower pp = monicMap.get(primitive);
+
+				if (pp == null) {
+					removeList.add(primitive);
+				} else {
+					int oldMin = entry.getValue().getInt();
+					int newVal = pp.primitivePowerExponent(this).getInt();
+
+					if (newVal < oldMin) {
+						entry.setValue(objectFactory.intObject(newVal));
+					}
+				}
+			}
+			for (Primitive p : removeList) {
+				minPowerMap.remove(p);
+			}
+			if (minPowerMap.isEmpty())
+				break;
+		}
+
+		int newMonicSize = minPowerMap.size();
+		@SuppressWarnings("unchecked")
+		Entry<Primitive, PrimitivePower>[] newMonicEntries = (Entry<Primitive, PrimitivePower>[]) new Entry<?, ?>[newMonicSize];
+		int newEntryCount = 0;
+
+		for (Entry<Primitive, IntObject> entry : minPowerMap.entrySet()) {
+			Primitive p = entry.getKey();
+
+			newMonicEntries[newEntryCount] = collectionFactory.entry(p,
+					primitivePower(p, entry.getValue()));
+			newEntryCount++;
+		}
+
+		Monic newMonic = monic(type, collectionFactory
+				.sortedMap(primitiveComparator, newMonicEntries));
+
+		return newMonic;
+	}
+
+	/**
+	 * <p>
+	 * Computes the constant that should be factored out of every term in a term
+	 * map in order to produce a polynomial in normal form. For integer type,
+	 * this is the GCD (greatest common divisor) of the absolute values of the
+	 * coefficients, multiplied by the sign of the leading coefficient. For real
+	 * type, it is just the coefficient of the leading term.
+	 * </p>
+	 * 
+	 * <p>
+	 * Note that in any case, after dividing every term by the constant factor,
+	 * the leading term will have a positive coefficient. For real type, the
+	 * leading coefficient will be 1. For integer type, the GCD of the absolute
+	 * values of the coefficients will be 1.
+	 * </p>
+	 * 
+	 * <p>
+	 * Precondition: <code>termMap</code> is non-empty
+	 * </p>
+	 * 
+	 * @param termMap
+	 *            a term map: a map from {@link Monic} to {@link Monomial} with
+	 *            the property that a {@link Monic} <i>m</i> maps to a
+	 *            {@link Monomial} of the form <i>c</i>*<i>m</i>, for some non-0
+	 *            {@link Constant} <i>c</i>
+	 * @return the constant that should be factored out of the entire term map
+	 *         in order to bring the term map into a normal form
+	 */
+	private Constant getConstantFactor(SymbolicMap<Monic, Monomial> termMap) {
+		SymbolicType type = termMap.getFirst().type();
+		Iterator<Monomial> monomialIter = termMap.values().iterator();
+		Monomial leadingMonomial = monomialIter.next();
+		Constant leadingConstant = leadingMonomial.monomialConstant(this);
+		Constant factor;
+
+		if (type.isInteger()) {
+			Number leadingNumber = leadingConstant.number();
+			IntegerNumber gcd = (IntegerNumber) numberFactory
+					.abs(leadingNumber);
+
+			while (monomialIter.hasNext()) {
+				Monomial m = monomialIter.next();
+				IntegerNumber coefficient = (IntegerNumber) m
+						.monomialConstant(this).number();
+
+				gcd = numberFactory.gcd(gcd,
+						(IntegerNumber) numberFactory.abs(coefficient));
+				if (gcd.isOne())
+					break;
+			}
+			if (leadingNumber.signum() < 0)
+				factor = constant(numberFactory.negate(gcd));
+			else
+				factor = constant(gcd);
+		} else {
+			factor = leadingConstant;
+		}
+		return factor;
+	}
+
+	/**
+	 * Divides two {@link Monic}s <code>m1</code> and <code>m2</code> under the
+	 * assumption that <code>m2</code> evenly divides <code>m1</code>. In other
+	 * words, for any primitive <i>p</i>, the exponent of <i>p</i> in
+	 * <code>m2</code> must be less than or equal to the exponent of <i>p</i> in
+	 * <code>m1</code>.
+	 * 
+	 * @param m1
+	 *            a {@link Monic}
+	 * @param m2
+	 *            a {@link Monic} of the same type as that of <code>m1</code>
+	 *            and that evenly divides <code>m1</code>
+	 * @return
+	 */
+	private Monic divideMonics(Monic m1, Monic m2) {
+		return monic(m1.type(), m1.monicFactors(this)
+				.combine(primitivePowerDivider, m2.monicFactors(this)));
+	}
+
+	/**
+	 * Produces the term map obtained by dividing every term in a given term map
+	 * by a given {@link Monomial}.
+	 * 
+	 * Precondition: all terms in <code>termMap</code> are evenly divisible by
+	 * <code>monomial</code>.
+	 * 
+	 * @param termMap
+	 *            a term map, i.e., a map from {@link Monic} to {@link Monomial}
+	 *            with the property that a {@link Monic} <i>m</i> maps to a
+	 *            {@link Monomial} of the form <i>c</i>*<i>m</i>, for some non-0
+	 *            {@link Constant} <i>c</i>
+	 * @param monomial
+	 *            a {@link Monomial} which evenly divides every term in
+	 *            <code>termMap</code>
+	 * @return the term map obtained by dividing every term in
+	 *         <code>termMap</code> by <code>monomial</code>
+	 */
+	private SymbolicMap<Monic, Monomial> divideTermMapMonomial(
+			SymbolicMap<Monic, Monomial> termMap, Monomial monomial) {
+		// this changes the monic as well as the monomial,
+		// but the order of the monics should not change!
+		int size = termMap.size();
+		@SuppressWarnings("unchecked")
+		Entry<Monic, Monomial>[] newEntries = (Entry<Monic, Monomial>[]) new Entry<?, ?>[size];
+		Constant constant = monomial.monomialConstant(this);
+		Monic monic = monomial.monic(this);
+		int count = 0;
+
+		for (Entry<Monic, Monomial> oldEntry : termMap.entries()) {
+			Monic newMonic = divideMonics(oldEntry.getKey(), monic);
+			Constant newConstant = divide(
+					oldEntry.getValue().monomialConstant(this), constant);
+			Monomial newMonomial = monomial(newConstant, newMonic);
+
+			newEntries[count] = collectionFactory.entry(newMonic, newMonomial);
+		}
+
+		SymbolicMap<Monic, Monomial> newMap = collectionFactory
+				.sortedMap(monicComparator, newEntries);
+
+		return newMap;
 	}
 
 	@Override
-	public Polynomial add(Polynomial p1, Polynomial p2) {
-		assert p1.type().equals(p2.type());
-		if (p1.isZero())
-			return p2;
-		if (p2.isZero())
-			return p1;
+	public Monomial factorTermMap(SymbolicMap<Monic, Monomial> termMap) {
+		Monic monic = getMonicFactor(termMap);
+		Constant constant = getConstantFactor(termMap);
+		SymbolicType type = constant.type();
+		Monomial monomial = monomial(constant, monic);
+		SymbolicMap<Monic, Monomial> newTermMap = divideTermMapMonomial(termMap,
+				monomial);
+		Polynomial polynomial = polynomial(type, newTermMap);
+		Monomial result = monomial(constant, multiplyMonics(monic, polynomial));
 
-		Monomial fact1 = p1.factorization(this);
-		Monomial fact2 = p2.factorization(this);
-		Monomial[] triple = extractCommonality(fact1, fact2);
+		return result;
+	}
+
+	private Monomial addNoCommon(Monomial m1, Monomial m2) {
+		SymbolicMap<Monic, Monomial> t1 = m1.termMap(this),
+				t2 = m2.termMap(this);
+		SymbolicMap<Monic, Monomial> t = addTermMaps(t1, t2);
+
+		if (t.isEmpty())
+			return zero(m1.type());
+		else
+			return factorTermMap(t);
+	}
+
+	@Override
+	public Monomial addMonomials(Monomial m1, Monomial m2) {
+		assert m1.type().equals(m2.type());
+		if (m1.isZero())
+			return m2;
+		if (m2.isZero())
+			return m1;
+
+		Monomial[] triple = extractCommonality(m1, m2);
 		// p1+p2=a(q1+q2)
 
 		if (triple[0].isOne())
-			return addNoCommon(p1, p2);
-		return multiplyPolynomials(triple[0].expand(this),
-				addNoCommon(triple[1].expand(this), triple[2].expand(this)));
-	}
-
-	@Override
-	public Polynomial multiplyPolynomials(Polynomial poly1, Polynomial poly2) {
-		if (poly1.isZero())
-			return poly1;
-		if (poly2.isZero())
-			return poly2;
-		if (poly1.isOne())
-			return poly2;
-		if (poly2.isOne())
-			return poly1;
-		if (poly1 instanceof Monomial && poly2 instanceof Monomial)
-			return multiplyMonomials((Monomial) poly1, (Monomial) poly2);
-		else {
-			SymbolicMap<Monic, Monomial> termMap1 = poly1.termMap(this);
-			SymbolicMap<Monic, Monomial> termMap2 = poly2.termMap(this);
-			SymbolicMap<Monic, Monomial> newTermMap = multiplyTermMaps(termMap1,
-					termMap2);
-			Monomial fact1 = poly1.factorization(this);
-			Monomial fact2 = poly2.factorization(this);
-			Monomial newFact = multiplyMonomials(fact1, fact2);
-			Polynomial result = polynomial(newTermMap, newFact);
-
-			return result;
-		}
-	}
-
-	@Override
-	public Polynomial divide(Polynomial polynomial, Constant constant) {
-		return polynomial(divide(polynomial.termMap(this), constant),
-				divide(polynomial.factorization(this), constant));
+			return addNoCommon(m1, m2);
+		return multiplyMonomials(triple[0], addNoCommon(triple[1], triple[2]));
 	}
 
 	@Override
@@ -2532,6 +2654,70 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public <V extends SymbolicExpression> SymbolicMap<Monic, V> emptyMonicMap() {
 		return (SymbolicMap<Monic, V>) emptyMonicMap;
+	}
+
+	@Override
+	public Monomial multiplyConstantMonomial(Constant constant,
+			Monomial monomial) {
+		return monomial(
+				multiplyConstants(constant, monomial.monomialConstant(this)),
+				monomial.monic(this));
+	}
+
+	@Override
+	public SymbolicMap<Monic, Monomial> oneTermMap(SymbolicType type) {
+		if (type.isInteger())
+			return oneTermMapInt;
+		else
+			return oneTermMapReal;
+	}
+
+	private Constant powerConstant(Constant base, int n) {
+		Number baseValue = base.number();
+		SymbolicType type = base.type();
+		Number result = one(type).number();
+
+		assert n >= 0;
+		if (n > 0) {
+			while (true) {
+				if (n % 2 != 0) {
+					result = numberFactory.multiply(result, baseValue);
+					n -= 1;
+					if (n == 0)
+						break;
+				}
+				baseValue = numberFactory.multiply(baseValue, baseValue);
+				n /= 2;
+			}
+		}
+		return constant(result);
+	}
+
+	@Override
+	public SymbolicMap<Monic, Monomial> powerTermMap(SymbolicType type,
+			SymbolicMap<Monic, Monomial> map, IntObject exponent) {
+		SymbolicMap<Monic, Monomial> result = oneTermMap(type);
+		int n = exponent.getInt();
+
+		assert n >= 0;
+		if (n > 0) {
+			while (true) {
+				if (n % 2 != 0) {
+					result = multiplyTermMaps(result, map);
+					n -= 1;
+					if (n == 0)
+						break;
+				}
+				map = multiplyTermMaps(map, map);
+				n /= 2;
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public Comparator<Monic> monicComparator() {
+		return monicComparator;
 	}
 
 }

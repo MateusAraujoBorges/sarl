@@ -28,7 +28,6 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
-import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 
@@ -91,11 +90,6 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
-		return factory.monicSingletonMap((Monic) this, (Monomial) this);
-	}
-
-	@Override
 	public NumericPrimitive primitive(IdealFactory factory) {
 		return this;
 	}
@@ -106,45 +100,22 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	}
 
 	@Override
-	public Monomial factorization(IdealFactory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Polynomial numerator(IdealFactory factory) {
-		return this;
-	}
-
-	@Override
-	public Polynomial denominator(IdealFactory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return factory.one(type());
 	}
-
-	// @Override
-	// public Monomial leadingTerm() {
-	// return this;
-	// }
 
 	@Override
 	public boolean isTrivialMonic() {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}.
-	 * 
-	 * <p>
-	 * Just returns this. Note this might need to be overridden for certain
-	 * kinds of numeric primitives, e.g., {@link ReducedPolynomial}s.
-	 * </p>
-	 */
 	@Override
-	public Polynomial expand(IdealFactory factory) {
-		return this;
-	}
-
-	@Override
-	public int degree() {
+	public int monomialDegree() {
 		return 1;
 	}
 
@@ -154,8 +125,13 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	}
 
 	@Override
-	public Constant constantTerm(IdealFactory factory) {
-		return factory.zero(type());
+	public SymbolicMap<Monic, Monomial> expand(IdealFactory factory) {
+		return factory.monicSingletonMap(this, this);
+	}
+
+	@Override
+	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
+		return factory.monicSingletonMap(this, this);
 	}
 
 }

@@ -18,7 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.IF;
 
-import edu.udel.cis.vsl.sarl.ideal2.common.ReducedPolynomial;
+import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 
 /**
  * A {@link Monomial} is the product of a constant and a {@link Monic}. The
@@ -28,7 +28,7 @@ import edu.udel.cis.vsl.sarl.ideal2.common.ReducedPolynomial;
  * @author Stephen F. Siegel
  * 
  */
-public interface Monomial extends Polynomial {
+public interface Monomial extends RationalExpression {
 
 	/**
 	 * Returns the constant factor of this monomial.
@@ -48,16 +48,25 @@ public interface Monomial extends Polynomial {
 	 */
 	Monic monic(IdealFactory factory);
 
+	int monomialDegree();
+
 	/**
-	 * If this monomial contains any primitives which are
-	 * {@link ReducedPolynomial}s, they are multiplied out (expanded) into
-	 * polynomials involving only ordinary primitives.
+	 * Returns the "fully expanded term map" of this monomial.
 	 * 
 	 * @param factory
 	 *            the ideal factory responsible for this monomial
-	 * @return equivalent polynomial with no {@link ReducedPolynomial}
-	 *         primitives in terms
+	 * @return term map whose sum is equivalent to this but with no
+	 *         {@link Polynomial}s.
 	 */
-	Polynomial expand(IdealFactory factory);
+	SymbolicMap<Monic, Monomial> expand(IdealFactory factory);
+
+	/**
+	 * Returns the "basic term map" of this monomial.
+	 * 
+	 * @param factory
+	 *            the ideal factory responsible for this monomial
+	 * @return a term map whose sum is equivalent to this monomial
+	 */
+	SymbolicMap<Monic, Monomial> termMap(IdealFactory factory);
 
 }

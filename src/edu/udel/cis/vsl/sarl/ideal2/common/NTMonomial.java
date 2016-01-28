@@ -34,8 +34,6 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
  */
 public class NTMonomial extends IdealExpression implements Monomial {
 
-	private SymbolicMap<Monic, Monomial> termMap = null;
-
 	protected NTMonomial(Constant constant, Monic monic) {
 		super(SymbolicOperator.MULTIPLY, constant.type(), constant, monic);
 		assert !constant.isZero();
@@ -58,14 +56,6 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
-		if (termMap == null)
-			termMap = factory.monicSingletonMap((Monic) argument(1),
-					(Monomial) this);
-		return termMap;
-	}
-
-	@Override
 	public Constant monomialConstant(IdealFactory factory) {
 		return (Constant) argument(0);
 	}
@@ -75,43 +65,29 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	}
 
 	@Override
-	public Monomial factorization(IdealFactory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Polynomial numerator(IdealFactory factory) {
-		return this;
-	}
-
-	@Override
-	public Polynomial denominator(IdealFactory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return factory.one(type());
 	}
 
-	// @Override
-	// public Monomial leadingTerm() {
-	// return this;
-	// }
-
 	@Override
-	public Polynomial expand(IdealFactory factory) {
+	public SymbolicMap<Monic, Monomial> expand(IdealFactory factory) {
 		Monic monic = this.monic();
-		Polynomial expandedMonic = monic.expand(factory);
+		SymbolicMap<Monic, Monomial> expandedMonic = monic.expand(factory);
 
 		if (monic == expandedMonic)
-			return this;
-		return factory.multiplyPolynomials(monomialConstant(), expandedMonic);
+			return factory.monicSingletonMap(monic, this);
+		return factory.multiplyConstantTermMap(monomialConstant(),
+				expandedMonic);
 	}
 
-	// @Override
-	// public String toString() {
-	// return monomialConstant().toString() + monic().toString();
-	// }
-
 	@Override
-	public int degree() {
-		return monic().degree();
+	public int monomialDegree() {
+		return monic().monomialDegree();
 	}
 
 	@Override
@@ -120,8 +96,14 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	}
 
 	@Override
-	public Constant constantTerm(IdealFactory factory) {
-		return factory.zero(type());
+	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
+		Monic monic = monic();
+
+		if (monic instanceof Polynomial) {
+			return factory.multiplyConstantTermMap((Constant) argument(0),
+					monic.termMap(factory));
+		}
+		return factory.monicSingletonMap(monic, this);
 	}
 
 }
