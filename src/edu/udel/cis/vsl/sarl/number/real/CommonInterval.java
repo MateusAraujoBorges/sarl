@@ -226,4 +226,9 @@ public class CommonInterval implements Interval {
 		}
 		return 0;
 	}
+
+	@Override
+	public boolean isZero() {
+		return lower.isZero() && upper.isZero() && !strictLower && !strictLower;
+	}
 }

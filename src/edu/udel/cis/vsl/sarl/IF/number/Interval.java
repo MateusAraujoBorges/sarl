@@ -24,11 +24,9 @@ package edu.udel.cis.vsl.sarl.IF.number;
  * right. It can be unbounded on either side.
  */
 public interface Interval {
-	
-	
-	
+
 	// IntervalUnion
-	
+
 	// int result; Interval union
 	// given two intervals i1 and i2: determine the case:
 	// (1) i1 is strictly less than i2 and their union is not an interval
@@ -36,7 +34,7 @@ public interface Interval {
 	// (3) i1 is strictly greater than i2 and their union is not an interval
 
 	// union: take union of two ValueSets
-	
+
 	/**
 	 * Does this interval have real type? If so, then both the upper and lower
 	 * bounds will be real.
@@ -93,6 +91,13 @@ public interface Interval {
 	boolean isEmpty();
 
 	/**
+	 * Does the interval represent exactly the single number of 0?
+	 * 
+	 * @return
+	 */
+	boolean isZero();
+
+	/**
 	 * Does this interval contain the given number? The behavior is unspecified
 	 * if this method is given a number which has a different type from that of
 	 * this interval. I.e., integer intervals should only be given integers;
@@ -108,8 +113,8 @@ public interface Interval {
 	 * 
 	 * 
 	 * 
-	 * Determines when the given number lies to the left, inside, or to the right of
-	 * this interval.
+	 * Determines when the given number lies to the left, inside, or to the
+	 * right of this interval.
 	 * 
 	 * @param number
 	 *            a number of the same type as this interval
@@ -124,5 +129,5 @@ public interface Interval {
 	 * 
 	 * @return
 	 */
-	boolean isUniversal();	
+	boolean isUniversal();
 }

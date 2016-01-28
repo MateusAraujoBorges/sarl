@@ -582,4 +582,9 @@ public class BoundsObject implements Interval {
 							realRat0.denominator()))).intValue();
 		}
 	}
+
+	@Override
+	public boolean isZero() {
+		return lower.isZero() && upper.isZero() && !strictLower && !strictLower;
+	}
 }
