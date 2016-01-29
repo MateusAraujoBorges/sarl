@@ -470,7 +470,7 @@ public interface NumberFactory {
 	 *            other one
 	 * @return the product of two {@link Interval}.
 	 */
-	Interval multiple(Interval i1, Interval i2);
+	Interval multiply(Interval i1, Interval i2);
 
 	/**
 	 * To calculate the power-result of a given non-<code>null</code> and not

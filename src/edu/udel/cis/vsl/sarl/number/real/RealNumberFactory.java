@@ -1463,7 +1463,7 @@ public class RealNumberFactory implements NumberFactory {
 	}
 
 	@Override
-	public Interval multiple(Interval i1, Interval i2) {
+	public Interval multiply(Interval i1, Interval i2) {
 		assert !i1.isEmpty() && !i2.isEmpty();
 		assert i1.isIntegral() == i2.isIntegral();
 
@@ -1532,53 +1532,207 @@ public class RealNumberFactory implements NumberFactory {
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
 		} else if (lo1 == null) {
-
+			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
+			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
+			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
+			
+			if (signumLo2 >= 0) {
+				if (signumUp1 <= 0) {
+					su = su1 || sl2;
+					up = multiply(up1, lo2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else{
+					su = su1 || su2;
+					up = multiply(up1, up2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}
+			}else if (signumUp2 <= 0){
+				if (signumUp1 <= 0) {
+					sl = su1 || su2;
+					lo = multiply(up1, up2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else{
+					sl = su1 || sl2;
+					lo = multiply(up1, lo2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}
+			}else{
+				return newInterval(isIntegral, lo, sl, up, su);
+			}
 		} else if (up1 == null) {
+			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
+			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
+			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
 
+			if (signumLo2 >= 0) {
+				if (signumLo1 >= 0) {
+					sl = sl1 || sl2;
+					lo = multiply(lo1, lo2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else{
+					sl = sl1 || su2;
+					lo = multiply(lo1, up2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}
+			}else if (signumUp2 <= 0) {
+				if (signumLo1 >= 0) {
+					su = sl1 || su2;
+					up = multiply(lo1, up2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else{
+					su = sl1 || sl2;
+					up = multiply(lo1, lo2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}
+			}else{
+				return newInterval(isIntegral, lo, sl, up, su);
+			}
 		} else if (lo2 == null) {
+			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
+			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
+			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
 
+			if (signumLo1 >= 0) {
+				if (signumUp2 <= 0) {
+					su = sl1 || su2;
+					up = multiply(lo1, up2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else{
+					su = su1 || su2;
+					up = multiply(up1, up2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}
+			}else if (signumUp1 <= 0) {
+				if (signumUp2 <= 0) {
+					sl = su1 || su2;
+					lo = multiply(up1, up2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else{
+					sl = sl1 || su2;
+					lo = multiply(lo1, up2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}
+			}else{
+				return newInterval(isIntegral, lo, sl, up, su);
+			}
 		} else if (up2 == null) {
+			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
+			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
+			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
 
+			if (signumLo1 >= 0) {
+				if (signumLo2 >= 0) {
+					sl = sl1 || sl2;
+					lo = multiply(lo1, lo2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else{
+					sl = su1 || sl2;
+					lo = multiply(up1, lo2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}
+			}else if (signumUp1 <= 0) {
+				if (signumLo2 >= 0) {
+					su = su1 || sl2;
+					up = multiply(up1, lo2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else{
+					su = sl1 || sl2;
+					up = multiply(lo1, lo2);
+					return newInterval(isIntegral, lo, sl, up, su);
+				}
+			}else{
+				return newInterval(isIntegral, lo, sl, up, su);
+			}
 		} else {
-			Number lo1lo2 = null;
-			Number lo1up2 = null;
-			Number up1lo2 = null;
-			Number up1up2 = null;
-			boolean slo1lo2 = true;
-			boolean slo1up2 = true;
-			boolean slo2lo2 = true;
-			boolean slo2up2 = true;
-			boolean isPosInfi = false;
-			boolean isNegInfi = false;
-
-			if (lo1 == null && lo2 == null) {
-				isPosInfi = true;
-			} else if (lo1 != null && lo2 != null) {
-				if (!sl1 && !sl2) {
-					slo1lo2 = false;
+			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
+			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
+			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
+			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
+			
+			if (signumLo1 >= 0) {
+				if (signumLo2 >= 0) {
+					lo = multiply(lo1, lo2);
+					sl = sl1 || sl2;
+					up = multiply(up1, up2);
+					su = su1 || su2;
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else if (signumUp2 <= 0) {
+					lo = multiply(up1, lo2);
+					sl = su1 || sl2;
+					up = multiply(lo1, up2);
+					su = sl1 || su2;
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else{
+					lo = multiply(up1, lo2);
+					sl = su1 || sl2;
+					up = multiply(up1, up2);
+					su = su1 || su2;
+					return newInterval(isIntegral, lo, sl, up, su);
 				}
-				lo1lo2 = multiply(lo1, lo2);
-			} else {
-
-			}
-			if (lo1 == null && up2 == null) {
-				isNegInfi = true;
-			} else if (lo1 != null && lo2 != null) {
-				if (!sl1 && !sl2) {
-					slo1lo2 = false;
+			}else if (signumUp1 <= 0) {
+				if (signumLo2 >= 0) {
+					lo = multiply(lo1, up2);
+					sl = sl1 || su2;
+					up = multiply(up1, lo2);
+					su = su1 || sl2;
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else if (signumUp2 <= 0) {
+					lo = multiply(up1, up2);
+					sl = su1 || su2;
+					up = multiply(lo1, lo2);
+					su = sl1 || sl2;
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else{
+					lo = multiply(lo1, up2);
+					sl = sl1 || su2;
+					up = multiply(lo1, lo2);
+					su = sl1 || sl2;
+					return newInterval(isIntegral, lo, sl, up, su);
 				}
-				lo1lo2 = multiply(lo1, lo2);
-			}
-
-			if (up1 != null && up2 != null) {
-				if (!su1 && !su2) {
-					su = false;
+			}else{
+				if (signumLo2 >= 0) {
+					lo = multiply(lo1, up2);
+					sl = sl1 || su2;
+					up = multiply(up1, up2);
+					su = su1 || su2;
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else if (signumUp2 <= 0) {
+					lo = multiply(up1, lo2);
+					sl = su1 || sl2;
+					up = multiply(lo1, lo2);
+					su = sl1 || sl2;
+					return newInterval(isIntegral, lo, sl, up, su);
+				}else{
+					Number lo1lo2 = multiply(lo1, lo2);
+					Number up1up2 = multiply(up1, up2);
+					Number lo1up2 = multiply(lo1, up2);
+					Number up1lo2 = multiply(up1, lo2);
+					
+					
+					if (lo1lo2.compareTo(up1up2) < 0) {
+						up = up1up2;
+						su = su1 || su2;
+					}else if(lo1lo2.compareTo(up1up2) > 0){
+						up = lo1lo2;
+						su = sl1 || sl2;
+					}else{
+						up = lo1lo2;
+						su = (sl1 || sl2) && (su1 || su2);
+					}
+					if (lo1up2.compareTo(up1lo2) < 0) {
+						lo = lo1up2;
+						sl = sl1 || su2;
+					}else if(lo1up2.compareTo(up1lo2) > 0){
+						lo = up1lo2;
+						sl = su1 || sl2;
+					}else{
+						lo = up1lo2;
+						sl = (sl1 || su2) && (su1 || sl2);
+					}
+					return newInterval(isIntegral, lo, sl, up, su);
 				}
-				up = add(up1, up2);
 			}
-			return newInterval(isIntegral, lo, sl, up, su);
 		}
-		return null; // TODO: implement
 	}
 
 	@Override
@@ -1610,7 +1764,7 @@ public class RealNumberFactory implements NumberFactory {
 				if (exp % 2 == 0) {
 					newLo = power(abs(upper), exp);
 					newSl = strictUpper;
-				}else{
+				} else {
 					newUp = power(upper, exp);
 					newSu = strictUpper;
 				}
@@ -1618,7 +1772,7 @@ public class RealNumberFactory implements NumberFactory {
 				if (exp % 2 == 0) {
 					newLo = zeroNumber;
 					newSl = false;
-				}else{
+				} else {
 					newUp = power(upper, exp);
 					newSu = strictUpper;
 				}
@@ -1634,7 +1788,7 @@ public class RealNumberFactory implements NumberFactory {
 				if (exp % 2 == 0) {
 					newLo = zeroNumber;
 					newSl = false;
-				}else{
+				} else {
 					newLo = power(upper, exp);
 					newSl = strictUpper;
 				}
@@ -1650,8 +1804,8 @@ public class RealNumberFactory implements NumberFactory {
 			newSl = strictLower;
 			if (signumLo >= 0) {
 				assert signumUp >= 0;
-				//Do nothing
-			}else if (signumUp <= 0) {
+				// Do nothing
+			} else if (signumUp <= 0) {
 				assert signumLo <= 0;
 				if (exp % 2 == 0) {
 					newUp = power(abs(lower), exp);
@@ -1659,14 +1813,14 @@ public class RealNumberFactory implements NumberFactory {
 					newLo = power(abs(upper), exp);
 					newSl = strictUpper;
 				}
-			}else{
+			} else {
 				if (exp % 2 == 0) {
 					Number tempUpFromLo = power(abs(lower), exp);
 					Number tempUpFromUp = power(upper, exp);
 					if (tempUpFromLo.compareTo(tempUpFromUp) < 0) {
 						newUp = tempUpFromUp;
 						newSu = strictUpper;
-					}else{
+					} else {
 						newUp = tempUpFromLo;
 						newSu = strictLower;
 					}

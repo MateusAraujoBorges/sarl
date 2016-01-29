@@ -68,7 +68,7 @@ public class IntervalUnionFactory implements RangeFactory {
 	 *            a number set of the same type (integer/real) as the other one
 	 * @return
 	 */
-	public Range multiple(Range lRange, Range rRange) {
+	public Range multiply(Range lRange, Range rRange) {
 		IntervalUnionSet lSet = (IntervalUnionSet) lRange;
 		IntervalUnionSet rSet = (IntervalUnionSet) lRange;
 		Interval[] lIntervals = lSet.intervals();
@@ -79,7 +79,7 @@ public class IntervalUnionFactory implements RangeFactory {
 		int resultIndex = 0;
 		for (int i = 0; i < lSize; ++i) {
 			for (int j = 0; j < rSize; ++j) {
-				resultIntervals[resultIndex] = numberFactory.multiple(lIntervals[i],
+				resultIntervals[resultIndex] = numberFactory.multiply(lIntervals[i],
 						rIntervals[j]);
 				resultIndex++;
 			}
