@@ -585,6 +585,7 @@ public class BoundsObject implements Interval {
 
 	@Override
 	public boolean isZero() {
-		return lower.isZero() && upper.isZero() && !strictLower && !strictLower;
+		return lower != null && upper != null && lower.isZero()
+				&& upper.isZero() && !strictLower && !strictLower;
 	}
 }

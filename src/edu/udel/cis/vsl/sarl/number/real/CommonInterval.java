@@ -187,7 +187,7 @@ public class CommonInterval implements Interval {
 		return strictLower && strictUpper && lower != null && upper != null
 				&& lower.equals(upper);
 	}
-	
+
 	@Override
 	public boolean isUniversal() {
 		return strictLower && strictUpper && lower == null && upper == null;
@@ -229,6 +229,7 @@ public class CommonInterval implements Interval {
 
 	@Override
 	public boolean isZero() {
-		return lower.isZero() && upper.isZero() && !strictLower && !strictLower;
+		return lower != null && upper != null && lower.isZero()
+				&& upper.isZero() && !strictLower && !strictLower;
 	}
 }
