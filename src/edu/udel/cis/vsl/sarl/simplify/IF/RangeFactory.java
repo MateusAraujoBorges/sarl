@@ -72,4 +72,38 @@ public interface RangeFactory {
 	 */
 	Range interval(Number left, boolean strictLeft, Number right,
 			boolean strictRight, boolean isIntegral);
+	
+
+	/**
+	 * For two range rSet and rSet, this function will calculate the summary for
+	 * those two range and return the result.
+	 * 
+	 * @param lRange
+	 *            a number set of the same type (integer/real) as the other one
+	 * @param rRange
+	 *            a number set of the same type (integer/real) as the other one
+	 * @return the range of the lSet adding the rSet
+	 */
+	public Range add(Range lRange, Range rRange);
+	
+	/**
+	 * 
+	 * @param lRange
+	 *            a number set of the same type (integer/real) as the other one
+	 * @param rRange
+	 *            a number set of the same type (integer/real) as the other one
+	 * @return
+	 */
+	public Range multiply(Range lRange, Range rRange);
+	
+
+	/**
+	 * 
+	 * @param lRange
+	 *            a number set of the same type (integer/real) as the other one
+	 * @param exp
+	 *            a natural number as exponent
+	 * @return
+	 */
+	public Range power(Range lRange, int exp);
 }

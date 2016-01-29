@@ -31,16 +31,7 @@ public class IntervalUnionFactory implements RangeFactory {
 				isIntegral);
 	}
 
-	/**
-	 * For two range rSet and rSet, this function will calculate the summary for
-	 * those two range and return the result.
-	 * 
-	 * @param lRange
-	 *            a number set of the same type (integer/real) as the other one
-	 * @param rRange
-	 *            a number set of the same type (integer/real) as the other one
-	 * @return the range of the lSet adding the rSet
-	 */
+	@Override
 	public Range add(Range lRange, Range rRange) {
 		IntervalUnionSet lSet = (IntervalUnionSet) lRange;
 		IntervalUnionSet rSet = (IntervalUnionSet) lRange;
@@ -60,14 +51,7 @@ public class IntervalUnionFactory implements RangeFactory {
 		return new IntervalUnionSet(resultIntervals);
 	}
 
-	/**
-	 * 
-	 * @param lRange
-	 *            a number set of the same type (integer/real) as the other one
-	 * @param rRange
-	 *            a number set of the same type (integer/real) as the other one
-	 * @return
-	 */
+	@Override
 	public Range multiply(Range lRange, Range rRange) {
 		IntervalUnionSet lSet = (IntervalUnionSet) lRange;
 		IntervalUnionSet rSet = (IntervalUnionSet) lRange;
@@ -87,14 +71,7 @@ public class IntervalUnionFactory implements RangeFactory {
 		return new IntervalUnionSet(resultIntervals);
 	}
 
-	/**
-	 * 
-	 * @param lRange
-	 *            a number set of the same type (integer/real) as the other one
-	 * @param exp
-	 *            a natural number as exponent
-	 * @return
-	 */
+	@Override
 	public Range power(Range lRange, int exp) {
 		IntervalUnionSet lSet = (IntervalUnionSet) lRange;
 		Interval[] lIntervals = lSet.intervals();
