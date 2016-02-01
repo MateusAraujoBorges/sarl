@@ -18,11 +18,11 @@ public class IntervalTest {
 	private static IntegerNumber INT_ZERO = numFactory.zeroInteger();
 	private static IntegerNumber INT_POS_ONE = numFactory.integer(1);
 	private static IntegerNumber INT_POS_TWO = numFactory.integer(2);
-	private static IntegerNumber INT_POS_FIVE = numFactory.integer(5);
+	private static IntegerNumber INT_POS_FOUR = numFactory.integer(4);
 	private static IntegerNumber INT_POS_TEN = numFactory.integer(10);
 	private static IntegerNumber INT_NEG_ONE = numFactory.negate(INT_POS_ONE);
 	private static IntegerNumber INT_NEG_TWO = numFactory.negate(INT_POS_TWO);
-	private static IntegerNumber INT_NEG_FIVE = numFactory.negate(INT_POS_FIVE);
+	private static IntegerNumber INT_NEG_FOUR = numFactory.negate(INT_POS_FOUR);
 	private static IntegerNumber INT_NEG_TEN = numFactory.negate(INT_POS_TEN);
 	private static RationalNumber RAT_ZERO = numFactory.fraction(INT_ZERO,
 			INT_POS_ONE);
@@ -30,16 +30,16 @@ public class IntervalTest {
 			INT_POS_ONE, INT_POS_ONE);
 	private static RationalNumber RAT_POS_TWO = numFactory.fraction(
 			INT_POS_TWO, INT_POS_ONE);
-	private static RationalNumber RAT_POS_FIVE = numFactory.fraction(
-			INT_POS_FIVE, INT_POS_ONE);
+	private static RationalNumber RAT_POS_FOUR = numFactory.fraction(
+			INT_POS_FOUR, INT_POS_ONE);
 	private static RationalNumber RAT_POS_TEN = numFactory.fraction(
 			INT_POS_TEN, INT_POS_ONE);
 	private static RationalNumber RAT_NEG_ONE = numFactory.fraction(
 			INT_NEG_ONE, INT_POS_ONE);
 	private static RationalNumber RAT_NEG_TWO = numFactory.fraction(
 			INT_NEG_TWO, INT_POS_ONE);
-	private static RationalNumber RAT_NEG_FIVE = numFactory.fraction(
-			INT_NEG_FIVE, INT_POS_ONE);
+	private static RationalNumber RAT_NEG_FOUR = numFactory.fraction(
+			INT_NEG_FOUR, INT_POS_ONE);
 	private static RationalNumber RAT_NEG_TEN = numFactory.fraction(
 			INT_NEG_TEN, INT_POS_ONE);
 
@@ -59,14 +59,14 @@ public class IntervalTest {
 	public void tearDown() throws Exception {
 	}
 
-	private void p(String input){
+	private void p(String input) {
 		System.out.println(input);
 	}
 
-	private void p(Object input){
+	private void p(Object input) {
 		System.out.println(input.toString());
 	}
-	
+
 	// ADD
 	@Test
 	public void add_Interval_Univ() {
@@ -165,6 +165,22 @@ public class IntervalTest {
 
 	// MULTIPLY
 	@Test
+	public void multiply_Interval_Zero() {
+		Interval interval_zero = numFactory.newInterval(false, RAT_ZERO, false,
+				RAT_ZERO, false);
+		Interval univInterval = numFactory.newInterval(false, null, true, null,
+				true);
+		Interval interval_neg1_pos1 = numFactory.newInterval(false,
+				RAT_NEG_ONE, false, RAT_POS_ONE, false);
+		Interval actualResult1 = numFactory.multiply(interval_zero,
+				univInterval);
+		Interval actualResult2 = numFactory.multiply(interval_zero,
+				interval_neg1_pos1);
+
+		assert actualResult1.isZero() && actualResult2.isZero();
+	}
+
+	@Test
 	public void multiply_Interval_Univ() {
 		Interval interval_neg1_pos1 = numFactory.newInterval(true, INT_NEG_ONE,
 				false, INT_POS_ONE, false);
@@ -183,5 +199,356 @@ public class IntervalTest {
 				&& actualResult3.isUniversal();
 	}
 
+	@Test
+	public void multiply_Interval_Two_Infinity() {
+		Interval univInterval = numFactory.newInterval(false, null, true, null,
+				true);
+		Interval interval_left_infi1 = numFactory.newInterval(false, null,
+				true, RAT_NEG_ONE, true);
+		Interval interval_left_infi2 = numFactory.newInterval(false, null,
+				true, RAT_ZERO, false);
+		Interval interval_left_infi3 = numFactory.newInterval(false, null,
+				true, RAT_POS_ONE, true);
+		Interval interval_right_infi1 = numFactory.newInterval(false,
+				RAT_POS_ONE, false, null, true);
+		Interval interval_right_infi2 = numFactory.newInterval(false, RAT_ZERO,
+				false, null, true);
+		Interval interval_right_infi3 = numFactory.newInterval(false,
+				RAT_NEG_ONE, true, null, true);
+		// L1
+		Interval actualResult_l1l1 = numFactory.multiply(interval_left_infi1,
+				interval_left_infi1);
+		Interval actualResult_l1l2 = numFactory.multiply(interval_left_infi1,
+				interval_left_infi2);
+		Interval actualResult_l1l3 = numFactory.multiply(interval_left_infi1,
+				interval_left_infi3);
+		Interval actualResult_l1r1 = numFactory.multiply(interval_left_infi1,
+				interval_right_infi1);
+		Interval actualResult_l1r2 = numFactory.multiply(interval_left_infi1,
+				interval_right_infi2);
+		Interval actualResult_l1r3 = numFactory.multiply(interval_left_infi1,
+				interval_right_infi3);
+		// L2
+		Interval actualResult_l2l1 = numFactory.multiply(interval_left_infi2,
+				interval_left_infi1);
+		Interval actualResult_l2l2 = numFactory.multiply(interval_left_infi2,
+				interval_left_infi2);
+		Interval actualResult_l2l3 = numFactory.multiply(interval_left_infi2,
+				interval_left_infi3);
+		Interval actualResult_l2r1 = numFactory.multiply(interval_left_infi2,
+				interval_right_infi1);
+		Interval actualResult_l2r2 = numFactory.multiply(interval_left_infi2,
+				interval_right_infi2);
+		Interval actualResult_l2r3 = numFactory.multiply(interval_left_infi2,
+				interval_right_infi3);
+		// L3
+		Interval actualResult_l3l1 = numFactory.multiply(interval_left_infi3,
+				interval_left_infi1);
+		Interval actualResult_l3l2 = numFactory.multiply(interval_left_infi3,
+				interval_left_infi2);
+		Interval actualResult_l3l3 = numFactory.multiply(interval_left_infi3,
+				interval_left_infi3);
+		Interval actualResult_l3r1 = numFactory.multiply(interval_left_infi3,
+				interval_right_infi1);
+		Interval actualResult_l3r2 = numFactory.multiply(interval_left_infi3,
+				interval_right_infi2);
+		Interval actualResult_l3r3 = numFactory.multiply(interval_left_infi3,
+				interval_right_infi3);
+		// R1
+		Interval actualResult_r1l1 = numFactory.multiply(interval_right_infi1,
+				interval_left_infi1);
+		Interval actualResult_r1l2 = numFactory.multiply(interval_right_infi1,
+				interval_left_infi2);
+		Interval actualResult_r1l3 = numFactory.multiply(interval_right_infi1,
+				interval_left_infi3);
+		Interval actualResult_r1r1 = numFactory.multiply(interval_right_infi1,
+				interval_right_infi1);
+		Interval actualResult_r1r2 = numFactory.multiply(interval_right_infi1,
+				interval_right_infi2);
+		Interval actualResult_r1r3 = numFactory.multiply(interval_right_infi1,
+				interval_right_infi3);
+		// R2
+		Interval actualResult_r2l1 = numFactory.multiply(interval_right_infi2,
+				interval_left_infi1);
+		Interval actualResult_r2l2 = numFactory.multiply(interval_right_infi2,
+				interval_left_infi2);
+		Interval actualResult_r2l3 = numFactory.multiply(interval_right_infi2,
+				interval_left_infi3);
+		Interval actualResult_r2r1 = numFactory.multiply(interval_right_infi2,
+				interval_right_infi1);
+		Interval actualResult_r2r2 = numFactory.multiply(interval_right_infi2,
+				interval_right_infi2);
+		Interval actualResult_r2r3 = numFactory.multiply(interval_right_infi2,
+				interval_right_infi3);
+		// R3
+		Interval actualResult_r3l1 = numFactory.multiply(interval_right_infi3,
+				interval_left_infi1);
+		Interval actualResult_r3l2 = numFactory.multiply(interval_right_infi3,
+				interval_left_infi2);
+		Interval actualResult_r3l3 = numFactory.multiply(interval_right_infi3,
+				interval_left_infi3);
+		Interval actualResult_r3r1 = numFactory.multiply(interval_right_infi3,
+				interval_right_infi1);
+		Interval actualResult_r3r2 = numFactory.multiply(interval_right_infi3,
+				interval_right_infi2);
+		Interval actualResult_r3r3 = numFactory.multiply(interval_right_infi3,
+				interval_right_infi3);
+		// Expected
+		// L1
+		Interval expectedResult_l1l1 = numFactory.newInterval(false,
+				RAT_POS_ONE, true, null, true);
+		Interval expectedResult_l1l2 = numFactory.newInterval(false, RAT_ZERO,
+				false, null, true);
+		Interval expectedResult_l1l3 = univInterval;
+		Interval expectedResult_l1r1 = interval_left_infi1;
+		Interval expectedResult_l1r2 = interval_left_infi2;
+		Interval expectedResult_l1r3 = univInterval;
+		// L2
+		Interval expectedResult_l2l2 = interval_right_infi2;
+		Interval expectedResult_l2l3 = univInterval;
+		Interval expectedResult_l2r1 = interval_left_infi2;
+		Interval expectedResult_l2r2 = interval_left_infi2;
+		Interval expectedResult_l2r3 = univInterval;
+		// L3
+		Interval expectedResult_l3l3 = univInterval;
+		Interval expectedResult_l3r1 = univInterval;
+		Interval expectedResult_l3r2 = univInterval;
+		Interval expectedResult_l3r3 = univInterval;
+		// R1
+		Interval expectedResult_r1r1 = interval_right_infi1;
+		Interval expectedResult_r1r2 = interval_right_infi2;
+		Interval expectedResult_r1r3 = univInterval;
+		// R2
+		Interval expectedResult_r2r2 = interval_right_infi2;
+		Interval expectedResult_r2r3 = univInterval;
+		// R3
+		Interval expectedResult_r3r3 = univInterval;
+
+		// L1
+		assert numFactory.compare(actualResult_l1l1, expectedResult_l1l1) == 0;
+		assert numFactory.compare(actualResult_l1l2, expectedResult_l1l2) == 0;
+		assert numFactory.compare(actualResult_l1l3, expectedResult_l1l3) == 0;
+		assert numFactory.compare(actualResult_l1r1, expectedResult_l1r1) == 0;
+		assert numFactory.compare(actualResult_l1r2, expectedResult_l1r2) == 0;
+		assert numFactory.compare(actualResult_l1r3, expectedResult_l1r3) == 0;
+		// L2
+		assert numFactory.compare(actualResult_l2l1, expectedResult_l1l2) == 0;
+		assert numFactory.compare(actualResult_l2l2, expectedResult_l2l2) == 0;
+		assert numFactory.compare(actualResult_l2l3, expectedResult_l2l3) == 0;
+		assert numFactory.compare(actualResult_l2r1, expectedResult_l2r1) == 0;
+		assert numFactory.compare(actualResult_l2r2, expectedResult_l2r2) == 0;
+		assert numFactory.compare(actualResult_l2r3, expectedResult_l2r3) == 0;
+		// L3
+		assert numFactory.compare(actualResult_l3l1, expectedResult_l1l3) == 0;
+		assert numFactory.compare(actualResult_l3l2, expectedResult_l2l3) == 0;
+		assert numFactory.compare(actualResult_l3l3, expectedResult_l3l3) == 0;
+		assert numFactory.compare(actualResult_l3r1, expectedResult_l3r1) == 0;
+		assert numFactory.compare(actualResult_l3r2, expectedResult_l3r2) == 0;
+		assert numFactory.compare(actualResult_l3r3, expectedResult_l3r3) == 0;
+		// R1
+		assert numFactory.compare(actualResult_r1l1, expectedResult_l1r1) == 0;
+		assert numFactory.compare(actualResult_r1l2, expectedResult_l2r1) == 0;
+		assert numFactory.compare(actualResult_r1l3, expectedResult_l3r1) == 0;
+		assert numFactory.compare(actualResult_r1r1, expectedResult_r1r1) == 0;
+		assert numFactory.compare(actualResult_r1r2, expectedResult_r1r2) == 0;
+		assert numFactory.compare(actualResult_r1r3, expectedResult_r1r3) == 0;
+		// R2
+		assert numFactory.compare(actualResult_r2l1, expectedResult_l1r2) == 0;
+		assert numFactory.compare(actualResult_r2l2, expectedResult_l2r2) == 0;
+		assert numFactory.compare(actualResult_r2l3, expectedResult_l3r2) == 0;
+		assert numFactory.compare(actualResult_r2r1, expectedResult_r1r2) == 0;
+		assert numFactory.compare(actualResult_r2r2, expectedResult_r2r2) == 0;
+		assert numFactory.compare(actualResult_r2r3, expectedResult_r2r3) == 0;
+		// R3
+		assert numFactory.compare(actualResult_r3l1, expectedResult_l1r3) == 0;
+		assert numFactory.compare(actualResult_r3l2, expectedResult_l2r3) == 0;
+		assert numFactory.compare(actualResult_r3l3, expectedResult_l3r3) == 0;
+		assert numFactory.compare(actualResult_r3r1, expectedResult_r1r3) == 0;
+		assert numFactory.compare(actualResult_r3r2, expectedResult_r2r3) == 0;
+		assert numFactory.compare(actualResult_r3r3, expectedResult_r3r3) == 0;
+	}
+
+	@Test
+	public void multiply_Interval_No_Infinity() {
+		Interval univInterval = numFactory.newInterval(false, null, true, null,
+				true);
+		Interval interval_neg_neg = numFactory.newInterval(false, RAT_NEG_TWO,
+				true, RAT_NEG_ONE, true);
+		Interval interval_neg_zero = numFactory.newInterval(false, RAT_NEG_TWO,
+				true, RAT_ZERO, false);
+		Interval interval_neg_pos1 = numFactory.newInterval(false, RAT_NEG_TWO,
+				false, RAT_POS_ONE, false);
+		Interval interval_pos_pos = numFactory.newInterval(false, RAT_POS_ONE,
+				false, RAT_POS_TWO, false);
+		Interval interval_zero_pos = numFactory.newInterval(false, RAT_ZERO,
+				false, RAT_POS_TWO, true);
+		Interval interval_neg_pos2 = numFactory.newInterval(false, RAT_NEG_ONE,
+				true, RAT_POS_TWO, true);
+		// L1
+		Interval actualResult_nnnn = numFactory.multiply(interval_neg_neg,
+				interval_neg_neg);
+		Interval actualResult_nnnz = numFactory.multiply(interval_neg_neg,
+				interval_neg_zero);
+		Interval actualResult_nnnp1 = numFactory.multiply(interval_neg_neg,
+				interval_neg_pos1);
+		Interval actualResult_nnpp = numFactory.multiply(interval_neg_neg,
+				interval_pos_pos);
+		Interval actualResult_nnzp = numFactory.multiply(interval_neg_neg,
+				interval_zero_pos);
+		Interval actualResult_nnnp2 = numFactory.multiply(interval_neg_neg,
+				interval_neg_pos2);
+		// L2
+		Interval actualResult_nznn = numFactory.multiply(interval_neg_zero,
+				interval_neg_neg);
+		Interval actualResult_nznz = numFactory.multiply(interval_neg_zero,
+				interval_neg_zero);
+		Interval actualResult_nznp1 = numFactory.multiply(interval_neg_zero,
+				interval_neg_pos1);
+		Interval actualResult_nzpp = numFactory.multiply(interval_neg_zero,
+				interval_pos_pos);
+		Interval actualResult_nzzp = numFactory.multiply(interval_neg_zero,
+				interval_zero_pos);
+		Interval actualResult_nznp2 = numFactory.multiply(interval_neg_zero,
+				interval_neg_pos2);
+		// L3
+		Interval actualResult_np1nn = numFactory.multiply(interval_neg_pos1,
+				interval_neg_neg);
+		Interval actualResult_np1nz = numFactory.multiply(interval_neg_pos1,
+				interval_neg_zero);
+		Interval actualResult_np1np1 = numFactory.multiply(interval_neg_pos1,
+				interval_neg_pos1);
+		Interval actualResult_np1pp = numFactory.multiply(interval_neg_pos1,
+				interval_pos_pos);
+		Interval actualResult_np1zp = numFactory.multiply(interval_neg_pos1,
+				interval_zero_pos);
+		Interval actualResult_np1np2 = numFactory.multiply(interval_neg_pos1,
+				interval_neg_pos2);
+		// R1
+		Interval actualResult_ppnn = numFactory.multiply(interval_pos_pos,
+				interval_neg_neg);
+		Interval actualResult_ppnz = numFactory.multiply(interval_pos_pos,
+				interval_neg_zero);
+		Interval actualResult_ppnp1 = numFactory.multiply(interval_pos_pos,
+				interval_neg_pos1);
+		Interval actualResult_pppp = numFactory.multiply(interval_pos_pos,
+				interval_pos_pos);
+		Interval actualResult_ppzp = numFactory.multiply(interval_pos_pos,
+				interval_zero_pos);
+		Interval actualResult_ppnp2 = numFactory.multiply(interval_pos_pos,
+				interval_neg_pos2);
+		// R2
+		Interval actualResult_zpnn = numFactory.multiply(interval_zero_pos,
+				interval_neg_neg);
+		Interval actualResult_zpnz = numFactory.multiply(interval_zero_pos,
+				interval_neg_zero);
+		Interval actualResult_zpnp1 = numFactory.multiply(interval_zero_pos,
+				interval_neg_pos1);
+		Interval actualResult_zppp = numFactory.multiply(interval_zero_pos,
+				interval_pos_pos);
+		Interval actualResult_zpzp = numFactory.multiply(interval_zero_pos,
+				interval_zero_pos);
+		Interval actualResult_zpnp2 = numFactory.multiply(interval_zero_pos,
+				interval_neg_pos2);
+		// R3
+		Interval actualResult_np2nn = numFactory.multiply(interval_neg_pos2,
+				interval_neg_neg);
+		Interval actualResult_np2nz = numFactory.multiply(interval_neg_pos2,
+				interval_neg_zero);
+		Interval actualResult_np2np1 = numFactory.multiply(interval_neg_pos2,
+				interval_neg_pos1);
+		Interval actualResult_np2pp = numFactory.multiply(interval_neg_pos2,
+				interval_pos_pos);
+		Interval actualResult_np2zp = numFactory.multiply(interval_neg_pos2,
+				interval_zero_pos);
+		Interval actualResult_np2np2 = numFactory.multiply(interval_neg_pos2,
+				interval_neg_pos2);
+		// Expected
+		// L1
+		Interval expectedResult_nnnn = numFactory.newInterval(false,
+				RAT_POS_ONE, true, RAT_POS_FOUR, true);
+		Interval expectedResult_nnnz = numFactory.newInterval(false, RAT_ZERO,
+				false, RAT_POS_FOUR, true);
+		Interval expectedResult_nnnp1 = numFactory.newInterval(false,
+				RAT_NEG_TWO, true, RAT_POS_FOUR, true);
+		Interval expectedResult_nnpp = numFactory.newInterval(false,
+				RAT_NEG_FOUR, true, RAT_NEG_ONE, true);
+		Interval expectedResult_nnzp = numFactory.newInterval(false,
+				RAT_NEG_FOUR, true, RAT_ZERO, false);
+		Interval expectedResult_nnnp2 = numFactory.newInterval(false,
+				RAT_NEG_FOUR, true, RAT_POS_TWO, true);
+		// L2
+		Interval expectedResult_nznz = numFactory.newInterval(false,
+				RAT_ZERO, false, RAT_POS_FOUR, true);
+		Interval expectedResult_nznp1 = numFactory.newInterval(false,
+				RAT_NEG_TWO, true, RAT_POS_FOUR, true);
+		Interval expectedResult_nzpp = numFactory.newInterval(false,
+				RAT_NEG_FOUR, true, RAT_ZERO, false);
+		Interval expectedResult_nzzp = expectedResult_nzpp;
+		Interval expectedResult_nznp2 = numFactory.newInterval(false,
+				RAT_NEG_FOUR, true, RAT_POS_TWO, true);
+		// L3
+		Interval expectedResult_np1np1 = numFactory.newInterval(false,
+				RAT_NEG_TWO, false, RAT_POS_FOUR, false);
+		Interval expectedResult_np1pp = numFactory.newInterval(false,
+				RAT_NEG_FOUR, false, RAT_POS_TWO, false);
+		Interval expectedResult_np1zp = numFactory.newInterval(false,
+				RAT_NEG_FOUR, true, RAT_POS_TWO, true);
+		Interval expectedResult_np1np2 = expectedResult_np1zp;
+		// R1
+		Interval expectedResult_pppp = numFactory.newInterval(false,
+				RAT_POS_ONE, false, RAT_POS_FOUR, false);
+		Interval expectedResult_ppzp = numFactory.newInterval(false,
+				RAT_ZERO, false, RAT_POS_FOUR, true);
+		Interval expectedResult_ppnp2 = numFactory.newInterval(false,
+				RAT_NEG_TWO, true, RAT_POS_FOUR, true);
+		// R2
+		Interval expectedResult_zpzp = expectedResult_ppzp;
+		Interval expectedResult_zpnp2 = expectedResult_ppnp2;
+		// R3
+		Interval expectedResult_np2np2 = expectedResult_ppnp2;
+
+		// L1
+		assert numFactory.compare(actualResult_nnnn, expectedResult_nnnn) == 0;
+		assert numFactory.compare(actualResult_nnnz, expectedResult_nnnz) == 0;
+		assert numFactory.compare(actualResult_nnnp1, expectedResult_nnnp1) == 0;
+		assert numFactory.compare(actualResult_nnpp, expectedResult_nnpp) == 0;
+		assert numFactory.compare(actualResult_nnzp, expectedResult_nnzp) == 0;
+		assert numFactory.compare(actualResult_nnnp2, expectedResult_nnnp2) == 0;
+		// L2
+		assert numFactory.compare(actualResult_nznn, expectedResult_nnnz) == 0;
+		assert numFactory.compare(actualResult_nznz, expectedResult_nznz) == 0;
+		assert numFactory.compare(actualResult_nznp1, expectedResult_nznp1) == 0;
+		assert numFactory.compare(actualResult_nzpp, expectedResult_nzpp) == 0;
+		assert numFactory.compare(actualResult_nzzp, expectedResult_nzzp) == 0;
+		assert numFactory.compare(actualResult_nznp2, expectedResult_nznp2) == 0;
+		// L3
+		assert numFactory.compare(actualResult_np1nn, expectedResult_nnnp1) == 0;
+		assert numFactory.compare(actualResult_np1nz, expectedResult_nznp1) == 0;
+		assert numFactory.compare(actualResult_np1np1, expectedResult_np1np1) == 0;
+		assert numFactory.compare(actualResult_np1pp, expectedResult_np1pp) == 0;
+		assert numFactory.compare(actualResult_np1zp, expectedResult_np1zp) == 0;
+		assert numFactory.compare(actualResult_np1np2, expectedResult_np1np2) == 0;
+		// R1
+		assert numFactory.compare(actualResult_ppnn, expectedResult_nnpp) == 0;
+		assert numFactory.compare(actualResult_ppnz, expectedResult_nzpp) == 0;
+		assert numFactory.compare(actualResult_ppnp1, expectedResult_np1pp) == 0;
+		assert numFactory.compare(actualResult_pppp, expectedResult_pppp) == 0;
+		assert numFactory.compare(actualResult_ppzp, expectedResult_ppzp) == 0;
+		assert numFactory.compare(actualResult_ppnp2, expectedResult_ppnp2) == 0;
+		// R2
+		assert numFactory.compare(actualResult_zpnn, expectedResult_nnzp) == 0;
+		assert numFactory.compare(actualResult_zpnz, expectedResult_nzzp) == 0;
+		assert numFactory.compare(actualResult_zpnp1, expectedResult_np1zp) == 0;
+		assert numFactory.compare(actualResult_zppp, expectedResult_ppzp) == 0;
+		assert numFactory.compare(actualResult_zpzp, expectedResult_zpzp) == 0;
+		assert numFactory.compare(actualResult_zpnp2, expectedResult_zpnp2) == 0;
+		// R3
+		assert numFactory.compare(actualResult_np2nn, expectedResult_nnnp2) == 0;
+		assert numFactory.compare(actualResult_np2nz, expectedResult_nznp2) == 0;
+		assert numFactory.compare(actualResult_np2np1, expectedResult_np1np2) == 0;
+		assert numFactory.compare(actualResult_np2pp, expectedResult_ppnp2) == 0;
+		assert numFactory.compare(actualResult_np2zp, expectedResult_zpnp2) == 0;
+		assert numFactory.compare(actualResult_np2np2, expectedResult_np2np2) == 0;
+	}
 	// POWER
 }
