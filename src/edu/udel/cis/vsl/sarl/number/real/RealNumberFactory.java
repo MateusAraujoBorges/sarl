@@ -1488,244 +1488,260 @@ public class RealNumberFactory implements NumberFactory {
 		} else if (i1.isUniversal() || i2.isUniversal()) {
 			return newInterval(isIntegral, lo, sl, up, su);
 		} else if (lo1 == null && lo2 == null) {
-			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
-			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
+			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
+			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
 
 			if (signumUp1 > 0 || signumUp2 > 0) {
 				return newInterval(isIntegral, lo, sl, up, su);
 			} else {
-				sl = su1 || su2;
+				sl = (su1 || su2) && (su1 || !up1.isZero())
+						&& (su2 || !up2.isZero());
 				lo = multiply(up1, up2);
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
 		} else if (lo1 == null && up2 == null) {
-			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
-			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
+			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
+			int signumLo2 = sl2 ? lo2.signum() * 2 + 1 : lo2.signum();
 
 			if (signumUp1 > 0 || signumLo2 < 0) {
 				return newInterval(isIntegral, lo, sl, up, su);
 			} else {
-				su = su1 || sl2;
+				su = (su1 || sl2) && (su1 || !up1.isZero())
+						&& (sl2 || !lo2.isZero());
 				up = multiply(up1, lo2);
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
 		} else if (up1 == null && lo2 == null) {
-			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
-			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
+			int signumLo1 = sl1 ? lo1.signum() * 2 + 1 : lo1.signum();
+			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
 
 			if (signumLo1 < 0 || signumUp2 > 0) {
 				return newInterval(isIntegral, lo, sl, up, su);
 			} else {
-				su = sl1 || su2;
+				su = (sl1 || su2) && (sl1 || !lo1.isZero())
+						&& (su2 || !up2.isZero());
 				up = multiply(lo1, up2);
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
 		} else if (up1 == null && up2 == null) {
-			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
-			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
+			int signumLo1 = sl1 ? lo1.signum() * 2 + 1 : lo1.signum();
+			int signumLo2 = sl2 ? lo2.signum() * 2 + 1 : lo2.signum();
 
 			if (signumLo1 < 0 || signumLo2 < 0) {
 				return newInterval(isIntegral, lo, sl, up, su);
 			} else {
-				sl = sl1 || sl2;
+				sl = (sl1 || sl2) && (sl1 || !lo1.isZero())
+						&& (sl2 || !lo2.isZero());
 				lo = multiply(lo1, lo2);
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
 		} else if (lo1 == null) {
-			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
-			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
-			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
-			
+			int signumLo2 = sl2 ? lo2.signum() * 2 + 1 : lo2.signum();
+			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
+			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
+
 			if (signumLo2 >= 0) {
 				if (signumUp1 <= 0) {
-					su = su1 || sl2;
+					su = (su1 || sl2) && (su1 || !up1.isZero())
+							&& (sl2 || !lo2.isZero());
 					up = multiply(up1, lo2);
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else{
-					su = su1 || su2;
+				} else {
+					su = (su1 || su2) && (su2 || !up2.isZero());
 					up = multiply(up1, up2);
 					return newInterval(isIntegral, lo, sl, up, su);
 				}
-			}else if (signumUp2 <= 0){
+			} else if (signumUp2 <= 0) {
 				if (signumUp1 <= 0) {
-					sl = su1 || su2;
+					sl = (su1 || su2) && (su1 || !up1.isZero())
+							&& (su2 || !up2.isZero());
 					lo = multiply(up1, up2);
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else{
+				} else {
 					sl = su1 || sl2;
 					lo = multiply(up1, lo2);
 					return newInterval(isIntegral, lo, sl, up, su);
 				}
-			}else{
+			} else {
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
 		} else if (up1 == null) {
-			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
-			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
-			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
+			int signumLo1 = sl1 ? lo1.signum() * 2 + 1 : lo1.signum();
+			int signumLo2 = sl2 ? lo2.signum() * 2 + 1 : lo2.signum();
+			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
 
 			if (signumLo2 >= 0) {
 				if (signumLo1 >= 0) {
-					sl = sl1 || sl2;
+					sl = (sl1 || sl2) && (sl1 || !lo1.isZero())
+							&& (sl2 || !lo2.isZero());
 					lo = multiply(lo1, lo2);
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else{
-					sl = sl1 || su2;
+				} else {
+					sl = (sl1 || su2) && (su2 || !up2.isZero());
 					lo = multiply(lo1, up2);
 					return newInterval(isIntegral, lo, sl, up, su);
 				}
-			}else if (signumUp2 <= 0) {
+			} else if (signumUp2 <= 0) {
 				if (signumLo1 >= 0) {
-					su = sl1 || su2;
+					su = (sl1 || su2) && (sl1 || !lo1.isZero())
+							&& (su2 || !up2.isZero());
 					up = multiply(lo1, up2);
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else{
+				} else {
 					su = sl1 || sl2;
 					up = multiply(lo1, lo2);
 					return newInterval(isIntegral, lo, sl, up, su);
 				}
-			}else{
+			} else {
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
 		} else if (lo2 == null) {
-			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
-			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
-			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
+			int signumLo1 = sl1 ? lo1.signum() * 2 + 1 : lo1.signum();
+			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
+			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
 
 			if (signumLo1 >= 0) {
 				if (signumUp2 <= 0) {
-					su = sl1 || su2;
+					su = (sl1 || su2) && (sl1 || !lo1.isZero())
+							&& (su2 || !up2.isZero());
 					up = multiply(lo1, up2);
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else{
-					su = su1 || su2;
+				} else {
+					su = (su1 || su2) && (su1 || !up1.isZero());
 					up = multiply(up1, up2);
 					return newInterval(isIntegral, lo, sl, up, su);
 				}
-			}else if (signumUp1 <= 0) {
+			} else if (signumUp1 <= 0) {
 				if (signumUp2 <= 0) {
-					sl = su1 || su2;
+					sl = (su1 || su2) && (su1 || !up1.isZero())
+							&& (su2 || !up2.isZero());
 					lo = multiply(up1, up2);
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else{
+				} else {
 					sl = sl1 || su2;
 					lo = multiply(lo1, up2);
 					return newInterval(isIntegral, lo, sl, up, su);
 				}
-			}else{
+			} else {
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
 		} else if (up2 == null) {
-			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
-			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
-			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
+			int signumLo1 = sl1 ? lo1.signum() * 2 + 1 : lo1.signum();
+			int signumLo2 = sl2 ? lo2.signum() * 2 + 1 : lo2.signum();
+			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
 
 			if (signumLo1 >= 0) {
 				if (signumLo2 >= 0) {
-					sl = sl1 || sl2;
+					sl = (sl1 || sl2) && (sl1 || !lo1.isZero())
+							&& (sl2 || !lo2.isZero());
 					lo = multiply(lo1, lo2);
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else{
-					sl = su1 || sl2;
+				} else {
+					sl = (su1 || sl2) && (su1 || !up1.isZero());
 					lo = multiply(up1, lo2);
 					return newInterval(isIntegral, lo, sl, up, su);
 				}
-			}else if (signumUp1 <= 0) {
+			} else if (signumUp1 <= 0) {
 				if (signumLo2 >= 0) {
-					su = su1 || sl2;
+					su = (su1 || sl2) && (su1 || !up1.isZero())
+							&& (sl2 || !lo2.isZero());
 					up = multiply(up1, lo2);
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else{
+				} else {
 					su = sl1 || sl2;
 					up = multiply(lo1, lo2);
 					return newInterval(isIntegral, lo, sl, up, su);
 				}
-			}else{
+			} else {
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
 		} else {
-			int signumLo1 = sl1 ? lo1.signum() + 1 : lo1.signum();
-			int signumLo2 = sl2 ? lo2.signum() + 1 : lo2.signum();
-			int signumUp1 = su1 ? up1.signum() - 1 : up1.signum();
-			int signumUp2 = su2 ? up2.signum() - 1 : up2.signum();
-			
+			int signumLo1 = sl1 ? lo1.signum() * 2 + 1 : lo1.signum();
+			int signumLo2 = sl2 ? lo2.signum() * 2 + 1 : lo2.signum();
+			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
+			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
+
 			if (signumLo1 >= 0) {
 				if (signumLo2 >= 0) {
 					lo = multiply(lo1, lo2);
-					sl = sl1 || sl2;
+					sl = (sl1 || sl2) && (sl1 || !lo1.isZero())
+							&& (sl2 || !lo2.isZero());
 					up = multiply(up1, up2);
-					su = su1 || su2;
+					su = (su1 || su2) && (su1 || !up1.isZero())
+							&& (su2 || !up2.isZero());
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else if (signumUp2 <= 0) {
+				} else if (signumUp2 <= 0) {
 					lo = multiply(up1, lo2);
-					sl = su1 || sl2;
+					sl = (su1 || sl2) && (su1 || !up1.isZero());
 					up = multiply(lo1, up2);
-					su = sl1 || su2;
+					su = (sl1 || su2) && (sl1 || !lo1.isZero())
+							&& (su2 || !up2.isZero());
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else{
+				} else {
 					lo = multiply(up1, lo2);
-					sl = su1 || sl2;
+					sl = (su1 || sl2) && (su1 || !up1.isZero());
 					up = multiply(up1, up2);
-					su = su1 || su2;
+					su = (su1 || su2) && (su1 || !up1.isZero());
 					return newInterval(isIntegral, lo, sl, up, su);
 				}
-			}else if (signumUp1 <= 0) {
+			} else if (signumUp1 <= 0) {
 				if (signumLo2 >= 0) {
 					lo = multiply(lo1, up2);
-					sl = sl1 || su2;
+					sl = (sl1 || su2) && (su2 || !up2.isZero());
 					up = multiply(up1, lo2);
-					su = su1 || sl2;
+					su = (su1 || sl2) && (su1 || !up1.isZero())
+							&& (sl2 || !lo2.isZero());
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else if (signumUp2 <= 0) {
+				} else if (signumUp2 <= 0) {
 					lo = multiply(up1, up2);
-					sl = su1 || su2;
+					sl = (su1 || su2) && (su1 || !up1.isZero())
+							&& (su2 || !up2.isZero());
 					up = multiply(lo1, lo2);
 					su = sl1 || sl2;
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else{
+				} else {
 					lo = multiply(lo1, up2);
 					sl = sl1 || su2;
 					up = multiply(lo1, lo2);
 					su = sl1 || sl2;
 					return newInterval(isIntegral, lo, sl, up, su);
 				}
-			}else{
+			} else {
 				if (signumLo2 >= 0) {
 					lo = multiply(lo1, up2);
-					sl = sl1 || su2;
+					sl = (sl1 || su2) && (su2 || !up2.isZero());
 					up = multiply(up1, up2);
-					su = su1 || su2;
+					su = (su1 || su2) && (su2 || !up2.isZero());
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else if (signumUp2 <= 0) {
+				} else if (signumUp2 <= 0) {
 					lo = multiply(up1, lo2);
 					sl = su1 || sl2;
 					up = multiply(lo1, lo2);
 					su = sl1 || sl2;
 					return newInterval(isIntegral, lo, sl, up, su);
-				}else{
+				} else {
 					Number lo1lo2 = multiply(lo1, lo2);
 					Number up1up2 = multiply(up1, up2);
 					Number lo1up2 = multiply(lo1, up2);
 					Number up1lo2 = multiply(up1, lo2);
-					
-					
+
 					if (lo1lo2.compareTo(up1up2) < 0) {
 						up = up1up2;
 						su = su1 || su2;
-					}else if(lo1lo2.compareTo(up1up2) > 0){
+					} else if (lo1lo2.compareTo(up1up2) > 0) {
 						up = lo1lo2;
 						su = sl1 || sl2;
-					}else{
+					} else {
 						up = lo1lo2;
 						su = (sl1 || sl2) && (su1 || su2);
 					}
 					if (lo1up2.compareTo(up1lo2) < 0) {
 						lo = lo1up2;
 						sl = sl1 || su2;
-					}else if(lo1up2.compareTo(up1lo2) > 0){
+					} else if (lo1up2.compareTo(up1lo2) > 0) {
 						lo = up1lo2;
 						sl = su1 || sl2;
-					}else{
+					} else {
 						lo = up1lo2;
 						sl = (sl1 || su2) && (su1 || sl2);
 					}
