@@ -1770,81 +1770,154 @@ public class RealNumberFactory implements NumberFactory {
 
 		if (exp == 0) {
 			return newInterval(isIntegral, oneNumber, false, oneNumber, false);
-		} else if (interval.isUniversal()) {
-			return newInterval(isIntegral, lower, strictLower, upper,
-					strictUpper);
-		} else if (lower == null) {
-			int signumUp = strictUpper ? upper.signum() - 1 : upper.signum();
+		} else if (exp > 0) {
+			if (interval.isUniversal()) {
+				return newInterval(isIntegral, lower, strictLower, upper,
+						strictUpper);
+			} else if (lower == null) {
+				int signumUp = strictUpper ? upper.signum() * 2 - 1 : upper
+						.signum();
 
-			if (signumUp < 0) {
-				if (exp % 2 == 0) {
-					newLo = power(abs(upper), exp);
-					newSl = strictUpper;
+				if (signumUp < 0) {
+					if (exp % 2 == 0) {
+						newLo = power(negate(upper), exp);
+						newSl = strictUpper;
+					} else {
+						newUp = power(upper, exp);
+						newSu = strictUpper;
+					}
 				} else {
-					newUp = power(upper, exp);
-					newSu = strictUpper;
+					if (exp % 2 == 0) {
+						newLo = zeroNumber;
+						newSl = false;
+					} else {
+						newUp = power(upper, exp);
+						newSu = strictUpper;
+					}
 				}
-			} else {
-				if (exp % 2 == 0) {
-					newLo = zeroNumber;
-					newSl = false;
-				} else {
-					newUp = power(upper, exp);
-					newSu = strictUpper;
-				}
-			}
-			return newInterval(isIntegral, newLo, newSl, newUp, newSu);
-		} else if (upper == null) {
-			int signumLo = strictLower ? lower.signum() + 1 : lower.signum();
+				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
+			} else if (upper == null) {
+				int signumLo = strictLower ? lower.signum() * 2 + 1 : lower
+						.signum();
 
-			if (signumLo > 0) {
-				newLo = power(upper, exp);
-				newSl = strictUpper;
-			} else {
-				if (exp % 2 == 0) {
-					newLo = zeroNumber;
-					newSl = false;
+				if (signumLo > 0) {
+					newLo = power(lower, exp);
+					newSl = strictLower;
 				} else {
-					newLo = power(upper, exp);
-					newSl = strictUpper;
+					if (exp % 2 == 0) {
+						newLo = zeroNumber;
+						newSl = false;
+					} else {
+						newLo = power(lower, exp);
+						newSl = strictLower;
+					}
 				}
+				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
+			} else {
+				int signumLo = strictLower ? lower.signum() * 2 + 1 : lower
+						.signum();
+				int signumUp = strictUpper ? upper.signum() * 2 - 1 : upper
+						.signum();
+
+				newUp = power(upper, exp);
+				newSu = strictUpper;
+				newLo = power(lower, exp);
+				newSl = strictLower;
+				if (signumLo >= 0) {
+					assert signumUp >= 0;
+					// Do nothing
+				} else if (signumUp <= 0) {
+					assert signumLo <= 0;
+					if (exp % 2 == 0) {
+						newUp = power(negate(lower), exp);
+						newSu = strictLower;
+						newLo = power(negate(upper), exp);
+						newSl = strictUpper;
+					}
+				} else {
+					if (exp % 2 == 0) {
+						Number tempUpFromLo = power(negate(lower), exp);
+						Number tempUpFromUp = power(upper, exp);
+						if (tempUpFromLo.compareTo(tempUpFromUp) < 0) {
+							newUp = tempUpFromUp;
+							newSu = strictUpper;
+						} else {
+							newUp = tempUpFromLo;
+							newSu = strictLower;
+						}
+						newLo = zeroNumber;
+						newSl = false;
+					}
+				}
+				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 			}
-			return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 		} else {
-			int signumLo = strictLower ? lower.signum() + 1 : lower.signum();
-			int signumUp = strictUpper ? upper.signum() - 1 : upper.signum();
+			exp = -exp;
+			if (interval.isUniversal()) {
+				throw new IllegalArgumentException(
+						"When the exponent number is less than zero, the interval should not contain zero");
+			} else if (lower == null) {
+				int signumUp = strictUpper ? upper.signum() * 2 - 1 : upper
+						.signum();
 
-			newUp = power(upper, exp);
-			newSu = strictUpper;
-			newLo = power(lower, exp);
-			newSl = strictLower;
-			if (signumLo >= 0) {
-				assert signumUp >= 0;
-				// Do nothing
-			} else if (signumUp <= 0) {
-				assert signumLo <= 0;
-				if (exp % 2 == 0) {
-					newUp = power(abs(lower), exp);
-					newSu = strictLower;
-					newLo = power(abs(upper), exp);
-					newSl = strictUpper;
-				}
-			} else {
-				if (exp % 2 == 0) {
-					Number tempUpFromLo = power(abs(lower), exp);
-					Number tempUpFromUp = power(upper, exp);
-					if (tempUpFromLo.compareTo(tempUpFromUp) < 0) {
-						newUp = tempUpFromUp;
+				if (signumUp < 0) {
+					if (exp % 2 == 0) {
+						newLo = zeroNumber;
+						newSl = true;
+						newUp = divide(oneNumber, power(negate(upper), exp));
 						newSu = strictUpper;
 					} else {
-						newUp = tempUpFromLo;
-						newSu = strictLower;
+						newLo = divide(oneNumber, power(upper, exp));
+						newSl = strictUpper;
+						newUp = zeroNumber;
+						newSu = true;
 					}
-					newLo = zeroNumber;
-					newSl = false;
+				} else {
+					throw new IllegalArgumentException(
+							"When the exponent number is less than zero, the interval should not contain zero");
 				}
+				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
+			} else if (upper == null) {
+				int signumLo = strictLower ? lower.signum() * 2 + 1 : lower
+						.signum();
+
+				if (signumLo > 0) {
+					newLo = zeroNumber;
+					newSl = true;
+					newUp = divide(oneNumber, power(lower, exp));
+					newSu = strictLower;
+				} else {
+					throw new IllegalArgumentException(
+							"When the exponent number is less than zero, the interval should not contain zero");
+				}
+				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
+			} else {
+				int signumLo = strictLower ? lower.signum() * 2 + 1 : lower
+						.signum();
+				int signumUp = strictUpper ? upper.signum() * 2 - 1 : upper
+						.signum();
+
+				newLo = divide(oneNumber, power(upper, exp));
+				newSl = strictUpper;
+				newUp = divide(oneNumber, power(lower, exp));
+				newSu = strictLower;
+				if (signumLo > 0) {
+					assert signumUp > 0;
+					// Do nothing
+				} else if (signumUp < 0) {
+					assert signumLo < 0;
+					if (exp % 2 == 0) {
+						newUp = divide(oneNumber, power(negate(upper), exp));
+						newSu = strictUpper;
+						newLo = divide(oneNumber, power(negate(lower), exp));
+						newSl = strictLower;
+					}
+				} else {
+					throw new IllegalArgumentException(
+							"When the exponent number is less than zero, the interval should not contain zero");
+				}
+				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 			}
-			return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 		}
 	}
 
@@ -1866,12 +1939,11 @@ public class RealNumberFactory implements NumberFactory {
 		int baseValue = base.value().intValue();
 		int result = baseValue;
 
-		assert baseValue != 0 || exp != 0;
-		while (exp > 1) {
-			result = result * baseValue;
-		}
+		assert exp > 0 || baseValue != 0;
 		if (exp == 0) {
 			result = 1;
+		} else {
+			result = (int) Math.pow(baseValue, exp);
 		}
 		return integer(result);
 	}
@@ -1884,14 +1956,16 @@ public class RealNumberFactory implements NumberFactory {
 		int resultNumerator = baseNumerator;
 		int resultDenominator = baseDenominator;
 
-		assert baseDenominator != 0 && (baseNumerator != 0 || exp != 0);
-		while (exp > 1) {
-			resultNumerator = resultNumerator * baseNumerator;
-			resultDenominator = resultDenominator * baseDenominator;
-		}
+		assert exp > 0 || resultNumerator != 0;
 		if (exp == 0) {
 			resultNumerator = 1;
 			resultDenominator = 1;
+		} else if (exp > 0) {
+			resultNumerator = (int) Math.pow(baseNumerator, exp);
+			resultDenominator = (int) Math.pow(baseDenominator, exp);
+		} else {
+			resultNumerator = (int) Math.pow(baseDenominator, -exp);
+			resultDenominator = (int) Math.pow(baseNumerator, -exp);
 		}
 		return fraction(integer(resultNumerator), integer(resultDenominator));
 	}
