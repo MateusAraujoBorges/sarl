@@ -1,4 +1,4 @@
-package edu.udel.cis.vsl.sarl.numbers;
+package edu.udel.cis.vsl.sarl.IF.numbers;
 
 import org.junit.After;
 import org.junit.AfterClass;
