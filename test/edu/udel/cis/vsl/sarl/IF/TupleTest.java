@@ -16,68 +16,203 @@ import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
+/**
+ * This test suite is created for functions related with
+ * {@link SymbolicExpression}s with the type of {@link SymbolicTupleType}, and
+ * all test cases do <strong>NOT</strong> include {@link NullPointerException}
+ * situations.
+ * 
+ * @author wwh
+ *
+ */
 public class TupleTest {
 
 	private final static PrintStream out = System.out;
 
-	private SymbolicUniverse universe;
+	private SymbolicUniverse sUniverse;
 
-	private SymbolicType integerType;
+	private SymbolicTupleType tupleType_int, tupleType_real, tupleType_int_int,
+			tupleType_int_int_int;
 
-	private NumericExpression one, two, three;
+	private NumericExpression int_0, int_1, int_2, int_4, real_half;
+
+	private IntObject index_0, index_1, index_2;
 
 	@Before
 	public void setUp() throws Exception {
-		universe = SARL.newStandardUniverse();
-		integerType = universe.integerType();
-		// zero = universe.integer(0);
-		one = universe.integer(1);
-		two = universe.integer(2);
-		three = universe.integer(3);
+		sUniverse = SARL.newStandardUniverse();
+		tupleType_real = sUniverse.tupleType(
+				sUniverse.stringObject("testTuple"),
+				Arrays.asList(new SymbolicType[] { sUniverse.realType() }));
+		tupleType_int = sUniverse.tupleType(
+				sUniverse.stringObject("testTuple"),
+				Arrays.asList(new SymbolicType[] { sUniverse.integerType() }));
+		tupleType_int_int = sUniverse.tupleType(
+				sUniverse.stringObject("testTuple"),
+				Arrays.asList(new SymbolicType[] { sUniverse.integerType(),
+						sUniverse.integerType() }));
+		tupleType_int_int_int = sUniverse.tupleType(
+				sUniverse.stringObject("testTuple"),
+				Arrays.asList(new SymbolicType[] { sUniverse.integerType(),
+						sUniverse.integerType(), sUniverse.integerType() }));
+		int_0 = sUniverse.integer(0);
+		int_1 = sUniverse.integer(1);
+		int_2 = sUniverse.integer(2);
+		int_4 = sUniverse.integer(4);
+		real_half = sUniverse.rational(1, 2);
+		index_0 = sUniverse.intObject(0);
+		index_1 = sUniverse.intObject(1);
+		index_2 = sUniverse.intObject(2);
 	}
 
 	@After
 	public void tearDown() throws Exception {
 	}
 
-	@Test
-	public void tuple1() {
-		SymbolicTupleType tupleType = universe.tupleType(
-				universe.stringObject("tup"),
-				Arrays.asList(new SymbolicType[] { integerType, integerType }));
-		SymbolicExpression tuple = universe.tuple(tupleType,
-				Arrays.asList(new SymbolicExpression[] { one, two }));
-		SymbolicExpression expected = universe.tuple(tupleType,
-				Arrays.asList(new SymbolicExpression[] { three, two }));
-		IntObject i0 = universe.intObject(0);
-		IntObject i1 = universe.intObject(1);
+	// Interface:CoreUniverse
+	// Function: tuple
+	@Test(expected = SARLException.class)
+	public void tuple_fieldTypeAndComponents_SizeMismatched() {
+		sUniverse.tuple(tupleType_int,
+				Arrays.asList(new SymbolicExpression[] { int_1, int_2 }));
+	}
 
-		out.println("tuple1: tuple = " + tuple);
-		tuple = universe.tupleWrite(tuple, i0, three);
-		out.println("tuple1: tuple = " + tuple);
-		assertEquals(expected, tuple);
-		assertEquals(three, universe.tupleRead(tuple, i0));
-		assertEquals(two, universe.tupleRead(tuple, i1));
-		tuple = universe.tupleWrite(tuple, i1, one);
-		assertEquals(three, universe.tupleRead(tuple, i0));
-		assertEquals(one, universe.tupleRead(tuple, i1));
+	@Test(expected = SARLException.class)
+	public void tuple_fieldTypeAndComponents_TypeMismatched() {
+		sUniverse.tuple(tupleType_real,
+				Arrays.asList(new SymbolicExpression[] { int_1 }));
 	}
 
 	@Test
-	public void denseTest() {
-		SymbolicTupleType tupleType = universe.tupleType(
-				universe.stringObject("tup"),
-				Arrays.asList(new SymbolicType[] { integerType, integerType }));
-		SymbolicExpression tuple = universe.symbolicConstant(
-				universe.stringObject("X"), tupleType);
-		SymbolicExpression concrete = universe.tuple(tupleType,
-				Arrays.asList(new SymbolicExpression[] { three, two }));
-		IntObject i0 = universe.intObject(0), i1 = universe.intObject(1);
+	public void tuple_contruct() {
+		sUniverse.tuple(tupleType_int,
+				Arrays.asList(new SymbolicExpression[] { int_0 }));
+		sUniverse.tuple(tupleType_int_int,
+				Arrays.asList(new SymbolicExpression[] { int_0, int_0 }));
+	}
 
-		tuple = universe.tupleWrite(tuple, i0, three);
-		assertEquals(three, universe.tupleRead(tuple, i0));
-		tuple = universe.tupleWrite(tuple, i1, two);
-		assertEquals(two, universe.tupleRead(tuple, i1));
-		assertEquals(concrete, tuple);
+	// Interface:CoreUniverse
+	// Function: tupleRead, TupleWrite
+	@Test(expected = SARLException.class)
+	public void tupleWrite_TypeMismatched() {
+		SymbolicExpression tuple_int_int = sUniverse.tuple(tupleType_int_int,
+				Arrays.asList(new SymbolicExpression[] { int_0, int_1 }));
+		sUniverse.tupleWrite(tuple_int_int, index_0, real_half);
+	}
+
+	@Test
+	public void tupleWrite_sameValue() {
+		SymbolicExpression tuple_int_int = sUniverse.tuple(tupleType_int_int,
+				Arrays.asList(new SymbolicExpression[] { int_0, int_1 }));
+		sUniverse.tupleWrite(tuple_int_int, index_0, int_0);
+	}
+
+	@Test
+	public void tupleWrite_differentValue() {
+		SymbolicExpression tuple_int_int = sUniverse.tuple(tupleType_int_int,
+				Arrays.asList(new SymbolicExpression[] { int_0, int_1 }));
+		sUniverse.tupleWrite(tuple_int_int, index_1, int_0);
+	}
+
+	@Test
+	public void tupleWrite_denseWrite_single_component() {
+		SymbolicExpression denseTuple = sUniverse.symbolicConstant(
+				sUniverse.stringObject("denseTuple"), tupleType_int);
+		sUniverse.tupleWrite(denseTuple, index_0, int_0);
+		sUniverse.tupleWrite(denseTuple, index_0, int_1);
+		// TODO: Under construction
+	}
+
+	@Test
+	public void tupleWrite_denseWrite_more_components() {
+		SymbolicExpression denseTuple = sUniverse.symbolicConstant(
+				sUniverse.stringObject("denseTuple"), tupleType_int_int);
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_0, int_0);
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_0, int_0);
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_1, int_0);
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_1, int_1);
+	}
+
+	@Test(expected = SARLException.class)
+	public void tupleRead_TypeMismatched() {
+		sUniverse.tupleRead(int_1, index_0);
+	}
+
+	@Test
+	public void tupleRead() {
+		SymbolicExpression tuple_int_int = sUniverse.tuple(tupleType_int_int,
+				Arrays.asList(new SymbolicExpression[] { int_0, int_1 }));
+		SymbolicExpression componet_0 = sUniverse.tupleRead(tuple_int_int,
+				index_0);
+		SymbolicExpression componet_1 = sUniverse.tupleRead(tuple_int_int,
+				index_1);
+		assertEquals(componet_0, int_0);
+		assertEquals(componet_1, int_1);
+	}
+
+	@Test
+	public void tupleRead_denseWrite_single_component() {
+		SymbolicExpression denseTuple = sUniverse.symbolicConstant(
+				sUniverse.stringObject("denseTuple"), tupleType_int);
+
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_0, int_0);
+		assertEquals(int_0, sUniverse.tupleRead(denseTuple, index_0));
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_0, int_1);
+		assertEquals(int_1, sUniverse.tupleRead(denseTuple, index_0));
+	}
+
+	@Test
+	public void tupleRead_denseWrite_more_components() {
+		SymbolicExpression denseTuple = sUniverse.symbolicConstant(
+				sUniverse.stringObject("denseTuple"), tupleType_int_int_int);
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_0, int_0);
+		assertEquals(int_0, sUniverse.tupleRead(denseTuple, index_0));
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_1, int_1);
+		assertEquals(int_1, sUniverse.tupleRead(denseTuple, index_1));
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_2, int_2);
+		assertEquals(int_2, sUniverse.tupleRead(denseTuple, index_2));
+	}
+
+	@Test
+	public void tupleRead_denseWrite_NOT_initialized_component_ALL() {
+		SymbolicExpression denseTuple = sUniverse.symbolicConstant(
+				sUniverse.stringObject("denseTuple"), tupleType_int_int_int);
+		sUniverse.tupleRead(denseTuple, index_0);
+	}
+
+	@Test
+	public void tupleRead_denseWrite_NOT_initialized_component_Part1() {
+		SymbolicExpression denseTuple = sUniverse.symbolicConstant(
+				sUniverse.stringObject("denseTuple"), tupleType_int_int);
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_0, int_0);
+		sUniverse.tupleRead(denseTuple, index_1);
+	}
+
+	@Test
+	public void tupleRead_denseWrite_NOT_initialized_component_Part2() {
+		SymbolicExpression denseTuple = sUniverse.symbolicConstant(
+				sUniverse.stringObject("denseTuple"), tupleType_int_int_int);
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_2, int_2);
+		sUniverse.tupleRead(denseTuple, index_1);
+		sUniverse.tupleRead(denseTuple, index_0);
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_1, int_1);
+		sUniverse.tupleRead(denseTuple, index_0);
+		denseTuple = sUniverse.tupleWrite(denseTuple, index_0, int_0);
+	}
+
+	// Interface:CoreUniverse
+	// Function: equals
+	@Test
+	public void tuple_Equals() {
+		SymbolicExpression tuple_int_int1 = sUniverse.tuple(tupleType_int_int,
+				Arrays.asList(new SymbolicExpression[] { int_1, int_1 }));
+		SymbolicExpression tuple_int_int2 = sUniverse.tuple(tupleType_int_int,
+				Arrays.asList(new SymbolicExpression[] { int_1, int_2 }));
+		SymbolicExpression tuple_int_int3 = sUniverse.tupleWrite(
+				tuple_int_int2, index_1, int_1);
+		assertEquals(tuple_int_int1, tuple_int_int1);
+		assertEquals(tuple_int_int1, tuple_int_int3);
+		assert sUniverse.equals(tuple_int_int1, tuple_int_int1).isTrue();
+		assert sUniverse.equals(tuple_int_int1, tuple_int_int2).isFalse();
 	}
 }
