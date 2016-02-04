@@ -105,7 +105,8 @@ public interface SymbolicTypeFactory {
 	 * Creates a SymbolicTypeSequence from a list of SymbolicTypes
 	 * 
 	 * @param elements
-	 *            elements can be of any type that extends SymbolicType.
+	 *            a non-<code>null</code> list of elements can be of any type
+	 *            that extends SymbolicType.
 	 * @return a symbolic type sequence for any SymbolicType elements.
 	 * 
 	 */

@@ -55,10 +55,11 @@ public class CommonSymbolicTypeSequence extends CommonSymbolicObject implements
 	 * a constructor to create a CommonSymbolicTypeSequence
 	 * using a list of SymblicType
 	 * 
-	 * @param types: any finite iterable<T> list of SymbolicType
+	 * @param types: any non-<code>null</code> finite iterable<T> list of SymbolicType
 	 */
 	public CommonSymbolicTypeSequence(Iterable<? extends SymbolicType> types) {
 		super(SymbolicObjectKind.TYPE_SEQUENCE);
+		assert types != null;
 		elements = new ArrayList<SymbolicType>();
 		for (SymbolicType type : types) {
 			if (type == null)
