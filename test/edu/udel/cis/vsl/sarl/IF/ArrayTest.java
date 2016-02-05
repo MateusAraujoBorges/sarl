@@ -19,8 +19,8 @@
 package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertSame;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -36,31 +36,42 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.universe.IF.Universes;
+import edu.udel.cis.vsl.sarl.util.Pair;
 
 public class ArrayTest {
 
 	private static PrintStream out = System.out;
 	private SymbolicUniverse universe;
-	// private NumberFactory numberFactory;
 	private StringObject a_obj; // "a"
-	// private StringObject b_obj; // "b"
-	// private SymbolicType realType;
 	private SymbolicType integerType;
-	private NumericExpression zero, one, two, five, six, seventeen; // integer
-																	// constants
+	private NumericExpression zero, one, two, three, five, six, seventeen; // integer constants
 	private List<NumericExpression> list1; // {5,6}
 	private List<NumericExpression> list2; // {17}
+	
+	private SymbolicExpression write2d(SymbolicExpression array,
+			NumericExpression i, NumericExpression j, SymbolicExpression value) {
+		SymbolicExpression row = universe.arrayRead(array, i);
+		SymbolicExpression newRow = universe.arrayWrite(row, j, value);
 
+		return universe.arrayWrite(array, i, newRow);
+	}
+
+	private SymbolicExpression read2d(SymbolicExpression array,
+			NumericExpression i, NumericExpression j) {
+		SymbolicExpression row = universe.arrayRead(array, i);
+
+		return universe.arrayRead(row, j);
+	}
+	
 	@Before
 	public void setUp() throws Exception {
 		universe = Universes.newIdealUniverse();
-		// realType = universe.realType();
 		integerType = universe.integerType();
 		a_obj = universe.stringObject("a");
-		// b_obj = universe.stringObject("b");
 		zero = universe.integer(0);
 		one = universe.integer(1);
 		two = universe.integer(2);
+		three = universe.integer(3);
 		five = universe.integer(5);
 		six = universe.integer(6);
 		seventeen = universe.integer(17);
@@ -71,19 +82,158 @@ public class ArrayTest {
 	@After
 	public void tearDown() throws Exception {
 	}
-
+	
+	/**
+	 * create a integer array with two elements {5,6}
+	 */
 	@Test
-	public void arrayRead1() {
+	public void arrayCreateTest(){
 		SymbolicExpression a = universe.array(integerType, list1);
-
-		out.println("arrayRead1: a = " + a);
 		assertEquals(universe.arrayType(integerType, two), a.type());
+	}
+	
+	/**
+	 * get the dimension and the base type of an array
+	 */
+	@Test
+	public void arrayDimensionAndBaseTypeTest(){
+		SymbolicExpression a = universe.array(integerType, list1);
+		Pair<Integer, SymbolicType> pair = universe.arrayDimensionAndBaseType((SymbolicArrayType)(a.type()));
+		assertEquals(pair.left, new Integer(1));
+		assertEquals(pair.right, integerType);
+	}
+	
+	/**
+	 * create an empty array
+	 */
+	@Test
+	public void emptyArrayTest(){
+		SymbolicExpression a = universe.emptyArray(integerType);
+		assertEquals(a.type(), universe.arrayType(integerType, zero));
+		
+		
+	}
+	
+	/**
+	 * create a constant array {1,1,1,1,1,1}
+	 */
+	@Test
+	public void constantArrayTest(){
+		SymbolicExpression a = universe.constantArray(integerType, six, one);
+		
+		for(int i=0; i<6; i++){
+			NumericExpression num = universe.integer(i);
+			assertEquals(universe.arrayRead(a, num), one);
+		}
+	}
+	
+	/**
+	 * append a number after an array
+	 * {5,6} ==> {5,6,17}
+	 */
+	@Test
+	public void appendTest(){
+		//{five, six}
+		SymbolicExpression a = universe.array(integerType, list1);
+		SymbolicExpression c = universe.append(a, seventeen);
+		
+		assertEquals(universe.arrayType(integerType, three), c.type());
+		int i=0;
+		for(; i<2; i++){
+			NumericExpression num = universe.integer(i);
+			assertEquals(universe.arrayRead(a, num), universe.arrayRead(c, num));
+		}
+		NumericExpression num = universe.integer(i);
+		assertEquals(universe.arrayRead(c, num), seventeen);
+	}
+	
+	/**
+	 * append an element into an empty array
+	 * {} ==> {1}
+	 */
+	@Test
+	public void appendEmptyArrayTest(){
+		SymbolicExpression a = universe.emptyArray(integerType);
+		SymbolicExpression b = universe.append(a, one);
+		
+		assertEquals(universe.length(b), one);
+	}
+	
+	
+	/**
+	 * remove an element from an array
+	 * {5,6} ==> {6}
+	 */
+	@Test
+	public void removeElementTest(){
+		SymbolicExpression a = universe.array(integerType, list1);
+		SymbolicExpression b = universe.removeElementAt(a, 0);
+		
+		assertEquals(universe.arrayType(integerType, one), b.type());
+		assertEquals(universe.arrayRead(b, zero), six);
+	}
+	
+	/**
+	 * insert an element into an array
+	 * {5,6} ==> {5,17,6}
+	 */
+	@Test
+	public void insertElementTest(){
+		SymbolicExpression a = universe.array(integerType, list1);
+		SymbolicExpression b = universe.insertElementAt(a, 1, seventeen);
+		
+		assertEquals(universe.arrayType(integerType, three), b.type());
+		assertEquals(universe.arrayRead(b, zero), five);
+		assertEquals(universe.arrayRead(b, one), seventeen);
+		assertEquals(universe.arrayRead(b, two), six);
+	}
+	
+	/**
+	 * get the length of an array
+	 */
+	@Test
+	public void lengthTest(){
+		SymbolicExpression a = universe.array(integerType, list1);
+		
+		assertEquals(two, universe.length(a));
+	}
+	
+	/**
+	 * array access test
+	 */
+	@Test
+	public void arrayRead() {
+		SymbolicExpression a = universe.array(integerType, list1);
 		assertEquals(five, universe.arrayRead(a, zero));
 		assertEquals(six, universe.arrayRead(a, one));
 	}
-
+	
+	/**
+	 * 
+	 * write an constant array
+	 * constant array is immutable?
+	 */
 	@Test
-	public void jagged1() {
+	public void constantArrayWrite(){
+		SymbolicExpression a = universe.constantArray(integerType, one, one);
+		SymbolicExpression b = universe.arrayWrite(a, zero, two);
+		
+		assertEquals(universe.arrayRead(b, zero), two);
+	}
+	
+	/**
+	 * remove an element from a constant array
+	 */
+	@Test
+	public void constantArrayRemove(){
+		SymbolicExpression a = universe.constantArray(integerType, two, one);
+		SymbolicExpression b = universe.removeElementAt(a, 0);
+		
+		assertEquals(one, universe.length(b));
+	}
+	
+	@Test
+	public void arrayWrite2Test() {
 		SymbolicArrayType t1 = universe.arrayType(integerType);
 		SymbolicArrayType t2 = universe.arrayType(t1, universe.integer(2));
 		SymbolicExpression a1 = universe.array(integerType, list1);
@@ -106,26 +256,11 @@ public class ArrayTest {
 		assertEquals(one, universe.length(universe.arrayRead(a, one)));
 	}
 
-	private SymbolicExpression write2d(SymbolicExpression array,
-			NumericExpression i, NumericExpression j, SymbolicExpression value) {
-		SymbolicExpression row = universe.arrayRead(array, i);
-		SymbolicExpression newRow = universe.arrayWrite(row, j, value);
-
-		return universe.arrayWrite(array, i, newRow);
-	}
-
-	private SymbolicExpression read2d(SymbolicExpression array,
-			NumericExpression i, NumericExpression j) {
-		SymbolicExpression row = universe.arrayRead(array, i);
-
-		return universe.arrayRead(row, j);
-	}
-
 	/**
 	 * Write and read a 2d array.
 	 */
 	@Test
-	public void array2d() {
+	public void array2dTest() {
 		SymbolicArrayType t = universe.arrayType(universe
 				.arrayType(integerType));
 		SymbolicExpression a = universe.symbolicConstant(a_obj, t);
@@ -139,22 +274,9 @@ public class ArrayTest {
 		// for the heck of it...
 		out.println("array2d: new row is: " + universe.arrayRead(a, zero));
 	}
-
+	
 	@Test
-	public void canonic1() {
-		SymbolicArrayType t1 = universe.arrayType(integerType,
-				universe.integer(3));
-		SymbolicArrayType t2 = universe.arrayType(integerType,
-				universe.integer(3));
-
-		assertEquals(t1, t2);
-		t1 = (SymbolicArrayType) universe.canonic(t1);
-		t2 = (SymbolicArrayType) universe.canonic(t2);
-		assertSame(t1, t2);
-	}
-
-	@Test
-	public void denseTest() {
+	public void denseArrayWriteTest() {
 		SymbolicArrayType t = universe.arrayType(integerType);
 		SymbolicExpression a = universe.symbolicConstant(
 				universe.stringObject("a"), t);
@@ -169,5 +291,17 @@ public class ArrayTest {
 		out.println("b2 = " + b2);
 		assertEquals(b2, b1);
 	}
-
+	
+	@Test
+	public void canonic1() {
+		SymbolicArrayType t1 = universe.arrayType(integerType,
+				universe.integer(3));
+		SymbolicArrayType t2 = universe.arrayType(integerType,
+				universe.integer(3));
+		assertEquals(t1, t2);
+		t1 = (SymbolicArrayType) universe.canonic(t1);
+		t2 = (SymbolicArrayType) universe.canonic(t2);
+		assertSame(t1, t2);
+	}
+	
 }
