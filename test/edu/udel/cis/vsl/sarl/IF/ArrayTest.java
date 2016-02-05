@@ -211,7 +211,6 @@ public class ArrayTest {
 	/**
 	 * 
 	 * write an constant array
-	 * constant array is immutable?
 	 */
 	@Test
 	public void constantArrayWrite(){
