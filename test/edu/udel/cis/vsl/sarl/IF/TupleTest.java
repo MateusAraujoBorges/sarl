@@ -34,7 +34,7 @@ public class TupleTest {
 	private SymbolicTupleType tupleType_int, tupleType_real, tupleType_int_int,
 			tupleType_int_int_int;
 
-	private NumericExpression int_0, int_1, int_2, int_4, real_half;
+	private NumericExpression int_0, int_1, int_2, real_half;
 
 	private IntObject index_0, index_1, index_2;
 
@@ -58,7 +58,6 @@ public class TupleTest {
 		int_0 = sUniverse.integer(0);
 		int_1 = sUniverse.integer(1);
 		int_2 = sUniverse.integer(2);
-		int_4 = sUniverse.integer(4);
 		real_half = sUniverse.rational(1, 2);
 		index_0 = sUniverse.intObject(0);
 		index_1 = sUniverse.intObject(1);
@@ -120,7 +119,6 @@ public class TupleTest {
 				sUniverse.stringObject("denseTuple"), tupleType_int);
 		sUniverse.tupleWrite(denseTuple, index_0, int_0);
 		sUniverse.tupleWrite(denseTuple, index_0, int_1);
-		// TODO: Under construction
 	}
 
 	@Test
@@ -146,8 +144,8 @@ public class TupleTest {
 				index_0);
 		SymbolicExpression componet_1 = sUniverse.tupleRead(tuple_int_int,
 				index_1);
-		assertEquals(componet_0, int_0);
-		assertEquals(componet_1, int_1);
+		assertEquals(int_0, componet_0);
+		assertEquals(int_1, componet_1);
 	}
 
 	@Test
