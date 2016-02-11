@@ -15,6 +15,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.ReferenceExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.universe.IF.Universes;
 
@@ -22,7 +23,8 @@ public class ArrayReasonTest {
 	private SymbolicUniverse universe;
 	private BooleanExpression t;
 	private List<NumericExpression> list1; // {5,6}
-	private NumericExpression one, two, five, six;
+	private StringObject a_obj; // "a"
+	private NumericExpression zero, one, two, five, six;
 	private ReferenceExpression identityReference;
 	private SymbolicType integerType;
 	private Reasoner reasoner;
@@ -32,6 +34,7 @@ public class ArrayReasonTest {
 		universe = Universes.newIdealUniverse();
 		t = universe.trueExpression();
 		reasoner = universe.reasoner(t);
+		zero = universe.integer(0);
 		one = universe.integer(1);
 		two = universe.integer(2);
 		five = universe.integer(5);
@@ -39,6 +42,7 @@ public class ArrayReasonTest {
 		list1 = Arrays.asList(new NumericExpression[] { five, six });
 		identityReference = universe.identityReference();
 		integerType = universe.integerType();
+		a_obj = universe.stringObject("a");
 	}
 	
 	@After
@@ -47,50 +51,54 @@ public class ArrayReasonTest {
 	
 	 /**
 	  * context: 
-	  * 	a = {1,1,1,1,1,1}
-	  * 1 <== simplify(a[5])
+	  * 	b = {a,a,a,a,a,a}
+	  * a <== simplify(a[5])
 	  */
 	@Test
 	public void arrayReasonSimplifyTest1(){
 		ArrayElementReference reference;
-		SymbolicExpression a = universe.constantArray(integerType, six, one);
+		SymbolicExpression a = universe.symbolicConstant(a_obj, integerType);
+		SymbolicExpression b = universe.constantArray(integerType, six, a);
 		reference = universe.arrayElementReference(identityReference, five);
 		
-		SymbolicExpression result = reasoner.simplify(universe.dereference(a, reference));
-		assertEquals(result, one);
+		SymbolicExpression result = reasoner.simplify(universe.dereference(b, reference));
+		assertEquals(result, a);
 		
 	}
 	
 	/**
 	 * context: 
-	 * 		a = {1,1,1,1,1,1}
-	 * 		b = {5,6}
-	 * 6 <== simplify(b[a[5]]) 
+	 * 		b = {a,a,a,a,a,a}
+	 * 		c = {5,6}
+	 * a <== simplify(b[c[0]]) 
 	 * 
 	 */
 	@Test
 	public void arrayReasonSimplifyTest2(){
 		ArrayElementReference reference;
-		SymbolicExpression a = universe.constantArray(integerType, six, one);
-		SymbolicExpression b = universe.array(integerType, list1);
-		reference = universe.arrayElementReference(identityReference, five);
-		SymbolicExpression a5 = universe.dereference(a, reference); // a[5]
-		reference = universe.arrayElementReference(identityReference, (NumericExpression)a5);
-		SymbolicExpression result = reasoner.simplify(universe.dereference(b, reference)); //b[a[5]]
+		SymbolicExpression a = universe.symbolicConstant(a_obj, integerType);
+		SymbolicExpression b = universe.constantArray(integerType, six, a);
+		SymbolicExpression c = universe.array(integerType, list1);
 		
-		assertEquals(result, six);
+		reference = universe.arrayElementReference(identityReference, zero);
+		SymbolicExpression c1 = universe.dereference(c, reference); // c[0]
+		reference = universe.arrayElementReference(identityReference, (NumericExpression)c1);
+		SymbolicExpression result = reasoner.simplify(universe.dereference(b, reference)); //b[c[0]]
+		
+		assertEquals(result, a);
 	}
 	
 	/**
 	 * context:
-	 * 		a = {1,1,1,1,1,1}
-	 * valid(a[5] == 1)
+	 * 		b = {a,a,a,a,a,a}
+	 * valid(b[5] == a)
 	 */
 	@Test
 	public void arrayReasonValidTest1(){
-		SymbolicExpression a = universe.constantArray(integerType, six, one);
-		BooleanExpression p = universe.equals(one,
-				(NumericExpression) universe.arrayRead(a, five));
+		SymbolicExpression a = universe.symbolicConstant(a_obj, integerType);
+		SymbolicExpression b = universe.constantArray(integerType, six, a);
+		BooleanExpression p = universe.equals(a,
+				(NumericExpression) universe.arrayRead(b, five));
 		ValidityResult result = reasoner.valid(p);
 		
 		assertEquals(ResultType.YES, result.getResultType());
