@@ -37,7 +37,7 @@ public class ReferencedTypeBenchmark {
 	
 	public static void main(String args[])
 	{
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		universe = PreUniverses.newPreUniverse(system);
 		integerType = universe.integerType();
 		arrayType = universe.arrayType(integerType);

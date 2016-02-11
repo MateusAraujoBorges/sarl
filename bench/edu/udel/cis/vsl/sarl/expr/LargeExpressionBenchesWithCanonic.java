@@ -28,12 +28,12 @@ public class LargeExpressionBenchesWithCanonic {
 		int numexpr;
 		ObjectFactory of;
 		
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		of = system.objectFactory();
 		Collection<BooleanExpression> col1;
 		Collection<BooleanExpression> col2;
 		numexpr = 1000;
-		sUniverse = Universes.newIdealUniverse();
+		sUniverse = Universes.newIdealUniverse2();
 		booleanType = sUniverse.booleanType();
 		BooleanExpression[] ExpressionList1 = {};
 		col1= new ArrayList<BooleanExpression>(Arrays.asList(ExpressionList1));

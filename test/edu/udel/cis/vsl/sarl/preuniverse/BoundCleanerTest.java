@@ -44,7 +44,7 @@ public class BoundCleanerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 
 		universe = PreUniverses.newPreUniverse(system);
 		integerType = universe.integerType();

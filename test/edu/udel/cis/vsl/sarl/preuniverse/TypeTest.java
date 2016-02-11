@@ -26,7 +26,7 @@ public class TypeTest {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		// Instantiate universe
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		universe = PreUniverses.newPreUniverse(system);
 		
 		// Instantiate NumberExpressions

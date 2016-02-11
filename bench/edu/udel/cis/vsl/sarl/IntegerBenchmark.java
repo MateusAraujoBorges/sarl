@@ -9,7 +9,7 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 
 public class IntegerBenchmark {
-	static FactorySystem system = PreUniverses.newIdealFactorySystem();
+	static FactorySystem system = PreUniverses.newIdealFactorySystem2();
 	private static PreUniverse universe = PreUniverses.newPreUniverse(system);
 	
 	static SymbolicConstant index = universe.symbolicConstant(

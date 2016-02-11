@@ -77,7 +77,7 @@ public class CommonPreUniverseTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		universe = PreUniverses.newPreUniverse(system);
 		preuniverse = (CommonPreUniverse) PreUniverses.newPreUniverse(system);
 		numberFactory = system.numberFactory();

@@ -23,7 +23,7 @@ public class ProveTest {
 	@Before
 	public void setUp() throws Exception {
 		universe = PreUniverses.newPreUniverse(PreUniverses
-				.newIdealFactorySystem());
+				.newIdealFactorySystem2());
 		proverFactory = Prove.newMultiProverFactory(universe,
 				Configurations.getDefaultConfiguration());
 	}

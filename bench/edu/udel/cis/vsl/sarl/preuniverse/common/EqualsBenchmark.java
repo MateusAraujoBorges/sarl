@@ -14,7 +14,7 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 public class EqualsBenchmark {
 
 	public final static SymbolicUniverse universe = SARL.newIdealUniverse();
-	public final static FactorySystem system = PreUniverses.newIdealFactorySystem();
+	public final static FactorySystem system = PreUniverses.newIdealFactorySystem2();
 	
 	public final static ExpressionFactory expressionFactory = system.expressionFactory();
 	

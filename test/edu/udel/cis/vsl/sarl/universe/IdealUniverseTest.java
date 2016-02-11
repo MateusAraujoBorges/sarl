@@ -58,7 +58,7 @@ public class IdealUniverseTest {
 
 	@Before
 	public void setUp() throws Exception {
-		universe = Universes.newIdealUniverse();
+		universe = Universes.newIdealUniverse2();
 		// numberFactory = universe.numberFactory();
 		Xobj = universe.stringObject("X");
 		Yobj = universe.stringObject("Y");

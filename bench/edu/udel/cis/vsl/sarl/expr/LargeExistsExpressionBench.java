@@ -46,7 +46,7 @@ public class LargeExistsExpressionBench {
 		SymbolicConstant c1;
 
 		numexpr = 1000;
-		sUniverse = Universes.newIdealUniverse();
+		sUniverse = Universes.newIdealUniverse2();
 		BooleanExpression[] ExpressionList1 = {};
 		c1 = (SymbolicConstant) sUniverse.falseExpression();
 		col1= new ArrayList<BooleanExpression>(Arrays.asList(ExpressionList1));

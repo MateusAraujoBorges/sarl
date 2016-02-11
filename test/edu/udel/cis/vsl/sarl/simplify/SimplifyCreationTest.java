@@ -44,7 +44,7 @@ public class SimplifyCreationTest {
 	 */
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		system = PreUniverses.newIdealFactorySystem();
+		system = PreUniverses.newIdealFactorySystem2();
 		preUniv = PreUniverses.newPreUniverse(system);
 		realType = preUniv.realType();
 		rat5 = preUniv.rational(5);

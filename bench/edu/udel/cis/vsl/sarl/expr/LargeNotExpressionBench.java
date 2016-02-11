@@ -45,7 +45,7 @@ public class LargeNotExpressionBench {
 		Collection<BooleanExpression> col1;
 
 		numexpr = 8000;
-		sUniverse = Universes.newIdealUniverse();
+		sUniverse = Universes.newIdealUniverse2();
 		booleanType = sUniverse.booleanType();
 		BooleanExpression[] ExpressionList1 = {};
 		col1= new ArrayList<BooleanExpression>(Arrays.asList(ExpressionList1));

@@ -57,7 +57,7 @@ public class CanonicalRenamerTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		universe = new CommonPreUniverse(system);
 		integerType = universe.integerType();
 		realType = universe.realType();

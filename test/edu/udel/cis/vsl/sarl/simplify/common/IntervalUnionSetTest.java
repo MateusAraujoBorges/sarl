@@ -125,7 +125,7 @@ public class IntervalUnionSetTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 
 		universe = PreUniverses.newPreUniverse(system);
 		RAT_X = (NumericSymbolicConstant) universe.symbolicConstant(

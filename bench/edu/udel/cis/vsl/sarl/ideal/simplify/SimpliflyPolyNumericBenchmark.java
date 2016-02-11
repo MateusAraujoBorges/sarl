@@ -117,14 +117,14 @@ public class SimpliflyPolyNumericBenchmark {
 
 	public static void main(String[] args) {
 		
-		system = PreUniverses.newIdealFactorySystem();
+		system = PreUniverses.newIdealFactorySystem1();
 		preUniv = PreUniverses.newPreUniverse(system);
 		out = System.out;
 		idealFactory = (IdealFactory) system.expressionFactory()
 				.numericFactory();
 		idealSimplifierFactory = (IdealSimplifierFactory) Ideal
 				.newIdealSimplifierFactory(idealFactory, preUniv);
-		boolExprFact = PreUniverses.newIdealFactorySystem().booleanFactory();
+		boolExprFact = PreUniverses.newIdealFactorySystem1().booleanFactory();
 		ratNeg1 = preUniv.rational(-1);
 		ratNeg2 = preUniv.rational(-2);
 		ratNeg3 = preUniv.rational(-3);
