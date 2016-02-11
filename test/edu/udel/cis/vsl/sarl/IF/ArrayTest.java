@@ -36,13 +36,13 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.universe.IF.Universes;
-import edu.udel.cis.vsl.sarl.util.Pair;
 
 public class ArrayTest {
 
 	private static PrintStream out = System.out;
 	private SymbolicUniverse universe;
 	private StringObject a_obj; // "a"
+	private StringObject b_obj; // "b"
 	private SymbolicType integerType;
 	private NumericExpression zero, one, two, three, five, six, seventeen; // integer constants
 	private List<NumericExpression> list1; // {5,6}
@@ -68,6 +68,7 @@ public class ArrayTest {
 		universe = Universes.newIdealUniverse();
 		integerType = universe.integerType();
 		a_obj = universe.stringObject("a");
+		b_obj = universe.stringObject("b");
 		zero = universe.integer(0);
 		one = universe.integer(1);
 		two = universe.integer(2);
@@ -83,86 +84,68 @@ public class ArrayTest {
 	public void tearDown() throws Exception {
 	}
 	
+
 	/**
-	 * create a integer array with two elements {5,6}
+	 * array read and write test
 	 */
 	@Test
-	public void arrayCreateTest(){
+	public void writeAndReadTest(){
+		SymbolicExpression a = universe.symbolicConstant(a_obj, universe
+				.arrayType(integerType));
+		NumericExpression b = (NumericExpression)universe.symbolicConstant(b_obj, integerType);
+		NumericExpression j = universe.integer(1);
+		SymbolicExpression c = universe.arrayWrite(a, j, b);
+		SymbolicExpression d = universe.arrayRead(c, j);
+		assertEquals(d , b);
+	}
+	
+	/**
+	 * get the length of an array
+	 */
+	@Test
+	public void lengthTest(){
 		SymbolicExpression a = universe.array(integerType, list1);
-		assertEquals(universe.arrayType(integerType, two), a.type());
-	}
-	
-	/**
-	 * get the dimension and the base type of an array
-	 */
-	@Test
-	public void arrayDimensionAndBaseTypeTest(){
-		SymbolicExpression a = universe.array(integerType, list1);
-		Pair<Integer, SymbolicType> pair = universe.arrayDimensionAndBaseType((SymbolicArrayType)(a.type()));
-		assertEquals(pair.left, new Integer(1));
-		assertEquals(pair.right, integerType);
-	}
-	
-	/**
-	 * create an empty array
-	 */
-	@Test
-	public void emptyArrayTest(){
-		SymbolicExpression a = universe.emptyArray(integerType);
-		assertEquals(a.type(), universe.arrayType(integerType, zero));
-		
-		
-	}
-	
-	/**
-	 * create a constant array {1,1,1,1,1,1}
-	 */
-	@Test
-	public void constantArrayTest(){
-		SymbolicExpression a = universe.constantArray(integerType, six, one);
-		
-		for(int i=0; i<6; i++){
-			NumericExpression num = universe.integer(i);
-			assertEquals(universe.arrayRead(a, num), one);
-		}
+		assertEquals(two, universe.length(a));
 	}
 	
 	/**
 	 * append a number after an array
-	 * {5,6} ==> {5,6,17}
+	 * {5,6} ==> {5,6,b}
 	 */
 	@Test
 	public void appendTest(){
-		//{five, six}
-		SymbolicExpression a = universe.array(integerType, list1);
-		SymbolicExpression c = universe.append(a, seventeen);
 		
-		assertEquals(universe.arrayType(integerType, three), c.type());
-		int i=0;
-		for(; i<2; i++){
-			NumericExpression num = universe.integer(i);
-			assertEquals(universe.arrayRead(a, num), universe.arrayRead(c, num));
-		}
-		NumericExpression num = universe.integer(i);
-		assertEquals(universe.arrayRead(c, num), seventeen);
+		SymbolicExpression a = universe.array(integerType, list1);
+		SymbolicExpression b = universe.symbolicConstant(b_obj, integerType);
+		SymbolicExpression c = universe.append(a, b);
+		
+		NumericExpression aLenPlusOne = universe.add(universe.length(a), one);
+		assertEquals(aLenPlusOne, universe.length(c));
+		
+		SymbolicExpression d = universe.arrayRead(c, universe.length(a));
+		assertEquals(b ,d);
+		
 	}
 	
 	/**
 	 * append an element into an empty array
-	 * {} ==> {1}
+	 * {} ==> {b}
 	 */
 	@Test
 	public void appendEmptyArrayTest(){
 		SymbolicExpression a = universe.emptyArray(integerType);
-		SymbolicExpression b = universe.append(a, one);
+		NumericExpression b = (NumericExpression)universe.symbolicConstant(b_obj, integerType);
+		SymbolicExpression c = universe.append(a, b);
+		SymbolicExpression d = universe.arrayRead(c, zero);
 		
-		assertEquals(universe.length(b), one);
+		assertEquals(universe.length(c), one);
+		assertEquals(b ,d);
 	}
 	
 	
 	/**
 	 * remove an element from an array
-	 * {5,6} ==> {6}
+	 * {5, 6} ==> {6}
 	 */
 	@Test
 	public void removeElementTest(){
@@ -179,57 +162,34 @@ public class ArrayTest {
 	 */
 	@Test
 	public void insertElementTest(){
-		SymbolicExpression a = universe.array(integerType, list1);
-		SymbolicExpression b = universe.insertElementAt(a, 1, seventeen);
 		
-		assertEquals(universe.arrayType(integerType, three), b.type());
-		assertEquals(universe.arrayRead(b, zero), five);
-		assertEquals(universe.arrayRead(b, one), seventeen);
-		assertEquals(universe.arrayRead(b, two), six);
+		SymbolicExpression a = universe.array(integerType, list1);
+		SymbolicExpression b = universe.symbolicConstant(b_obj, integerType);
+		SymbolicExpression c = universe.insertElementAt(a, 1, b);
+		NumericExpression aLenPlusOne = universe.add(universe.length(a), one);
+		SymbolicExpression d = universe.arrayRead(c, one);
+		
+		assertEquals(universe.length(c), aLenPlusOne);
+		assertEquals(b, d);
 	}
 	
-	/**
-	 * get the length of an array
-	 */
-	@Test
-	public void lengthTest(){
-		SymbolicExpression a = universe.array(integerType, list1);
-		
-		assertEquals(two, universe.length(a));
-	}
-	
-	/**
-	 * array access test
-	 */
-	@Test
-	public void arrayRead() {
-		SymbolicExpression a = universe.array(integerType, list1);
-		assertEquals(five, universe.arrayRead(a, zero));
-		assertEquals(six, universe.arrayRead(a, one));
-	}
 	
 	/**
 	 * 
-	 * write an constant array
+	 * constant array test
+	 * {a,a,a}
 	 */
 	@Test
-	public void constantArrayWrite(){
-		SymbolicExpression a = universe.constantArray(integerType, one, one);
-		SymbolicExpression b = universe.arrayWrite(a, zero, two);
+	public void constantArrayTest(){
+		SymbolicExpression a = universe.symbolicConstant(a_obj, integerType);
+		SymbolicExpression b = universe.constantArray(integerType, three, a);
 		
-		assertEquals(universe.arrayRead(b, zero), two);
+		assertEquals(universe.arrayRead(b, zero), a);
+		assertEquals(universe.arrayRead(b, one), a);
+		assertEquals(universe.arrayRead(b, two), a);
+		assertEquals(three, universe.length(b));
 	}
 	
-	/**
-	 * remove an element from a constant array
-	 */
-	@Test
-	public void constantArrayRemove(){
-		SymbolicExpression a = universe.constantArray(integerType, two, one);
-		SymbolicExpression b = universe.removeElementAt(a, 0);
-		
-		assertEquals(one, universe.length(b));
-	}
 	
 	@Test
 	public void arrayWrite2Test() {
@@ -243,7 +203,6 @@ public class ArrayTest {
 		a = universe.arrayWrite(a, zero, a1);
 		a = universe.arrayWrite(a, one, a2);
 		out.println("jagged1: a = " + a);
-		// a={{5,6},{17}}
 		assertEquals(five,
 				universe.arrayRead(universe.arrayRead(a, zero), zero));
 		assertEquals(six, universe.arrayRead(universe.arrayRead(a, zero), one));
