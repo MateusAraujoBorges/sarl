@@ -40,16 +40,15 @@ import edu.udel.cis.vsl.sarl.number.real.RealRational;
  * lower bound must be strict. The upper bound can be +infty, represented by
  * null, in which case the upper bound must be strict.
  * 
- * A BoundsObject has one of two types: integral or real, which is 
- * determined by the type of the symbolic constant.
+ * A BoundsObject has one of two types: integral or real, which is determined by
+ * the type of the symbolic constant.
  * 
- * For an integer type bounds object, a non-null lower or upper 
- * bound must be a non-strict integer.
- * The static constructors guarantee this and take care of any conversions 
- * necessary if the inputs do not satisfy these constraints.
+ * For an integer type bounds object, a non-null lower or upper bound must be a
+ * non-strict integer. The static constructors guarantee this and take care of
+ * any conversions necessary if the inputs do not satisfy these constraints.
  * 
- * A BoundsObject instance is not immutable.   There are methods for modifying the object.
- * However the symbolic expression (and therefore type) cannot change.
+ * A BoundsObject instance is not immutable. There are methods for modifying the
+ * object. However the symbolic expression (and therefore type) cannot change.
  */
 public class BoundsObject implements Interval {
 
@@ -133,7 +132,7 @@ public class BoundsObject implements Interval {
 		return result;
 	}
 
-/**
+	/**
 	 * Private default constructor with the complete set of constructor
 	 * arguments for a BoundsObject.
 	 * 
@@ -197,9 +196,10 @@ public class BoundsObject implements Interval {
 							+ expression);
 		if (isIntegral() && bound != null
 				&& (strict || !(bound instanceof IntegerNumber))) {
-			bound = (strict ? factory.add(factory.oneInteger(),
-					factory.floor(factory.rational(bound))) : factory
-					.ceil(factory.rational(bound)));
+			bound = (strict
+					? factory.add(factory.oneInteger(),
+							factory.floor(factory.rational(bound)))
+					: factory.ceil(factory.rational(bound)));
 			strict = false;
 		}
 		this.lower = bound;
@@ -221,10 +221,10 @@ public class BoundsObject implements Interval {
 							+ expression);
 		if (isIntegral() && bound != null
 				&& (strict || !(bound instanceof IntegerNumber))) {
-			bound = (strict ? factory
-					.subtract(factory.ceil(factory.rational(bound)),
-							factory.oneInteger()) : factory.floor(factory
-					.rational(bound)));
+			bound = (strict
+					? factory.subtract(factory.ceil(factory.rational(bound)),
+							factory.oneInteger())
+					: factory.floor(factory.rational(bound)));
 			strict = false;
 		}
 		this.upper = bound;
@@ -252,11 +252,11 @@ public class BoundsObject implements Interval {
 
 			else
 				return expression.equals(that.expression)
-						&& ((upper == null && that.upper == null) || upper
-								.equals(that.upper))
+						&& ((upper == null && that.upper == null)
+								|| upper.equals(that.upper))
 						&& strictUpper == that.strictUpper
-						&& ((lower == null && that.lower == null) || lower
-								.equals(that.lower))
+						&& ((lower == null && that.lower == null)
+								|| lower.equals(that.lower))
 						&& strictLower == that.strictLower;
 		}
 		return false;
@@ -320,8 +320,8 @@ public class BoundsObject implements Interval {
 					"Internal TASS error: tight bound cannot be null: "
 							+ expression);
 		if (isIntegral() && !(value instanceof IntegerNumber)) {
-			if (!(value instanceof RationalNumber && factory
-					.isIntegral((RationalNumber) value)))
+			if (!(value instanceof RationalNumber
+					&& factory.isIntegral((RationalNumber) value)))
 				throw new RuntimeException(
 						"TASS Internal error: attempt to set symbolic constant of integer type to non-integer value: "
 								+ expression + " " + value);
@@ -577,9 +577,10 @@ public class BoundsObject implements Interval {
 			} else {
 				realRat1 = (RealRational) arg1;
 			}
-			return (realRat0.numerator().multiply(realRat1.denominator())
-					.subtract(realRat1.numerator().multiply(
-							realRat0.denominator()))).intValue();
+			return (realRat0.numerator()
+					.multiply(realRat1.denominator()).subtract(realRat1
+							.numerator().multiply(realRat0.denominator())))
+									.intValue();
 		}
 	}
 
@@ -588,4 +589,34 @@ public class BoundsObject implements Interval {
 		return lower != null && upper != null && lower.isZero()
 				&& upper.isZero() && !strictLower && !strictLower;
 	}
+
+//	@Override
+	public BoundsObject affineTransform(Number coefficient, Number offset) {
+		int sgn = coefficient.signum();
+
+		if (sgn > 0) {
+			return new BoundsObject(expression,
+					upper == null ? null
+							: factory.add(factory.multiply(upper, coefficient),
+									offset),
+					strictUpper,
+					lower == null ? null
+							: factory.add(factory.multiply(lower, coefficient),
+									offset),
+					strictLower);
+		} else if (sgn < 0) {
+			return new BoundsObject(expression,
+					lower == null ? null
+							: factory.add(factory.multiply(lower, coefficient),
+									offset),
+					strictLower,
+					upper == null ? null
+							: factory.add(factory.multiply(upper, coefficient),
+									offset),
+					strictUpper);
+		} else { // sgn == 0
+			return new BoundsObject(expression, offset, false, offset, false);
+		}
+	}
+
 }

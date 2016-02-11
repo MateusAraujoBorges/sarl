@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.collections.IF.SimpleEntry;
@@ -230,9 +231,40 @@ public class CommonCollectionFactory implements CollectionFactory {
 	@Override
 	public <K extends SymbolicExpression, V extends SymbolicExpression> Entry<K, V> entry(
 			K key, V value) {
-		Entry<?,?> e1 = new SimpleEntry(key,value);
-		
+		Entry<?, ?> e1 = new SimpleEntry(key, value);
+
 		return (Entry<K, V>) e1;
+	}
+
+	@Override
+	public <K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> mask(
+			SymbolicMap<K, V> map, boolean[] mask) {
+		int size = map.size();
+		int newSize = 0;
+
+		assert size == mask.length;
+		for (int i = 0; i < size; i++)
+			if (mask[i])
+				newSize++;
+		if (newSize == size)
+			return map;
+
+		@SuppressWarnings("unchecked")
+		Entry<K, V>[] newEntries = (Entry<K, V>[]) new Entry<?, ?>[newSize];
+		int count = 0;
+
+		for (Entry<K, V> entry : map.entries()) {
+			if (mask[count]) {
+				newEntries[count] = entry;
+				count++;
+			}
+		}
+		if (map instanceof SortedSymbolicMap<?, ?>) {
+			return sortedMap(((SortedSymbolicMap<K, V>) map).comparator(),
+					newEntries);
+		} else {
+			throw new SARLInternalException("Unsorted maps not implemented");
+		}
 	}
 
 }

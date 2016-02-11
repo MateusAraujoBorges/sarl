@@ -18,7 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
-import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.RationalExpression;
 
@@ -41,7 +41,7 @@ public class NTRationalExpression extends IdealExpression
 		assert !numerator.equals(denominator);
 	}
 
-	public Monomial numerator(IdealFactory factory) {
+	public Monomial numerator(Ideal2Factory factory) {
 		return (Monomial) argument(0);
 	}
 
@@ -49,7 +49,7 @@ public class NTRationalExpression extends IdealExpression
 		return (Monomial) argument(0);
 	}
 
-	public Monomial denominator(IdealFactory factory) {
+	public Monomial denominator(Ideal2Factory factory) {
 		return (Monomial) argument(1);
 	}
 

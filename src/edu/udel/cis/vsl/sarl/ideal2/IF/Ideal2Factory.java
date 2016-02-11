@@ -31,7 +31,7 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
 
 /**
  * <p>
- * An {@link IdealFactory} provides a few services beyond those guaranteed by an
+ * An {@link Ideal2Factory} provides a few services beyond those guaranteed by an
  * arbitrary {@link NumericExpressionFactory}.
  * </p>
  * 
@@ -229,8 +229,8 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * @author siegel
  * 
  */
-public interface IdealFactory extends NumericExpressionFactory {
-	
+public interface Ideal2Factory extends NumericExpressionFactory {
+
 	Comparator<Monic> monicComparator();
 
 	/**
@@ -350,6 +350,28 @@ public interface IdealFactory extends NumericExpressionFactory {
 	// Primitive Powers...
 
 	PrimitivePower primitivePower(Primitive primitive, IntObject exponent);
+
+	// Monics...
+
+	/**
+	 * Given a {@link Monic} returns the {@link Monic} obtained by removing some
+	 * of the {@link PrimitivePower} factors according to the given
+	 * <code>mask</code>. The <code>mask</code> is an array whose length is the
+	 * number of {@link PrimitivePower} factors in <code>monic</code>. A
+	 * <code>true</code> mask entry indicates the corresponding factor should be
+	 * kept; a <code>false</code> entry indicates the corresponding factor
+	 * should be removed.
+	 * 
+	 * @param monic
+	 *            a non-<code>null</code> {@link Monic}
+	 * @param mask
+	 *            array of boolean whose length equals number of primitive power
+	 *            factors in <code>monic</code>
+	 * @return a {@link Monic} with same type as <code>monic</code> obtained
+	 *         from <code>monic</code> by keeping only those factors for which
+	 *         the corresponding bit in <code>mask</code> is <code>true</code>
+	 */
+	Monic monicMask(Monic monic, boolean[] mask);
 
 	// Monomials...
 

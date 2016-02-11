@@ -9,6 +9,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.ArrayElementReference;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
@@ -17,7 +18,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.ReferenceExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.universe.IF.Universes;
 
 public class ArrayReasonTest {
 	private SymbolicUniverse universe;
@@ -31,7 +31,7 @@ public class ArrayReasonTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		universe = Universes.newIdealUniverse();
+		universe = SARL.newStandardUniverse();
 		t = universe.trueExpression();
 		reasoner = universe.reasoner(t);
 		zero = universe.integer(0);

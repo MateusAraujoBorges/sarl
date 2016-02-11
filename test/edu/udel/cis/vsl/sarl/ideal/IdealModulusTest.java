@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package edu.udel.cis.vsl.sarl.ideal; 
+package edu.udel.cis.vsl.sarl.ideal;
 
 import static org.junit.Assert.assertEquals;
 
@@ -31,16 +31,16 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
-import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
 /**
- * The class IdealModulusTest tests methods found in the edu.udel.cis.vsl.sarl.ideal.common package 
- * using modulus
+ * The class IdealModulusTest tests methods found in the
+ * edu.udel.cis.vsl.sarl.ideal.common package using modulus
  * 
  * This class returns a polynomial which is of the form numerator % denominator
  * 
@@ -53,7 +53,7 @@ public class IdealModulusTest {
 	private NumberFactory numberFactory;
 	private ObjectFactory objectFactory;
 	private SymbolicTypeFactory typeFactory;
-	private IdealFactory idealFactory;
+	private Ideal2Factory idealFactory;
 
 	/**
 	 * real constant 1.5 (3/2)
@@ -66,7 +66,7 @@ public class IdealModulusTest {
 	/**
 	 * int constant 0
 	 */
-	private Constant intZero; 
+	private Constant intZero;
 	/**
 	 * int constant 1
 	 */
@@ -82,19 +82,20 @@ public class IdealModulusTest {
 	/**
 	 * "X"
 	 */
-	StringObject Xobj; 
+	StringObject Xobj;
 	/**
-	 *  int symbolic constant "X"
+	 * int symbolic constant "X"
 	 */
 	NumericSymbolicConstant x;
-	
+
 	@Before
 	public void setUp() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
+
 		numberFactory = system.numberFactory();
 		objectFactory = system.objectFactory();
 		typeFactory = system.typeFactory();
-		idealFactory = (IdealFactory) system.numericFactory();
+		idealFactory = (Ideal2Factory) system.numericFactory();
 		ratOnePointFive = numberFactory.rational("1.25");
 		constOnePointFive = idealFactory.constant(ratOnePointFive);
 		ratOne = numberFactory.rational("1");
@@ -102,15 +103,15 @@ public class IdealModulusTest {
 		intZero = idealFactory.intConstant(0);
 		intOne = idealFactory.intConstant(1);
 		Xobj = objectFactory.stringObject("X");
-		x = objectFactory.canonic(idealFactory.symbolicConstant(Xobj,
-				typeFactory.integerType()));
+		x = objectFactory.canonic(
+				idealFactory.symbolicConstant(Xobj, typeFactory.integerType()));
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		
+
 	}
-	
+
 	/**
 	 * Integer modulus. Assume numerator is nonnegative and denominator is
 	 * positive.
@@ -119,25 +120,25 @@ public class IdealModulusTest {
 	 * 
 	 * @param numerator
 	 *            a nonnegative integer polynomial
-	 *            
+	 * 
 	 * @param denominator
 	 *            a positive integer polynomial
-	 *            
+	 * 
 	 * @return the polynomial of the form numerator%denominator
 	 */
 	@Test
 	public void intModulusPoly() {
-		NumericExpression n1 = idealFactory.subtract(idealFactory.multiply(x, x),
-				intOne);
+		NumericExpression n1 = idealFactory
+				.subtract(idealFactory.multiply(x, x), intOne);
 		NumericExpression n2 = idealFactory.add(x, intOne);
-		NumericExpression ne1 = idealFactory.modulo(n1, n2);		
+		NumericExpression ne1 = idealFactory.modulo(n1, n2);
 		NumericExpression n = idealFactory.modulo(n1, n2);
 		NumericExpression m = idealFactory.modulo(intZero, n2);
 		NumericExpression p = idealFactory.modulo(n1, intOne);
 		NumericExpression q = idealFactory.modulo(constOnePointFive, constOne);
-		
+
 		out.println("modulo=" + q);
-		
+
 		assertEquals(ne1, n);
 		assertEquals(intZero, m);
 		assertEquals(intZero, p);

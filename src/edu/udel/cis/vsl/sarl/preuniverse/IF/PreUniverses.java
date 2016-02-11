@@ -22,14 +22,28 @@ public class PreUniverses {
 				expressionFactory, collectionFactory);
 	}
 
-	public static FactorySystem newIdealFactorySystem() {
+	public static FactorySystem newIdealFactorySystem1() {
 		NumberFactory numberFactory = Numbers.REAL_FACTORY;
 		ObjectFactory objectFactory = Objects.newObjectFactory(numberFactory);
 		SymbolicTypeFactory typeFactory = Types.newTypeFactory(objectFactory);
 		CollectionFactory collectionFactory = Collections
 				.newCollectionFactory(objectFactory);
 		ExpressionFactory expressionFactory = Expressions
-				.newIdealExpressionFactory(numberFactory, objectFactory,
+				.newIdealExpressionFactory1(numberFactory, objectFactory,
+						typeFactory, collectionFactory);
+
+		return newFactorySystem(objectFactory, typeFactory, expressionFactory,
+				collectionFactory);
+	}
+
+	public static FactorySystem newIdealFactorySystem2() {
+		NumberFactory numberFactory = Numbers.REAL_FACTORY;
+		ObjectFactory objectFactory = Objects.newObjectFactory(numberFactory);
+		SymbolicTypeFactory typeFactory = Types.newTypeFactory(objectFactory);
+		CollectionFactory collectionFactory = Collections
+				.newCollectionFactory(objectFactory);
+		ExpressionFactory expressionFactory = Expressions
+				.newIdealExpressionFactory2(numberFactory, objectFactory,
 						typeFactory, collectionFactory);
 
 		return newFactorySystem(objectFactory, typeFactory, expressionFactory,

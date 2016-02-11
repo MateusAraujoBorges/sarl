@@ -23,7 +23,7 @@ import java.io.PrintStream;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
-import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 
 /**
@@ -47,7 +47,7 @@ public class SimplifierInfo {
 	 */
 	public PreUniverse universe;
 
-	public IdealFactory idealFactory;
+	public Ideal2Factory idealFactory;
 
 	public NumberFactory numberFactory;
 

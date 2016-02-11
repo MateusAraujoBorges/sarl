@@ -23,7 +23,7 @@ import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 
@@ -61,27 +61,27 @@ public class NTConstant extends IdealExpression implements Constant {
 	}
 
 	@Override
-	public Constant monomialConstant(IdealFactory factory) {
+	public Constant monomialConstant(Ideal2Factory factory) {
 		return this;
 	}
 
 	@Override
-	public Monic monic(IdealFactory factory) {
+	public Monic monic(Ideal2Factory factory) {
 		return factory.one(type());
 	}
 
 	@Override
-	public Monomial numerator(IdealFactory factory) {
+	public Monomial numerator(Ideal2Factory factory) {
 		return this;
 	}
 
 	@Override
-	public Monomial denominator(IdealFactory factory) {
+	public Monomial denominator(Ideal2Factory factory) {
 		return factory.one(type());
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(IdealFactory factory) {
+	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		return factory.monicSingletonMap(factory.one(type()), this);
 	}
 
@@ -96,7 +96,7 @@ public class NTConstant extends IdealExpression implements Constant {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
+	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
 		return factory.monicSingletonMap(factory.one(type()), this);
 	}
 

@@ -19,13 +19,12 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
-import edu.udel.cis.vsl.sarl.universe.IF.Universes;
 
 public class SimplifyTest {
 
 	static PrintStream out = System.out;
 
-	static SymbolicUniverse universe = Universes.newIdealUniverse();
+	static SymbolicUniverse universe = SARL.newStandardUniverse();
 
 	static SymbolicIntegerType intType = universe.integerType();
 
@@ -60,15 +59,15 @@ public class SimplifyTest {
 				.symbolicConstant(univ.stringObject("X1"), univ.integerType()));
 		SymbolicConstant X2 = (SymbolicConstant) univ.canonic(univ
 				.symbolicConstant(univ.stringObject("X2"), univ.integerType()));
-		BooleanExpression contex = (BooleanExpression) univ.canonic(univ
-				.equals(univ.integer(4), univ.canonic(univ.multiply(
-						(NumericExpression) X1, (NumericExpression) X2))));
+		BooleanExpression contex = (BooleanExpression) univ
+				.canonic(univ.equals(univ.integer(4),
+						univ.canonic(univ.multiply((NumericExpression) X1,
+								(NumericExpression) X2))));
 		Reasoner reasoner;
 
-		contex = (BooleanExpression) univ.canonic(univ.and(
-				contex,
-				(BooleanExpression) univ.canonic(univ.equals(X1,
-						univ.integer(1)))));
+		contex = (BooleanExpression) univ
+				.canonic(univ.and(contex, (BooleanExpression) univ
+						.canonic(univ.equals(X1, univ.integer(1)))));
 		reasoner = univ.reasoner(contex);
 		System.out.println(contex.toString());
 		contex = reasoner.getReducedContext();
@@ -77,8 +76,8 @@ public class SimplifyTest {
 
 	@Test
 	public void test() {
-		NumericExpression x = (NumericExpression) universe.symbolicConstant(
-				universe.stringObject("x"), intType);
+		NumericExpression x = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("x"), intType);
 		SymbolicCompleteArrayType arrayType = universe.arrayType(intType, x);
 		NumericSymbolicConstant index = (NumericSymbolicConstant) universe
 				.symbolicConstant(universe.stringObject("i"), intType);

@@ -27,13 +27,11 @@ import org.junit.Test;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal;
 
 /**
  * Testing on IdealSimplifier based on Polynomials for both assumptions and
  * simplification.
  * 
- * @see Ideal.simplifier
  * 
  * @author mbrahma
  */
@@ -152,8 +150,8 @@ public class IdealSimplifierSimpExprTest {
 	}
 
 	/**
-	 * Test on IdealSimplifier that tests the method simplifyExpression() when only
-	 * subtracting polynomials 
+	 * Test on IdealSimplifier that tests the method simplifyExpression() when
+	 * only subtracting polynomials
 	 * 
 	 */
 	@Test
@@ -190,8 +188,8 @@ public class IdealSimplifierSimpExprTest {
 	}
 
 	/**
-	 * Test on IdealSimplifier that tests the method simplifyExpression() when only
-	 * dividing polynomials 
+	 * Test on IdealSimplifier that tests the method simplifyExpression() when
+	 * only dividing polynomials
 	 * 
 	 */
 	@Test
@@ -217,21 +215,20 @@ public class IdealSimplifierSimpExprTest {
 		assertEquals(expected, idealSimp.simplifyExpression(symExpr));
 
 	}
-	
+
 	/**
-	 * Test on IdealSimplifier that tests the method simplifyExpression() when only
-	 * multiplying polynomials 
+	 * Test on IdealSimplifier that tests the method simplifyExpression() when
+	 * only multiplying polynomials
 	 * 
 	 */
 	@Test
 	public void simplifyExpressionPoly() {
 		NumericExpression num = preUniv.add(
 				preUniv.add(
-						preUniv.multiply(
-								rat4,
+						preUniv.multiply(rat4,
 								preUniv.multiply(preUniv.power(x, 3),
 										preUniv.power(y, 2))),
-						preUniv.multiply(rat2, preUniv.multiply(xy, x))),
+				preUniv.multiply(rat2, preUniv.multiply(xy, x))),
 				preUniv.multiply(rat3, xy));
 
 		NumericExpression denom = preUniv.multiply(y, x);
@@ -245,9 +242,9 @@ public class IdealSimplifierSimpExprTest {
 
 		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
 
-		numExpect = preUniv.add(preUniv.multiply(
-				preUniv.multiply(rat4, preUniv.power(x, 2)), y), preUniv.add(
-				preUniv.multiply(rat2, x), rat3));
+		numExpect = preUniv.add(preUniv
+				.multiply(preUniv.multiply(rat4, preUniv.power(x, 2)), y),
+				preUniv.add(preUniv.multiply(rat2, x), rat3));
 
 		expected = numExpect;
 

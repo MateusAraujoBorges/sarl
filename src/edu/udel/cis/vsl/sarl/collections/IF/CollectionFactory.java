@@ -289,4 +289,24 @@ public interface CollectionFactory {
 	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
 			Comparator<? super K> comparator, Entry<K, V>[] entries);
 
+	/**
+	 * Given a {@link SymbolicMap} returns the {@link SymbolicMap} obtained by
+	 * removing the entries specified by the given <code>mask</code> . The
+	 * <code>mask</code> is an array whose length is the
+	 * {@link SymbolicMap#size()} (number of entries) of <code>map</code>. A
+	 * <code>true</code> mask value indicates the corresponding entry should be
+	 * kept; a <code>false</code> value indicates the corresponding entry should
+	 * be removed.
+	 * 
+	 * @param map
+	 *            a non-<code>null</code> {@link SortedSymbolicMap}
+	 * @param mask
+	 *            array of boolean of length size of <code>map</code> specifying
+	 *            which entries to keep
+	 * @return the map obtained from given map by keeping the specified subset
+	 *         of entries
+	 */
+	<K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> mask(
+			SymbolicMap<K, V> map, boolean[] mask);
+
 }

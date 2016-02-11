@@ -25,7 +25,7 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
@@ -72,7 +72,7 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 
 	@Override
 	public SymbolicMap<Primitive, PrimitivePower> monicFactors(
-			IdealFactory factory) {
+			Ideal2Factory factory) {
 		if (monicFactors == null)
 			monicFactors = factory.primitiveSingletonMap(this,
 					(PrimitivePower) this);
@@ -80,32 +80,32 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	}
 
 	@Override
-	public Constant monomialConstant(IdealFactory factory) {
+	public Constant monomialConstant(Ideal2Factory factory) {
 		return factory.one(type());
 	}
 
 	@Override
-	public Monic monic(IdealFactory factory) {
+	public Monic monic(Ideal2Factory factory) {
 		return this;
 	}
 
 	@Override
-	public NumericPrimitive primitive(IdealFactory factory) {
+	public NumericPrimitive primitive(Ideal2Factory factory) {
 		return this;
 	}
 
 	@Override
-	public IntObject primitivePowerExponent(IdealFactory factory) {
+	public IntObject primitivePowerExponent(Ideal2Factory factory) {
 		return factory.oneIntObject();
 	}
 
 	@Override
-	public Monomial numerator(IdealFactory factory) {
+	public Monomial numerator(Ideal2Factory factory) {
 		return this;
 	}
 
 	@Override
-	public Monomial denominator(IdealFactory factory) {
+	public Monomial denominator(Ideal2Factory factory) {
 		return factory.one(type());
 	}
 
@@ -125,12 +125,12 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(IdealFactory factory) {
+	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		return factory.monicSingletonMap(this, this);
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
+	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
 		return factory.monicSingletonMap(this, this);
 	}
 

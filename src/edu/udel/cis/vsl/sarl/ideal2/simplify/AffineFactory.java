@@ -24,7 +24,7 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
@@ -32,7 +32,7 @@ import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
 public class AffineFactory {
 
-	private IdealFactory idealFactory;
+	private Ideal2Factory idealFactory;
 
 	private NumberFactory numberFactory;
 
@@ -42,11 +42,11 @@ public class AffineFactory {
 
 	private RationalNumber ZERO_REAL, ONE_REAL;
 
-	//private AffineExpression zeroIntAffine, zeroRealAffine;
+	// private AffineExpression zeroIntAffine, zeroRealAffine;
 
 	private SymbolicType integerType, realType;
 
-	public AffineFactory(IdealFactory idealFactory) {
+	public AffineFactory(Ideal2Factory idealFactory) {
 		this.idealFactory = idealFactory;
 		this.numberFactory = idealFactory.numberFactory();
 		this.typeFactory = idealFactory.typeFactory();
@@ -111,11 +111,11 @@ public class AffineFactory {
 
 	/**
 	 * Determines a bound on the pseudo primitive polynomial X, assuming the
-	 * predicate aX+b>0 holds (if strict is true), or aX+b>=0 (if strict is
-	 * false).
+	 * predicate aX+b OP 0 holds, where OP is one of <,<=,>,>=.
 	 * 
 	 * The bound will be either an upper or a lower bound, depending upon the
-	 * sign of a. If a>0, it is a lower bound. If a<0 it is an upper bound.
+	 * sign of a and the operator. If a>0, it is a lower bound. If a<0 it is an
+	 * upper bound.
 	 * 
 	 * The bound returned will be either strict or not strict. If X is real (not
 	 * integral) then the bound is strict iff the argument strict is true. If x
@@ -140,8 +140,31 @@ public class AffineFactory {
 	 * If strict is true, we have X>c, i.e. X>=floor(c)+1.
 	 * 
 	 * If strict is false, we have X>=c, i.e., X>=ceil(c).
+	 * 
+	 * All of the previous is for the case X>0 or X>=0. If X<0 or X<=0 is the
+	 * inequality, the following changes are made. If a>0, it is an upper bound;
+	 * if a<0 it is a lower bound.
+	 * 
+	 * For the integral cases:
+	 * 
+	 * Suppose a<0, so lower bound.
+	 * 
+	 * If strict is true, X>c, i.e., X>=floor(c)+1.
+	 * 
+	 * If strict is false, X>=c, i.e., X>=ceil(c)
+	 * 
+	 * Suppose a>0, so upper bound.
+	 * 
+	 * If strict is true, X<c, i.e., X<=ceil(c)-1
+	 * 
+	 * If strict is false, X<=c, i.e., X<=floor(c).
+	 * 
+	 * (a<0 && gt) || (a>0 && !gt) -> floor(c)+1
+	 * 
+	 * Etc.
+	 * 
 	 */
-	public Number bound(AffineExpression affine, boolean strict) {
+	public Number bound(AffineExpression affine, boolean gt, boolean strict) {
 		RationalNumber rationalBound = null;
 		Number result = null;
 		Monic pseudo = affine.pseudo();
@@ -153,7 +176,9 @@ public class AffineFactory {
 			rationalBound = numberFactory
 					.negate(numberFactory.divide(offset, coefficient));
 			if (pseudo.type().isInteger()) {
-				if (coefficient.signum() >= 0) {
+				boolean pos = coefficient.signum() >= 0;
+
+				if ((pos && gt) || (!pos && !gt)) {
 					if (strict)
 						result = numberFactory.add(ONE_INT,
 								numberFactory.floor(rationalBound));

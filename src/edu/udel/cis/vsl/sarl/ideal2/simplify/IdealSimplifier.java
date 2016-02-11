@@ -18,10 +18,16 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.simplify;
 
+import static edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator.EQUALS;
+import static edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator.LESS_THAN;
+import static edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator.LESS_THAN_EQUALS;
+import static edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator.NEQ;
+
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -36,11 +42,14 @@ import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
+import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
+import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
-import edu.udel.cis.vsl.sarl.ideal2.common.NTPolynomial;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
+import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifier;
 
@@ -211,8 +220,13 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * @return
 	 */
 	private Monomial simplifyMonic(Monic monic) {
+		Number constant = constantMap.get(monic);
 
-		return null;
+		if (constant != null)
+			return info.idealFactory.constant(constant);
+		if (monic instanceof Polynomial)
+			return simplifyPolynomial((Polynomial) monic);
+		return (Monomial) super.simplifyGenericExpression(monic);
 	}
 
 	/**
@@ -228,8 +242,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * @return
 	 */
 	private Monomial simplifyPolynomial(Polynomial poly) {
-
-		return null;
+		return info.idealFactory.factorTermMap(poly.expand(info.idealFactory));
 	}
 
 	/**
@@ -271,46 +284,83 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	/**
-	 * Attempts to determine the value of a polynomial using the information in
-	 * the {@link #constantMap}. The polynomial is converted to affine form
-	 * aX+b, where X is pseudo-primitive, and the constant map is used to
-	 * determine a value for X, which can then be used to determine a value for
-	 * the polynomial. If the constant map does not have a value for X, returns
-	 * <code>null</code>.
+	 * Simplifies a relational expression. Assumes expression does not already
+	 * exist in simplification cache. Does NOT assume that generic
+	 * simplification has been performed on expression. Current strategy:
 	 * 
-	 * @param polynomial
-	 *            any non-<code>null</code> polynomial
-	 * @return either a constant value for that polynomial or <code>null</code>
-	 *         if no constant value can be determined
+	 * <pre>
+	 * 1. simplifyGeneric
+	 * 2. if no change: simplifyRelationalWork
+	 * 3. otherwise (change): if concrete, finished
+	 * 4. otherwise (change, not concrete): look up in cache
+	 * 5. if found in cache, finished
+	 * 6. otherwise (change, not concrete, not cached): if relational,
+	 *    simplifyRelationalWork
+	 * 7. otherwise (change, not concrete, not cached, not relational):
+	 *    simplifyGeneric
+	 * </pre>
+	 * 
+	 * @param expression
+	 *            any boolean expression
+	 * @return simplified version of the expression, which may be the original
+	 *         expression
 	 */
-	private Constant pseudoReplacement(Polynomial polynomial) {
-		AffineExpression affine = info.affineFactory.affine(polynomial);
-		Monomial pseudo = affine.pseudo();
-		Number pseudoValue = constantMap.get(pseudo);
+	private BooleanExpression simplifyRelational(BooleanExpression expression) {
+		BooleanExpression result1 = (BooleanExpression) simplifyGenericExpression(
+				expression);
 
-		if (pseudoValue != null)
-			return info.idealFactory.constant(
-					info.affineFactory.affineValue(affine, pseudoValue));
-		else
-			return null;
+		if (result1 == expression)
+			return simplifyRelationalWork(expression);
+		if (result1.operator() == SymbolicOperator.CONCRETE)
+			return result1;
+
+		BooleanExpression result2 = (BooleanExpression) getCachedSimplification(
+				result1);
+
+		if (result2 != null)
+			return result2;
+		if (isRelational(result1.operator()))
+			return simplifyRelationalWork(result1);
+		return (BooleanExpression) simplifyGenericExpression(result1);
 	}
 
+	/**
+	 * Simplifies a relational expression. Assumes expression has already gone
+	 * through generic simplification and result is not in cache.
+	 * 
+	 * @param expression
+	 * @return
+	 */
 	private BooleanExpression simplifyRelationalWork(
 			BooleanExpression expression) {
 		SymbolicOperator operator = expression.operator();
-		Polynomial poly = (Polynomial) expression.argument(1);
+		Monomial arg0 = (Monomial) expression.argument(0),
+				arg1 = (Monomial) expression.argument(1);
 		BooleanExpression result;
 
-		assert ((SymbolicExpression) expression.argument(0)).isZero();
+		// 0=Primitive, 0<Monic, 0<=Monic, Monic<0, Monic<=0, 0!=Primitive.
+
 		switch (operator) {
 		case LESS_THAN:
-		case LESS_THAN_EQUALS:
-			result = simplifyGT0(poly, operator == SymbolicOperator.LESS_THAN);
+		case LESS_THAN_EQUALS: {
+			boolean strict = operator == SymbolicOperator.LESS_THAN;
+
+			if (arg0.isZero()) {// 0<?arg1
+				result = simplifyIneq0((Monic) arg1, true, strict);
+			} else if (arg1.isZero()) {
+				result = simplifyIneq0((Monic) arg0, false, strict);
+			} else
+				throw new SARLInternalException(
+						"unreachable: impossible expression " + expression);
 			return result == null ? expression : result;
+		}
 		case EQUALS:
-			result = simplifyEQ0(poly);
+			assert arg0.isZero();
+			result = simplifyEQ0((Primitive) arg1);
 			return result == null ? expression : result;
 		case NEQ: {
+			assert arg0.isZero();
+
 			BooleanExpression negExpression = universe.not(expression);
 
 			result = (BooleanExpression) simplifyExpression(negExpression);
@@ -323,30 +373,269 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	/**
-	 * Simplifies a relational expression. Assumes expression does not already
-	 * exist in simplification cache. Does NOT assume that generic
-	 * simplification has been performed on expression.
+	 * A categorization of intervals. Every interval falls into exactly one of
+	 * these categories.
 	 * 
-	 * @param expression
-	 *            any boolean expression
-	 * @return simplified version of the expression, which may be the original
-	 *         expression
+	 * @author siegel
+	 *
 	 */
-	private BooleanExpression simplifyRelational(BooleanExpression expression) {
-		BooleanExpression result1 = (BooleanExpression) simplifyGenericExpression(
-				expression);
-		BooleanExpression result2 = null;
+	private enum BoundType {
+		/**
+		 * Every element of the interval is less than 0 and the interval is not
+		 * empty.
+		 */
+		LT0,
+		/**
+		 * Every element of the interval is less than or equal to 0 and the
+		 * interval contains 0 and a negative number.
+		 */
+		LE0,
+		/** The interval consists exactly of 0 and nothing else. */
+		EQ0,
+		/**
+		 * The interval contains 0 and a positive number and every element of
+		 * the interval is greater than or equal to 0.
+		 */
+		GE0,
+		/**
+		 * Every element of the interval is greater than 0 and the interval is
+		 * non-empty.
+		 */
+		GT0,
+		/** The interval is empty */
+		EMPTY,
+		/** The interval contains a negative number, 0, and a positive number */
+		ALL
+	};
 
-		if (result1 != expression) {
-			result2 = (BooleanExpression) getCachedSimplification(result1);
-			if (result2 == null) {
-				if (result1.operator() == SymbolicOperator.CONCRETE)
-					result2 = result1;
+	private BoundType boundType(BoundsObject bound) {
+		if (bound.isEmpty())
+			return BoundType.EMPTY;
+
+		Number l = bound.lower, r = bound.upper;
+		int lsign = l == null ? -1 : l.signum();
+		int rsign = r == null ? 1 : r.signum();
+
+		if (lsign > 0)
+			return BoundType.GT0;
+		if (rsign < 0)
+			return BoundType.LT0;
+
+		if (lsign < 0) {
+			if (rsign == 0) {
+				return bound.strictUpper ? BoundType.LT0 : BoundType.LE0;
+			} else { // rsign > 0
+				return BoundType.ALL;
+			}
+		} else { // lsign == 0
+			if (rsign == 0) {
+				return BoundType.EQ0;
+			} else { // rsign > 0
+				return bound.strictLower ? BoundType.GT0 : BoundType.EQ0;
 			}
 		}
-		if (result2 == null)
-			result2 = simplifyRelationalWork(result1);
-		return result2;
+	}
+
+	/**
+	 * Does every x in the bound interval satisfy x OP 0, where OP is one of
+	 * <, <=, >, >=. Answer can be
+	 * 
+	 * @param bound
+	 * @param gt
+	 * @param strict
+	 * @return
+	 */
+	private BooleanExpression ineqFromBound(BoundsObject bound, boolean gt,
+			boolean strict) {
+		Number l = bound.lower, r = bound.upper;
+
+		if (strict) { // bound>0
+			if (l != null) {
+				int lsign = l.signum();
+
+				if (lsign > 0 || (lsign == 0 && !bound.strictLower))
+					return gt ? info.trueExpr : info.falseExpr;
+			}
+			if (r != null && r.signum() <= 0)
+				return gt ? info.falseExpr : info.trueExpr;
+		} else { // bound>=0
+			if (l != null && l.signum() >= 0)
+				return gt ? info.trueExpr : info.falseExpr;
+			if (r != null) {
+				int rsign = r.signum();
+
+				if (rsign < 0 || (rsign == 0 && !bound.strictUpper))
+					return gt ? info.falseExpr : info.trueExpr;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Simplifies an inequality of one of the forms: x>0, x>=0, x<0, x<=0, where
+	 * x is a {@link Monic} in which the maximum degree of any {@link Primitive}
+	 * is 1. Assumes <code>monic</code> is already simplified.
+	 * 
+	 * @param monic
+	 * @param gt
+	 *            is the form one of x>0, x>=0
+	 * @param strict
+	 *            is the form one of x>0 or x<0 (strict inequality)
+	 * @return simplified version of the inequality of <code>null</code> if no
+	 *         simplification was possible
+	 */
+	private BooleanExpression simplifyIneq0(Monic monic, boolean gt,
+			boolean strict) {
+		// see if there is a bound on this monic...
+		SymbolicType type = monic.type();
+		BoundsObject bound = boundMap.get(monic);
+		BooleanExpression result;
+
+		if (bound != null) {
+			result = ineqFromBound(bound, gt, strict);
+			if (result != null)
+				return result;
+		}
+		if (monic instanceof Polynomial)
+			return simplifyIneq0Poly((Polynomial) monic, gt, strict);
+		if (monic instanceof Primitive)
+			return null;
+
+		// look for bounds on the primitive factors...
+
+		SymbolicMap<Primitive, PrimitivePower> factorMap = monic
+				.monicFactors(info.idealFactory);
+		int numFactors = factorMap.size();
+		boolean[] mask = new boolean[numFactors]; // unconstrained primitives
+		List<Primitive> zeroList = new LinkedList<>();
+		boolean positive = gt;
+		int count = 0, unconstrained = 0;
+
+		for (Primitive p : factorMap.keys()) {
+			BoundsObject pb = boundMap.get(p);
+
+			switch (boundType(pb)) {
+			case ALL:
+				mask[count] = true;
+				unconstrained++;
+				break;
+			case EMPTY:
+				// this means there is an inconsistency. this should have
+				// been dealt with immediately when the inconsistency was
+				// found
+				throw new SARLInternalException(
+						"unreachable: inconsistent primitive: " + p);
+			case EQ0:
+				// if one factor is 0, the whole product is 0
+				return strict ? info.falseExpr : info.trueExpr;
+			case GE0:
+				// assume x>=0.
+				// xy>=0 <=> x=0 || y>=0.
+				// xy>0 <=> x!=0 && y>0.
+				// xy<=0 <=> x=0 || y<=0.
+				// xy<0 <=> x!=0 && y<0.
+				zeroList.add(p);
+				break;
+			case GT0:
+				// assume x>0.
+				// xy>=0 <=> y>=0.
+				// xy>0 <=> y>0.
+				// xy<=0 <=> y<=0.
+				// xy<0 <=> y<0.
+				break;
+			case LE0:
+				// assume x<=0.
+				// xy>=0 <=> x=0 || y<=0.
+				// xy>0 <=> x!=0 && y<0.
+				// xy<=0 <=> x=0 || y>=0.
+				// xy<0 <=> x!=0 && y>0.
+				zeroList.add(p);
+				positive = !positive;
+				break;
+			case LT0:
+				positive = !positive;
+				break;
+			default:
+				throw new SARLInternalException("unreachable");
+			}
+			count++;
+		}
+		if (numFactors == unconstrained)
+			// everything unconstrained; no simplification possible
+			return null;
+
+		BooleanExpressionFactory bf = info.booleanFactory;
+		Monomial zero = info.idealFactory.zero(type);
+
+		if (unconstrained > 0) {
+			// create new Monic from the unconstrained primitives
+			Monic newMonic = info.idealFactory.monicMask(monic, mask);
+			SymbolicOperator op = strict ? LESS_THAN : LESS_THAN_EQUALS;
+
+			result = positive ? bf.booleanExpression(op, zero, newMonic)
+					: bf.booleanExpression(op, newMonic, zero);
+		} else { // newMonic is essentially 1
+			result = positive ? info.trueExpr : info.falseExpr;
+		}
+		// if strict: conjunction (&&) with !=0 from zeroList
+		// if !strict: disjunction(||) with ==0 from zeroList
+		if (strict) {
+			for (Primitive p : zeroList)
+				result = bf.and(result, bf.booleanExpression(NEQ, zero, p));
+		} else {
+			for (Primitive p : zeroList)
+				result = bf.or(result, bf.booleanExpression(EQUALS, zero, p));
+		}
+		return result;
+	}
+
+	/**
+	 * Simplifies expression poly OP 0, where poly is a {@link Polynomial} and
+	 * OP is one of LT, LE, GT, or GE.
+	 * 
+	 * Preconditions:
+	 * <ul>
+	 * <li>there is no entry in the {@link #constantMap} for <code>poly</code>
+	 * </li>
+	 * <li><code>poly</code> is fully expanded</li> <lil><code>poly</code> has
+	 * at least 2 terms</li>
+	 * </ul>
+	 * 
+	 * @param poly
+	 * @param gt
+	 * @param strict
+	 * @return
+	 */
+	private BooleanExpression simplifyIneq0Poly(Polynomial poly, boolean gt,
+			boolean strict) {
+		AffineExpression affine = info.affineFactory.affine(poly);
+		Monomial pseudo = affine.pseudo(); // non-null since zep non-constant
+		Number pseudoValue = constantMap.get(pseudo);
+		AffineFactory af = info.affineFactory;
+
+		if (pseudoValue != null) {
+			// substitute known constant value for pseudo...
+			Number val = af.affineValue(affine, pseudoValue);
+			int sgn = val.signum();
+
+			if (gt) {
+				return (strict ? sgn > 0 : sgn >= 0) ? info.trueExpr
+						: info.falseExpr;
+			} else {
+				return (strict ? sgn < 0 : sgn < 0) ? info.trueExpr
+						: info.falseExpr;
+			}
+		}
+
+		BoundsObject pseudoBound = boundMap.get(pseudo);
+
+		if (pseudoBound == null)
+			return null;
+
+		BoundsObject scaledBound = pseudoBound
+				.affineTransform(affine.coefficient(), affine.offset());
+
+		return ineqFromBound(scaledBound, gt, strict);
 	}
 
 	/**
@@ -359,10 +648,19 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * @return <code>null</code> or a {@link BooleanExpression} equivalent to
 	 *         poly=0
 	 */
+	private BooleanExpression simplifyEQ0(Primitive primitive) {
+		if (primitive instanceof Polynomial)
+			return simplifyEQ0Poly((Polynomial) primitive);
 
-	// TODO: expand?
+		// a true primitive...
+		Number number = constantMap.get(primitive);
 
-	private BooleanExpression simplifyEQ0(Polynomial poly) {
+		if (number != null)
+			return number.isZero() ? info.trueExpr : info.falseExpr;
+		return null;
+	}
+
+	private BooleanExpression simplifyEQ0Poly(Polynomial poly) {
 		SymbolicType type = poly.type();
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Monomial pseudo = affine.pseudo(); // non-null since zep non-constant
@@ -428,127 +726,19 @@ public class IdealSimplifier extends CommonSimplifier {
 		return null;
 	}
 
-	/**
-	 * Attempts to simplify the expression fp>?0. Returns null if no
-	 * simplification is possible, else returns a CnfBoolean expression
-	 * equivalent to fp>?0. (Here >? represents either > or >=, depending on
-	 * value of strictInequality.)
-	 * 
-	 * @param fp
-	 *            the factored polynomial
-	 * @return null or a CnfBoolean expression equivalent to fp>0
-	 */
-	private BooleanExpression simplifyGT0(Polynomial fp,
-			boolean strictInequality) {
-		if (fp instanceof Constant) {
-			int signum = ((Constant) fp).number().signum();
-
-			if (strictInequality)
-				return signum > 0 ? info.trueExpr : info.falseExpr;
-			else
-				return signum >= 0 ? info.trueExpr : info.falseExpr;
-		}
-
-		SymbolicType type = fp.type();
-		AffineExpression affine = info.affineFactory.affine(fp);
-		Monomial pseudo = affine.pseudo();
-		assert pseudo != null;
-		Number pseudoValue = constantMap.get(pseudo);
-
-		if (pseudoValue != null) {
-			int signum = info.affineFactory.affineValue(affine, pseudoValue)
-					.signum();
-
-			if (strictInequality)
-				return signum > 0 ? info.trueExpr : info.falseExpr;
-			else
-				return signum >= 0 ? info.trueExpr : info.falseExpr;
-		}
-
-		BoundsObject oldBounds = boundMap.get(pseudo);
-
-		if (oldBounds == null)
-			return null;
-
-		Number newBound = info.affineFactory.bound(affine, strictInequality);
-		assert newBound != null;
-		// bound on pseudo X, assuming fp=aX+b>?0.
-		// If a>0, it is a lower bound. If a<0 it is an upper bound.
-		// newBound may or may not be strict
-		Number coefficient = affine.coefficient();
-		assert coefficient.signum() != 0;
-		boolean strictBound = type.isInteger() ? false : strictInequality;
-
-		int leftSign, rightSign;
-		{
-			Number lower = oldBounds.lower(), upper = oldBounds.upper();
-
-			if (lower == null)
-				leftSign = -1;
-			else
-				leftSign = info.numberFactory.subtract(lower, newBound)
-						.signum();
-			if (upper == null)
-				rightSign = 1;
-			else
-				rightSign = info.numberFactory.subtract(upper, newBound)
-						.signum();
-		}
-
-		if (coefficient.signum() > 0) {
-			// simplify X>newBound or X>=newBound knowing X is in
-			// [oldLowerBound,oldUpperBound]
-			// let X'=X-newBound.
-			// simplify X'>0 (or X'>=0) knowing X' is in [left,right]
-			// if left>0: true
-			// if left=0 && (strictleft || strict): true
-			// if right<0: false
-			// if right=0 && (strictright || strict): false
-			if (leftSign > 0 || (leftSign == 0
-					&& (!strictBound || oldBounds.strictLower())))
-				return info.trueExpr;
-			if (rightSign < 0 || (rightSign == 0
-					&& (strictBound || oldBounds.strictUpper())))
-				return info.falseExpr;
-			if (rightSign == 0 && !strictBound && !oldBounds.strictUpper())
-				// X'=0, where X'=X-newBound.
-				return info.idealFactory.equals(pseudo,
-						info.idealFactory.constant(newBound));
-		} else {
-			// simplify X<newBound or X<=newBound knowing X is in
-			// [oldLowerBound,oldUpperBound]
-			// simplify X'<0 or X'<=0 knowning X' is in [left,right]
-			// if left>0: false
-			// if left=0 && (strict || strictleft): false
-			// if right<0: true
-			// if right=0 && (strictright || strict): true
-			if (leftSign > 0 || (leftSign == 0
-					&& (strictBound || oldBounds.strictLower())))
-				return info.falseExpr;
-			if (rightSign < 0 || (rightSign == 0
-					&& (!strictBound || oldBounds.strictUpper())))
-				return info.trueExpr;
-			if (leftSign == 0 && !strictBound && !oldBounds.strictLower())
-				// X'=0, where X'=X-newBound.
-				return info.idealFactory.equals(pseudo,
-						info.idealFactory.constant(newBound));
-		}
-		return null;
-	}
-
 	/***********************************************************************
 	 * End of Simplification Routines..................................... *
 	 ***********************************************************************/
 
 	/**
-	 * Converts the bound to a boolean expression in canoncial form. Returns
+	 * Converts the bound to a boolean expression in canonical form. Returns
 	 * null if both upper and lower bound are infinite (equivalent to "true").
 	 */
 	private BooleanExpression boundToIdeal(BoundsObject bound) {
 		Number lower = bound.lower(), upper = bound.upper();
 		BooleanExpression result = null;
-		Polynomial fp = (Polynomial) bound.expression;
-		Polynomial ideal = (Polynomial) apply(fp);
+		Monic fp = (Monic) bound.expression;
+		Monomial ideal = (Monomial) apply(fp);
 
 		if (lower != null) {
 			if (bound.strictLower())
@@ -577,8 +767,16 @@ public class IdealSimplifier extends CommonSimplifier {
 
 	private void initialize() {
 		while (true) {
-			boundMap.clear(); // why? and why not boolean map?
-			clearSimplificationCache(); // why?
+			// boundMap.clear(); // why? and why not boolean map?
+			// probably because the existence of a bound causes
+			// further searches for bounds to stop?
+
+			// round 1: learn XY>0 && X>0.
+			// ask to simplify: Y>0: NO CAN DO.
+			// need to do round 2 using what was learned in round 1.
+
+			clearSimplificationCache(); // why? maybe because simplifications
+										// can improve
 
 			boolean satisfiable = extractBounds();
 
@@ -696,6 +894,10 @@ public class IdealSimplifier extends CommonSimplifier {
 		extractRemainingFacts();
 	}
 
+	/*
+	 * Extraction of information from the assumption.
+	 */
+
 	/**
 	 * Attempts to determine bounds (upper and lower) on primitive expressions
 	 * by examining the assumption. Returns false if assumption is determined to
@@ -739,9 +941,6 @@ public class IdealSimplifier extends CommonSimplifier {
 
 				assert !bounds.strictLower && !bounds.strictUpper;
 				constantMap.put(expression, lower);
-
-				// TODO: consider removing the entry from bounds map
-
 				processHerbrandCast(expression, lower);
 			}
 		}
@@ -922,22 +1121,26 @@ public class IdealSimplifier extends CommonSimplifier {
 			// Cases: 0=Primitive, 0<Monic, 0<=Monic, Monic<0, Monic<=0,
 			// 0!=Primitive.
 
-			SymbolicExpression arg = (SymbolicExpression) basic.argument(1);
+			SymbolicExpression arg0 = (SymbolicExpression) basic.argument(0);
+			SymbolicExpression arg1 = (SymbolicExpression) basic.argument(1);
 
-			if (arg.type().isNumeric()) {
-				Polynomial poly = (Polynomial) arg;
-
+			if (arg0.type().isNumeric()) {
 				switch (operator) {
 				case EQUALS: // 0==x
-					return extractEQ0Bounds(poly, aBoundMap, aBooleanMap);
-				case NEQ: {
-					return extractNEQ0Bounds(poly, aBoundMap, aBooleanMap);
-				}
-				case LESS_THAN: // 0<x
-					return extractGT0Bounds(true, poly, aBoundMap, aBooleanMap);
-				case LESS_THAN_EQUALS: // 0<=x
-					return extractGT0Bounds(false, poly, aBoundMap,
+					return extractEQ0Bounds((Primitive) arg0, aBoundMap,
 							aBooleanMap);
+				case NEQ:
+					return extractNEQ0Bounds((Primitive) arg0, aBoundMap,
+							aBooleanMap);
+				case LESS_THAN: // 0<x or x<0
+				case LESS_THAN_EQUALS: // 0<=x or x<=0
+					if (arg0.isZero()) {
+						return extractIneqBounds((Monic) arg1, true,
+								operator == LESS_THAN, aBoundMap, aBooleanMap);
+					} else {
+						return extractIneqBounds((Monic) arg0, false,
+								operator == LESS_THAN, aBoundMap, aBooleanMap);
+					}
 				default:
 					throw new RuntimeException(
 							"Unknown RelationKind: " + operator);
@@ -969,6 +1172,29 @@ public class IdealSimplifier extends CommonSimplifier {
 		return true;
 	}
 
+	private boolean extractEQ0Bounds(Primitive primitive,
+			Map<Monic, BoundsObject> aBoundMap,
+			Map<BooleanExpression, Boolean> aBooleanMap) {
+		if (primitive instanceof Polynomial)
+			return extractEQ0BoundsPoly((Polynomial) primitive, aBoundMap,
+					aBooleanMap);
+
+		BoundsObject bound = aBoundMap.get(primitive);
+		Number zero = primitive.type().isInteger()
+				? info.numberFactory.zeroInteger()
+				: info.numberFactory.zeroRational();
+
+		if (bound == null) {
+			bound = BoundsObject.newTightBound(primitive, zero);
+			aBoundMap.put(primitive, bound);
+		} else {
+			if (!bound.contains(zero))
+				return false;
+			bound.makeConstant(zero);
+		}
+		return true;
+	}
+
 	/**
 	 * Given the fact that poly==0, for some {@link Polynomial} poly, updates
 	 * the specified bound map and boolean map appropriately.
@@ -985,15 +1211,9 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *         is inconsistent with the information in the bound map and boolean
 	 *         map; else <code>true</code>
 	 */
-
-	// need for Primitive (not just Polynomial)
-
-	private boolean extractEQ0Bounds(Polynomial poly,
+	private boolean extractEQ0BoundsPoly(Polynomial poly,
 			Map<Monic, BoundsObject> aBoundMap,
 			Map<BooleanExpression, Boolean> aBooleanMap) {
-		if (poly instanceof Constant)
-			return poly.isZero();
-
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Monic pseudo = affine.pseudo();
 		RationalNumber coefficient = info.numberFactory
@@ -1018,13 +1238,44 @@ public class IdealSimplifier extends CommonSimplifier {
 			bound = BoundsObject.newTightBound(pseudo, value);
 			aBoundMap.put(pseudo, bound);
 		} else {
-			if ((bound.lower != null
-					&& info.numberFactory.compare(bound.lower, value) > 0)
-					|| (bound.upper != null
-							&& value.compareTo(bound.upper) > 0))
+			if (!bound.contains(value))
 				return false;
 			bound.makeConstant(value);
 		}
+		return true;
+	}
+
+	private boolean extractNEQ0Bounds(Primitive primitive,
+			Map<Monic, BoundsObject> aBoundMap,
+			Map<BooleanExpression, Boolean> aBooleanMap) {
+
+		if (primitive instanceof Polynomial)
+			return extractNEQ0BoundsPoly((Polynomial) primitive, aBoundMap,
+					aBooleanMap);
+
+		BoundsObject bound = aBoundMap.get(primitive);
+		SymbolicType type = primitive.type();
+		Constant zero = info.idealFactory.zero(type);
+
+		if (bound == null) {
+			// for now, nothing can be done, since the bounds are
+			// plain intervals. we need a more precise abstraction
+			// than intervals here.
+		} else if (bound.contains(zero.number())) {
+			// is value an end-point? Might be able to sharpen bound...
+			if (bound.lower != null && bound.lower.isZero()
+					&& !bound.strictLower) {
+				bound.restrictLower(bound.lower, true);
+			}
+			if (bound.upper != null && bound.upper.isZero()
+					&& !bound.strictUpper) {
+				bound.restrictUpper(bound.upper, true);
+			}
+			if (bound.isEmpty()) {
+				return false;
+			}
+		}
+		aBooleanMap.put(info.universe.neq(zero, primitive), true);
 		return true;
 	}
 
@@ -1044,15 +1295,9 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *         is inconsistent with the information in the bound map and boolean
 	 *         map; else <code>true</code>
 	 */
-
-	// need for Primitive
-
-	private boolean extractNEQ0Bounds(Polynomial poly,
+	private boolean extractNEQ0BoundsPoly(Polynomial poly,
 			Map<Monic, BoundsObject> aBoundMap,
 			Map<BooleanExpression, Boolean> aBooleanMap) {
-		if (poly instanceof Constant)
-			return !poly.isZero();
-
 		// poly=aX+b. if X=-b/a, contradiction.
 		SymbolicType type = poly.type();
 		AffineExpression affine = info.affineFactory.affine(poly);
@@ -1101,56 +1346,58 @@ public class IdealSimplifier extends CommonSimplifier {
 		return true;
 	}
 
-	/**
-	 * Extracts bounds from expression of the form e>0 (strict true) or e>=0
-	 * (strict false). Updates aBoundMap and aBooleanMap.
-	 */
-	private boolean extractGT0Bounds(boolean strict, Polynomial poly,
+	private boolean extractIneqBounds(Monic monic, boolean gt, boolean strict,
 			Map<Monic, BoundsObject> aBoundMap,
 			Map<BooleanExpression, Boolean> aBooleanMap) {
-		return extractGT0(poly, aBoundMap, aBooleanMap, strict);
+		// extract meaning from XYZ>0, >=0, <0, <=0
+		if (monic instanceof Polynomial)
+			return extractIneqBoundsPoly((Polynomial) monic, gt, strict,
+					aBoundMap, aBooleanMap);
+
+		return false;
 	}
 
-	// need for Primitive, not just Polynomial
-	private boolean extractGT0(Polynomial fp,
-			Map<Monic, BoundsObject> aBoundMap,
-			Map<BooleanExpression, Boolean> aBooleanMap, boolean strict) {
+	private boolean extractIneqBoundsPoly(Polynomial fp, boolean gt,
+			boolean strict, Map<Monic, BoundsObject> aBoundMap,
+			Map<BooleanExpression, Boolean> aBooleanMap) {
 		AffineExpression affine = info.affineFactory.affine(fp);
 		Monic pseudo;
 
 		if (affine == null)
 			return true;
 		pseudo = affine.pseudo();
-		if (pseudo != null) {
-			BoundsObject boundsObject = aBoundMap.get(pseudo);
-			Number coefficient = affine.coefficient();
-			Number bound = info.affineFactory.bound(affine, strict);
+		assert pseudo != null;
 
-			if (pseudo.type().isInteger())
-				strict = false;
-			if (coefficient.signum() > 0) { // lower bound
-				if (boundsObject == null) {
-					boundsObject = BoundsObject.newLowerBound(pseudo, bound,
-							strict);
-					aBoundMap.put(pseudo, boundsObject);
-				} else {
-					boundsObject.restrictLower(bound, strict);
-					return boundsObject.isConsistent();
-				}
-			} else { // upper bound
-				if (boundsObject == null) {
-					boundsObject = BoundsObject.newUpperBound(pseudo, bound,
-							strict);
-					aBoundMap.put(pseudo, boundsObject);
-				} else {
-					boundsObject.restrictUpper(bound, strict);
-					return boundsObject.isConsistent();
-				}
+		BoundsObject boundsObject = aBoundMap.get(pseudo);
+		Number coefficient = affine.coefficient();
+		boolean pos = coefficient.signum() > 0;
+		Number bound = info.affineFactory.bound(affine, gt, strict);
+		// aX+b>0.
+		// a>0:lower bound (X>-b/a).
+		// a<0: upper bound (X<-b/a).
+
+		if (pseudo.type().isInteger())
+			strict = false;
+		if ((pos && gt) || (!pos && !gt)) { // lower bound
+			if (boundsObject == null) {
+				boundsObject = BoundsObject.newLowerBound(pseudo, bound,
+						strict);
+				aBoundMap.put(pseudo, boundsObject);
+			} else {
+				boundsObject.restrictLower(bound, strict);
+				return boundsObject.isConsistent();
 			}
-			return true;
+		} else { // upper bound
+			if (boundsObject == null) {
+				boundsObject = BoundsObject.newUpperBound(pseudo, bound,
+						strict);
+				aBoundMap.put(pseudo, boundsObject);
+			} else {
+				boundsObject.restrictUpper(bound, strict);
+				return boundsObject.isConsistent();
+			}
 		}
-		return (strict ? affine.offset().signum() > 0
-				: affine.offset().signum() >= 0);
+		return true;
 	}
 
 	private void declareFact(SymbolicExpression booleanExpression,
@@ -1215,8 +1462,8 @@ public class IdealSimplifier extends CommonSimplifier {
 			SymbolicExpression expression) {
 		if (expression instanceof Constant) // optimization
 			return expression;
-		if (expression instanceof Polynomial)
-			return simplifyPolynomial((Polynomial) expression);
+		if (expression instanceof Monic)
+			return simplifyMonic((Monic) expression);
 
 		SymbolicType type = expression.type();
 

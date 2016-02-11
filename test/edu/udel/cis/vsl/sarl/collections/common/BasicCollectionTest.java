@@ -76,7 +76,7 @@ public class BasicCollectionTest {
 		SymbolicObject symObj =  objFact.numberObject(expr);
 		SymbolicTypeFactory typeFact = Types.newTypeFactory(objFact);
 		CollectionFactory collectionFact = Collections.newCollectionFactory(objFact);
-		ExpressionFactory exprFact = Expressions.newIdealExpressionFactory(numFact, objFact, typeFact, collectionFact);
+		ExpressionFactory exprFact = Expressions.newIdealExpressionFactory2(numFact, objFact, typeFact, collectionFact);
 		return exprFact.expression(SymbolicOperator.CONCRETE, symbolicType, symObj);
 	}
 	
@@ -89,7 +89,7 @@ public class BasicCollectionTest {
 		SymbolicObject symObj =  objectFactory.numberObject(FIVE);
 		typeFactory = Types.newTypeFactory(objectFactory);
 		collectionFactory = Collections.newCollectionFactory(objectFactory);
-		exprFact = Expressions.newIdealExpressionFactory(numFact, objectFactory, typeFactory, collectionFactory);
+		exprFact = Expressions.newIdealExpressionFactory2(numFact, objectFactory, typeFactory, collectionFactory);
 		expr5 = exprFact.expression(SymbolicOperator.CONCRETE, symbolicType, symObj);
 		expr2 = exprFact.expression(SymbolicOperator.CONCRETE, symbolicType, objectFactory.numberObject(numFact.integer(2)));
 		expr100 = exprFact.expression(SymbolicOperator.CONCRETE, symbolicType, objectFactory.numberObject(numFact.integer(100)));

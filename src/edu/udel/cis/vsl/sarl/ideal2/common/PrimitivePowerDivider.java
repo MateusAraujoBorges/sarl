@@ -19,7 +19,7 @@
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
-import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
@@ -36,11 +36,11 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  */
 class PrimitivePowerDivider implements BinaryOperator<PrimitivePower> {
 
-	private IdealFactory idealFactory;
+	private Ideal2Factory idealFactory;
 
 	private ObjectFactory objectFactory;
 
-	public PrimitivePowerDivider(IdealFactory idealFactory) {
+	public PrimitivePowerDivider(Ideal2Factory idealFactory) {
 		this.idealFactory = idealFactory;
 		this.objectFactory = idealFactory.objectFactory();
 	}

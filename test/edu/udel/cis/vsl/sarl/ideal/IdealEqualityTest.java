@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package edu.udel.cis.vsl.sarl.ideal; 
+package edu.udel.cis.vsl.sarl.ideal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -36,20 +36,21 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
-import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
-import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
 /**
- * The class IdealEqualityTest tests methods found in the edu.udel.cis.vsl.sarl.ideal.common package 
- * using equalities
+ * The class IdealEqualityTest tests methods found in the
+ * edu.udel.cis.vsl.sarl.ideal.common package using equalities
  * 
- * This class compares two expressions and returns a boolean value. The expressions
- * can be polynomials, rational expressions, monomials, monics, primitive powers, primitives etc.
+ * This class compares two expressions and returns a boolean value. The
+ * expressions can be polynomials, rational expressions, monomials, monics,
+ * primitive powers, primitives etc.
  * 
  * The comparisons usually comprises of:
  * 
@@ -57,9 +58,9 @@ import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
  * <li>equals</li>
  * <li>not equals</li>
  * <li>Also checks if two symbolic constants are equal or not.</li>
- * <li>Compares two rational expressions also performing operations such as less than, less than equals, 
- * not less than, not less than equals etc.</li>
- *</ul>
+ * <li>Compares two rational expressions also performing operations such as less
+ * than, less than equals, not less than, not less than equals etc.</li>
+ * </ul>
  *
  */
 public class IdealEqualityTest {
@@ -68,11 +69,11 @@ public class IdealEqualityTest {
 	private NumberFactory numberFactory;
 	private ObjectFactory objectFactory;
 	private SymbolicTypeFactory typeFactory;
-	private IdealFactory idealFactory;
+	private Ideal2Factory idealFactory;
 	private BooleanExpressionFactory booleanFactory;
 
 	/**
-	 *  int constant 1
+	 * int constant 1
 	 */
 	private Constant intOne;
 	/**
@@ -80,21 +81,21 @@ public class IdealEqualityTest {
 	 */
 	private Constant intTwo;
 	/**
-	 *  "X"
+	 * "X"
 	 */
 	StringObject Xobj;
 	/**
 	 * int symbolic constant "X"
 	 */
-	NumericSymbolicConstant x; 
+	NumericSymbolicConstant x;
 	/**
 	 * int symbolic constant "Y"
 	 */
-	NumericSymbolicConstant y; 
+	NumericSymbolicConstant y;
 	/**
 	 * real constant 0
 	 */
-	private NumericExpression zero; 
+	private NumericExpression zero;
 	/**
 	 * real 0
 	 */
@@ -102,17 +103,17 @@ public class IdealEqualityTest {
 
 	@Before
 	public void setUp() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		numberFactory = system.numberFactory();
 		objectFactory = system.objectFactory();
 		typeFactory = system.typeFactory();
-		idealFactory = (IdealFactory) system.numericFactory();
+		idealFactory = (Ideal2Factory) system.numericFactory();
 		booleanFactory = system.booleanFactory();
 		intOne = idealFactory.intConstant(1);
 		intTwo = idealFactory.intConstant(2);
 		Xobj = objectFactory.stringObject("X");
-		x = objectFactory.canonic(idealFactory.symbolicConstant(Xobj,
-				typeFactory.integerType()));
+		x = objectFactory.canonic(
+				idealFactory.symbolicConstant(Xobj, typeFactory.integerType()));
 		y = objectFactory.canonic(idealFactory.symbolicConstant(
 				objectFactory.stringObject("Y"), typeFactory.integerType()));
 		realZero = numberFactory.rational("0");
@@ -121,18 +122,17 @@ public class IdealEqualityTest {
 
 	@After
 	public void tearDown() throws Exception {
-		
+
 	}
-	
+
 	/**
-	 * Returns true or false if the two symbolic Expressions are not equal 
-	 * or equal respectively
+	 * Returns true or false if the two symbolic Expressions are not equal or
+	 * equal respectively
 	 * 
 	 * @param type
-	 * 				NumericExpression
+	 *            NumericExpression
 	 * 
-	 * @return type
-	 * 				BooleanExpression
+	 * @return type BooleanExpression
 	 * 
 	 */
 	@Test
@@ -140,63 +140,67 @@ public class IdealEqualityTest {
 		NumericExpression n11 = idealFactory.add(x, y);
 		NumericExpression n22 = idealFactory.subtract(x, y);
 		NumericExpression n1 = idealFactory.add(y, intTwo);
-		NumericExpression n2 = idealFactory.subtract(y,	intTwo);
+		NumericExpression n2 = idealFactory.subtract(y, intTwo);
 		BooleanExpression n = idealFactory.neq(n1, n2);
 		BooleanExpression n0 = idealFactory.neq(n1, n1);
 		BooleanExpression n1122 = idealFactory.neq(n11, n22);
 		BooleanExpression m1 = booleanFactory.symbolic(false);
 		BooleanExpression m2 = booleanFactory.symbolic(true);
-		
-		out.println("neq2=" + n1122);		
+
+		out.println("neq2=" + n1122);
 		assertEquals(m1, n0);
 		assertEquals(m2, n);
 	}
-	
+
 	/**
-	 * Compares two Rational Expressions. Does the less than, not less than, 
-	 * not less than equals, less than equals comparisons
+	 * Compares two Rational Expressions. Does the less than, not less than, not
+	 * less than equals, less than equals comparisons
 	 * 
 	 * @param type
-	 * 				Symbolic Expressions of same numeric type
+	 *            Symbolic Expressions of same numeric type
 	 */
 	@Test
 	public void comparingRationalExpressions() {
-		NumericSymbolicConstant x2 = objectFactory.canonic(idealFactory
-				.symbolicConstant(Xobj, typeFactory.realType())); //value 'X' of real type
-		NumericSymbolicConstant y2 = objectFactory.canonic(idealFactory
-				.symbolicConstant(objectFactory.stringObject("Y"),
+		NumericSymbolicConstant x2 = objectFactory.canonic(
+				idealFactory.symbolicConstant(Xobj, typeFactory.realType())); // value
+																				// 'X'
+																				// of
+																				// real
+																				// type
+		NumericSymbolicConstant y2 = objectFactory.canonic(
+				idealFactory.symbolicConstant(objectFactory.stringObject("Y"),
 						typeFactory.realType())); // value 'Y' of real type
-		
-		RationalExpression r1 = (RationalExpression) idealFactory.divide(x2, y2);
+
+		RationalExpression r1 = (RationalExpression) idealFactory.divide(x2,
+				y2);
 		BooleanExpression b1 = booleanFactory.booleanExpression(
-				SymbolicOperator.LESS_THAN_EQUALS, r1,
-				idealFactory.zeroReal());
+				SymbolicOperator.LESS_THAN_EQUALS, r1, idealFactory.zeroReal());
 		BooleanExpression b2 = booleanFactory.booleanExpression(
 				SymbolicOperator.LESS_THAN, idealFactory.zeroReal(), r1);
-		BooleanExpression nb2 = idealFactory.notLessThan(idealFactory.
-				zeroReal(), r1);
-		BooleanExpression nb3 = idealFactory.notLessThanEquals(idealFactory.
-				zeroReal(), r1);
-		BooleanExpression nb4 = idealFactory.lessThanEquals(r1, idealFactory.
-				zeroReal());
-		NumericExpression nb5 = idealFactory.divide(
-				idealFactory.zeroReal(), r1);
-		BooleanExpression nb6 = idealFactory.lessThan(r1, idealFactory.
-				zeroReal());
-		
-		out.println("b1=" +b1);
-		out.println("b2=" +b2);
+		BooleanExpression nb2 = idealFactory
+				.notLessThan(idealFactory.zeroReal(), r1);
+		BooleanExpression nb3 = idealFactory
+				.notLessThanEquals(idealFactory.zeroReal(), r1);
+		BooleanExpression nb4 = idealFactory.lessThanEquals(r1,
+				idealFactory.zeroReal());
+		NumericExpression nb5 = idealFactory.divide(idealFactory.zeroReal(),
+				r1);
+		BooleanExpression nb6 = idealFactory.lessThan(r1,
+				idealFactory.zeroReal());
+
+		out.println("b1=" + b1);
+		out.println("b2=" + b2);
 		assertEquals(zero, nb5);
 		assertEquals(nb2, nb4);
 		assertEquals(nb3, nb6);
 	}
-	
+
 	/**
-	 * Checks if two Symbolic Constants are equal. One is created globally 
-	 * and the other locally.
+	 * Checks if two Symbolic Constants are equal. One is created globally and
+	 * the other locally.
 	 * 
 	 * @param type
-	 * 				NumericSymbolicConstant
+	 *            NumericSymbolicConstant
 	 */
 	@Test
 	public void symbolicConstantEquality() {
@@ -207,50 +211,47 @@ public class IdealEqualityTest {
 	}
 
 	/**
-	 * Checks if two Symbolic Constants are equal or not. 
-	 * Here both have different values. So they are not equal. 
-	 * Hence this method returns false.
+	 * Checks if two Symbolic Constants are equal or not. Here both have
+	 * different values. So they are not equal. Hence this method returns false.
 	 * 
 	 * @param type
-	 * 				NumericSymbolicConstant
+	 *            NumericSymbolicConstant
 	 */
 	@Test
 	public void symbolicConstantInequality1() {
 		assertFalse(x.equals(y));
 	}
-	
+
 	/**
-	 * Returns true or false if the two symbolic Expressions are equal or 
-	 * not equal respectively
+	 * Returns true or false if the two symbolic Expressions are equal or not
+	 * equal respectively
 	 * 
 	 * @param type
-	 * 				NumericExpression
+	 *            NumericExpression
 	 * 
-	 * @return type
-	 * 				BooleanExpression
+	 * @return type BooleanExpression
 	 * 
 	 */
 	@Test
 	public void equals() {
 		NumericExpression n1 = idealFactory.add(x, intOne);
-		NumericExpression n2 = idealFactory.add(idealFactory.
-				multiply(intOne, idealFactory.multiply(x, x)), x);
-		NumericExpression n3 = idealFactory.add(idealFactory.
-				multiply(intTwo, idealFactory.multiply(x, y)), x);
-		NumericExpression r1 = idealFactory.
-				divide(idealFactory.add(x, y), x);	// (x-y)/y	
+		NumericExpression n2 = idealFactory.add(
+				idealFactory.multiply(intOne, idealFactory.multiply(x, x)), x);
+		NumericExpression n3 = idealFactory.add(
+				idealFactory.multiply(intTwo, idealFactory.multiply(x, y)), x);
+		NumericExpression r1 = idealFactory.divide(idealFactory.add(x, y), x); // (x-y)/y
 		BooleanExpression m = booleanFactory.symbolic(true);
 		BooleanExpression n = booleanFactory.symbolic(false);
-		
+
 		BooleanExpression b0 = idealFactory.equals(x, n1);
 		BooleanExpression b1 = idealFactory.equals(x, n2);
 		BooleanExpression b2 = idealFactory.equals(x, n3);
 		BooleanExpression b3 = idealFactory.equals(x, x);
 		BooleanExpression b4 = idealFactory.equals(intOne, r1);
-		
-		out.println("b1=" +b1);
-		out.println("b2=" +b2);
-		out.println("b4=" +b4);
+
+		out.println("b1=" + b1);
+		out.println("b2=" + b2);
+		out.println("b4=" + b4);
 		assertEquals(n, b0);
 		assertEquals(m, b3);
 	}

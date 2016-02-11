@@ -88,7 +88,7 @@ public class CnfFactoryTest {
 	 */
 	@Before
 	public void setUpBeforeClass() {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem1();
 
 		factory = system.booleanFactory();
 		stf = system.typeFactory();

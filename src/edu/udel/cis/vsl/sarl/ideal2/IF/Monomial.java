@@ -37,7 +37,7 @@ public interface Monomial extends RationalExpression {
 	 *            the ideal factory responsible for this monomial
 	 * @return the constant factor of this monomial
 	 */
-	Constant monomialConstant(IdealFactory factory);
+	Constant monomialConstant(Ideal2Factory factory);
 
 	/**
 	 * Returns the monic factor of this monomial.
@@ -46,7 +46,7 @@ public interface Monomial extends RationalExpression {
 	 *            the ideal factory responsible for this monomial
 	 * @return the monic factor of this monomial
 	 */
-	Monic monic(IdealFactory factory);
+	Monic monic(Ideal2Factory factory);
 
 	int monomialDegree();
 
@@ -58,7 +58,7 @@ public interface Monomial extends RationalExpression {
 	 * @return term map whose sum is equivalent to this but with no
 	 *         {@link Polynomial}s.
 	 */
-	SymbolicMap<Monic, Monomial> expand(IdealFactory factory);
+	SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory);
 
 	/**
 	 * Returns the "basic term map" of this monomial.
@@ -67,6 +67,6 @@ public interface Monomial extends RationalExpression {
 	 *            the ideal factory responsible for this monomial
 	 * @return a term map whose sum is equivalent to this monomial
 	 */
-	SymbolicMap<Monic, Monomial> termMap(IdealFactory factory);
+	SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory);
 
 }

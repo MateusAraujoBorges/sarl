@@ -3,18 +3,18 @@
  * 
  * This file is part of SARL.
  * 
- * SARL is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your
- * option) any later version.
+ * SARL is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
  * 
- * SARL is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
- * License for more details.
+ * SARL is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with SARL. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.IF;
 
@@ -27,11 +27,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.universe.IF.Universes;
 
 public class MixedArithmeticTest {
 
@@ -43,7 +43,7 @@ public class MixedArithmeticTest {
 
 	@Before
 	public void setUp() throws Exception {
-		this.universe = Universes.newStandardUniverse();
+		this.universe = SARL.newStandardUniverse();
 		this.herbrandReal = universe.herbrandRealType();
 		this.herbrandInteger = universe.herbrandIntegerType();
 		// this.realType = universe.realType();
@@ -96,10 +96,10 @@ public class MixedArithmeticTest {
 
 	@Test
 	public void herbrandSimplify() {
-		NumericExpression one = (NumericExpression) universe.cast(
-				herbrandInteger, universe.integer(1));
-		NumericExpression two = (NumericExpression) universe.cast(
-				herbrandInteger, universe.integer(2));
+		NumericExpression one = (NumericExpression) universe
+				.cast(herbrandInteger, universe.integer(1));
+		NumericExpression two = (NumericExpression) universe
+				.cast(herbrandInteger, universe.integer(2));
 		NumericSymbolicConstant x = (NumericSymbolicConstant) universe
 				.symbolicConstant(universe.stringObject("X"), herbrandInteger);
 		NumericExpression e1 = universe.add(x, one);
@@ -116,8 +116,8 @@ public class MixedArithmeticTest {
 
 	@Test
 	public void hrelations() {
-		NumericExpression one = (NumericExpression) universe.cast(
-				herbrandInteger, universe.integer(1));
+		NumericExpression one = (NumericExpression) universe
+				.cast(herbrandInteger, universe.integer(1));
 		NumericSymbolicConstant x = (NumericSymbolicConstant) universe
 				.symbolicConstant(universe.stringObject("X"), herbrandInteger);
 		BooleanExpression assumption = universe.and(

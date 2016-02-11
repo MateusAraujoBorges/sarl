@@ -53,7 +53,7 @@ import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal.common.ReducedPolynomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
@@ -135,7 +135,7 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  * type is integer then the leading coefficient is positive and the GCD of the
  * absolute values of the coefficients is 1, and (3) there is no known
  * nontrivial factorization of the polynomial. The method
- * {@link Monomial#expand(IdealFactory)} returns an equivalent polynomial that
+ * {@link Monomial#expand(Ideal2Factory)} returns an equivalent polynomial that
  * contains no instances of {@link ReducedPolynomial}.
  * </p>
  * 
@@ -164,7 +164,7 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  * 
  * @author Stephen F. Siegel
  */
-public class CommonIdealFactory implements IdealFactory {
+public class CommonIdealFactory implements Ideal2Factory {
 
 	/**
 	 * Threshold after which polynomial term maps are not computed.
@@ -512,7 +512,7 @@ public class CommonIdealFactory implements IdealFactory {
 		if (monicMap.isEmpty())
 			return one(type);
 		if (monicMap.size() == 1)
-			return monicMap.iterator().next();
+			return monicMap.getFirst();
 		return ntMonic(type, monicMap);
 	}
 
@@ -2718,6 +2718,12 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public Comparator<Monic> monicComparator() {
 		return monicComparator;
+	}
+
+	@Override
+	public Monic monicMask(Monic monic, boolean[] mask) {
+		return monic(monic.type(),
+				collectionFactory.mask(monic.monicFactors(this), mask));
 	}
 
 }

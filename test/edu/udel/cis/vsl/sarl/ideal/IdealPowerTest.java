@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package edu.udel.cis.vsl.sarl.ideal; 
+package edu.udel.cis.vsl.sarl.ideal;
 
 import static org.junit.Assert.assertEquals;
 
@@ -32,20 +32,20 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
-import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
 /**
- * The class IdealPowerTest tests methods found in the edu.udel.cis.vsl.sarl.ideal.common package 
- * using exponentials
+ * The class IdealPowerTest tests methods found in the
+ * edu.udel.cis.vsl.sarl.ideal.common package using exponentials
  * 
- * This class has a method bigPower which finds the result for 
- *            [(x+y)^100] / [(x+y)^99] as (x+y) by removing all the common factors
- * This test method is one of the good benchmarks by which we can evaluate the performance.
+ * This class has a method bigPower which finds the result for [(x+y)^100] /
+ * [(x+y)^99] as (x+y) by removing all the common factors This test method is
+ * one of the good benchmarks by which we can evaluate the performance.
  *
  */
 public class IdealPowerTest {
@@ -53,7 +53,7 @@ public class IdealPowerTest {
 	private static PrintStream out = System.out;
 	private ObjectFactory objectFactory;
 	private SymbolicTypeFactory typeFactory;
-	private IdealFactory idealFactory;
+	private Ideal2Factory idealFactory;
 	/**
 	 * int constant -1
 	 */
@@ -82,87 +82,91 @@ public class IdealPowerTest {
 	 * int symbolic constant "Y"
 	 */
 	NumericSymbolicConstant y;
-		
+
 	@Before
 	public void setUp() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		objectFactory = system.objectFactory();
 		typeFactory = system.typeFactory();
-		idealFactory = (IdealFactory) system.numericFactory();
+		idealFactory = (Ideal2Factory) system.numericFactory();
 		intNegOne = idealFactory.intConstant(-1);
 		intZero = idealFactory.zeroInt();
 		intOne = idealFactory.intConstant(1);
 		intTwo = idealFactory.intConstant(2);
 		Xobj = objectFactory.stringObject("X");
-		x = objectFactory.canonic(idealFactory.symbolicConstant(Xobj,
-				typeFactory.integerType()));
+		x = objectFactory.canonic(
+				idealFactory.symbolicConstant(Xobj, typeFactory.integerType()));
 		y = objectFactory.canonic(idealFactory.symbolicConstant(
 				objectFactory.stringObject("Y"), typeFactory.integerType()));
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		
+
 	}
-	
+
 	/**
-	 * a function - power() which has NumericExpression as base and IntObject as an exponent
+	 * a function - power() which has NumericExpression as base and IntObject as
+	 * an exponent
 	 * 
-	 * @param a - NumericExpression
-	 * @param b - IntObject
+	 * @param a
+	 *            - NumericExpression
+	 * @param b
+	 *            - IntObject
 	 * 
-	 * @return
-	 * 			the value of an expression consisting of numeric expression as base and IntObject as power
+	 * @return the value of an expression consisting of numeric expression as
+	 *         base and IntObject as power
 	 */
-	public NumericExpression power(NumericExpression a, IntObject b){
+	public NumericExpression power(NumericExpression a, IntObject b) {
 		NumericExpression ne = idealFactory.power(a, b);
 		return ne;
 	}
-	
+
 	/**
 	 * Creates a numeric expression 0^0, which should raise a SARLException
 	 */
-	@Test(expected=SARLException.class)
+	@Test(expected = SARLException.class)
 	public void zeroToZero() {
 		NumericExpression ztz = idealFactory.power(intZero, intZero);
 		out.println("ztz= " + ztz);
 	}
-	
+
 	/**
 	 * Creates a numeric expression 1^-1, which should raise a SARLException
 	 */
-	@Test(expected=SARLException.class)
+	@Test(expected = SARLException.class)
 	public void negativeExponent() {
 		NumericExpression negExp = idealFactory.power(intOne, intNegOne);
 		out.println("negExp= " + negExp);
 	}
-	
+
 	/**
 	 * Asserts that(x+1)^2 = x^2 + 2*x + 1
 	 * 
 	 * @param type
-	 * 				SymbolicExpression of numeric type
+	 *            SymbolicExpression of numeric type
 	 */
 	@Test
 	public void xPlus1Squared() {
 		NumericExpression xp1 = idealFactory.add(x, intOne);
 		SymbolicExpression xp1squared = idealFactory.multiply(xp1, xp1);
-		SymbolicExpression x2p2xp1 = idealFactory.add(idealFactory.multiply(x,
-				x), idealFactory.add(idealFactory.multiply(intTwo, x), intOne));
+		SymbolicExpression x2p2xp1 = idealFactory.add(
+				idealFactory.multiply(x, x),
+				idealFactory.add(idealFactory.multiply(intTwo, x), intOne));
 
 		out.println("xplus1squared: " + xp1squared + " vs. " + x2p2xp1);
-		
+
 		assertEquals(xp1squared, x2p2xp1);
 	}
 
 	/**
-	 * gives the result for [(x+y)^100] / [(x+y)^99] as (x+y). Will compute
-	 * the values for [(x+y)^100] first and also compute the value for
-	 * [(x+y)^99], divide both of them and remove the common factors which will
-	 * be equal to (x + y).
+	 * gives the result for [(x+y)^100] / [(x+y)^99] as (x+y). Will compute the
+	 * values for [(x+y)^100] first and also compute the value for [(x+y)^99],
+	 * divide both of them and remove the common factors which will be equal to
+	 * (x + y).
 	 * 
 	 * @param type
-	 * 				SymbolicExpression of numeric type
+	 *            SymbolicExpression of numeric type
 	 */
 	@Test
 	public void bigPower() {
@@ -177,7 +181,7 @@ public class IdealPowerTest {
 		out.println("bigPower: (X+Y)^" + n + " = " + xpyen);
 		out.println("bigPower: (X+Y)^" + m + " = " + xpyem);
 		out.println("bigPower: quotient : " + quotient);
-		
+
 		assertEquals(xpy, quotient);
 	}
 }

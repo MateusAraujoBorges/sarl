@@ -113,7 +113,7 @@ public class ExpressionTest {
 	private NumericExpression xty;
 	private NumericExpression xpyDxty;
 	private static FactorySystem factorySystem = PreUniverses
-			.newIdealFactorySystem();
+			.newIdealFactorySystem2();
 	private static PreUniverse universe = PreUniverses
 			.newPreUniverse(factorySystem);
 	private ExpressionFactory expressionFactory = factorySystem
@@ -135,7 +135,7 @@ public class ExpressionTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		sUniverse = Universes.newIdealUniverse();
+		sUniverse = Universes.newIdealUniverse2();
 		Xobj = sUniverse.stringObject("X");
 		Yobj = sUniverse.stringObject("Y");
 		fiveIntObj = sUniverse.intObject(5);
@@ -176,7 +176,7 @@ public class ExpressionTest {
 		xpy = sUniverse.add(x, y);
 		xty = sUniverse.multiply(x, y);
 		xpyDxty = sUniverse.divide(xpy, xty);
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		stf = system.typeFactory();
 		of = system.objectFactory();
 		cf = system.collectionFactory();
@@ -188,7 +188,7 @@ public class ExpressionTest {
 
 	@After
 	public void tearDown() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		of = system.objectFactory();
 		cf = system.collectionFactory();
 		stf = system.typeFactory();
@@ -1096,9 +1096,9 @@ public class ExpressionTest {
 		// n).idealFactory();
 		IdealFactory idf = new CommonIdealFactory(nf, of, stf, cf, bf);
 		NumberFactory n2 = idf.numberFactory();
-		ExpressionFactory sef = Expressions.newStandardExpressionFactory(n2,
+		ExpressionFactory sef = Expressions.newStandardExpressionFactory2(n2,
 				of, stf, cf);
-		SimplifierFactory sf = Expressions.standardSimplifierFactory(sef,
+		SimplifierFactory sf = Expressions.standardSimplifierFactory2(sef,
 				universe);
 		assertNotNull(sf);
 	}

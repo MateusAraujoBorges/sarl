@@ -1,6 +1,5 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
-
 import java.io.PrintStream;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
@@ -11,8 +10,8 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal;
-import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
@@ -21,12 +20,12 @@ import edu.udel.cis.vsl.sarl.simplify.common.IdentitySimplifierFactory;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
 /**
- * Importing this class into test files stored in the same package 
- * allows for the availability of common SARL objects.
+ * Importing this class into test files stored in the same package allows for
+ * the availability of common SARL objects.
  * <p>
- * Importation of this class merely provides the declaration statements.
- * To also include the initialization of the SARL objects, the setUp()
- * method must be called.
+ * Importation of this class merely provides the declaration statements. To also
+ * include the initialization of the SARL objects, the setUp() method must be
+ * called.
  * 
  * @see CommonObjects.setUp()
  * 
@@ -38,83 +37,89 @@ public class CommonObjects {
 	static FactorySystem system;
 
 	static PreUniverse preUniv;
-	
+
 	static PrintStream out;
-	
+
 	static SymbolicTypeFactory symbFactory;
-	
+
 	static NumberFactory numFact;
-	
+
 	static NumericExpressionFactory numExprFact;
-	
+
 	static BooleanExpressionFactory boolExprFact;
-	
-	static IdealFactory idealFactory;
-	
+
+	static Ideal2Factory idealFactory;
+
 	static IdealSimplifierFactory idealSimplifierFactory;
-	
+
 	static IdentitySimplifierFactory identitySimplifierFactory;
-	
+
 	static IdealSimplifier idealSimplifier, idealSimp2;
-	
+
 	static Simplifier simp1ifier_xeq5;
-	
-	static BooleanExpression p, q, claim1, pThanQ, xeq5, yeq6, trueExpr, falseExpr, assumption; //assumption is not initialized, as uses will vary greatly
-	
+
+	static BooleanExpression p, q, claim1, pThanQ, xeq5, yeq6, trueExpr,
+			falseExpr, assumption; // assumption is not initialized, as uses
+									// will vary greatly
+
 	static SymbolicExpression symbExpr_xpy; // x + y
-	
+
 	static SymbolicExpression symbExpr_xy; // x * y
-	
+
 	static SymbolicExpression symbExpr_xx; // x^2
-	
+
 	static SymbolicExpression symbExpr_xxy; // x^2 * y
-	
+
 	static SymbolicExpression symbExpr_xyy; // x * y^2
-	
+
 	static SymbolicExpression symbExpr_xpyInt; // (int)x + (int)y
-	
+
 	static SymbolicExpression symbExpr_xyInt; // (int)x * (int)y
-	
+
 	static SymbolicExpression symbExpr_xxInt; // (int)x^2
-	
+
 	static SymbolicExpression symbExpr_xxyInt; // (int)x^2 * (int)y
-	
+
 	static SymbolicExpression symbExpr_xyyInt; // (int)x * (int)y^2
-	
+
 	static NumericSymbolicConstant A, B, C, x, xsqd, y, z, xInt, yInt;
-	
-	
-	/*static SymbolicExpression symbExpr
-	
-	static SymbolicExpression symbExpr
-	
-	static SymbolicExpression symbExpr*/
-	
+
+	/*
+	 * static SymbolicExpression symbExpr
+	 * 
+	 * static SymbolicExpression symbExpr
+	 * 
+	 * static SymbolicExpression symbExpr
+	 */
+
 	static SymbolicType realType, integerType;
-		
-	static NumericExpression ratNeg1, ratNeg2, ratNeg3, ratNeg5, ratNeg25, ratNeg300,
-	rat0, rat1, rat2, rat3, rat4, rat5, rat6, rat20, rat25, rat200; // -1.0, -2.0, -3.0, -5.0, -25.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 25.0, 200.0
-	
-	static NumericExpression intNeg1, intNeg2, intNeg3, intNeg5, int0,
-	int1, int2, int3, int4, int5; // -1, -2, -3, -5, 1, 2, 3, 4, 5
-	
-	static NumericExpression xNE, yNE, xpy, xy, xx, x4th, threeX4th, xxy,
-	xyy, onePxPxSqdP3x4th, mixedXYTermPoly, bigMixedXYTermPoly, xSqrLess1, xSqrP1;
-	
-	static NumericExpression xpyInt, xyInt, xxInt, x4thInt, 
-	threeX4thInt, xxyInt, xyyInt;
-	
+
+	static NumericExpression ratNeg1, ratNeg2, ratNeg3, ratNeg5, ratNeg25,
+			ratNeg300, rat0, rat1, rat2, rat3, rat4, rat5, rat6, rat20, rat25,
+			rat200; // -1.0, -2.0, -3.0, -5.0, -25.0, 0.0, 1.0, 2.0, 3.0, 4.0,
+					// 5.0, 6.0, 25.0, 200.0
+
+	static NumericExpression intNeg1, intNeg2, intNeg3, intNeg5, int0, int1,
+			int2, int3, int4, int5; // -1, -2, -3, -5, 1, 2, 3, 4, 5
+
+	static NumericExpression xNE, yNE, xpy, xy, xx, x4th, threeX4th, xxy, xyy,
+			onePxPxSqdP3x4th, mixedXYTermPoly, bigMixedXYTermPoly, xSqrLess1,
+			xSqrP1;
+
+	static NumericExpression xpyInt, xyInt, xxInt, x4thInt, threeX4thInt,
+			xxyInt, xyyInt;
+
 	static BoundsObject boundObj, boundObj2, boundObj3;
-	
-	static edu.udel.cis.vsl.sarl.IF.number.Number num3,
-	num5, numNeg2000, num10000, num0, num10pt5;
-	
-	static edu.udel.cis.vsl.sarl.IF.number.Number num3Int,
-	num5Int, num0Int, numNeg2000Int, num10000Int, neg1Int;
+
+	static edu.udel.cis.vsl.sarl.IF.number.Number num3, num5, numNeg2000,
+			num10000, num0, num10pt5;
+
+	static edu.udel.cis.vsl.sarl.IF.number.Number num3Int, num5Int, num0Int,
+			numNeg2000Int, num10000Int, neg1Int;
 
 	/**
-	 * Method provides initialization of common SARL Objects declared 
-	 * in the CommonObjects Class.
+	 * Method provides initialization of common SARL Objects declared in the
+	 * CommonObjects Class.
 	 * <p>
 	 * This method is only accessible within the
 	 * edu.udel.cis.vsl.sarl.ideal.simplify package.
@@ -122,14 +127,14 @@ public class CommonObjects {
 	 * @see CommonObjects
 	 */
 	static void setUp() {
-		system = PreUniverses.newIdealFactorySystem();
+		system = PreUniverses.newIdealFactorySystem2();
 		preUniv = PreUniverses.newPreUniverse(system);
 		out = System.out;
-		idealFactory = (IdealFactory) system.expressionFactory()
+		idealFactory = (Ideal2Factory) system.expressionFactory()
 				.numericFactory();
-		idealSimplifierFactory = (IdealSimplifierFactory) Ideal
+		idealSimplifierFactory = (IdealSimplifierFactory) Ideal2
 				.newIdealSimplifierFactory(idealFactory, preUniv);
-		boolExprFact = PreUniverses.newIdealFactorySystem().booleanFactory();
+		boolExprFact = PreUniverses.newIdealFactorySystem2().booleanFactory();
 		ratNeg1 = preUniv.rational(-1);
 		ratNeg2 = preUniv.rational(-2);
 		ratNeg3 = preUniv.rational(-3);
@@ -144,7 +149,7 @@ public class CommonObjects {
 		rat5 = preUniv.rational(5);
 		rat6 = preUniv.rational(6);
 		rat20 = preUniv.rational(20);
-		rat25 = preUniv.rational(25); //25.0
+		rat25 = preUniv.rational(25); // 25.0
 		rat200 = preUniv.rational(200);
 		intNeg1 = preUniv.integer(-1);
 		intNeg2 = preUniv.integer(-2);
@@ -156,25 +161,25 @@ public class CommonObjects {
 		int3 = preUniv.integer(3);
 		int4 = preUniv.integer(4);
 		int5 = preUniv.integer(5);
-		//neg1Int = preUniv.integer(-1);
+		// neg1Int = preUniv.integer(-1);
 		symbFactory = system.expressionFactory().typeFactory();
 		realType = preUniv.realType();
 		integerType = preUniv.integerType();
-		x = (NumericSymbolicConstant) preUniv.symbolicConstant(
-				preUniv.stringObject("x"), realType);
-		y = (NumericSymbolicConstant) preUniv.symbolicConstant(
-				preUniv.stringObject("y"), realType);
-		z = (NumericSymbolicConstant) preUniv.symbolicConstant(
-				preUniv.stringObject("y"), realType);
-		xInt = (NumericSymbolicConstant) preUniv.symbolicConstant(
-				preUniv.stringObject("xInt"), integerType);
-		yInt = (NumericSymbolicConstant) preUniv.symbolicConstant(
-				preUniv.stringObject("yInt"), integerType);
+		x = (NumericSymbolicConstant) preUniv
+				.symbolicConstant(preUniv.stringObject("x"), realType);
+		y = (NumericSymbolicConstant) preUniv
+				.symbolicConstant(preUniv.stringObject("y"), realType);
+		z = (NumericSymbolicConstant) preUniv
+				.symbolicConstant(preUniv.stringObject("y"), realType);
+		xInt = (NumericSymbolicConstant) preUniv
+				.symbolicConstant(preUniv.stringObject("xInt"), integerType);
+		yInt = (NumericSymbolicConstant) preUniv
+				.symbolicConstant(preUniv.stringObject("yInt"), integerType);
 		xeq5 = preUniv.equals(x, rat5);
 		yeq6 = preUniv.equals(y, rat6);
 		simp1ifier_xeq5 = idealSimplifierFactory.newSimplifier(xeq5);
-		//not sure if xsqd is necessary
-		//xsqd = preUniv.multiply(x, x);
+		// not sure if xsqd is necessary
+		// xsqd = preUniv.multiply(x, x);
 		xpy = preUniv.add(x, y);
 		symbExpr_xpy = xpy;
 		xy = preUniv.multiply(x, y);
@@ -188,8 +193,10 @@ public class CommonObjects {
 		symbExpr_xxy = xxy;
 		xyy = preUniv.multiply(xy, y);
 		symbExpr_xyy = xyy;
-		onePxPxSqdP3x4th = preUniv.add(rat1, preUniv.add(x, preUniv.add(xx, threeX4th)));
-		mixedXYTermPoly = preUniv.multiply(preUniv.add(onePxPxSqdP3x4th, preUniv.add(xxy, xyy)), xpy);
+		onePxPxSqdP3x4th = preUniv.add(rat1,
+				preUniv.add(x, preUniv.add(xx, threeX4th)));
+		mixedXYTermPoly = preUniv.multiply(
+				preUniv.add(onePxPxSqdP3x4th, preUniv.add(xxy, xyy)), xpy);
 		bigMixedXYTermPoly = preUniv.power(mixedXYTermPoly, int3);
 		xpyInt = preUniv.add(xInt, yInt);
 		symbExpr_xpyInt = xpyInt;

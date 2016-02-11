@@ -20,7 +20,7 @@ package edu.udel.cis.vsl.sarl.ideal2.common;
 
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
@@ -42,7 +42,7 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	}
 
 	@Override
-	public Monic monic(IdealFactory factory) {
+	public Monic monic(Ideal2Factory factory) {
 		return (Monic) argument(1);
 	}
 
@@ -56,7 +56,7 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	}
 
 	@Override
-	public Constant monomialConstant(IdealFactory factory) {
+	public Constant monomialConstant(Ideal2Factory factory) {
 		return (Constant) argument(0);
 	}
 
@@ -65,17 +65,17 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	}
 
 	@Override
-	public Monomial numerator(IdealFactory factory) {
+	public Monomial numerator(Ideal2Factory factory) {
 		return this;
 	}
 
 	@Override
-	public Monomial denominator(IdealFactory factory) {
+	public Monomial denominator(Ideal2Factory factory) {
 		return factory.one(type());
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(IdealFactory factory) {
+	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		Monic monic = this.monic();
 		SymbolicMap<Monic, Monomial> expandedMonic = monic.expand(factory);
 
@@ -96,7 +96,7 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
+	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
 		Monic monic = monic();
 
 		if (monic instanceof Polynomial) {

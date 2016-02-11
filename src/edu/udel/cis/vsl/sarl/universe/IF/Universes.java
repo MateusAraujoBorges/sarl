@@ -55,9 +55,25 @@ public class Universes {
 
 	// you can specify specific prover or entire config
 
-	public static SymbolicUniverse newIdealUniverse(SARLConfig config,
+	public static SymbolicUniverse newIdealUniverse1(SARLConfig config,
 			ProverInfo prover) {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem1();
+		CommonSymbolicUniverse universe = new CommonSymbolicUniverse(system);
+		SimplifierFactory simplifierFactory = Ideal.newIdealSimplifierFactory(
+				(IdealFactory) system.numericFactory(), universe);
+		TheoremProverFactory proverFactory = prover == null
+				? Prove.newMultiProverFactory(universe, config)
+				: Prove.newProverFactory(universe, prover);
+		ReasonerFactory reasonerFactory = Reason.newReasonerFactory(universe,
+				simplifierFactory, proverFactory);
+
+		universe.setReasonerFactory(reasonerFactory);
+		return universe;
+	}
+	
+	public static SymbolicUniverse newIdealUniverse2(SARLConfig config,
+			ProverInfo prover) {
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		CommonSymbolicUniverse universe = new CommonSymbolicUniverse(system);
 		SimplifierFactory simplifierFactory = Ideal.newIdealSimplifierFactory(
 				(IdealFactory) system.numericFactory(), universe);
@@ -71,13 +87,17 @@ public class Universes {
 		return universe;
 	}
 
-	public static SymbolicUniverse newIdealUniverse() {
-		return newIdealUniverse(Configurations.getDefaultConfiguration(), null);
+	public static SymbolicUniverse newIdealUniverse1() {
+		return newIdealUniverse1(Configurations.getDefaultConfiguration(), null);
+	}
+	
+	public static SymbolicUniverse newIdealUniverse2() {
+		return newIdealUniverse2(Configurations.getDefaultConfiguration(), null);
 	}
 
 	public static SymbolicUniverse newMathUniverse(SARLConfig config,
 			ProverInfo prover) {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		FactorySystem system = PreUniverses.newIdealFactorySystem1();
 		MathUniverse universe = new MathUniverse(system);
 		SimplifierFactory simplifierFactory = Ideal.newIdealSimplifierFactory(
 				(IdealFactory) system.numericFactory(), universe);
@@ -116,7 +136,7 @@ public class Universes {
 				null);
 	}
 
-	public static SymbolicUniverse newStandardUniverse(SARLConfig config,
+	public static SymbolicUniverse newStandardUniverse1(SARLConfig config,
 			ProverInfo prover) {
 		NumberFactory numberFactory = Numbers.REAL_FACTORY;
 		ObjectFactory objectFactory = Objects.newObjectFactory(numberFactory);
@@ -124,13 +144,38 @@ public class Universes {
 		CollectionFactory collectionFactory = Collections
 				.newCollectionFactory(objectFactory);
 		ExpressionFactory expressionFactory = Expressions
-				.newStandardExpressionFactory(numberFactory, objectFactory,
+				.newStandardExpressionFactory1(numberFactory, objectFactory,
 						typeFactory, collectionFactory);
 		FactorySystem system = PreUniverses.newFactorySystem(objectFactory,
 				typeFactory, expressionFactory, collectionFactory);
 		CommonSymbolicUniverse universe = new CommonSymbolicUniverse(system);
 		SimplifierFactory simplifierFactory = Expressions
-				.standardSimplifierFactory(expressionFactory, universe);
+				.standardSimplifierFactory1(expressionFactory, universe);
+		TheoremProverFactory proverFactory = prover == null
+				? Prove.newMultiProverFactory(universe, config)
+				: Prove.newProverFactory(universe, prover);
+		ReasonerFactory reasonerFactory = Reason.newReasonerFactory(universe,
+				simplifierFactory, proverFactory);
+
+		universe.setReasonerFactory(reasonerFactory);
+		return universe;
+	}
+	
+	public static SymbolicUniverse newStandardUniverse2(SARLConfig config,
+			ProverInfo prover) {
+		NumberFactory numberFactory = Numbers.REAL_FACTORY;
+		ObjectFactory objectFactory = Objects.newObjectFactory(numberFactory);
+		SymbolicTypeFactory typeFactory = Types.newTypeFactory(objectFactory);
+		CollectionFactory collectionFactory = Collections
+				.newCollectionFactory(objectFactory);
+		ExpressionFactory expressionFactory = Expressions
+				.newStandardExpressionFactory2(numberFactory, objectFactory,
+						typeFactory, collectionFactory);
+		FactorySystem system = PreUniverses.newFactorySystem(objectFactory,
+				typeFactory, expressionFactory, collectionFactory);
+		CommonSymbolicUniverse universe = new CommonSymbolicUniverse(system);
+		SimplifierFactory simplifierFactory = Expressions
+				.standardSimplifierFactory2(expressionFactory, universe);
 		TheoremProverFactory proverFactory = prover == null
 				? Prove.newMultiProverFactory(universe, config)
 				: Prove.newProverFactory(universe, prover);
@@ -141,10 +186,16 @@ public class Universes {
 		return universe;
 	}
 
-	public static SymbolicUniverse newStandardUniverse() {
-		return newStandardUniverse(Configurations.getDefaultConfiguration(),
+	public static SymbolicUniverse newStandardUniverse1() {
+		return newStandardUniverse1(Configurations.getDefaultConfiguration(),
 				null);
 	}
+	
+	public static SymbolicUniverse newStandardUniverse2() {
+		return newStandardUniverse2(Configurations.getDefaultConfiguration(),
+				null);
+	}
+
 
 	// public static TrigonometricUniverse newTrigonometricUniverse() {
 	// NumberFactory numberFactory = Numbers.REAL_FACTORY;

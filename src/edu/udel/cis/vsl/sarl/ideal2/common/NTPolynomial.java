@@ -22,7 +22,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
@@ -52,7 +52,7 @@ public class NTPolynomial extends NumericPrimitive implements Polynomial {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(IdealFactory factory) {
+	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
 		return termMap();
 	}
 
@@ -93,7 +93,7 @@ public class NTPolynomial extends NumericPrimitive implements Polynomial {
 	}
 
 	@Override
-	public Constant constantTerm(IdealFactory factory) {
+	public Constant constantTerm(Ideal2Factory factory) {
 		SymbolicType type = type();
 		Constant constant = (Constant) termMap().get(factory.one(type));
 
@@ -101,7 +101,7 @@ public class NTPolynomial extends NumericPrimitive implements Polynomial {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(IdealFactory factory) {
+	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		SymbolicMap<Monic, Monomial> termMap = termMap();
 		int numTerms = termMap.size();
 		@SuppressWarnings("unchecked")

@@ -29,7 +29,7 @@ import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
-import edu.udel.cis.vsl.sarl.ideal2.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
@@ -81,7 +81,7 @@ public class LinearSolver {
 
 	private NumberFactory numberFactory;
 
-	private IdealFactory idealFactory;
+	private Ideal2Factory idealFactory;
 
 	private RationalNumber[][] intMatrix, realMatrix;
 
@@ -100,7 +100,7 @@ public class LinearSolver {
 
 	private Map<Monic, Integer> intIdMap, realIdMap;
 
-	LinearSolver(IdealFactory idealFactory) {
+	LinearSolver(Ideal2Factory idealFactory) {
 		this.idealFactory = idealFactory;
 		this.numberFactory = idealFactory.numberFactory();
 	}
@@ -338,7 +338,7 @@ public class LinearSolver {
 		return true;
 	}
 
-	public static boolean reduceConstantMap(IdealFactory idealFactory,
+	public static boolean reduceConstantMap(Ideal2Factory idealFactory,
 			Map<Monic, Number> map) {
 		LinearSolver solver = new LinearSolver(idealFactory);
 
