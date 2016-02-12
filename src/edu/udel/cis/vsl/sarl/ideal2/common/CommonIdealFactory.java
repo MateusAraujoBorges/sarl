@@ -2581,6 +2581,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 			Monomial newMonomial = monomial(newConstant, newMonic);
 
 			newEntries[count] = collectionFactory.entry(newMonic, newMonomial);
+			count++;
 		}
 
 		SymbolicMap<Monic, Monomial> newMap = collectionFactory
@@ -2591,6 +2592,13 @@ public class CommonIdealFactory implements Ideal2Factory {
 
 	@Override
 	public Monomial factorTermMap(SymbolicMap<Monic, Monomial> termMap) {
+		int size = termMap.size();
+
+		assert size != 0;
+
+		if (size == 1)
+			return termMap.getFirst();
+
 		Monic monic = getMonicFactor(termMap);
 		Constant constant = getConstantFactor(termMap);
 		SymbolicType type = constant.type();

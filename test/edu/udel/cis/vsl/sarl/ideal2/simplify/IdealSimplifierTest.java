@@ -1,15 +1,15 @@
-package edu.udel.cis.vsl.sarl.ideal.simplify;
+package edu.udel.cis.vsl.sarl.ideal2.simplify;
 
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.idealSimplifier;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.idealSimplifierFactory;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.preUniv;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat0;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat2;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat25;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.ratNeg25;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.trueExpr;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.x;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xeq5;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.idealSimplifier;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.idealSimplifierFactory;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.preUniv;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat0;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat2;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat25;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.ratNeg25;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.trueExpr;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.x;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.xeq5;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.After;
@@ -17,6 +17,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.ideal2.simplify.IdealSimplifier;
 
 /**
  * Testing on IdealSimplifier based on Polynomials using methods -

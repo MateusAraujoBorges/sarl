@@ -1,4 +1,4 @@
-package edu.udel.cis.vsl.sarl.ideal.simplify;
+package edu.udel.cis.vsl.sarl.ideal2.simplify;
 
 import org.junit.Ignore;
 import org.junit.runner.RunWith;

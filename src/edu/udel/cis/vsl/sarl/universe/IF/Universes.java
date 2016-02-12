@@ -29,6 +29,8 @@ import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.Expressions;
 import edu.udel.cis.vsl.sarl.ideal.IF.Ideal;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.object.IF.Objects;
@@ -75,8 +77,8 @@ public class Universes {
 			ProverInfo prover) {
 		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		CommonSymbolicUniverse universe = new CommonSymbolicUniverse(system);
-		SimplifierFactory simplifierFactory = Ideal.newIdealSimplifierFactory(
-				(IdealFactory) system.numericFactory(), universe);
+		SimplifierFactory simplifierFactory = Ideal2.newIdealSimplifierFactory(
+				(Ideal2Factory) system.numericFactory(), universe);
 		TheoremProverFactory proverFactory = prover == null
 				? Prove.newMultiProverFactory(universe, config)
 				: Prove.newProverFactory(universe, prover);

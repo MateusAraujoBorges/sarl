@@ -242,6 +242,9 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * @return
 	 */
 	private Monomial simplifyPolynomial(Polynomial poly) {
+		
+		// why is there no attempt to do normal simplification?
+		// substitute for x, etc.
 		return info.idealFactory.factorTermMap(poly.expand(info.idealFactory));
 	}
 
@@ -733,6 +736,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	/**
 	 * Converts the bound to a boolean expression in canonical form. Returns
 	 * null if both upper and lower bound are infinite (equivalent to "true").
+	 * Note that the variable in the bound is simplified.
 	 */
 	private BooleanExpression boundToIdeal(BoundsObject bound) {
 		Number lower = bound.lower(), upper = bound.upper();
@@ -937,7 +941,7 @@ public class IdealSimplifier extends CommonSimplifier {
 			Number lower = bounds.lower();
 
 			if (lower != null && lower.equals(bounds.upper)) {
-				Polynomial expression = (Polynomial) bounds.expression;
+				Monic expression = (Monic) bounds.expression;
 
 				assert !bounds.strictLower && !bounds.strictUpper;
 				constantMap.put(expression, lower);
@@ -1127,10 +1131,10 @@ public class IdealSimplifier extends CommonSimplifier {
 			if (arg0.type().isNumeric()) {
 				switch (operator) {
 				case EQUALS: // 0==x
-					return extractEQ0Bounds((Primitive) arg0, aBoundMap,
+					return extractEQ0Bounds((Primitive) arg1, aBoundMap,
 							aBooleanMap);
 				case NEQ:
-					return extractNEQ0Bounds((Primitive) arg0, aBoundMap,
+					return extractNEQ0Bounds((Primitive) arg1, aBoundMap,
 							aBooleanMap);
 				case LESS_THAN: // 0<x or x<0
 				case LESS_THAN_EQUALS: // 0<=x or x<=0

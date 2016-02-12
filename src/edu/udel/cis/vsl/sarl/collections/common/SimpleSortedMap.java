@@ -69,6 +69,11 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 			Entry<K, V>[] entries) {
 		super();
 		this.comparator = comparator;
+		
+		// TODO: remove when done debugging:
+		for (int i=0; i<entries.length; i++)
+			assert entries[i] != null;
+		
 		this.entries = entries;
 	}
 

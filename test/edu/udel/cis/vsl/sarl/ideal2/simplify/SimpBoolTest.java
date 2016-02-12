@@ -1,16 +1,16 @@
 /* Copyright 2013 Stephen F. Siegel, University of Delaware
  */
-package edu.udel.cis.vsl.sarl.ideal.simplify;
+package edu.udel.cis.vsl.sarl.ideal2.simplify;
 
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.assumption;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.claim1;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.idealSimp2;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.idealSimplifier;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.idealSimplifierFactory;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.preUniv;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat5;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.x;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xeq5;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.assumption;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.claim1;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.idealSimp2;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.idealSimplifier;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.idealSimplifierFactory;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.preUniv;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat5;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.x;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.xeq5;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
@@ -19,6 +19,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import edu.udel.cis.vsl.sarl.ideal.simplify.IdealSimplifier;
 
 /**
  * Testing on IdealSimplifier on the basis of boolean

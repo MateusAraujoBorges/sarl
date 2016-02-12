@@ -1,16 +1,18 @@
 /* Copyright 2013 Stephen F. Siegel, University of Delaware
  */
-package edu.udel.cis.vsl.sarl.ideal.simplify;
+package edu.udel.cis.vsl.sarl.ideal2.simplify;
 
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.boundObj;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.num0;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.x;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.boundObj;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.num0;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.x;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import edu.udel.cis.vsl.sarl.ideal2.simplify.BoundsObject;
 
 /**
  * Provides testing of the newLowerBound method, which

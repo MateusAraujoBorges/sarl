@@ -1,23 +1,23 @@
-package edu.udel.cis.vsl.sarl.ideal.simplify;
+package edu.udel.cis.vsl.sarl.ideal2.simplify;
 
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.idealSimplifierFactory;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.onePxPxSqdP3x4th;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.out;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.preUniv;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat0;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat2;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat20;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat200;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat25;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat3;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat4;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat5;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.rat6;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.ratNeg300;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.x;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xx;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xy;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.y;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.idealSimplifierFactory;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.onePxPxSqdP3x4th;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.out;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.preUniv;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat0;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat2;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat20;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat200;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat25;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat3;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat4;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat5;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.rat6;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.ratNeg300;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.x;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.xx;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.xy;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.y;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.After;
@@ -27,6 +27,7 @@ import org.junit.Test;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.ideal2.simplify.IdealSimplifier;
 
 /**
  * Testing on IdealSimplifier based on Polynomials for both assumptions and

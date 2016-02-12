@@ -1,16 +1,16 @@
 /* Copyright 2013 Stephen F. Siegel, University of Delaware
  */
-package edu.udel.cis.vsl.sarl.ideal.simplify;
+package edu.udel.cis.vsl.sarl.ideal2.simplify;
 
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.boundObj;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.boundObj2;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.num0;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.num10000;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.num10pt5;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.x;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xeq5;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xpy;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.y;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.boundObj;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.boundObj2;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.num0;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.num10000;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.num10pt5;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.x;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.xeq5;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.xpy;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.y;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -21,6 +21,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import edu.udel.cis.vsl.sarl.ideal2.simplify.BoundsObject;
 import edu.udel.cis.vsl.sarl.number.real.CommonInterval;
 
 /**Provides testing of the equals method of BoundsObject

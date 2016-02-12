@@ -1,4 +1,4 @@
-package edu.udel.cis.vsl.sarl.ideal.simplify;
+package edu.udel.cis.vsl.sarl.ideal2.simplify;
 
 import java.io.PrintStream;
 
@@ -10,6 +10,9 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
+import edu.udel.cis.vsl.sarl.ideal2.simplify.BoundsObject;
+import edu.udel.cis.vsl.sarl.ideal2.simplify.IdealSimplifier;
+import edu.udel.cis.vsl.sarl.ideal2.simplify.IdealSimplifierFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;

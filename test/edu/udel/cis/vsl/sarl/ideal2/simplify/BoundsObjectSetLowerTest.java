@@ -1,13 +1,13 @@
 /* Copyright 2013 Stephen F. Siegel, University of Delaware
  */
-package edu.udel.cis.vsl.sarl.ideal.simplify;
+package edu.udel.cis.vsl.sarl.ideal2.simplify;
 
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.boundObj;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.num0;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.num0Int;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.num10000Int;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.x;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xInt;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.boundObj;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.num0;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.num0Int;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.num10000Int;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.x;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.xInt;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -19,6 +19,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+import edu.udel.cis.vsl.sarl.ideal2.simplify.BoundsObject;
 
 /**
  * Provides testing on the lower method of BoundsObject,

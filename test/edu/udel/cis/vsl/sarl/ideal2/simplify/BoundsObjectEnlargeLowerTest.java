@@ -1,16 +1,16 @@
 /* Copyright 2013 Stephen F. Siegel, University of Delaware
  */
-package edu.udel.cis.vsl.sarl.ideal.simplify;
+package edu.udel.cis.vsl.sarl.ideal2.simplify;
 
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.boundObj;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.boundObj2;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.boundObj3;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.num0;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.num3;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.num5;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xInt;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xpy;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xy;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.boundObj;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.boundObj2;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.boundObj3;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.num0;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.num3;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.num5;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.xInt;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.xpy;
+import static edu.udel.cis.vsl.sarl.ideal2.simplify.CommonObjects.xy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import edu.udel.cis.vsl.sarl.ideal2.simplify.BoundsObject;
 import edu.udel.cis.vsl.sarl.number.real.CommonInterval;
 
 /**Provides testing of the enlargeLower method 

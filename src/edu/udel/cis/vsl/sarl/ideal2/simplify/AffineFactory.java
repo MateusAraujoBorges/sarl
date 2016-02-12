@@ -98,6 +98,8 @@ public class AffineFactory {
 				pseudo = fp;
 			} else {
 				// better: one must be last, so remove last element
+				// note: after removing one, resulting map might
+				// have one entry
 				Monomial difference = idealFactory.factorTermMap(fp
 						.termMap(idealFactory).remove(idealFactory.one(type)));
 
