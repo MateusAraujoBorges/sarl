@@ -75,6 +75,15 @@ public class RealArithmeticTest {
 		assertEquals(addResult1, onePointTwoFive);
 		assertEquals(addResult2, onePointFive);
 		assertEquals(addResult3, onePointTwoFive);
+		
+		/**
+		 * a+0 = a;
+		 */
+		NumericExpression a = (NumericExpression) universe
+				.symbolicConstant(a_obj, realType);
+		NumericExpression aPlusZero = universe.add(a, zero);
+		
+		assertEquals(a, aPlusZero);
 	}
 	
 	/**
@@ -186,13 +195,6 @@ public class RealArithmeticTest {
 	 */
 	@Test
 	public void lessThanTest(){
-//		BooleanExpression result1 = universe.lessThan(onePointTwoFive, onePointFive);
-//		BooleanExpression result2 = universe.lessThan(onePointFive, onePointTwoFive);
-//		BooleanExpression result3 = universe.lessThan(onePointFive, onePointFive);
-//		
-//		assertEquals(t, result1);
-//		assertEquals(f, result2);
-//		assertEquals(f, result3);
 		NumericExpression a = (NumericExpression) universe
 				.symbolicConstant(a_obj, realType);
 		NumericExpression num = universe.add(a, one);
@@ -210,15 +212,6 @@ public class RealArithmeticTest {
 	 */
 	@Test
 	public void lessThanEquals(){
-//		NumericExpression num1 = universe.add(pointTwoFive, one);
-//		NumericExpression num2 = universe.subtract(onePointTwoFive, one);
-//		BooleanExpression result1 = universe.lessThanEquals(onePointTwoFive, num1);
-//		BooleanExpression result2 = universe.lessThanEquals(num2, onePointTwoFive);
-//		BooleanExpression result3 = universe.lessThanEquals(onePointTwoFive, onePointTwoFive);
-//		
-//		assertEquals(t, result1);
-//		assertEquals(t, result2);
-//		assertEquals(t, result3);
 		
 		NumericExpression a = (NumericExpression) universe
 				.symbolicConstant(a_obj, realType);
@@ -245,6 +238,19 @@ public class RealArithmeticTest {
 		NumericExpression aPbMb = universe.subtract(universe.add(a, b), b); //(a+b)-b
 		NumericExpression aMULbDb = universe.divide(universe.multiply(a, b), b); //(a*b)/b
 		BooleanExpression result = universe.equals(aPbMb, aMULbDb);
+		
+		assertEquals(result, t);
+	}
+	
+	/**
+	 * a != a+1
+	 */
+	@Test
+	public void notEqualsTest(){
+		NumericExpression a = (NumericExpression) universe
+				.symbolicConstant(a_obj, realType);
+		NumericExpression aPlusOne = universe.add(a, one);
+		BooleanExpression result = universe.neq(aPlusOne, a);
 		
 		assertEquals(result, t);
 	}
