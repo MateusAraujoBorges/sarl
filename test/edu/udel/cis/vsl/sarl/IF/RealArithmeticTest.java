@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
+import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
@@ -32,11 +33,7 @@ public class RealArithmeticTest {
 	 * 1/2
 	 */
 	private NumericExpression pointFive;
-	/**
-	 * 1/4
-	 */
-	private NumericExpression pointTwoFive;
-	private NumericExpression negTwo, one, two, three;
+	private NumericExpression zero, one, three;
 	/**
 	 * "a"
 	 */
@@ -46,7 +43,8 @@ public class RealArithmeticTest {
 	 */
 	private StringObject b_obj;
 	private SymbolicType realType;
-	
+	BooleanExpression f;
+	BooleanExpression t;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -56,13 +54,13 @@ public class RealArithmeticTest {
 		negPointTwoFive = universe.rational(-0.25);
 		onePointTwoFive = universe.rational(1.25);
 		pointFive = universe.rational(1, 2);
-		pointTwoFive = universe.rational(1, 4);
-		negTwo = universe.rational(-2);
+		zero = universe.rational(0);
 		one = universe.rational(1);
-		two = universe.rational(2);
 		three = universe.rational(3);
 		a_obj = universe.stringObject("a");
 		b_obj = universe.stringObject("b");
+		f = universe.bool(false);
+		t = universe.bool(true);
 	}
 	
 	@Test
@@ -79,6 +77,9 @@ public class RealArithmeticTest {
 		assertEquals(addResult3, onePointTwoFive);
 	}
 	
+	/**
+	 * (a+b) == (b+a)
+	 */
 	@Test
 	public void addCommutativityTest(){
 		NumericExpression a = (NumericExpression) universe
@@ -93,11 +94,26 @@ public class RealArithmeticTest {
 	
 	@Test
 	public void substractTest(){
-		NumericExpression result = universe.subtract(onePointTwoFive, negPointTwoFive);
+		/**
+		 * 1.25 - (-.25) = 1.5
+		 */
+		NumericExpression result1 = universe.subtract(onePointTwoFive, negPointTwoFive);
+		assertEquals(result1, onePointFive);
 		
-		assertEquals(result, onePointFive);
+		/**
+		 * (a+b)-a = b;
+		 */
+		NumericExpression a = (NumericExpression) universe
+				.symbolicConstant(a_obj, realType);
+		NumericExpression b = (NumericExpression) universe
+				.symbolicConstant(b_obj, realType);
+		NumericExpression result2 = universe.subtract(universe.add(a, b), a);
+		assertEquals(result2, b);
 	}
 	
+	/**
+	 * 3 * .5 = 1.5
+	 */
 	@Test
 	public void multiplyTest(){
 		NumericExpression result1 = universe.multiply(three, pointFive);
@@ -110,6 +126,9 @@ public class RealArithmeticTest {
 		assertEquals(result2, onePointFive);
 	}
 	
+	/**
+	 * (a*b) == (b*a)
+	 */
 	@Test 
 	public void multiplyCommutativityTest(){
 		NumericExpression a = (NumericExpression) universe
@@ -122,6 +141,9 @@ public class RealArithmeticTest {
 		assertEquals(result1, result2);
 	}
 	
+	/**
+	 * 1.5 / .5 == 3
+	 */
 	@Test 
 	public void divideTest(){
 		NumericExpression result = universe.divide(onePointFive, pointFive);
@@ -129,19 +151,103 @@ public class RealArithmeticTest {
 		assertEquals(result, three);
 	}
 	
+	/**
+	 * a + -a == 0
+	 */
 	@Test
 	public void minusTest(){
-		NumericExpression result = universe.minus(negPointTwoFive);
+		NumericExpression a = (NumericExpression) universe
+				.symbolicConstant(a_obj, realType);
+		NumericExpression negA = universe.minus(a);
+		NumericExpression o = universe.add(a, negA);
 		
-		assertEquals(result, pointTwoFive);
+		assertEquals(o, zero);
 	}
 	
+	/**
+	 * a^3 == a*a*a
+	 */
 	@Test
 	public void powerTest(){
-		NumericExpression result1 = universe.power(pointFive, two);
-		NumericExpression result2 = universe.power(two, negTwo);
+		NumericExpression a = (NumericExpression) universe
+				.symbolicConstant(a_obj, realType);
+		ArrayList<NumericExpression> numList = new ArrayList<NumericExpression>();
+		numList.add(a);
+		numList.add(a);
+		numList.add(a);
+		NumericExpression aCube1 = universe.power(a, 3);
+		NumericExpression aCube2 = universe.multiply(numList);
 		
-		assertEquals(result1, pointTwoFive);
-		assertEquals(result2, pointTwoFive);
+		assertEquals(aCube1, aCube2);
 	}
+	
+	/**
+	 * a && a+1
+	 */
+	@Test
+	public void lessThanTest(){
+//		BooleanExpression result1 = universe.lessThan(onePointTwoFive, onePointFive);
+//		BooleanExpression result2 = universe.lessThan(onePointFive, onePointTwoFive);
+//		BooleanExpression result3 = universe.lessThan(onePointFive, onePointFive);
+//		
+//		assertEquals(t, result1);
+//		assertEquals(f, result2);
+//		assertEquals(f, result3);
+		NumericExpression a = (NumericExpression) universe
+				.symbolicConstant(a_obj, realType);
+		NumericExpression num = universe.add(a, one);
+		BooleanExpression result1 = universe.lessThan(a, num);
+		BooleanExpression result2 = universe.lessThan(num, a);
+		BooleanExpression result3 = universe.lessThan(a, a);
+		
+		assertEquals(t, result1);
+		assertEquals(f, result2);
+		assertEquals(f, result3);
+	}
+	
+	/**
+	 * a && a+1 && a-1
+	 */
+	@Test
+	public void lessThanEquals(){
+//		NumericExpression num1 = universe.add(pointTwoFive, one);
+//		NumericExpression num2 = universe.subtract(onePointTwoFive, one);
+//		BooleanExpression result1 = universe.lessThanEquals(onePointTwoFive, num1);
+//		BooleanExpression result2 = universe.lessThanEquals(num2, onePointTwoFive);
+//		BooleanExpression result3 = universe.lessThanEquals(onePointTwoFive, onePointTwoFive);
+//		
+//		assertEquals(t, result1);
+//		assertEquals(t, result2);
+//		assertEquals(t, result3);
+		
+		NumericExpression a = (NumericExpression) universe
+				.symbolicConstant(a_obj, realType);
+		NumericExpression num1 = universe.add(a, one);
+		NumericExpression num2 = universe.subtract(a, one);
+		BooleanExpression result1 = universe.lessThanEquals(a, num1);
+		BooleanExpression result2 = universe.lessThanEquals(num2, a);
+		BooleanExpression result3 = universe.lessThanEquals(a, a);
+		
+		assertEquals(t, result1);
+		assertEquals(t, result2);
+		assertEquals(t, result3);
+	}
+	
+	/**
+	 * (a+b)-b == (a*b)/b
+	 */
+	@Test
+	public void equalsTest(){
+		NumericExpression a = (NumericExpression) universe
+				.symbolicConstant(a_obj, realType);
+		NumericExpression b = (NumericExpression) universe
+				.symbolicConstant(b_obj, realType);
+		NumericExpression aPbMb = universe.subtract(universe.add(a, b), b); //(a+b)-b
+		NumericExpression aMULbDb = universe.divide(universe.multiply(a, b), b); //(a*b)/b
+		BooleanExpression result = universe.equals(aPbMb, aMULbDb);
+		
+		assertEquals(result, t);
+	}
+	
+	
 }
