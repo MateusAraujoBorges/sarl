@@ -22,13 +22,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.List;
 
 import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
@@ -98,7 +98,7 @@ public class ArrayTest {
 		NumericExpression j = universe.integer(1);
 		SymbolicExpression c = universe.arrayWrite(a, j, b);
 		SymbolicExpression d = universe.arrayRead(c, j);
-		assertEquals(d, b);
+		assertEquals(b ,d);
 	}
 
 	/**
@@ -152,7 +152,7 @@ public class ArrayTest {
 		SymbolicExpression b = universe.removeElementAt(a, 0);
 
 		assertEquals(universe.arrayType(integerType, one), b.type());
-		assertEquals(universe.arrayRead(b, zero), six);
+		assertEquals(six, universe.arrayRead(b, zero));
 	}
 
 	/**
