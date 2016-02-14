@@ -72,9 +72,9 @@ public class RealArithmeticTest {
 		NumericExpression addResult2 = universe.add(one, pointFive);
 		NumericExpression addResult3 = universe.add(numArr);
 		
-		assertEquals(addResult1, onePointTwoFive);
-		assertEquals(addResult2, onePointFive);
-		assertEquals(addResult3, onePointTwoFive);
+		assertEquals(onePointTwoFive, addResult1);
+		assertEquals(onePointFive, addResult2);
+		assertEquals(onePointTwoFive, addResult3);
 		
 		/**
 		 * a+0 = a;
@@ -107,7 +107,7 @@ public class RealArithmeticTest {
 		 * 1.25 - (-.25) = 1.5
 		 */
 		NumericExpression result1 = universe.subtract(onePointTwoFive, negPointTwoFive);
-		assertEquals(result1, onePointFive);
+		assertEquals(onePointFive, result1);
 		
 		/**
 		 * (a+b)-a = b;
@@ -117,7 +117,7 @@ public class RealArithmeticTest {
 		NumericExpression b = (NumericExpression) universe
 				.symbolicConstant(b_obj, realType);
 		NumericExpression result2 = universe.subtract(universe.add(a, b), a);
-		assertEquals(result2, b);
+		assertEquals(b, result2);
 	}
 	
 	/**
@@ -131,8 +131,8 @@ public class RealArithmeticTest {
 		numArr.add(pointFive);
 		NumericExpression result2 = universe.multiply(numArr);
 		
-		assertEquals(result1, onePointFive);
-		assertEquals(result2, onePointFive);
+		assertEquals(onePointFive, result1);
+		assertEquals(onePointFive, result2);
 	}
 	
 	/**
@@ -157,7 +157,7 @@ public class RealArithmeticTest {
 	public void divideTest(){
 		NumericExpression result = universe.divide(onePointFive, pointFive);
 		
-		assertEquals(result, three);
+		assertEquals(three, result);
 	}
 	
 	/**
@@ -170,7 +170,7 @@ public class RealArithmeticTest {
 		NumericExpression negA = universe.minus(a);
 		NumericExpression o = universe.add(a, negA);
 		
-		assertEquals(o, zero);
+		assertEquals(zero, o);
 	}
 	
 	/**
@@ -239,7 +239,7 @@ public class RealArithmeticTest {
 		NumericExpression aMULbDb = universe.divide(universe.multiply(a, b), b); //(a*b)/b
 		BooleanExpression result = universe.equals(aPbMb, aMULbDb);
 		
-		assertEquals(result, t);
+		assertEquals(t, result);
 	}
 	
 	/**
@@ -252,8 +252,7 @@ public class RealArithmeticTest {
 		NumericExpression aPlusOne = universe.add(a, one);
 		BooleanExpression result = universe.neq(aPlusOne, a);
 		
-		assertEquals(result, t);
+		assertEquals(t, result);
 	}
-	
 	
 }
