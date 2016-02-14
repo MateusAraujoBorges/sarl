@@ -62,7 +62,7 @@ public class ArrayReasonTest {
 		reference = universe.arrayElementReference(identityReference, five);
 		
 		SymbolicExpression result = reasoner.simplify(universe.dereference(b, reference));
-		assertEquals(result, a);
+		assertEquals(a, result);
 		
 	}
 	
@@ -85,7 +85,7 @@ public class ArrayReasonTest {
 		reference = universe.arrayElementReference(identityReference, (NumericExpression)c1);
 		SymbolicExpression result = reasoner.simplify(universe.dereference(b, reference)); //b[c[0]]
 		
-		assertEquals(result, a);
+		assertEquals(a, result);
 	}
 	
 	/**
@@ -121,7 +121,7 @@ public class ArrayReasonTest {
 		}
 		
 		for(int i=0; i<len; i++){
-			assertEquals(universe.arrayRead(b, universe.integer(i)), two);
+			assertEquals(two, universe.arrayRead(b, universe.integer(i)));
 		}
 	}
 	
