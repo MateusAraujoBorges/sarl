@@ -141,7 +141,7 @@ public class IdealPowerTest {
 	}
 
 	/**
-	 * Asserts that(x+1)^2 = x^2 + 2*x + 1
+	 * Asserts that (x+1)^2 = x^2 + 2*x + 1
 	 * 
 	 * @param type
 	 *            SymbolicExpression of numeric type
@@ -149,14 +149,17 @@ public class IdealPowerTest {
 	@Test
 	public void xPlus1Squared() {
 		NumericExpression xp1 = idealFactory.add(x, intOne);
-		SymbolicExpression xp1squared = idealFactory.multiply(xp1, xp1);
-		SymbolicExpression x2p2xp1 = idealFactory.add(
+		NumericExpression xp1squared = idealFactory.multiply(xp1, xp1);
+		NumericExpression x2p2xp1 = idealFactory.add(
 				idealFactory.multiply(x, x),
 				idealFactory.add(idealFactory.multiply(intTwo, x), intOne));
 
 		out.println("xplus1squared: " + xp1squared + " vs. " + x2p2xp1);
+		
+		NumericExpression diff = idealFactory.subtract(xp1squared, x2p2xp1);
+		
 
-		assertEquals(xp1squared, x2p2xp1);
+		assertEquals(intZero, diff);
 	}
 
 	/**

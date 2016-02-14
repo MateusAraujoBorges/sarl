@@ -39,14 +39,13 @@ import edu.udel.cis.vsl.sarl.ideal2.simplify.IdealSimplifier;
 
 public class IdealSimplifierSimpExprTest {
 
-	private static IdealSimplifier idealSimp;
+	private IdealSimplifier idealSimp;
 
-	private static BooleanExpression assumption;
+	private BooleanExpression assumption;
 
-	private static NumericExpression numExpr, numExpect, expr1, expr2, expr3,
-			expr4;
+	private NumericExpression numExpr, numExpect, expr1, expr2, expr3, expr4;
 
-	private static SymbolicExpression symExpr, expected;
+	private SymbolicExpression symExpr, expected;
 
 	/**
 	 * Calls the setUp() method in CommonObjects to make use of consolidated
@@ -243,12 +242,16 @@ public class IdealSimplifierSimpExprTest {
 
 		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
 
-		numExpect = preUniv.add(preUniv
-				.multiply(preUniv.multiply(rat4, preUniv.power(x, 2)), y),
-				preUniv.add(preUniv.multiply(rat2, x), rat3));
+		// x(4xy+2)+3 = 4x^2y+2x+3
+		numExpect = preUniv.add(preUniv.multiply(x, preUniv
+				.add(preUniv.multiply(preUniv.multiply(rat4, x), y), rat2)),
+				rat3);
 
 		expected = numExpect;
 
-		assertEquals(expected, idealSimp.simplifyExpression(symExpr));
+		NumericExpression simplified = (NumericExpression) idealSimp
+				.simplifyExpression(symExpr);
+
+		assertEquals(expected, simplified);
 	}
 }

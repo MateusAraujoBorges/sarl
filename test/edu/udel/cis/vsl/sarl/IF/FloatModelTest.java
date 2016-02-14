@@ -24,10 +24,6 @@ import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.expr.common.CommonNumericExpressionFactory;
-import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
-import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
-import edu.udel.cis.vsl.sarl.preuniverse.common.CommonPreUniverse;
 
 public class FloatModelTest {
 
@@ -243,9 +239,10 @@ public class FloatModelTest {
 		NumericExpression result2 = plus(plus(x1, x2), plus(x3, x4));
 		NumericExpression difference = universe.subtract(result1, result2);
 		NumericExpression pos, abs;
-		NumericExpression factorization;
-		IdealFactory idealFactory = (IdealFactory) ((CommonNumericExpressionFactory) ((CommonPreUniverse) universe)
-				.numericExpressionFactory()).idealFactory();
+		// NumericExpression factorization;
+		// Ideal2Factory idealFactory = (Ideal2Factory)
+		// ((CommonNumericExpressionFactory) ((CommonPreUniverse) universe)
+		// .numericExpressionFactory()).idealFactory();
 
 		System.out.println("difference  = " + difference);
 		pos = positivize(difference);
@@ -254,7 +251,7 @@ public class FloatModelTest {
 		System.out.println("upperBound1 = " + abs);
 		abs = (NumericExpression) universe.mapSubstituter(xmap).apply(abs);
 		System.out.println("upperBound2 = " + abs);
-		factorization = ((Polynomial) abs).factorization(idealFactory);
-		System.out.println("            = " + factorization);
+//		factorization = ((Polynomial) abs).factorization(idealFactory);
+//		System.out.println("            = " + factorization);
 	}
 }

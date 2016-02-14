@@ -71,7 +71,7 @@ public class IdealSimplifierBBTest {
 	 */
 	@Test
 	public void xGreater0Test() {
-		assumption = preUniv.lessThan(rat0, xNE);
+		assumption = preUniv.lessThan(rat0, xNE); // 0<x
 		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
 		// out.println(idealSimplifier.simplifyExpression(bigMixedXYTermPoly));
 		assertEquals("0 < x", idealSimplifier.getReducedContext().toString());

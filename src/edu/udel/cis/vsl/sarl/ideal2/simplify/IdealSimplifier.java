@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
@@ -224,9 +225,22 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		if (constant != null)
 			return info.idealFactory.constant(constant);
-		if (monic instanceof Polynomial)
-			return simplifyPolynomial((Polynomial) monic);
-		return (Monomial) super.simplifyGenericExpression(monic);
+
+		Monomial result = (Monomial) super.simplifyGenericExpression(monic);
+
+		if (result != monic)
+			return result;
+
+		if (monic instanceof Polynomial) {
+			Polynomial poly = (Polynomial) monic;
+
+			result = info.idealFactory
+					.factorTermMap(poly.expand(info.idealFactory));
+
+			if (result != monic)
+				result = (Monomial) simplifyExpression(result);
+		}
+		return result;
 	}
 
 	/**
@@ -241,12 +255,9 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * @param poly
 	 * @return
 	 */
-	private Monomial simplifyPolynomial(Polynomial poly) {
-		
-		// why is there no attempt to do normal simplification?
-		// substitute for x, etc.
-		return info.idealFactory.factorTermMap(poly.expand(info.idealFactory));
-	}
+	// private Monomial simplifyPolynomial(Polynomial poly) {
+	// return info.idealFactory.factorTermMap(poly.expand(info.idealFactory));
+	// }
 
 	/**
 	 * Determines if the operator is one of the relation operators
@@ -375,6 +386,23 @@ public class IdealSimplifier extends CommonSimplifier {
 		}
 	}
 
+	private BooleanExpression simplifiedEQ0Monic(Monic monic) {
+		NumericExpression zero = info.idealFactory.zero(monic.type());
+		BooleanExpression expr = info.idealFactory.equals(zero, monic);
+		BooleanExpression result = (BooleanExpression) simplifyExpression(expr);
+
+		return result;
+	}
+
+	// returns null if no simplification possible beyond obvious...
+	private BooleanExpression simplifiedNEQ0Monic(Monic monic) {
+		NumericExpression zero = info.idealFactory.zero(monic.type());
+		BooleanExpression expr = info.idealFactory.neq(zero, monic);
+		BooleanExpression result = (BooleanExpression) simplifyExpression(expr);
+
+		return result;
+	}
+
 	/**
 	 * A categorization of intervals. Every interval falls into exactly one of
 	 * these categories.
@@ -448,27 +476,53 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * @param strict
 	 * @return
 	 */
-	private BooleanExpression ineqFromBound(BoundsObject bound, boolean gt,
-			boolean strict) {
+	private BooleanExpression ineqFromBound(Monic monic, BoundsObject bound,
+			boolean gt, boolean strict) {
 		Number l = bound.lower, r = bound.upper;
 
-		if (strict) { // bound>0
+		if (strict) { // bound>0 or bound<0
 			if (l != null) {
 				int lsign = l.signum();
 
-				if (lsign > 0 || (lsign == 0 && !bound.strictLower))
+				if (lsign > 0 || (lsign == 0 && bound.strictLower))
 					return gt ? info.trueExpr : info.falseExpr;
+				if (lsign == 0 && !bound.strictLower)
+					return gt ? simplifiedNEQ0Monic(monic) : info.falseExpr;
 			}
-			if (r != null && r.signum() <= 0)
-				return gt ? info.falseExpr : info.trueExpr;
-		} else { // bound>=0
-			if (l != null && l.signum() >= 0)
-				return gt ? info.trueExpr : info.falseExpr;
 			if (r != null) {
 				int rsign = r.signum();
 
-				if (rsign < 0 || (rsign == 0 && !bound.strictUpper))
+				if (rsign < 0 || (rsign == 0 && bound.strictUpper))
 					return gt ? info.falseExpr : info.trueExpr;
+				if (rsign == 0 && !bound.strictUpper)
+					return gt ? info.falseExpr : simplifiedNEQ0Monic(monic);
+			}
+			return gt ? info.falseExpr : info.trueExpr;
+		} else { // bound>=0 or bound<=0
+			if (gt) { // bound>=0
+				if (l != null && l.signum() >= 0)
+					return info.trueExpr;
+				if (r != null) {
+					int rsign = r.signum();
+
+					if (rsign < 0)
+						return info.falseExpr;
+					if (rsign == 0)
+						return bound.strictUpper ? info.falseExpr
+								: simplifiedEQ0Monic(monic);
+				}
+			} else {// bound<=0
+				if (r != null && r.signum() <= 0)
+					return info.trueExpr;
+				if (l != null) {
+					int lsign = l.signum();
+
+					if (lsign > 0)
+						return info.falseExpr;
+					if (lsign == 0)
+						return bound.strictLower ? info.falseExpr
+								: simplifiedEQ0Monic(monic);
+				}
 			}
 		}
 		return null;
@@ -495,7 +549,7 @@ public class IdealSimplifier extends CommonSimplifier {
 		BooleanExpression result;
 
 		if (bound != null) {
-			result = ineqFromBound(bound, gt, strict);
+			result = ineqFromBound(monic, bound, gt, strict);
 			if (result != null)
 				return result;
 		}
@@ -635,10 +689,11 @@ public class IdealSimplifier extends CommonSimplifier {
 		if (pseudoBound == null)
 			return null;
 
-		BoundsObject scaledBound = pseudoBound
+		// the following is a bound on poly (ignore the variable)
+		BoundsObject polyBound = pseudoBound
 				.affineTransform(affine.coefficient(), affine.offset());
 
-		return ineqFromBound(scaledBound, gt, strict);
+		return ineqFromBound(poly, polyBound, gt, strict);
 	}
 
 	/**
@@ -1358,7 +1413,29 @@ public class IdealSimplifier extends CommonSimplifier {
 			return extractIneqBoundsPoly((Polynomial) monic, gt, strict,
 					aBoundMap, aBooleanMap);
 
-		return false;
+		BoundsObject boundsObject = aBoundMap.get(monic);
+		Number zero = monic.type().isInteger()
+				? info.numberFactory.zeroInteger()
+				: info.numberFactory.zeroRational();
+
+		if (gt) { // lower bound
+			if (boundsObject == null) {
+				boundsObject = BoundsObject.newLowerBound(monic, zero, strict);
+				aBoundMap.put(monic, boundsObject);
+			} else {
+				boundsObject.restrictLower(zero, strict);
+				return boundsObject.isConsistent();
+			}
+		} else { // upper bound
+			if (boundsObject == null) {
+				boundsObject = BoundsObject.newUpperBound(monic, zero, strict);
+				aBoundMap.put(monic, boundsObject);
+			} else {
+				boundsObject.restrictUpper(zero, strict);
+				return boundsObject.isConsistent();
+			}
+		}
+		return true;
 	}
 
 	private boolean extractIneqBoundsPoly(Polynomial fp, boolean gt,

@@ -1577,7 +1577,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 	 * <code>polynomial</code> is concrete, a concrete boolean expression is
 	 * returned.
 	 * 
-	 * @param monomkal
+	 * @param monomial
 	 *            a non-<code>null</code> {@link Monomial}
 	 * @return an expression equivalent to <code>monomial&gt;0</code>
 	 */
@@ -1625,6 +1625,18 @@ public class CommonIdealFactory implements Ideal2Factory {
 
 			Monic reducedMonic = monic(type, collectionFactory
 					.sortedMap(primitiveComparator, reducedEntries));
+
+			// TODO: special handling for integers??? so that they don't
+			// use LESS_THAN?
+
+			// XYZ>0 ===> XYZ-1>=0. The first form is superior.
+			// XYZ+1>0 ===> XYZ>=0. The second form is superior.
+			// Heuristic:
+
+			// monic-1>=0 ==> monic>0
+			// monic+1<=0 ==> monic<0
+			// monic+1>0 ==> monic>=0
+			// monic-1<0 ==> monic<=0
 
 			result = signum > 0
 					? booleanFactory.booleanExpression(
@@ -1880,7 +1892,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 	 * Given two numeric expressions <code>arg0</code> and <code>arg1</code>,
 	 * returns a boolean expression equivalent to <code>arg0&le;arg1</code>. The
 	 * result will be in ideal form, i.e., <code>0&le;arg1-arg0</code>.
-	 * Implementation uses {@link #isNonnegative(Polynomial)} and
+	 * Implementation uses {@link #isNonnegative(Monomial)} and
 	 * {@link #isNonnegative(RationalExpression)}.
 	 * 
 	 * @param arg0
@@ -1894,8 +1906,8 @@ public class CommonIdealFactory implements Ideal2Factory {
 			NumericExpression arg1) {
 		NumericExpression difference = subtract(arg1, arg0);
 
-		return difference instanceof Polynomial
-				? isNonnegative((Polynomial) difference)
+		return difference instanceof Monomial
+				? isNonnegative((Monomial) difference)
 				: isNonnegative((RationalExpression) difference);
 	}
 
@@ -2122,6 +2134,12 @@ public class CommonIdealFactory implements Ideal2Factory {
 		Number exponentNumber = extractNumber(exponent);
 
 		if (exponentNumber != null) {
+			if (exponentNumber instanceof RationalNumber) {
+				RationalNumber rat = (RationalNumber) exponentNumber;
+
+				if (numberFactory.isIntegral(rat))
+					exponentNumber = numberFactory.integerValue(rat);
+			}
 			if (exponentNumber instanceof IntegerNumber) {
 				IntegerNumber exponentInteger = (IntegerNumber) exponentNumber;
 				int signum = exponentNumber.signum();
@@ -2228,6 +2246,11 @@ public class CommonIdealFactory implements Ideal2Factory {
 		}
 
 		NumericExpression difference = subtract(arg1, arg0);
+
+		// TODO: choose one form for integers?
+		// how to choose: which one factors more?
+		// for integer type:
+		// 0<X <=> 0<=X-1
 
 		return difference instanceof Monomial
 				? isPositive((Monomial) difference)
