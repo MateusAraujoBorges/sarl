@@ -1213,7 +1213,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 			r = triple[0];
 		}
 		c1 = (IntegerNumber) numberFactory
-				.abs(m2.monomialConstant(this).number());
+				.abs(m1.monomialConstant(this).number());
 		c2 = (IntegerNumber) numberFactory
 				.abs(m2.monomialConstant(this).number());
 		if (!c1.isOne() && !c2.isOne()) {
@@ -1314,7 +1314,8 @@ public class CommonIdealFactory implements Ideal2Factory {
 					(Constant) denominator);
 		else {
 			Monomial[] triple = intFactor(numerator, denominator);
-
+			// TODO?  BUG??  intFactor(X,3) yields [3,0,1]
+			
 			numerator = triple[1];
 			denominator = triple[2];
 			if (denominator.isOne())
