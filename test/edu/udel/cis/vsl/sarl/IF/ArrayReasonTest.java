@@ -2,6 +2,7 @@ package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,7 +29,9 @@ public class ArrayReasonTest {
 	private ReferenceExpression identityReference;
 	private SymbolicType integerType;
 	private Reasoner reasoner;
-	
+
+	private static PrintStream out = System.out;
+
 	@Before
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
@@ -44,85 +47,95 @@ public class ArrayReasonTest {
 		integerType = universe.integerType();
 		a_obj = universe.stringObject("a");
 	}
-	
+
 	@After
 	public void tearDown() throws Exception {
 	}
-	
-	 /**
-	  * context: 
-	  * 	b = {a,a,a,a,a,a}
-	  * a <== simplify(a[5])
-	  */
+
+	/**
+	 * context: b = {a,a,a,a,a,a} a <== simplify(a[5])
+	 */
 	@Test
-	public void arrayReasonSimplifyTest1(){
+	public void arrayReasonSimplifyTest1() {
 		ArrayElementReference reference;
 		SymbolicExpression a = universe.symbolicConstant(a_obj, integerType);
 		SymbolicExpression b = universe.constantArray(integerType, six, a);
 		reference = universe.arrayElementReference(identityReference, five);
-		
-		SymbolicExpression result = reasoner.simplify(universe.dereference(b, reference));
+
+		SymbolicExpression result = reasoner
+				.simplify(universe.dereference(b, reference));
 		assertEquals(a, result);
-		
+
 	}
-	
+
 	/**
-	 * context: 
-	 * 		b = {a,a,a,a,a,a}
-	 * 		c = {5,6}
-	 * a <== simplify(b[c[0]]) 
+	 * context: b = {a,a,a,a,a,a} c = {5,6} a <== simplify(b[c[0]])
 	 * 
 	 */
 	@Test
-	public void arrayReasonSimplifyTest2(){
+	public void arrayReasonSimplifyTest2() {
 		ArrayElementReference reference;
 		SymbolicExpression a = universe.symbolicConstant(a_obj, integerType);
 		SymbolicExpression b = universe.constantArray(integerType, six, a);
 		SymbolicExpression c = universe.array(integerType, list1);
-		
+
 		reference = universe.arrayElementReference(identityReference, zero);
 		SymbolicExpression c1 = universe.dereference(c, reference); // c[0]
-		reference = universe.arrayElementReference(identityReference, (NumericExpression)c1);
-		SymbolicExpression result = reasoner.simplify(universe.dereference(b, reference)); //b[c[0]]
-		
+		reference = universe.arrayElementReference(identityReference,
+				(NumericExpression) c1);
+		SymbolicExpression result = reasoner
+				.simplify(universe.dereference(b, reference)); // b[c[0]]
+
 		assertEquals(a, result);
 	}
-	
+
 	/**
-	 * context:
-	 * 		b = {a,a,a,a,a,a}
-	 * valid(b[5] == a)
+	 * context: b = {a,a,a,a,a,a} valid(b[5] == a)
 	 */
 	@Test
-	public void arrayReasonValidTest1(){
+	public void arrayReasonValidTest1() {
 		SymbolicExpression a = universe.symbolicConstant(a_obj, integerType);
 		SymbolicExpression b = universe.constantArray(integerType, six, a);
 		BooleanExpression p = universe.equals(a,
 				(NumericExpression) universe.arrayRead(b, five));
 		ValidityResult result = reasoner.valid(p);
-		
+
 		assertEquals(ResultType.YES, result.getResultType());
 	}
-	
+
 	/**
-	 * context:
-	 * 		a = {1,1,1,1,1,1}
-	 * 		b[i] = a[i] + 1 forall i=0..6
-	 * valid(b[i] == 2 for all i=0..6)
+	 * context: a = {1,1,1,1,1,1} b[i] = a[i] + 1 forall i=0..6 valid(b[i] == 2
+	 * for all i=0..6)
 	 */
 	@Test
-	public void arrayReasonValidTest2(){
+	public void arrayReasonValidTest2() {
 		SymbolicExpression a = universe.constantArray(integerType, six, one);
 		SymbolicExpression b = universe.emptyArray(integerType);
 		int len = Integer.parseInt(universe.length(a).toString());
-		for(int i=0; i<len; i++){
+		for (int i = 0; i < len; i++) {
 			// b[i] = a[i] +1
-			b = universe.append(b, universe.add((NumericExpression)universe.arrayRead(a, universe.integer(i)), one));
+			b = universe.append(b, universe.add((NumericExpression) universe
+					.arrayRead(a, universe.integer(i)), one));
 		}
-		
-		for(int i=0; i<len; i++){
+
+		for (int i = 0; i < len; i++) {
 			assertEquals(two, universe.arrayRead(b, universe.integer(i)));
 		}
 	}
-	
+
+	@Test
+	public void writeRead() {
+		SymbolicExpression a = universe.symbolicConstant(
+				universe.stringObject("a"), universe.arrayType(integerType));
+		NumericExpression i = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("i"), integerType);
+		SymbolicExpression a2 = universe.arrayWrite(a, i, six);
+		SymbolicExpression x = universe.arrayRead(a2, two);
+		Reasoner r = universe.reasoner(universe.equals(i, two));
+
+		out.println("x=" + x);
+
+		assertEquals(six, r.simplify(x));
+	}
+
 }
