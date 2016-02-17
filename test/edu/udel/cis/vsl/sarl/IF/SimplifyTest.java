@@ -1,6 +1,7 @@
 package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -17,6 +18,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 
@@ -53,21 +55,38 @@ public class SimplifyTest {
 	}
 
 	@Test
+	public void invalidInterval() {
+		SymbolicUniverse universe = SARL.newStandardUniverse();
+		SymbolicConstant X = (SymbolicConstant) universe.canonic(universe
+				.symbolicConstant(universe.stringObject("X"),
+						universe.integerType()));
+		// context: X<1 && 1<X
+		BooleanExpression context = (BooleanExpression) universe.and(
+				universe.lessThan((NumericExpression) X, universe.oneInt()),
+				universe.lessThan(universe.oneInt(), (NumericExpression) X));
+		Reasoner reasoner = universe.reasoner(context);
+		// SARL crashes here
+		Interval interval = reasoner.assumptionAsInterval(X);
+
+		assertTrue(interval == null);
+	}
+
+	@Test
 	public void simplify() {
 		SymbolicUniverse univ = SARL.newStandardUniverse();
 		SymbolicConstant X1 = (SymbolicConstant) univ.canonic(univ
 				.symbolicConstant(univ.stringObject("X1"), univ.integerType()));
 		SymbolicConstant X2 = (SymbolicConstant) univ.canonic(univ
 				.symbolicConstant(univ.stringObject("X2"), univ.integerType()));
-		BooleanExpression contex = (BooleanExpression) univ
-				.canonic(univ.equals(univ.integer(4),
-						univ.canonic(univ.multiply((NumericExpression) X1,
-								(NumericExpression) X2))));
+		BooleanExpression contex = (BooleanExpression) univ.canonic(univ
+				.equals(univ.integer(4), univ.canonic(univ.multiply(
+						(NumericExpression) X1, (NumericExpression) X2))));
 		Reasoner reasoner;
 
-		contex = (BooleanExpression) univ
-				.canonic(univ.and(contex, (BooleanExpression) univ
-						.canonic(univ.equals(X1, univ.integer(1)))));
+		contex = (BooleanExpression) univ.canonic(univ.and(
+				contex,
+				(BooleanExpression) univ.canonic(univ.equals(X1,
+						univ.integer(1)))));
 		reasoner = univ.reasoner(contex);
 		System.out.println(contex.toString());
 		contex = reasoner.getReducedContext();
@@ -76,8 +95,8 @@ public class SimplifyTest {
 
 	@Test
 	public void test() {
-		NumericExpression x = (NumericExpression) universe
-				.symbolicConstant(universe.stringObject("x"), intType);
+		NumericExpression x = (NumericExpression) universe.symbolicConstant(
+				universe.stringObject("x"), intType);
 		SymbolicCompleteArrayType arrayType = universe.arrayType(intType, x);
 		NumericSymbolicConstant index = (NumericSymbolicConstant) universe
 				.symbolicConstant(universe.stringObject("i"), intType);
