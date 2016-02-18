@@ -84,7 +84,7 @@ public interface Interval {
 	boolean strictUpper();
 
 	/**
-	 * Is the interval empty?
+	 * Is the interval empty? The empty interval should be (0, 0).
 	 * 
 	 * @return
 	 */
