@@ -1,6 +1,5 @@
 package edu.udel.cis.vsl.sarl.simplify.common;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
@@ -257,58 +256,37 @@ public class IntervalUnionSet implements Range {
 	 */
 	private Interval createIntervalwithInvariants(boolean isIntegral,
 			Number lower, boolean strictLower, Number upper, boolean strictUpper) {
-		Number zeroRational = numberFactory.rational(BigInteger.ZERO,
-				BigInteger.ONE);
-		Number zeroInteger = numberFactory.integer(BigInteger.ZERO);
-		Number oneInteger = numberFactory.integer(BigInteger.ONE);
-		boolean sl = strictLower, su = strictUpper;
+		Interval emptyInterval = isIntegral ? numberFactory
+				.emptyIntegerInterval() : numberFactory.emptyRealInterval();
+		Number zeroNumber = isIntegral ? numberFactory.zeroInteger()
+				: numberFactory.zeroRational();
+		Number oneInteger = numberFactory.oneInteger();
 		Number lo = lower, up = upper;
+		boolean sl = strictLower, su = strictUpper;
 		int compare = 0;
-
-		if (lo == null && up == null) {
-			sl = true;
-			su = true;
-		} else if (lo == null) {
-			sl = true;
-			if (isIntegral && su) {
-				up = numberFactory.subtract(up, oneInteger);
-				su = false;
-			}
-		} else if (up == null) {
-			su = true;
+		if (lo != null) {
 			if (isIntegral && sl) {
 				lo = numberFactory.add(lo, oneInteger);
 				sl = false;
 			}
 		} else {
-			if (isIntegral && sl) {
-				lo = numberFactory.add(lo, oneInteger);
-				sl = false;
-			}
+			sl = true;
+		}
+		if (up != null) {
 			if (isIntegral && su) {
 				up = numberFactory.subtract(up, oneInteger);
 				su = false;
 			}
-			compare = numberFactory.subtract(up, lo).signum();
-			if (isIntegral) {
-				if (compare < 0) {
-					return numberFactory.newInterval(true, zeroInteger, true,
-							zeroInteger, true);
-				}
-			} else {
-				if (!sl && !su) {
-					if (compare < 0) {
-						return numberFactory.newInterval(false, zeroRational,
-								true, zeroRational, true);
-					}
-				} else {
-					if (compare <= 0) {
-						return numberFactory.newInterval(false, zeroRational,
-								true, zeroRational, true);
-					}
-				}
+		} else {
+			su = true;
+		}
+		if (lo != null && up != null) {
+			compare = up.compareTo(lo);
+			if (compare < 0) {
+				return emptyInterval;
+			} else if (compare == 0 && !isIntegral && (sl || su)) {
+				return emptyInterval;
 			}
-
 		}
 		return numberFactory.newInterval(isIntegral, lo, sl, up, su);
 	}
@@ -752,7 +730,7 @@ public class IntervalUnionSet implements Range {
 	 *            a single non-<code>null</code> {@link Number} of the same type
 	 *            (integer/real) with this {@link IntervalUnionSet}
 	 */
-	public IntervalUnionSet addNumber(Number number) {
+	public Range addNumber(Number number) {
 		assert number != null;
 		assert (number instanceof IntegerNumber) == isInt;
 
@@ -1033,7 +1011,7 @@ public class IntervalUnionSet implements Range {
 	}
 
 	@Override
-	public IntervalUnionSet union(Range set) {
+	public Range union(Range set) {
 		assert set != null;
 		assert set.isIntegral() == isInt;
 
@@ -1166,7 +1144,7 @@ public class IntervalUnionSet implements Range {
 	}
 
 	@Override
-	public IntervalUnionSet intersect(Range set) {
+	public Range intersect(Range set) {
 		assert set != null;
 		assert set.isIntegral() == isInt;
 
@@ -1272,7 +1250,7 @@ public class IntervalUnionSet implements Range {
 	}
 
 	@Override
-	public IntervalUnionSet minus(Range set) {
+	public Range minus(Range set) {
 		assert set != null;
 		assert set.isIntegral() == isInt;
 
@@ -1409,56 +1387,53 @@ public class IntervalUnionSet implements Range {
 	}
 
 	@Override
-	public IntervalUnionSet affineTransform(Number a, Number b) {
+	public Range affineTransform(Number a, Number b) {
 		assert a != null && b != null;
 		assert a instanceof IntegerNumber == isInt;
 		assert b instanceof IntegerNumber == isInt;
 
 		int index = 0;
 		int size = intervalArray.length;
-		Interval[] tempArray = new Interval[size];
-		Interval temp = null, current = null;
-
-		if (0 == size) {
-			return new IntervalUnionSet(isInt);
-		}
-		current = intervalArray[index];
-		if (current.isUniversal()) {
-			return new IntervalUnionSet(this);
-		}
-		if (a.signum() == 0) {
-			return new IntervalUnionSet(createIntervalwithInvariants(isInt, b,
-					false, b, false));
-		} else if (a.signum() > 0) {
-			while (index < size) {
-				current = intervalArray[index];
-				temp = numberFactory.affineTransform(current, a, b);
-				tempArray[index] = temp;
-				index++;
-			}
-		} else if (a.signum() < 0) {
-			while (index < size) {
-				current = intervalArray[index];
-				temp = numberFactory.affineTransform(current, a, b);
-				index++;
-				tempArray[size - index] = temp;
-			}
-		}
-
+		Interval[] intervals = new Interval[size];
+		Interval newInterval = null, oldInterval = null;
 		IntervalUnionSet result = new IntervalUnionSet(isInt, size);
 
-		System.arraycopy(tempArray, 0, result.intervalArray, 0, size);
+		if (0 == size) { // IsEmpty
+			return new IntervalUnionSet(isInt);
+		}
+		oldInterval = intervalArray[index];
+		if (oldInterval.isUniversal()) { // IsUniv
+			return new IntervalUnionSet(this);
+		}
+		if (a.signum() == 0) { // a = 0
+			return new IntervalUnionSet(numberFactory.newInterval(isInt, b,
+					false, b, false));
+		} else if (a.signum() > 0) { // a > 0
+			while (index < size) {
+				oldInterval = intervalArray[index];
+				newInterval = numberFactory.affineTransform(oldInterval, a, b);
+				intervals[index] = newInterval;
+				index++;
+			}
+		} else if (a.signum() < 0) { // a < 0
+			while (index < size) {
+				oldInterval = intervalArray[index];
+				newInterval = numberFactory.affineTransform(oldInterval, a, b);
+				index++;
+				intervals[size - index] = newInterval;
+			}
+		}
+		result.intervalArray = intervals;
 		return result;
 	}
 
 	@Override
-	public IntervalUnionSet complement() {
-		Interval univ = createIntervalwithInvariants(isIntegral(), null, true,
+	public Range complement() {
+		Interval univInterval = numberFactory.newInterval(isInt, null, true,
 				null, true);
-		IntervalUnionSet univSet = new IntervalUnionSet(univ);
-		IntervalUnionSet result = (IntervalUnionSet) univSet.minus(this);
+		IntervalUnionSet univSet = new IntervalUnionSet(univInterval);
 
-		return result;
+		return univSet.minus(this);
 	}
 
 	@Override
@@ -1471,53 +1446,56 @@ public class IntervalUnionSet implements Range {
 		NumericExpression lowerExpression = null;
 		NumericExpression upperExpression = null;
 		NumericExpression symbolX = (NumericExpression) x;
-		Interval interval = null;
+		Interval temp = null;
 		int index = 0;
 		int size = intervalArray.length;
 
-		if (0 >= size) {
+		if (0 == size) {
+			// This set is empty
 			return result;
 		}
 		while (index < size) {
-			interval = intervalArray[index];
+			temp = intervalArray[index];
 			index++;
 
-			boolean strictLower = interval.strictLower();
-			boolean strictUpper = interval.strictUpper();
-			Number lower = interval.lower();
-			Number upper = interval.upper();
-			BooleanExpression temp1, temp2, resultExpression;
+			boolean strictLower = temp.strictLower();
+			boolean strictUpper = temp.strictUpper();
+			Number lower = temp.lower();
+			Number upper = temp.upper();
+			BooleanExpression lowerWithXExpression, upperWithXExpression, tempExpression;
 
 			if (lower == null && upper == null) {
+				// This set is universal
 				result = universe.bool(true);
 				return result;
 			} else if (lower == null) {
 				upperExpression = universe.number(upper);
-				resultExpression = strictUpper ? universe.lessThan(symbolX,
+				tempExpression = strictUpper ? universe.lessThan(symbolX,
 						upperExpression) : universe.lessThanEquals(symbolX,
 						upperExpression);
 			} else if (upper == null) {
 				lowerExpression = universe.number(lower);
-				resultExpression = strictLower ? universe.lessThan(
+				tempExpression = strictLower ? universe.lessThan(
 						lowerExpression, symbolX) : universe.lessThanEquals(
 						lowerExpression, symbolX);
 			} else {
 				lowerExpression = universe.number(lower);
 				upperExpression = universe.number(upper);
-				temp1 = strictLower ? universe.lessThan(lowerExpression,
-						symbolX) : universe.lessThanEquals(lowerExpression,
-						symbolX);
-				temp2 = strictUpper ? universe.lessThan(symbolX,
+				lowerWithXExpression = strictLower ? universe.lessThan(
+						lowerExpression, symbolX) : universe.lessThanEquals(
+						lowerExpression, symbolX);
+				upperWithXExpression = strictUpper ? universe.lessThan(symbolX,
 						upperExpression) : universe.lessThanEquals(symbolX,
 						upperExpression);
-				resultExpression = universe.and(temp1, temp2);
+				tempExpression = universe.and(lowerWithXExpression,
+						upperWithXExpression);
 				if (lower.compareTo(upper) == 0) {
-					// assert !strictLower && !strictUpper;
-					resultExpression = universe
-							.equals(symbolX, lowerExpression);
+					// This interval represents a single number.
+					assert !strictLower && !strictUpper;
+					tempExpression = universe.equals(symbolX, lowerExpression);
 				}
 			}
-			result = universe.or(result, resultExpression);
+			result = universe.or(result, tempExpression);
 		}
 		return result;
 	}
@@ -1578,7 +1556,9 @@ public class IntervalUnionSet implements Range {
 	 * except for +infty and -infty.
 	 * 
 	 * @return <code>true</code> iff every {@link Interval} in <code>this</code>
-	 *         set ensures invariants
+	 *         set ensures invariants (Because all {@link IntervalUnionSet}
+	 *         constructors would ensure those invariants, this function should
+	 *         always return the value of </code>true</code>)
 	 */
 	public boolean checkInvariants() {
 		assert intervalArray != null;

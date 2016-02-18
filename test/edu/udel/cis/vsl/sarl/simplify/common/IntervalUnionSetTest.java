@@ -23,6 +23,7 @@ import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
+import edu.udel.cis.vsl.sarl.simplify.IF.Range;
 
 /**
  * @author WenhaoWu
@@ -90,12 +91,12 @@ public class IntervalUnionSetTest {
 	private static RationalNumber RAT_N_TEN = numberFactory.rational(INT_N_TEN);
 	private static NumericSymbolicConstant RAT_X;
 	private static NumericSymbolicConstant INT_X;
-	private IntervalUnionSet actual;
-	private IntervalUnionSet actual1;
-	private IntervalUnionSet actual2;
-	private IntervalUnionSet expected;
-	private IntervalUnionSet expected1;
-	private IntervalUnionSet expected2;
+	private Range actual;
+	private Range actual1;
+	private Range actual2;
+	private Range expected;
+	private Range expected1;
+	private Range expected2;
 
 	private void p(String s) {
 		if (showLog) {
@@ -152,13 +153,13 @@ public class IntervalUnionSetTest {
 	@After
 	public void tearDown() throws Exception {
 		if (actual != null) {
-			assert actual.checkInvariants();
+			assert ((IntervalUnionSet)actual).checkInvariants();
 		}
 		if (actual1 != null) {
-			assert actual1.checkInvariants();
+			assert ((IntervalUnionSet)actual1).checkInvariants();
 		}
 		if (actual2 != null) {
-			assert actual2.checkInvariants();
+			assert ((IntervalUnionSet)actual2).checkInvariants();
 		}
 	}
 
@@ -1011,7 +1012,7 @@ public class IntervalUnionSetTest {
 	@Test
 	public void constructIntervalUnionSet_IntervalUnionSet_Empty() {
 		expected = new IntervalUnionSet(false);
-		actual = new IntervalUnionSet(expected);
+		actual = new IntervalUnionSet((IntervalUnionSet)expected);
 
 		assertTrue(actual.isEmpty());
 		assertTrue(!actual.isIntegral());
@@ -1025,7 +1026,7 @@ public class IntervalUnionSetTest {
 		Interval intInterval = numberFactory.newInterval(true, INT_N_TEN,
 				false, INT_TEN, false);
 		expected = new IntervalUnionSet(intInterval);
-		actual = new IntervalUnionSet(expected);
+		actual = new IntervalUnionSet((IntervalUnionSet)expected);
 
 		assertTrue(!actual.isEmpty());
 		assertTrue(actual.isIntegral());
@@ -1045,7 +1046,7 @@ public class IntervalUnionSetTest {
 					int_j, false);
 		}
 		expected = new IntervalUnionSet(expectedList);
-		actual = new IntervalUnionSet(expected);
+		actual = new IntervalUnionSet((IntervalUnionSet)expected);
 
 		assertEquals(expected.toString(), actual.toString());
 		p("expected: " + expected.toString());
@@ -1934,7 +1935,7 @@ public class IntervalUnionSetTest {
 		expected2 = new IntervalUnionSet(numberFactory.newInterval(false,
 				RAT_N_FIVE, true, RAT_FIVE, true));
 		actual1 = intervalSet.addNumber(RAT_N_TWO);
-		actual2 = actual1.addNumber(RAT_TWO);
+		actual2 = ((IntervalUnionSet)actual1).addNumber(RAT_TWO);
 
 		assertEquals(expected1.toString(), actual1.toString());
 		p("      Set: " + intervalSet.toString());
