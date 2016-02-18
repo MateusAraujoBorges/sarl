@@ -1597,7 +1597,6 @@ public class IntervalUnionSet implements Range {
 		index++;
 		// Check 1:
 		if (temp == null) {
-			assert false;
 			return false;
 		}
 		tempLower = temp.lower();
@@ -1606,24 +1605,20 @@ public class IntervalUnionSet implements Range {
 		tempSu = temp.strictUpper();
 		// Check 2:
 		if (temp.isEmpty()) {
-			assert false;
 			return false;
 		}
 		// Check 3, 4, 6: Skipped the 1st
 		// Check 5:
 		if ((tempLower == null && !tempSl) || (tempUpper == null && !tempSu)) {
-			assert false;
 			return false;
 		}
 		// Check 7:
 		if (isInt != temp.isIntegral()) {
-			assert false;
 			return false;
 		}
 		// Check 8:
 		if (isInt) {
 			if ((tempLower != null && tempSl) || (tempUpper != null && tempSu)) {
-				assert false;
 				return false;
 			}
 		}
@@ -1634,7 +1629,6 @@ public class IntervalUnionSet implements Range {
 				index++;
 				// Check 1:
 				if (temp == null) {
-					assert false;
 					return false;
 				}
 				tempLower = temp.lower();
@@ -1643,41 +1637,34 @@ public class IntervalUnionSet implements Range {
 				tempSu = temp.strictUpper();
 				// Check 2:
 				if (temp.isEmpty()) {
-					assert false;
 					return false;
 				}
 				// Check 3:
 				if (compareJoint(prev, temp) >= 0) {
-					assert false;
 					return false;
 				}
 				// Check 4:
 				if (compareLo(prev, temp) >= 0 || compareUp(prev, temp) >= 0) {
-					assert false;
 					return false;
 				}
 				// Check 5:
 				if ((tempLower == null && !tempSl)
 						|| (tempUpper == null && !tempSu)) {
-					assert false;
 					return false;
 				}
 				// Check 6:
 				if (tempLower.compareTo(prev.upper()) == 0
 						&& (!tempSl || !prev.strictUpper())) {
-					assert false;
 					return false;
 				}
 				// Check 7:
 				if (isInt != temp.isIntegral()) {
-					assert false;
 					return false;
 				}
 				// Check 8:
 				if (isInt) {
 					if ((tempLower != null && tempSl)
 							|| (tempUpper != null && tempSu)) {
-						assert false;
 						return false;
 					}
 				}
