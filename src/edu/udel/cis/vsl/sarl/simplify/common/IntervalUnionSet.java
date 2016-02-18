@@ -41,7 +41,8 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Range;
  * one must be open on the right and the second one must be open on the left.</li>
  * 
  * <li>If the range set has integer type, all of the intervals are integer
- * intervals. If it has real type, all of the intervals are real intervals.</li>
+ * intervals. If it has real type, all of the intervals are real intervals. (All
+ * integral intervals are actually )</li>
  * 
  * <li>If the range set has integer type, all of the intervals are closed,
  * except for +infty and -infty.</li>
@@ -49,11 +50,12 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Range;
  * </ol>
  * </p>
  * 
+ *
  * @author Wenhao Wu
  *
  */
 public class IntervalUnionSet implements Range {
-
+	// TODO: Add pre-cond for necessary construcors or functions.
 	private static NumberFactory numberFactory = Numbers.REAL_FACTORY;
 
 	/**
@@ -70,7 +72,8 @@ public class IntervalUnionSet implements Range {
 	private Interval[] intervalArray;
 
 	/**
-	 * Constructs an {@link IntervalUnionSet} with defined type and size.
+	 * Constructs an {@link IntervalUnionSet} with defined type and size. It is
+	 * used for in-class functions which
 	 * 
 	 * @param isIntegral
 	 *            A boolean value to represent whether <code>this</code>
@@ -204,6 +207,7 @@ public class IntervalUnionSet implements Range {
 			}
 			if (temp != null && !temp.isEmpty()) {
 				assert isInt == temp.isIntegral();
+				// TODO: Throws an Excpetion for mismatched type
 				addInterval(list, temp);
 			}
 			inputIndex++;
@@ -234,8 +238,7 @@ public class IntervalUnionSet implements Range {
 	 * To get the {@link Interval} array for <ccode>this</code>
 	 * {@link IntervalUnionSet}.
 	 * 
-	 * @return
-	 *   An array of {@link Interval}s
+	 * @return An array of {@link Interval}s
 	 */
 	public Interval[] intervals() {
 		return this.intervalArray;
@@ -319,10 +322,12 @@ public class IntervalUnionSet implements Range {
 	 *            list.
 	 */
 	private void addInterval(ArrayList<Interval> list, Interval interval) {
+		// TODO: add the pre-cond: list should satisfy all invariants.
 		// assert list != null;
 		// assert interval != null;
 		// assert isInt == interval.isIntegral();
 
+		// TODO: add comments for magic numbers
 		int size = list.size();
 		int start = -2;
 		int end = -2;
@@ -334,6 +339,7 @@ public class IntervalUnionSet implements Range {
 		boolean strictUpper = interval.strictUpper();
 		boolean noIntersection = true;
 
+		// TODO: check the state of the list (isUniversal?)
 		if (interval.isUniversal()) {
 			list.clear();
 			list.add(interval);
@@ -343,17 +349,18 @@ public class IntervalUnionSet implements Range {
 			end = size;
 		}
 		while (left < right && start == -2) {
+			// TODO: Check once for -2
 			int mid = (left + right) / 2;
 			Interval temp = list.get(mid);
 			int compare = temp.compare(lower);
 
 			if (lower == temp.lower() && strictLower && temp.strictLower()) {
-				compare = 0;
+				compare = 0; // For case: (1, ...) with (1, ...)
 			}
 			if (compare == 0) {
 				start = mid;
-				lower = list.get(start).lower();
-				strictLower = list.get(start).strictLower();
+				lower = temp.lower();
+				strictLower = temp.strictLower();
 				noIntersection = false;
 				break;
 			} else if (compare > 0) {
@@ -1260,7 +1267,7 @@ public class IntervalUnionSet implements Range {
 		IntervalUnionSet result = new IntervalUnionSet(isInt, newSize);
 
 		list.toArray(newArray);
-		System.arraycopy(newArray, 0, result.intervalArray, 0, newSize);
+		result.intervalArray = newArray; // To use assignment replacing copy
 		return result;
 	}
 
@@ -1516,49 +1523,33 @@ public class IntervalUnionSet implements Range {
 	}
 
 	public String toString() {
-		String result = "";
+		StringBuilder result = new StringBuilder();
 		int index = 0;
 		int size = intervalArray.length;
 
-		result += "{";
-		if (index >= size) {
-			result += "(0, 0)";
+		result.append("{");
+		if (0 == size) {
+			result.append("(0, 0)");
 		}
 		while (index < size) {
 			Interval temp = intervalArray[index];
-			Number lo = temp.lower();
-			Number up = temp.upper();
-			boolean sl = temp.strictLower();
-			boolean su = temp.strictUpper();
+			Number lower = temp.lower();
+			Number upper = temp.upper();
+			boolean slower = temp.strictLower();
+			boolean sUpper = temp.strictUpper();
 
-			if (sl) {
-				result += "(";
-			} else {
-				result += "[";
-			}
-			if (lo == null) {
-				result += "-inf";
-			} else {
-				result += lo.toString();
-			}
-			result += ", ";
-			if (up == null) {
-				result += "+inf";
-			} else {
-				result += up.toString();
-			}
-			if (su) {
-				result += ")";
-			} else {
-				result += "]";
-			}
+			result.append(slower ? "(" : "[");
+			result.append(lower == null ? "-infi" : lower);
+			result.append(", ");
+			result.append(upper == null ? "+infi" : upper);
+			result.append(sUpper ? "(" : "]");
 			index++;
 			if (index < size) {
-				result += " U ";
+				result.append(" U ");
 			}
 		}
-		result += "};";
-		return result;
+		result.append("}");
+		return result.toString();
 	}
 
 	/**
@@ -1590,47 +1581,95 @@ public class IntervalUnionSet implements Range {
 	 *         set ensures invariants
 	 */
 	public boolean checkInvariants() {
+		assert intervalArray != null;
+
 		int index = 0;
 		int size = intervalArray.length;
-		Interval temp = null, previous = null;
+		Interval temp, prev = null;
+		Number tempLower, tempUpper = null;
+		boolean tempSl, tempSu = true;
 
-		if (index >= size) {
-			return size == 0;
+		if (0 == size) {
+			// It is an empty set.
+			return true;
 		}
-		while (index < size) {
-			if (temp != null) {
-				previous = temp;
+		temp = intervalArray[index];
+		index++;
+		// Check 1:
+		if (temp == null) {
+			return false;
+		}
+		tempLower = temp.lower();
+		tempUpper = temp.upper();
+		tempSl = temp.strictLower();
+		tempSu = temp.strictUpper();
+		// Check 2:
+		if (temp.isEmpty()) {
+			return false;
+		}
+		// Check 3, 4, 6: Skipped the 1st
+		// Check 5:
+		if ((tempLower == null && !tempSl) || (tempUpper == null && !tempSl)) {
+			return false;
+		}
+		// Check 7:
+		if (isInt != temp.isIntegral()) {
+			return false;
+		}
+		// Check 8:
+		if (isInt) {
+			if ((tempLower != null && tempSl) || (tempUpper != null && tempSu)) {
+				return false;
 			}
-			temp = intervalArray[index];
-			index++;
-			// Check 1
-			assert temp != null;
-			// Check 2
-			assert !temp.isEmpty();
-			if (previous != null && temp != null) {
-				// Check 3
-				assert compareJoint(previous, temp) < 0;
-				// check 4
-				assert compareLo(previous, temp) < 0
-						&& compareUp(previous, temp) < 0;
-				// check 6
-				if (temp.lower().compareTo(previous.upper()) == 0) {
-					assert temp.strictLower() && previous.strictUpper();
+		}
+		if (1 < size) {
+			while (index < size) {
+				prev = temp;
+				temp = intervalArray[index];
+				index++;
+				// Check 1:
+				if (temp == null) {
+					return false;
 				}
-			}
-			// check 5
-			assert temp.lower() != null || temp.strictLower();
-			assert temp.upper() != null || temp.strictUpper();
-			// check 7
-			assert isInt == temp.isIntegral();
-			// check 8
-			if (isInt) {
-				assert temp.lower() == null || !temp.strictLower();
-				assert temp.upper() == null || !temp.strictUpper();
+				tempLower = temp.lower();
+				tempUpper = temp.upper();
+				tempSl = temp.strictLower();
+				tempSu = temp.strictUpper();
+				// Check 2:
+				if (temp.isEmpty()) {
+					return false;
+				}
+				// Check 3:
+				if (compareJoint(prev, temp) >= 0) {
+					return false;
+				}
+				// Check 4:
+				if (compareLo(prev, temp) >= 0 || compareUp(prev, temp) >= 0) {
+					return false;
+				}
+				// Check 5:
+				if ((tempLower == null && !tempSl)
+						|| (tempUpper == null && !tempSl)) {
+					return false;
+				}
+				// Check 6:
+				if (tempLower.compareTo(prev.upper()) == 0
+						&& (!tempSl || !prev.strictUpper())) {
+					return false;
+				}
+				// Check 7:
+				if (isInt != temp.isIntegral()) {
+					return false;
+				}
+				// Check 8:
+				if (isInt) {
+					if ((tempLower != null && tempSl)
+							|| (tempUpper != null && tempSu)) {
+						return false;
+					}
+				}
 			}
 		}
 		return true;
 	}
-	// TODO: Do a performance testing for small intervals by looping it several
-	// times And put them into the "bench".
 }
