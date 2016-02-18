@@ -3,6 +3,7 @@ package edu.udel.cis.vsl.sarl.simplify.common;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
+import edu.udel.cis.vsl.sarl.simplify.IF.Range;
 
 public class LargeMinusIntervalUnionSetBench {
 
@@ -16,8 +17,8 @@ public class LargeMinusIntervalUnionSetBench {
 		NumberFactory numberFactory = Numbers.REAL_FACTORY;
 		Interval int_univ = numberFactory.newInterval(true, null, true, null,
 				true);
-		IntervalUnionSet[] intervalUnionSets;
-		IntervalUnionSet intervalUnionSet;
+		Range[] intervalUnionSets;
+		Range intervalUnionSet;
 
 		//
 		numexpr = 10000;

@@ -2,6 +2,7 @@ package edu.udel.cis.vsl.sarl.simplify.common;
 
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
+import edu.udel.cis.vsl.sarl.simplify.IF.Range;
 
 public class LargeUnionIntervalUnionSetBench {
 
@@ -12,8 +13,8 @@ public class LargeUnionIntervalUnionSetBench {
 		int tempInt1;
 		int tempInt2;
 		int numexpr;
-		IntervalUnionSet[] intervalUnionSets;
-		IntervalUnionSet intervalUnionSet;
+		Range[] intervalUnionSets;
+		Range intervalUnionSet;
 		NumberFactory numberFactory = Numbers.REAL_FACTORY;
 
 		//
