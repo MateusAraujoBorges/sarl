@@ -571,49 +571,54 @@ public class IdealSimplifier extends CommonSimplifier {
 		for (Primitive p : factorMap.keys()) {
 			BoundsObject pb = boundMap.get(p);
 
-			switch (boundType(pb)) {
-			case ALL:
+			if (pb == null) {
 				mask[count] = true;
 				unconstrained++;
-				break;
-			case EMPTY:
-				// this means there is an inconsistency. this should have
-				// been dealt with immediately when the inconsistency was
-				// found
-				throw new SARLInternalException(
-						"unreachable: inconsistent primitive: " + p);
-			case EQ0:
-				// if one factor is 0, the whole product is 0
-				return strict ? info.falseExpr : info.trueExpr;
-			case GE0:
-				// assume x>=0.
-				// xy>=0 <=> x=0 || y>=0.
-				// xy>0 <=> x!=0 && y>0.
-				// xy<=0 <=> x=0 || y<=0.
-				// xy<0 <=> x!=0 && y<0.
-				zeroList.add(p);
-				break;
-			case GT0:
-				// assume x>0.
-				// xy>=0 <=> y>=0.
-				// xy>0 <=> y>0.
-				// xy<=0 <=> y<=0.
-				// xy<0 <=> y<0.
-				break;
-			case LE0:
-				// assume x<=0.
-				// xy>=0 <=> x=0 || y<=0.
-				// xy>0 <=> x!=0 && y<0.
-				// xy<=0 <=> x=0 || y>=0.
-				// xy<0 <=> x!=0 && y>0.
-				zeroList.add(p);
-				positive = !positive;
-				break;
-			case LT0:
-				positive = !positive;
-				break;
-			default:
-				throw new SARLInternalException("unreachable");
+			} else {
+				switch (boundType(pb)) {
+				case ALL:
+					mask[count] = true;
+					unconstrained++;
+					break;
+				case EMPTY:
+					// this means there is an inconsistency. this should have
+					// been dealt with immediately when the inconsistency was
+					// found
+					throw new SARLInternalException(
+							"unreachable: inconsistent primitive: " + p);
+				case EQ0:
+					// if one factor is 0, the whole product is 0
+					return strict ? info.falseExpr : info.trueExpr;
+				case GE0:
+					// assume x>=0.
+					// xy>=0 <=> x=0 || y>=0.
+					// xy>0 <=> x!=0 && y>0.
+					// xy<=0 <=> x=0 || y<=0.
+					// xy<0 <=> x!=0 && y<0.
+					zeroList.add(p);
+					break;
+				case GT0:
+					// assume x>0.
+					// xy>=0 <=> y>=0.
+					// xy>0 <=> y>0.
+					// xy<=0 <=> y<=0.
+					// xy<0 <=> y<0.
+					break;
+				case LE0:
+					// assume x<=0.
+					// xy>=0 <=> x=0 || y<=0.
+					// xy>0 <=> x!=0 && y<0.
+					// xy<=0 <=> x=0 || y>=0.
+					// xy<0 <=> x!=0 && y>0.
+					zeroList.add(p);
+					positive = !positive;
+					break;
+				case LT0:
+					positive = !positive;
+					break;
+				default:
+					throw new SARLInternalException("unreachable");
+				}
 			}
 			count++;
 		}
