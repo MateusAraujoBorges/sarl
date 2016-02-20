@@ -233,10 +233,12 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		if (monic instanceof Polynomial) {
 			Polynomial poly = (Polynomial) monic;
+			SymbolicMap<Monic, Monomial> expansion = poly
+					.expand(info.idealFactory);
 
-			result = info.idealFactory
-					.factorTermMap(poly.expand(info.idealFactory));
-
+			if (expansion.isEmpty())
+				return info.idealFactory.zero(monic.type());
+			result = info.idealFactory.factorTermMap(expansion);
 			if (result != monic)
 				result = (Monomial) simplifyExpression(result);
 		}
@@ -497,7 +499,6 @@ public class IdealSimplifier extends CommonSimplifier {
 				if (rsign == 0 && !bound.strictUpper)
 					return gt ? info.falseExpr : simplifiedNEQ0Monic(monic);
 			}
-			return gt ? info.falseExpr : info.trueExpr;
 		} else { // bound>=0 or bound<=0
 			if (gt) { // bound>=0
 				if (l != null && l.signum() >= 0)
@@ -831,16 +832,8 @@ public class IdealSimplifier extends CommonSimplifier {
 
 	private void initialize() {
 		while (true) {
-			// boundMap.clear(); // why? and why not boolean map?
-			// probably because the existence of a bound causes
-			// further searches for bounds to stop?
-
-			// round 1: learn XY>0 && X>0.
-			// ask to simplify: Y>0: NO CAN DO.
-			// need to do round 2 using what was learned in round 1.
-
-			clearSimplificationCache(); // why? maybe because simplifications
-										// can improve
+			// because simplifications can improve...
+			clearSimplificationCache();
 
 			boolean satisfiable = extractBounds();
 
@@ -849,111 +842,108 @@ public class IdealSimplifier extends CommonSimplifier {
 					info.out.println("Path condition is unsatisfiable.");
 					info.out.flush();
 				}
-				assumption = info.falseExpr;
+				rawAssumption = assumption = info.falseExpr;
 				return;
-			} else {
-				// need to substitute into assumption new value of symbolic
-				// constants.
-				BooleanExpression newAssumption = (BooleanExpression) simplifyExpression(
-						assumption);
-
-				rawAssumption = newAssumption;
-				// at this point, rawAssumption contains only those facts that
-				// could not be
-				// determined from the booleanMap, boundMap, or constantMap.
-				// these facts need to be added back in---except for the case
-				// where
-				// a symbolic constant is mapped to a concrete value in the
-				// constantMap.
-				// such symbolic constants will be entirely eliminated from the
-				// assumption
-
-				// after SimplifyExpression, the removable symbolic constants
-				// should all be gone, replaced with their concrete values.
-				// However, as we add back in facts from the constant map,
-				// bound map and boolean
-				// map, those symbolic constants might sneak back in!
-				// We will remove them again later.
-
-				for (BoundsObject bound : boundMap.values()) {
-					BooleanExpression constraint = boundToIdeal(bound);
-
-					if (constraint != null)
-						newAssumption = info.booleanFactory.and(newAssumption,
-								constraint);
-				}
-				// also need to add facts from constant map.
-				// but can eliminate any constant values for primitives since
-				// those will never occur in the state.
-				for (Entry<Monic, Number> entry : constantMap.entrySet()) {
-					Monic fp = entry.getKey();
-
-					if (fp instanceof SymbolicConstant) {
-						// symbolic constant: will be entirely eliminated
-					} else {
-						BooleanExpression constraint = info.idealFactory.equals(
-								fp,
-								info.idealFactory.constant(entry.getValue()));
-
-						newAssumption = info.booleanFactory.and(newAssumption,
-								constraint);
-					}
-				}
-
-				for (Entry<SymbolicExpression, SymbolicExpression> entry : otherConstantMap
-						.entrySet()) {
-					SymbolicExpression key = entry.getKey();
-
-					if (key instanceof SymbolicConstant) {
-						// symbolic constant: will be entirely eliminated
-					} else {
-						BooleanExpression constraint = info.universe.equals(key,
-								entry.getValue());
-
-						newAssumption = info.booleanFactory.and(newAssumption,
-								constraint);
-					}
-				}
-
-				for (Entry<BooleanExpression, Boolean> entry : booleanMap
-						.entrySet()) {
-					BooleanExpression primitive = entry.getKey();
-
-					if (primitive instanceof SymbolicConstant) {
-						// symbolic constant: will be entirely eliminated
-					} else {
-						newAssumption = info.booleanFactory.and(newAssumption,
-								entry.getValue() ? primitive
-										: info.booleanFactory.not(primitive));
-					}
-				}
-
-				// now we remove those removable symbolic constants...
-
-				Map<SymbolicExpression, SymbolicExpression> substitutionMap = new HashMap<>();
-
-				for (Entry<Monic, Number> entry : constantMap.entrySet()) {
-					SymbolicExpression key = entry.getKey();
-
-					if (key.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
-						substitutionMap.put(key,
-								universe.number(entry.getValue()));
-				}
-				for (Entry<SymbolicExpression, SymbolicExpression> entry : otherConstantMap
-						.entrySet()) {
-					SymbolicExpression key = entry.getKey();
-
-					if (key.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
-						substitutionMap.put(key, entry.getValue());
-				}
-				newAssumption = (BooleanExpression) universe
-						.mapSubstituter(substitutionMap).apply(newAssumption);
-
-				if (assumption.equals(newAssumption))
-					break;
-				assumption = (BooleanExpression) universe
-						.canonic(newAssumption);
 			}
+
+			// need to substitute into assumption new value of symbolic
+			// constants.
+			BooleanExpression newAssumption = (BooleanExpression) simplifyExpression(
+					assumption);
+
+			rawAssumption = newAssumption;
+			// at this point, rawAssumption contains only those facts that
+			// could not be
+			// determined from the booleanMap, boundMap, or constantMap.
+			// these facts need to be added back in---except for the case
+			// where
+			// a symbolic constant is mapped to a concrete value in the
+			// constantMap.
+			// such symbolic constants will be entirely eliminated from the
+			// assumption
+
+			// after SimplifyExpression, the removable symbolic constants
+			// should all be gone, replaced with their concrete values.
+			// However, as we add back in facts from the constant map,
+			// bound map and boolean
+			// map, those symbolic constants might sneak back in!
+			// We will remove them again later.
+
+			for (BoundsObject bound : boundMap.values()) {
+				BooleanExpression constraint = boundToIdeal(bound);
+
+				if (constraint != null)
+					newAssumption = info.booleanFactory.and(newAssumption,
+							constraint);
+			}
+			// also need to add facts from constant map.
+			// but can eliminate any constant values for primitives since
+			// those will never occur in the state.
+			for (Entry<Monic, Number> entry : constantMap.entrySet()) {
+				Monic fp = entry.getKey();
+
+				if (fp instanceof SymbolicConstant) {
+					// symbolic constant: will be entirely eliminated
+				} else {
+					BooleanExpression constraint = info.idealFactory.equals(fp,
+							info.idealFactory.constant(entry.getValue()));
+
+					newAssumption = info.booleanFactory.and(newAssumption,
+							constraint);
+				}
+			}
+
+			for (Entry<SymbolicExpression, SymbolicExpression> entry : otherConstantMap
+					.entrySet()) {
+				SymbolicExpression key = entry.getKey();
+
+				if (key instanceof SymbolicConstant) {
+					// symbolic constant: will be entirely eliminated
+				} else {
+					BooleanExpression constraint = info.universe.equals(key,
+							entry.getValue());
+
+					newAssumption = info.booleanFactory.and(newAssumption,
+							constraint);
+				}
+			}
+
+			for (Entry<BooleanExpression, Boolean> entry : booleanMap
+					.entrySet()) {
+				BooleanExpression primitive = entry.getKey();
+
+				if (primitive instanceof SymbolicConstant) {
+					// symbolic constant: will be entirely eliminated
+				} else {
+					newAssumption = info.booleanFactory.and(newAssumption,
+							entry.getValue() ? primitive
+									: info.booleanFactory.not(primitive));
+				}
+			}
+
+			// now we remove those removable symbolic constants...
+
+			Map<SymbolicExpression, SymbolicExpression> substitutionMap = new HashMap<>();
+
+			for (Entry<Monic, Number> entry : constantMap.entrySet()) {
+				SymbolicExpression key = entry.getKey();
+
+				if (key.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
+					substitutionMap.put(key, universe.number(entry.getValue()));
+			}
+			for (Entry<SymbolicExpression, SymbolicExpression> entry : otherConstantMap
+					.entrySet()) {
+				SymbolicExpression key = entry.getKey();
+
+				if (key.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
+					substitutionMap.put(key, entry.getValue());
+			}
+			newAssumption = (BooleanExpression) universe
+					.mapSubstituter(substitutionMap).apply(newAssumption);
+
+			if (assumption.equals(newAssumption))
+				break;
+			assumption = (BooleanExpression) universe.canonic(newAssumption);
 		}
 		extractRemainingFacts();
 	}
