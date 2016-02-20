@@ -1,6 +1,7 @@
 package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.PrintStream;
 
@@ -448,8 +449,6 @@ public class RealArithmeticTest {
 	/**
 	 * (a+1) * (a-1) == a^2 - 1
 	 * 
-	 * @param type
-	 * 				SymbolicExpression of Numeric type
 	 */
 	@Test
 	public void xp1xm1() {
@@ -462,7 +461,13 @@ public class RealArithmeticTest {
 		out.println("xp1xm1=" + xp1xm1);
 		out.println("x2m1=" + x2m1);
 		
-		assertEquals(x2m1, xp1xm1);
+		BooleanExpression eq = universe.equals(xp1xm1, x2m1);
+		
+		out.println("eq: "+eq);
+		
+		assertTrue(universe.reasoner(t).isValid(eq));
+		
+		//assertEquals(x2m1, xp1xm1);
 	}
 	
 	/**************************divide test******************************/
