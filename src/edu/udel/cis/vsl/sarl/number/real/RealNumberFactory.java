@@ -191,8 +191,8 @@ public class RealNumberFactory implements NumberFactory {
 
 		return rational(
 				x.numerator().multiply(y.denominator())
-						.add(x.denominator().multiply(y.numerator())), x
-						.denominator().multiply(y.denominator()));
+						.add(x.denominator().multiply(y.numerator())),
+				x.denominator().multiply(y.denominator()));
 	}
 
 	@Override
@@ -281,8 +281,8 @@ public class RealNumberFactory implements NumberFactory {
 		RealRational x = (RealRational) arg0;
 		RealRational y = (RealRational) arg1;
 
-		return rational(x.numerator().multiply(y.denominator()), x
-				.denominator().multiply(y.numerator()));
+		return rational(x.numerator().multiply(y.denominator()),
+				x.denominator().multiply(y.numerator()));
 	}
 
 	@Override
@@ -385,8 +385,8 @@ public class RealNumberFactory implements NumberFactory {
 		RealRational x = (RealRational) arg0;
 		RealRational y = (RealRational) arg1;
 
-		return rational(x.numerator().multiply(y.numerator()), x.denominator()
-				.multiply(y.denominator()));
+		return rational(x.numerator().multiply(y.numerator()),
+				x.denominator().multiply(y.denominator()));
 	}
 
 	@Override
@@ -630,8 +630,8 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return add((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException("Unknown type of number: "
-					+ arg0);
+			throw new IllegalArgumentException(
+					"Unknown type of number: " + arg0);
 		}
 	}
 
@@ -654,8 +654,8 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return divide((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException("Unknown type of number: "
-					+ arg0);
+			throw new IllegalArgumentException(
+					"Unknown type of number: " + arg0);
 		}
 	}
 
@@ -678,8 +678,8 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return multiply((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException("Unknown type of number: "
-					+ arg0);
+			throw new IllegalArgumentException(
+					"Unknown type of number: " + arg0);
 		}
 	}
 
@@ -702,8 +702,8 @@ public class RealNumberFactory implements NumberFactory {
 								+ arg1);
 			return subtract((RationalNumber) arg0, (RationalNumber) arg1);
 		} else {
-			throw new IllegalArgumentException("Unknown type of number: "
-					+ arg0);
+			throw new IllegalArgumentException(
+					"Unknown type of number: " + arg0);
 		}
 	}
 
@@ -967,10 +967,10 @@ public class RealNumberFactory implements NumberFactory {
 
 		assert isIntegral == i2.isIntegral();
 
-		Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(), hi2 = i2
-				.upper();
-		boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(), su1 = i1
-				.strictUpper(), su2 = i2.strictUpper();
+		Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(),
+				hi2 = i2.upper();
+		boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(),
+				su1 = i1.strictUpper(), su2 = i2.strictUpper();
 		Number lo, hi;
 		boolean sl, su;
 
@@ -1064,10 +1064,10 @@ public class RealNumberFactory implements NumberFactory {
 
 			assert isIntegral == i2.isIntegral();
 
-			Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(), hi2 = i2
-					.upper();
-			boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(), su1 = i1
-					.strictUpper(), su2 = i2.strictUpper();
+			Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(),
+					hi2 = i2.upper();
+			boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(),
+					su1 = i1.strictUpper(), su2 = i2.strictUpper();
 			Number lo = null, hi = null; // To set the result set as (-infi,
 											// +infi)
 			boolean sl = false, su = false;
@@ -1775,8 +1775,8 @@ public class RealNumberFactory implements NumberFactory {
 				return newInterval(isIntegral, lower, strictLower, upper,
 						strictUpper);
 			} else if (lower == null) {
-				int signumUp = strictUpper ? upper.signum() * 2 - 1 : upper
-						.signum();
+				int signumUp = strictUpper ? upper.signum() * 2 - 1
+						: upper.signum();
 
 				if (signumUp < 0) {
 					if (exp % 2 == 0) {
@@ -1797,8 +1797,8 @@ public class RealNumberFactory implements NumberFactory {
 				}
 				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 			} else if (upper == null) {
-				int signumLo = strictLower ? lower.signum() * 2 + 1 : lower
-						.signum();
+				int signumLo = strictLower ? lower.signum() * 2 + 1
+						: lower.signum();
 
 				if (signumLo > 0) {
 					newLo = power(lower, exp);
@@ -1814,10 +1814,10 @@ public class RealNumberFactory implements NumberFactory {
 				}
 				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 			} else {
-				int signumLo = strictLower ? lower.signum() * 2 + 1 : lower
-						.signum();
-				int signumUp = strictUpper ? upper.signum() * 2 - 1 : upper
-						.signum();
+				int signumLo = strictLower ? lower.signum() * 2 + 1
+						: lower.signum();
+				int signumUp = strictUpper ? upper.signum() * 2 - 1
+						: upper.signum();
 
 				newUp = power(upper, exp);
 				newSu = strictUpper;
@@ -1857,8 +1857,8 @@ public class RealNumberFactory implements NumberFactory {
 				throw new IllegalArgumentException(
 						"When the exponent number is less than zero, the interval should not contain zero");
 			} else if (lower == null) {
-				int signumUp = strictUpper ? upper.signum() * 2 - 1 : upper
-						.signum();
+				int signumUp = strictUpper ? upper.signum() * 2 - 1
+						: upper.signum();
 
 				if (signumUp < 0) {
 					if (exp % 2 == 0) {
@@ -1878,8 +1878,8 @@ public class RealNumberFactory implements NumberFactory {
 				}
 				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 			} else if (upper == null) {
-				int signumLo = strictLower ? lower.signum() * 2 + 1 : lower
-						.signum();
+				int signumLo = strictLower ? lower.signum() * 2 + 1
+						: lower.signum();
 
 				if (signumLo > 0) {
 					newLo = zeroNumber;
@@ -1892,10 +1892,10 @@ public class RealNumberFactory implements NumberFactory {
 				}
 				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 			} else {
-				int signumLo = strictLower ? lower.signum() * 2 + 1 : lower
-						.signum();
-				int signumUp = strictUpper ? upper.signum() * 2 - 1 : upper
-						.signum();
+				int signumLo = strictLower ? lower.signum() * 2 + 1
+						: lower.signum();
+				int signumUp = strictUpper ? upper.signum() * 2 - 1
+						: upper.signum();
 
 				newLo = divide(oneNumber, power(upper, exp));
 				newSl = strictUpper;
@@ -1928,8 +1928,8 @@ public class RealNumberFactory implements NumberFactory {
 		} else if (number instanceof RationalNumber) {
 			return power((RationalNumber) number, exp);
 		} else {
-			throw new IllegalArgumentException("Unknown type of number: "
-					+ number);
+			throw new IllegalArgumentException(
+					"Unknown type of number: " + number);
 		}
 	}
 
@@ -1968,5 +1968,31 @@ public class RealNumberFactory implements NumberFactory {
 			resultDenominator = (int) Math.pow(baseNumerator, -exp);
 		}
 		return fraction(integer(resultNumerator), integer(resultDenominator));
+	}
+
+	@Override
+	public Interval singletonInterval(Number x) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Interval restrictUpper(Interval interval, Number bound,
+			boolean strict) {
+		// TODO
+		return null;
+	}
+
+	@Override
+	public Interval restrictLower(Interval interval, Number bound,
+			boolean strict) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Interval join(Interval i1, Interval i2) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

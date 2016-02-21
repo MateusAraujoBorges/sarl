@@ -63,7 +63,9 @@ public interface NumberFactory {
 	 */
 	boolean isIntegral(RationalNumber arg0);
 
-	/** Returns the rational number which is the quotient of the two integers. */
+	/**
+	 * Returns the rational number which is the quotient of the two integers.
+	 */
 	RationalNumber fraction(IntegerNumber numerator, IntegerNumber denominator);
 
 	/** Casts an integer to a rational number. */
@@ -304,6 +306,52 @@ public interface NumberFactory {
 	Interval emptyRealInterval();
 
 	/**
+	 * Returns the interval consisting of the single number x: [x,x].
+	 * 
+	 * @param x
+	 *            a non-<code>null</code> {@link Number}
+	 * @return closed interval of same type as <code>x</code> with both bounds
+	 *         equal to <code>x</code> and non-strict
+	 */
+	Interval singletonInterval(Number x);
+
+	/**
+	 * Restricts the upper bound of an interval as specified. Returns the
+	 * interval which is the intersection of the given <code>interval</code> and
+	 * the interval (-&infin;,<code>bound</code>) (if <code>strict</code>) or
+	 * (-&infin;,<code>bound</code>] (if not <code>strict</code>). This method
+	 * could be implemented using {@link #intersection(Interval, Interval)} or
+	 * it could be implemented more efficiently in an equivalent way.
+	 * 
+	 * @param interval
+	 *            a non-<code>null</code> {@link Interval}
+	 * @param bound
+	 *            a {@link Number} of same type as <code>interval</code>
+	 * @param strict
+	 *            is the <code>bound</code> strict?
+	 * @return interval obtained by intersecting the two intervals
+	 */
+	Interval restrictUpper(Interval interval, Number bound, boolean strict);
+
+	/**
+	 * Restricts the lower bound of an interval as specified. Returns the
+	 * interval which is the intersection of the given <code>interval</code> and
+	 * the interval (<code>bound</code>,&infin;) (if <code>strict</code>) or (
+	 * <code>bound</code>,&infin;] (if not <code>strict</code>). This method
+	 * could be implemented using {@link #intersection(Interval, Interval)} or
+	 * it could be implemented more efficiently in an equivalent way.
+	 * 
+	 * @param interval
+	 *            a non-<code>null</code> {@link Interval}
+	 * @param bound
+	 *            a {@link Number} of same type as <code>interval</code>
+	 * @param strict
+	 *            is the <code>bound</code> strict?
+	 * @return interval obtained by intersecting the two intervals
+	 */
+	Interval restrictLower(Interval interval, Number bound, boolean strict);
+
+	/**
 	 * Returns a new {@link Interval} as specified. A value of <code>null</code>
 	 * for the lower bound represents negative infinity; for the upper bound it
 	 * represents positive infinity.
@@ -373,7 +421,8 @@ public interface NumberFactory {
 	 * <code>status=0</code> and <code>union</code> is the union of the two
 	 * intervals.</li>
 	 * <li>i1 is strictly less than i2 and the union is not an interval. In this
-	 * case, <code>status<0</code> and <code>union</code> is <code>null</code>.</li>
+	 * case, <code>status<0</code> and <code>union</code> is <code>null</code>.
+	 * </li>
 	 * <li>i1 is strictly greater than i2 and the union is not an interval. In
 	 * this case, <code>status>0</code> and <code>union</code> is
 	 * <code>null</code>.
@@ -406,6 +455,20 @@ public interface NumberFactory {
 	 *         <code>i2</code> or <code>null</code>
 	 */
 	void union(Interval i1, Interval i2, IntervalUnion result);
+
+	/**
+	 * Returns the smallest interval containing both of the given intervals.
+	 * 
+	 * @param i1
+	 *            a non-<code>null</code> {@link Interval}
+	 * @param i2
+	 *            a non-<code>null</code> {@link Interval} of same type as
+	 *            <code>i1</code>
+	 * @return the smallest {@link Interval} containing <code>i1</code> and
+	 *         <code>i2</code>
+	 */
+	// TODO: implement me!
+	Interval join(Interval i1, Interval i2);
 
 	/**
 	 * Computes the affineTransform of the input interval <code>itv</code> with
