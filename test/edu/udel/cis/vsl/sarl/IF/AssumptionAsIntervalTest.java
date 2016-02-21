@@ -2,6 +2,7 @@ package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -19,6 +20,10 @@ public class AssumptionAsIntervalTest {
 
 	// Context: (X0+-2 <= 0) && (X1+-2 <= 0) && (0 <= X0+-1) && (0 <= X1+-1)
 	// expected interval of X0, X1: [1, 2]
+	// THIS TEST MISCONSTRUES THE CONTRACT FOR assumptionAsInterval.
+	// However a new method should be added to do what this test asks.
+	// Then this test can be fixed and used.
+	@Ignore
 	@Test
 	public void getInterval() {
 		NumericExpression X0 = (NumericExpression) universe.symbolicConstant(

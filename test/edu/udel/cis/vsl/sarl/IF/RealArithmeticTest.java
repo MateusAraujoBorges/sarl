@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.PrintStream;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -374,6 +375,7 @@ public class RealArithmeticTest {
 	 * 
 	 */
 	@Test
+	@Ignore
     public void mulPolyToPoly() {
 		NumericExpression p1 = universe.add(universe.multiply(a, a), one); // a^2 + 1
 		NumericExpression p2 = universe.add(universe.multiply(two,

@@ -2246,6 +2246,8 @@ public class CommonPreUniverse implements PreUniverse {
 		if (predicate.isFalse())
 			return falseValue;
 		assert trueValue.type().equals(falseValue.type());
+		if (trueValue.equals(falseValue))
+			return trueValue;
 		return expression(SymbolicOperator.COND, trueValue.type(), predicate,
 				trueValue, falseValue);
 	}
