@@ -169,7 +169,7 @@ public class IntervalUnionSet implements Range {
 	}
 
 	/**
-	 * Constructs an {@link IntervalUnionSet} with an ordered array of
+	 * Constructs an {@link IntervalUnionSet} with an array of
 	 * {@link Interval}s.
 	 * 
 	 * @param intervals
