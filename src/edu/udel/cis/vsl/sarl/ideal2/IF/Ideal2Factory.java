@@ -31,8 +31,8 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
 
 /**
  * <p>
- * An {@link Ideal2Factory} provides a few services beyond those guaranteed by an
- * arbitrary {@link NumericExpressionFactory}.
+ * An {@link Ideal2Factory} provides a few services beyond those guaranteed by
+ * an arbitrary {@link NumericExpressionFactory}.
  * </p>
  * 
  * The ideal factory produces and manipulates the following kinds of numeric
@@ -426,7 +426,7 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 * </p>
 	 * 
 	 * <p>
-	 * Pre-condition: <map> is non-empty.
+	 * Pre-condition: <code>maps</code> is non-empty.
 	 * </p>
 	 * 
 	 * @param map
@@ -443,52 +443,5 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 
 	Polynomial polynomial(SymbolicType type,
 			SymbolicMap<Monic, Monomial> termMap);
-
-	// /**
-	// * Given a polynomial p with constant term c, returns p-c.
-	// *
-	// * @param polynomial
-	// * a non-<code>null</code> instance of {@link Polynomial}
-	// *
-	// * @return result of subtracting the constant term from the polynomial
-	// */
-	// Polynomial subtractConstantTerm(Polynomial polynomial);
-
-	// /**
-	// * Divides each term in a polynomial with by a constant. The polynomial
-	// and
-	// * constant must have the same type. If the type is integer, this will
-	// * perform integer division on each term; this is only equivalent to
-	// integer
-	// * division of the polynomial by the constant if the constant divides each
-	// * term.
-	// *
-	// *
-	// * @param polynomial
-	// * a non-<code>null</code> instance of {@link Polynomial}
-	// * @param constant
-	// * a concrete number of the same type as the
-	// * <code>polynomial</code>
-	// *
-	// * @return the polynomial that results from dividing the given polynomial
-	// by
-	// * the given constant
-	// */
-	// Polynomial dividePolynomialConstant(Polynomial polynomial,
-	// Constant constant);
-
-	// /**
-	// * Given a numeric expression e of integer or real type, returns a
-	// (possibly
-	// * simpler) polynomial p of the same type which has the property that e=0
-	// if
-	// * and only if p=0. Example: e=x^5, p=x.
-	// *
-	// * @param expr
-	// * a non-<code>null</code> numeric expression
-	// * @return a polynomial of same type which is zero iff <code>expr</code>
-	// is
-	// */
-	// Polynomial zeroEssence(NumericExpression expr);
 
 }

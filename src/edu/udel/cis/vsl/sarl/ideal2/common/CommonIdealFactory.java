@@ -165,6 +165,8 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  * @author Stephen F. Siegel
  */
 public class CommonIdealFactory implements Ideal2Factory {
+	
+	public final static boolean debug = false;
 
 	/**
 	 * Threshold after which polynomial term maps are not computed.
@@ -883,161 +885,6 @@ public class CommonIdealFactory implements Ideal2Factory {
 		return result;
 	}
 
-	// /**
-	// * Merges the two sorted lists, possibly modifying either or both in the
-	// * process.
-	// *
-	// * @param vec1
-	// * @param vec2
-	// * @return
-	// */
-	// private ArrayList<Pair<Monic, Number>> merge(
-	// ArrayList<Pair<Monic, Number>> vec1,
-	// ArrayList<Pair<Monic, Number>> vec2) {
-	// int n1 = vec1.size();
-	//
-	// if (n1 == 0)
-	// return vec2;
-	//
-	// int n2 = vec2.size();
-	//
-	// if (n2 == 0)
-	// return vec1;
-	//
-	// int i1 = 0, i2 = 0;
-	// Pair<Monic, Number> pair1 = vec1.get(i1), pair2 = vec2.get(i2);
-	// Monic monic1 = pair1.left, monic2 = pair2.left;
-	// ArrayList<Pair<Monic, Number>> result = new ArrayList<>(n1 + n2);
-	//
-	// while (true) {
-	// int c = monicComparator.compare(monic1, monic2);
-	//
-	// if (c < 0) {
-	// result.add(pair1);
-	// i1++;
-	// if (i1 == n1)
-	// break;
-	// pair1 = vec1.get(i1);
-	// monic1 = pair1.left;
-	// } else if (c > 0) {
-	// result.add(pair2);
-	// i2++;
-	// if (i2 == n2)
-	// break;
-	// pair2 = vec2.get(i2);
-	// monic2 = pair2.left;
-	// } else if (c == 0) {
-	// Number sum = numberFactory.add(pair1.right, pair2.right);
-	//
-	// if (!sum.isZero()) {
-	// pair1.right = sum;
-	// result.add(pair1);
-	// }
-	// i1++;
-	// i2++;
-	// if (i1 == n1 || i2 == n2)
-	// break;
-	// pair1 = vec1.get(i1);
-	// monic1 = pair1.left;
-	// pair2 = vec2.get(i2);
-	// monic2 = pair2.left;
-	// }
-	// }
-	// while (i1 < n1) {
-	// result.add(vec1.get(i1));
-	// i1++;
-	// }
-	// while (i2 < n2) {
-	// result.add(vec2.get(i2));
-	// i2++;
-	// }
-	// return result;
-	// }
-	//
-	// /**
-	// * Computes the product of the sum of a slice of terms in one term map
-	// with
-	// * the sum of all the terms in a second term map. The slice of terms is
-	// * specified by giving the first index and the number of terms. The slice
-	// * consists of the terms in positions index, index+1, ..., index+count-1.
-	// *
-	// * @param termMap1
-	// * the first term map
-	// * @param start
-	// * starting index in termMap1 specifying the beginning of the
-	// * slice
-	// * @param count
-	// * the number of terms in termMap1 to include in the slice
-	// * @param termMap2
-	// * the second term map
-	// * @return
-	// */
-	// private ArrayList<Pair<Monic, Number>> multiplyAux(
-	// Entry<Monic, Monomial>[] entries1, int start, int count,
-	// Entry<Monic, Monomial>[] entries2) {
-	// ArrayList<Pair<Monic, Number>> result;
-	//
-	// if (count == 0) {
-	// assert (false);
-	// result = new ArrayList<Pair<Monic, Number>>(0);
-	// } else if (count == 1) {
-	// Entry<Monic, Monomial> entry1 = entries1[start];
-	// Monic monic1 = entry1.getKey();
-	// Number number1 = entry1.getValue().monomialConstant(this).number();
-	// int size2 = entries2.length;
-	//
-	// result = new ArrayList<>(size2);
-	// for (int i = 0; i < size2; i++) {
-	// Entry<Monic, Monomial> entry2 = entries2[i];
-	// Monic monic2 = entry2.getKey();
-	// Number number2 = entry2.getValue().monomialConstant(this)
-	// .number();
-	//
-	// result.add(
-	// new Pair<Monic, Number>(multiplyMonics(monic1, monic2),
-	// numberFactory.multiply(number1, number2)));
-	// }
-	// } else { // count > 1
-	// int n2 = count / 2, n1 = count - n2;
-	// ArrayList<Pair<Monic, Number>> result1 = multiplyAux(entries1,
-	// start, n1, entries2);
-	// ArrayList<Pair<Monic, Number>> result2 = multiplyAux(entries1,
-	// start + n1, n2, entries2);
-	//
-	// result = merge(result1, result2);
-	// }
-	// return result;
-	// }
-	//
-	// /**
-	// * An attempt at optimizing multiplication of term maps by using a binary
-	// * merging scheme---doesn't seem to improve anything.
-	// *
-	// * @param termMap1
-	// * @param termMap2
-	// * @return
-	// */
-	// @SuppressWarnings("unused")
-	// private SymbolicMap<Monic, Monomial> multiplyTermMaps3(
-	// SymbolicMap<Monic, Monomial> termMap1,
-	// SymbolicMap<Monic, Monomial> termMap2) {
-	// ArrayList<Pair<Monic, Number>> pairs = multiplyAux(
-	// termMap1.entryArray(), 0, termMap1.size(),
-	// termMap2.entryArray());
-	// int size = pairs.size();
-	// @SuppressWarnings("unchecked")
-	// Entry<Monic, Monomial>[] entries = (Entry<Monic, Monomial>[]) new
-	// Entry<?, ?>[size];
-	// int i = 0;
-	//
-	// for (Pair<Monic, Number> pair : pairs) {
-	// entries[i] = collectionFactory.entry(pair.left,
-	// monomial(constant(pair.right), pair.left));
-	// i++;
-	// }
-	// return collectionFactory.sortedMap(monicComparator, entries);
-	// }
-
 	/**
 	 * Multiplies two rational expressions.
 	 * 
@@ -1314,8 +1161,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 					(Constant) denominator);
 		else {
 			Monomial[] triple = intFactor(numerator, denominator);
-			// TODO?  BUG??  intFactor(X,3) yields [3,0,1]
-			
+
 			numerator = triple[1];
 			denominator = triple[2];
 			if (denominator.isOne())

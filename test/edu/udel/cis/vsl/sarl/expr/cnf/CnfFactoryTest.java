@@ -136,12 +136,12 @@ public class CnfFactoryTest {
 		BooleanExpression q = (BooleanExpression) ef.symbolicConstant(qobject,
 				booleanType);
 		BooleanExpression foralltruechk = bef.exists(b, testingfalse);
-		BooleanExpression EXISTS = bef.booleanExpression(
-				SymbolicOperator.EXISTS, foralltruechk);
+		BooleanExpression EXISTS = bef
+				.booleanExpression(SymbolicOperator.EXISTS, foralltruechk);
 		CnfExpression cnf2 = (CnfExpression) EXISTS;
 		BooleanExpression existschk = bef.forall(b, testingtrue);
-		BooleanExpression FORALL = bef.booleanExpression(
-				SymbolicOperator.FORALL, existschk);
+		BooleanExpression FORALL = bef
+				.booleanExpression(SymbolicOperator.FORALL, existschk);
 		CnfExpression cnf3 = (CnfExpression) FORALL;
 		BooleanExpression andtrue = bef.and(p, q);
 		BooleanExpression ortrue = bef.or(p, q);
@@ -184,12 +184,12 @@ public class CnfFactoryTest {
 		BooleanExpression foralltrue = bef.forall(b, testingtrue);
 		BooleanExpression existstrue = bef.exists(b, testingfalse);
 		BooleanExpression foralltruechk = bef.exists(b, testingfalse);
-		BooleanExpression EXISTS = bef.booleanExpression(
-				SymbolicOperator.EXISTS, foralltruechk);
+		BooleanExpression EXISTS = bef
+				.booleanExpression(SymbolicOperator.EXISTS, foralltruechk);
 		CnfExpression cnf2 = (CnfExpression) EXISTS;
 		BooleanExpression existschk = bef.forall(b, testingtrue);
-		BooleanExpression FORALL = bef.booleanExpression(
-				SymbolicOperator.FORALL, existschk);
+		BooleanExpression FORALL = bef
+				.booleanExpression(SymbolicOperator.FORALL, existschk);
 		CnfExpression cnf3 = (CnfExpression) FORALL;
 
 		assertEquals(bef.or(bef.not(p), bef.not(q)), bef.not(andtrue));
@@ -237,7 +237,8 @@ public class CnfFactoryTest {
 
 		assertEquals(falseExpr, bef.and(bef.not(p), p));
 		assertEquals(falseExpr, bef.and(p, bef.not(p)));
-		assertEquals(bef.or(bef.not(p), r), (bef.or(bef.not(p), bef.and(p, r))));
+		assertEquals(bef.or(bef.not(p), r),
+				(bef.or(bef.not(p), bef.and(p, r))));
 
 		assertEquals(bef.and(p, r), bef.or(bef.and(p, r), bef.and(r, p)));
 		assertEquals(bef.or(bef.or(p, r), p), bef.or(r, p));
@@ -284,7 +285,8 @@ public class CnfFactoryTest {
 
 		assertEquals(falseExpr, bef.and(bef.not(p), p));
 		assertEquals(falseExpr, bef.and(p, bef.not(p)));
-		assertEquals(bef.or(bef.not(p), r), (bef.or(bef.not(p), bef.and(p, r))));
+		assertEquals(bef.or(bef.not(p), r),
+				(bef.or(bef.not(p), bef.and(p, r))));
 
 		assertEquals(bef.and(p, r), bef.or(bef.and(p, r), bef.and(r, p)));
 		assertEquals(bef.or(bef.or(p, r), p), bef.or(r, p));
@@ -440,11 +442,26 @@ public class CnfFactoryTest {
 				universe.stringObject("X"), universe.integerType());
 		BooleanExpression clause1 = universe.lessThanEquals(
 				universe.divide((NumericExpression) X, two), universe.oneInt());
-		BooleanExpression clause2 = universe.lessThanEquals(
-				universe.integer(3), (NumericExpression) X);
+		BooleanExpression clause2 = universe.lessThanEquals(universe.integer(3),
+				(NumericExpression) X);
 
-		BooleanExpression result = universe.reasoner(
-				universe.and(clause1, clause2)).getReducedContext();
+		BooleanExpression result = universe
+				.reasoner(universe.and(clause1, clause2)).getReducedContext();
 		System.out.println(result);
+
+		// want X=3.
+		// need to reason as follows:
+		// a div b <= c ==>
+		// assume a>=0, b>0
+		// a = q*b + r
+		// q>=0, 0<=r<b
+		// q=(a-r)/b=a/b-r/b
+		// (a/b)-1<q<=a/b
+
+		// X/2>=3/2
+		// X div 2 > (X/2)-1 >= 3/2-1 >= .5 -> X div 2 >= 1
+		// -> X div 2 = 1
+		// X/2<X div 2 + 1 = 2 -> X<4 -> X=3
+
 	}
 }

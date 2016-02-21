@@ -1074,10 +1074,46 @@ public interface CoreUniverse {
 	NumericExpression multiply(Iterable<? extends NumericExpression> args);
 
 	/**
+	 * <p>
 	 * Returns a symbolic expression which is the result of dividing arg0 by
 	 * arg1. The two given expressions must have the same (numeric) type: either
 	 * both integers, or both real. In the integer case, division is interpreted
 	 * as "integer division", which rounds towards 0.
+	 * </p>
+	 * 
+	 * <p>
+	 * For reference, here's what C11 (Sec. 6.5.5) says about integer division:
+	 * </p>
+	 * 
+	 * <pre>
+	 * The result of the / operator is the quotient from the
+	 * division of the first operand by the second; the result
+	 * of the % operator is the remainder. In both operations,
+	 * if the value of the second operand is zero, the behavior
+	 * is undefined.
+	 * 
+	 * When integers are divided, the result of the / operator
+	 * is the algebraic quotient with any fractional part discarded.
+	 * [This is often called "truncation toward zero".]
+	 * If the quotient a/b is representable, the expression
+	 * (a/b)*b + a%b shall equal a; otherwise, the behavior
+	 * of both a/b and a%b is undefined.
+	 * </pre>
+	 * 
+	 * <p>
+	 * Hence in C, a%b=a-(a/b)*b. Examples:
+	 * <ul>
+	 * <li>a=4, b=3: a/b=1, a%b=4-3=1</li>
+	 * <li>a=4, b=-3: a/b=-1, a%b=4-(-1)(-3)=1</li>
+	 * <li>a=-4, b=3: a/b=-1, a%b=-4-(-1)3=-1</li>
+	 * <li>a=-4, b=-3: a/b=1, a%b=-4-1(-3)=-1</li>
+	 * </ul>
+	 * </p>
+	 * 
+	 * <p>
+	 * Note that the sign of a/b is the same for integer or real division, i.e.,
+	 * sign(a/b)=sign(a)*sign(b). The sign of a%b is sign(a).
+	 * </p>
 	 * 
 	 * @param arg0
 	 *            a symbolic expression of a numeric type
@@ -1091,8 +1127,7 @@ public interface CoreUniverse {
 
 	/**
 	 * Returns a symbolic expression which represents arg0 modulo arg1. The two
-	 * given expressions must have the integer type. What happens for negative
-	 * integers is unspecified.
+	 * given expressions must have the integer type.
 	 * 
 	 * @param arg0
 	 *            a symbolic expression of integer type

@@ -122,7 +122,14 @@ import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifier;
  */
 public class IdealSimplifier extends CommonSimplifier {
 
-	private final static boolean debug = false;
+	// Static fields...
+
+	/**
+	 * Print debugging information?
+	 */
+	public final static boolean debug = false;
+
+	// Instance fields...
 
 	/**
 	 * Object that gathers together references to various objects needed for
@@ -157,7 +164,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	private BooleanExpression fullContext = null;
 
 	/**
-	 * A map that assigns bounds to pseudo primitive polynomials.
+	 * A map that assigns bounds to monics.
 	 */
 	private Map<Monic, BoundsObject> boundMap = new HashMap<>();
 
@@ -168,14 +175,12 @@ public class IdealSimplifier extends CommonSimplifier {
 	private Map<BooleanExpression, Boolean> booleanMap = new HashMap<>();
 
 	/**
-	 * The keys in this map are pseudo-primitive factored polynomials. See
-	 * {@link AffineExpression} for the definition. The value is the constant
-	 * value that has been determined to be the value of that pseudo.
+	 * Map assigning concrete numerical values to certain {@link Monic}s.
 	 */
 	private Map<Monic, Number> constantMap = new HashMap<>();
 
 	/**
-	 * Non-numeric constants.
+	 * Map assigning concrete values to certain non-numeric expressions.
 	 */
 	private Map<SymbolicExpression, SymbolicExpression> otherConstantMap = new HashMap<>();
 
@@ -195,19 +200,763 @@ public class IdealSimplifier extends CommonSimplifier {
 	 */
 	private SymbolicConstant intervalVariable = null;
 
+	// Constructors...
+
+	/**
+	 * Constructs new simplifier based on the given assumption. The assumption
+	 * is analyzed to extract information such as bounds, and the maps which are
+	 * fields of this class are populated based on that information.
+	 * 
+	 * @param info
+	 *            the info object wrapping together references to all objects
+	 *            needed for this simplifier to do its job
+	 * @param assumption
+	 *            the assumption ("context") on which this simplifier will be
+	 *            based
+	 */
 	public IdealSimplifier(SimplifierInfo info, BooleanExpression assumption) {
 		super(info.universe);
-		// need to decide if this should be a precondition, or if
-		// it should be made canonic, or just to not care
-		// assert assumption.isCanonic();
 		this.info = info;
 		this.assumption = assumption;
 		initialize();
 	}
 
-	/***********************************************************************
-	 * Begin Simplification Routines...................................... *
-	 ***********************************************************************/
+	// private methods...
+
+	// ****************************************************************
+	// *.........................Initialization.......................*
+	// *........ Extraction of information from the assumption........*
+	// ****************************************************************
+
+	/**
+	 * The main initialization method: extract information from
+	 * {@link #assumption} and populates the various maps and other fields of
+	 * this class. This is run once, when this object is instantiated.
+	 */
+	private void initialize() {
+		while (true) {
+			// because simplifications can improve...
+			clearSimplificationCache();
+
+			boolean satisfiable = extractBounds();
+
+			if (!satisfiable) {
+				if (info.verbose) {
+					info.out.println("Path condition is unsatisfiable.");
+					info.out.flush();
+				}
+				rawAssumption = assumption = info.falseExpr;
+				return;
+			}
+
+			// need to substitute into assumption new value of symbolic
+			// constants.
+			BooleanExpression newAssumption = (BooleanExpression) simplifyExpression(
+					assumption);
+
+			rawAssumption = newAssumption;
+			// at this point, rawAssumption contains only those facts that
+			// could not be
+			// determined from the booleanMap, boundMap, or constantMap.
+			// these facts need to be added back in---except for the case
+			// where
+			// a symbolic constant is mapped to a concrete value in the
+			// constantMap.
+			// such symbolic constants will be entirely eliminated from the
+			// assumption
+
+			// after SimplifyExpression, the removable symbolic constants
+			// should all be gone, replaced with their concrete values.
+			// However, as we add back in facts from the constant map,
+			// bound map and boolean
+			// map, those symbolic constants might sneak back in!
+			// We will remove them again later.
+
+			for (BoundsObject bound : boundMap.values()) {
+				BooleanExpression constraint = boundToIdeal(bound);
+
+				if (constraint != null)
+					newAssumption = info.booleanFactory.and(newAssumption,
+							constraint);
+			}
+			// also need to add facts from constant map.
+			// but can eliminate any constant values for primitives since
+			// those will never occur in the state.
+			for (Entry<Monic, Number> entry : constantMap.entrySet()) {
+				Monic fp = entry.getKey();
+
+				if (fp instanceof SymbolicConstant) {
+					// symbolic constant: will be entirely eliminated
+				} else {
+					BooleanExpression constraint = info.idealFactory.equals(fp,
+							info.idealFactory.constant(entry.getValue()));
+
+					newAssumption = info.booleanFactory.and(newAssumption,
+							constraint);
+				}
+			}
+
+			for (Entry<SymbolicExpression, SymbolicExpression> entry : otherConstantMap
+					.entrySet()) {
+				SymbolicExpression key = entry.getKey();
+
+				if (key instanceof SymbolicConstant) {
+					// symbolic constant: will be entirely eliminated
+				} else {
+					BooleanExpression constraint = info.universe.equals(key,
+							entry.getValue());
+
+					newAssumption = info.booleanFactory.and(newAssumption,
+							constraint);
+				}
+			}
+
+			for (Entry<BooleanExpression, Boolean> entry : booleanMap
+					.entrySet()) {
+				BooleanExpression primitive = entry.getKey();
+
+				if (primitive instanceof SymbolicConstant) {
+					// symbolic constant: will be entirely eliminated
+				} else {
+					newAssumption = info.booleanFactory.and(newAssumption,
+							entry.getValue() ? primitive
+									: info.booleanFactory.not(primitive));
+				}
+			}
+
+			// now we remove those removable symbolic constants...
+
+			Map<SymbolicExpression, SymbolicExpression> substitutionMap = new HashMap<>();
+
+			for (Entry<Monic, Number> entry : constantMap.entrySet()) {
+				SymbolicExpression key = entry.getKey();
+
+				if (key.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
+					substitutionMap.put(key, universe.number(entry.getValue()));
+			}
+			for (Entry<SymbolicExpression, SymbolicExpression> entry : otherConstantMap
+					.entrySet()) {
+				SymbolicExpression key = entry.getKey();
+
+				if (key.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
+					substitutionMap.put(key, entry.getValue());
+			}
+			newAssumption = (BooleanExpression) universe
+					.mapSubstituter(substitutionMap).apply(newAssumption);
+
+			if (assumption.equals(newAssumption))
+				break;
+			assumption = (BooleanExpression) universe.canonic(newAssumption);
+		}
+		extractRemainingFacts();
+	}
+
+	/**
+	 * Converts the bound to a boolean expression in canonical form. Returns
+	 * null if both upper and lower bound are infinite (equivalent to "true").
+	 * Note that the variable in the bound is simplified.
+	 */
+	private BooleanExpression boundToIdeal(BoundsObject bound) {
+		Number lower = bound.lower(), upper = bound.upper();
+		BooleanExpression result = null;
+		Monic fp = (Monic) bound.expression;
+		Monomial ideal = (Monomial) apply(fp);
+
+		if (lower != null) {
+			if (bound.strictLower())
+				result = info.idealFactory
+						.lessThan(info.idealFactory.constant(lower), ideal);
+			else
+				result = info.idealFactory.lessThanEquals(
+						info.idealFactory.constant(lower), ideal);
+		}
+		if (upper != null) {
+			BooleanExpression upperResult;
+
+			if (bound.strictUpper())
+				upperResult = info.idealFactory.lessThan(ideal,
+						info.idealFactory.constant(upper));
+			else
+				upperResult = info.idealFactory.lessThanEquals(ideal,
+						info.idealFactory.constant(upper));
+			if (result == null)
+				result = upperResult;
+			else
+				result = info.booleanFactory.and(result, upperResult);
+		}
+		return result;
+	}
+
+	/**
+	 * Attempts to determine bounds (upper and lower) on primitive expressions
+	 * by examining the assumption. Returns false if assumption is determined to
+	 * be unsatisfiable.
+	 */
+	private boolean extractBounds() {
+		if (assumption.operator() == SymbolicOperator.AND) {
+			for (BooleanExpression clause : assumption.booleanCollectionArg(0))
+				if (!extractBoundsOr(clause, boundMap, booleanMap))
+					return false;
+		} else if (!extractBoundsOr(assumption, boundMap, booleanMap))
+			return false;
+		return updateConstantMap();
+	}
+
+	private void processHerbrandCast(Monomial poly, Number value) {
+		if (poly.operator() == SymbolicOperator.CAST) {
+			SymbolicType type = poly.type();
+			SymbolicExpression original = (SymbolicExpression) poly.argument(0);
+			SymbolicType originalType = original.type();
+
+			if (originalType.isHerbrand() && originalType.isInteger()
+					&& type.isInteger()
+					|| originalType.isReal() && type.isReal()) {
+				SymbolicExpression constant = universe.cast(originalType,
+						universe.number(value));
+
+				cacheSimplification(original, constant);
+			}
+		}
+	}
+
+	private boolean updateConstantMap() {
+		// The constant map doesn't get cleared because we want to keep
+		// accumulating facts. Thus the map might not be empty at this point.
+		for (BoundsObject bounds : boundMap.values()) {
+			Number lower = bounds.lower();
+
+			if (lower != null && lower.equals(bounds.upper)) {
+				Monic expression = (Monic) bounds.expression;
+
+				assert !bounds.strictLower && !bounds.strictUpper;
+				constantMap.put(expression, lower);
+				processHerbrandCast(expression, lower);
+			}
+		}
+
+		boolean satisfiable = LinearSolver.reduceConstantMap(info.idealFactory,
+				constantMap);
+
+		if (debug) {
+			printBoundMap(info.out);
+			printConstantMap(info.out);
+			printBooleanMap(info.out);
+		}
+		return satisfiable;
+	}
+
+	private void printBoundMap(PrintStream out) {
+		out.println("Bounds map:");
+		for (BoundsObject boundObject : boundMap.values()) {
+			out.println(boundObject);
+		}
+		out.println();
+		out.flush();
+	}
+
+	private void printConstantMap(PrintStream out) {
+		out.println("Constant map:");
+		for (Entry<Monic, Number> entry : constantMap.entrySet()) {
+			out.print(entry.getKey() + " = ");
+			out.println(entry.getValue());
+		}
+		out.println();
+		out.flush();
+	}
+
+	private void printBooleanMap(PrintStream out) {
+		out.println("Boolean map:");
+		for (Entry<BooleanExpression, Boolean> entry : booleanMap.entrySet()) {
+			out.print(entry.getKey() + " = ");
+			out.println(entry.getValue());
+		}
+		out.println();
+		out.flush();
+	}
+
+	/**
+	 * Performs deep copy of a bounds map. Temporary fix: once persistent maps
+	 * and an immutable BoundsObject are used, this will not be needed.
+	 * 
+	 * @param map
+	 *            a bounds map
+	 * @return a deep copy of that map that does not share anything that is
+	 *         mutable, such as a BoundsObject
+	 */
+	private Map<Monic, BoundsObject> copyBoundMap(
+			Map<Monic, BoundsObject> map) {
+		HashMap<Monic, BoundsObject> result = new HashMap<>();
+
+		for (Entry<Monic, BoundsObject> entry : map.entrySet()) {
+			result.put(entry.getKey(), entry.getValue().clone());
+		}
+		return result;
+	}
+
+	private Map<BooleanExpression, Boolean> copyBooleanMap(
+			Map<BooleanExpression, Boolean> map) {
+		return new HashMap<>(map);
+	}
+
+	private boolean extractBoundsOr(BooleanExpression or,
+			Map<Monic, BoundsObject> aBoundMap,
+			Map<BooleanExpression, Boolean> aBooleanMap) {
+		SymbolicOperator op = or.operator();
+
+		if (op == SymbolicOperator.OR) {
+			// p & (q0 | ... | qn) = (p & q0) | ... | (p & qn)
+			// copies of original maps, corresponding to p. these never
+			// change...
+			Map<Monic, BoundsObject> originalBoundMap = copyBoundMap(aBoundMap);
+			Map<BooleanExpression, Boolean> originalBooleanMap = copyBooleanMap(
+					aBooleanMap);
+			Iterator<? extends BooleanExpression> clauses = or
+					.booleanCollectionArg(0).iterator();
+			boolean satisfiable = extractBoundsBasic(clauses.next(), aBoundMap,
+					aBooleanMap); // result <- p & q0:
+
+			// result <- result | ((p & q1) | ... | (p & qn)) :
+			while (clauses.hasNext()) {
+				BooleanExpression clause = clauses.next();
+				Map<Monic, BoundsObject> newBoundMap = copyBoundMap(
+						originalBoundMap);
+				Map<BooleanExpression, Boolean> newBooleanMap = copyBooleanMap(
+						originalBooleanMap);
+				// compute p & q_i:
+				boolean newSatisfiable = extractBoundsBasic(clause, newBoundMap,
+						newBooleanMap);
+
+				// result <- result | (p & q_i) where result is (aBoundMap,
+				// aBooleanMap)....
+				satisfiable = satisfiable || newSatisfiable;
+				if (newSatisfiable) {
+					LinkedList<SymbolicExpression> boundRemoveList = new LinkedList<>();
+					LinkedList<BooleanExpression> booleanRemoveList = new LinkedList<>();
+
+					for (Map.Entry<Monic, BoundsObject> entry : aBoundMap
+							.entrySet()) {
+						SymbolicExpression primitive = entry.getKey();
+						BoundsObject oldBound = entry.getValue();
+						BoundsObject newBound = newBoundMap.get(primitive);
+
+						if (newBound == null) {
+							boundRemoveList.add(primitive);
+						} else {
+							oldBound.enlargeTo(newBound);
+							if (oldBound.isUniversal())
+								boundRemoveList.add(primitive);
+						}
+					}
+					for (SymbolicExpression primitive : boundRemoveList)
+						aBoundMap.remove(primitive);
+					for (Map.Entry<BooleanExpression, Boolean> entry : aBooleanMap
+							.entrySet()) {
+						BooleanExpression primitive = entry.getKey();
+						Boolean oldValue = entry.getValue();
+						Boolean newValue = newBooleanMap.get(primitive);
+
+						if (newValue == null || !newValue.equals(oldValue))
+							booleanRemoveList.add(primitive);
+					}
+					for (BooleanExpression primitive : booleanRemoveList)
+						aBooleanMap.remove(primitive);
+				}
+			}
+			return satisfiable;
+		} else { // 1 clause
+			// if this is of the form EQ x,y where y is a constant and
+			// x and y are not-numeric, add to otherConstantMap
+			if (op == SymbolicOperator.EQUALS) {
+				SymbolicExpression arg0 = (SymbolicExpression) or.argument(0),
+						arg1 = (SymbolicExpression) or.argument(1);
+				SymbolicType type = arg0.type();
+
+				if (!type.isNumeric()) {
+					boolean const0 = arg0
+							.operator() == SymbolicOperator.CONCRETE;
+					boolean const1 = (arg1
+							.operator() == SymbolicOperator.CONCRETE);
+
+					if (const1 && !const0) {
+						otherConstantMap.put(arg0, arg1);
+						return true;
+					} else if (const0 && !const1) {
+						otherConstantMap.put(arg1, arg0);
+						return true;
+					} else if (const0 && const1) {
+						return arg0.equals(arg1);
+					} else {
+						return true;
+					}
+				}
+			}
+			return extractBoundsBasic(or, aBoundMap, aBooleanMap);
+		}
+	}
+
+	/**
+	 * A basic expression is either a boolean constant (true/false), a
+	 * LiteralExpression (p or !p) or QuantifierExpression
+	 */
+	private boolean extractBoundsBasic(BooleanExpression basic,
+			Map<Monic, BoundsObject> aBoundMap,
+			Map<BooleanExpression, Boolean> aBooleanMap) {
+		SymbolicOperator operator = basic.operator();
+
+		if (operator == SymbolicOperator.CONCRETE)
+			return ((BooleanObject) basic.argument(0)).getBoolean();
+		if (isRelational(operator)) {
+
+			// Cases: 0=Primitive, 0<Monic, 0<=Monic, Monic<0, Monic<=0,
+			// 0!=Primitive.
+
+			SymbolicExpression arg0 = (SymbolicExpression) basic.argument(0);
+			SymbolicExpression arg1 = (SymbolicExpression) basic.argument(1);
+
+			if (arg0.type().isNumeric()) {
+				switch (operator) {
+				case EQUALS: // 0==x
+					return extractEQ0Bounds((Primitive) arg1, aBoundMap,
+							aBooleanMap);
+				case NEQ:
+					return extractNEQ0Bounds((Primitive) arg1, aBoundMap,
+							aBooleanMap);
+				case LESS_THAN: // 0<x or x<0
+				case LESS_THAN_EQUALS: // 0<=x or x<=0
+					if (arg0.isZero()) {
+						return extractIneqBounds((Monic) arg1, true,
+								operator == LESS_THAN, aBoundMap, aBooleanMap);
+					} else {
+						return extractIneqBounds((Monic) arg0, false,
+								operator == LESS_THAN, aBoundMap, aBooleanMap);
+					}
+				default:
+					throw new RuntimeException(
+							"Unknown RelationKind: " + operator);
+				}
+			}
+		} else if (operator == SymbolicOperator.EXISTS
+				|| operator == SymbolicOperator.FORALL) {
+			// forall or exists: difficult
+			// forall x: ()bounds: can substitute whatever you want for x
+			// and extract bounds.
+			// example: forall i: a[i]<7. Look for all occurrence of a[*]
+			// and add bounds
+			return true;
+		} else if (operator == SymbolicOperator.NOT) {
+			BooleanExpression primitive = basic.booleanArg(0);
+			Boolean value = aBooleanMap.get(primitive);
+
+			if (value != null)
+				return !value;
+			aBooleanMap.put(primitive, false);
+			return true;
+		}
+
+		Boolean value = aBooleanMap.get(basic);
+
+		if (value != null)
+			return value;
+		aBooleanMap.put(basic, true);
+		return true;
+	}
+
+	private boolean extractEQ0Bounds(Primitive primitive,
+			Map<Monic, BoundsObject> aBoundMap,
+			Map<BooleanExpression, Boolean> aBooleanMap) {
+		if (primitive instanceof Polynomial)
+			return extractEQ0BoundsPoly((Polynomial) primitive, aBoundMap,
+					aBooleanMap);
+
+		// TODO: Perhaps make a method to get the bounds
+		// on something. And a method to impose
+		// bounds on something (union or intersect).
+		// This method will create the bounds for int div
+		// or mod if needed.
+
+		BoundsObject bound = aBoundMap.get(primitive);
+		Number zero = primitive.type().isInteger()
+				? info.numberFactory.zeroInteger()
+				: info.numberFactory.zeroRational();
+
+		if (bound == null) {
+			bound = BoundsObject.newTightBound(primitive, zero);
+			aBoundMap.put(primitive, bound);
+		} else {
+			if (!bound.contains(zero))
+				return false;
+			bound.makeConstant(zero);
+		}
+		return true;
+	}
+
+	/**
+	 * Given the fact that poly==0, for some {@link Polynomial} poly, updates
+	 * the specified bound map and boolean map appropriately.
+	 * 
+	 * @param poly
+	 *            a non-<code>null</code> polynomial
+	 * @param aBoundMap
+	 *            a bound map: a map from pseudo-primitive polynomials to bound
+	 *            objects specifying an interval bound for those polynomials
+	 * @param aBooleanMap
+	 *            a map specifying a concrete boolean value for some set of
+	 *            boolean-valued symbolic expressions
+	 * @return <code>false</code> if it is determined that the given assertion
+	 *         is inconsistent with the information in the bound map and boolean
+	 *         map; else <code>true</code>
+	 */
+	private boolean extractEQ0BoundsPoly(Polynomial poly,
+			Map<Monic, BoundsObject> aBoundMap,
+			Map<BooleanExpression, Boolean> aBooleanMap) {
+		AffineExpression affine = info.affineFactory.affine(poly);
+		Monic pseudo = affine.pseudo();
+		RationalNumber coefficient = info.numberFactory
+				.rational(affine.coefficient());
+		RationalNumber offset = info.numberFactory.rational(affine.offset());
+		RationalNumber rationalValue = info.numberFactory
+				.negate(info.numberFactory.divide(offset, coefficient));
+		Number value; // same as rationalValue but IntegerNumber if type is
+						// integer
+		BoundsObject bound = aBoundMap.get(pseudo);
+
+		if (pseudo.type().isInteger()) {
+			if (info.numberFactory.isIntegral(rationalValue)) {
+				value = info.numberFactory.integerValue(rationalValue);
+			} else {
+				return false;
+			}
+		} else {
+			value = rationalValue;
+		}
+		if (bound == null) {
+			bound = BoundsObject.newTightBound(pseudo, value);
+			aBoundMap.put(pseudo, bound);
+		} else {
+			if (!bound.contains(value))
+				return false;
+			bound.makeConstant(value);
+		}
+		return true;
+	}
+
+	private boolean extractNEQ0Bounds(Primitive primitive,
+			Map<Monic, BoundsObject> aBoundMap,
+			Map<BooleanExpression, Boolean> aBooleanMap) {
+
+		if (primitive instanceof Polynomial)
+			return extractNEQ0BoundsPoly((Polynomial) primitive, aBoundMap,
+					aBooleanMap);
+
+		BoundsObject bound = aBoundMap.get(primitive);
+		SymbolicType type = primitive.type();
+		Constant zero = info.idealFactory.zero(type);
+
+		if (bound == null) {
+			// for now, nothing can be done, since the bounds are
+			// plain intervals. we need a more precise abstraction
+			// than intervals here.
+		} else if (bound.contains(zero.number())) {
+			// is value an end-point? Might be able to sharpen bound...
+			if (bound.lower != null && bound.lower.isZero()
+					&& !bound.strictLower) {
+				bound.restrictLower(bound.lower, true);
+			}
+			if (bound.upper != null && bound.upper.isZero()
+					&& !bound.strictUpper) {
+				bound.restrictUpper(bound.upper, true);
+			}
+			if (bound.isEmpty()) {
+				return false;
+			}
+		}
+		aBooleanMap.put(info.universe.neq(zero, primitive), true);
+		return true;
+	}
+
+	/**
+	 * Given the fact that poly!=0, for some {@link Polynomial} poly, updates
+	 * the specified bound map and boolean map appropriately.
+	 * 
+	 * @param poly
+	 *            a non-<code>null</code> polynomial
+	 * @param aBoundMap
+	 *            a bound map: a map from pseudo-primitive polynomials to bound
+	 *            objects specifying an interval bound for those polynomials
+	 * @param aBooleanMap
+	 *            a map specifying a concrete boolean value for some set of
+	 *            boolean-valued symbolic expressions
+	 * @return <code>false</code> if it is determined that the given assertion
+	 *         is inconsistent with the information in the bound map and boolean
+	 *         map; else <code>true</code>
+	 */
+	private boolean extractNEQ0BoundsPoly(Polynomial poly,
+			Map<Monic, BoundsObject> aBoundMap,
+			Map<BooleanExpression, Boolean> aBooleanMap) {
+		// poly=aX+b. if X=-b/a, contradiction.
+		SymbolicType type = poly.type();
+		AffineExpression affine = info.affineFactory.affine(poly);
+		Monic pseudo = affine.pseudo();
+		RationalNumber coefficient = info.numberFactory
+				.rational(affine.coefficient());
+		RationalNumber offset = info.numberFactory.rational(affine.offset());
+		RationalNumber rationalValue = info.numberFactory
+				.negate(info.numberFactory.divide(offset, coefficient));
+		Number value; // same as rationalValue but IntegerNumber if type is
+						// integer
+		BoundsObject bound = aBoundMap.get(pseudo);
+		Monomial zero = info.idealFactory.zero(type);
+
+		if (type.isInteger()) {
+			if (info.numberFactory.isIntegral(rationalValue)) {
+				value = info.numberFactory.integerValue(rationalValue);
+			} else {
+				// an integer cannot equal a non-integer.
+				aBooleanMap.put(info.idealFactory.neq(zero, poly), true);
+				return true;
+			}
+		} else {
+			value = rationalValue;
+		}
+		// interpret fact pseudo!=value, where pseudo is in bound
+		if (bound == null) {
+			// for now, nothing can be done, since the bounds are
+			// plain intervals. we need a more precise abstraction
+			// than intervals here.
+		} else if (bound.contains(value)) {
+			// is value an end-point? Might be able to sharpen bound...
+			if (bound.lower != null && bound.lower.equals(value)
+					&& !bound.strictLower) {
+				bound.restrictLower(bound.lower, true);
+			}
+			if (bound.upper != null && bound.upper.equals(value)
+					&& !bound.strictUpper) {
+				bound.restrictUpper(bound.upper, true);
+			}
+			if (bound.isEmpty()) {
+				return false;
+			}
+		}
+		aBooleanMap.put(info.universe.neq(zero, poly), true);
+		return true;
+	}
+
+	private boolean extractIneqBounds(Monic monic, boolean gt, boolean strict,
+			Map<Monic, BoundsObject> aBoundMap,
+			Map<BooleanExpression, Boolean> aBooleanMap) {
+		// extract meaning from XYZ>0, >=0, <0, <=0
+		if (monic instanceof Polynomial)
+			return extractIneqBoundsPoly((Polynomial) monic, gt, strict,
+					aBoundMap, aBooleanMap);
+
+		BoundsObject boundsObject = aBoundMap.get(monic);
+		Number zero = monic.type().isInteger()
+				? info.numberFactory.zeroInteger()
+				: info.numberFactory.zeroRational();
+
+		if (gt) { // lower bound
+			if (boundsObject == null) {
+				boundsObject = BoundsObject.newLowerBound(monic, zero, strict);
+				aBoundMap.put(monic, boundsObject);
+			} else {
+				boundsObject.restrictLower(zero, strict);
+				return boundsObject.isConsistent();
+			}
+		} else { // upper bound
+			if (boundsObject == null) {
+				boundsObject = BoundsObject.newUpperBound(monic, zero, strict);
+				aBoundMap.put(monic, boundsObject);
+			} else {
+				boundsObject.restrictUpper(zero, strict);
+				return boundsObject.isConsistent();
+			}
+		}
+		return true;
+	}
+
+	private boolean extractIneqBoundsPoly(Polynomial fp, boolean gt,
+			boolean strict, Map<Monic, BoundsObject> aBoundMap,
+			Map<BooleanExpression, Boolean> aBooleanMap) {
+		AffineExpression affine = info.affineFactory.affine(fp);
+		Monic pseudo;
+
+		if (affine == null)
+			return true;
+		pseudo = affine.pseudo();
+		assert pseudo != null;
+
+		BoundsObject boundsObject = aBoundMap.get(pseudo);
+		Number coefficient = affine.coefficient();
+		boolean pos = coefficient.signum() > 0;
+		Number bound = info.affineFactory.bound(affine, gt, strict);
+		// aX+b>0.
+		// a>0:lower bound (X>-b/a).
+		// a<0: upper bound (X<-b/a).
+
+		if (pseudo.type().isInteger())
+			strict = false;
+		if ((pos && gt) || (!pos && !gt)) { // lower bound
+			if (boundsObject == null) {
+				boundsObject = BoundsObject.newLowerBound(pseudo, bound,
+						strict);
+				aBoundMap.put(pseudo, boundsObject);
+			} else {
+				boundsObject.restrictLower(bound, strict);
+				return boundsObject.isConsistent();
+			}
+		} else { // upper bound
+			if (boundsObject == null) {
+				boundsObject = BoundsObject.newUpperBound(pseudo, bound,
+						strict);
+				aBoundMap.put(pseudo, boundsObject);
+			} else {
+				boundsObject.restrictUpper(bound, strict);
+				return boundsObject.isConsistent();
+			}
+		}
+		return true;
+	}
+
+	private void declareFact(SymbolicExpression booleanExpression,
+			boolean truth) {
+		BooleanExpression value = truth ? info.trueExpr : info.falseExpr;
+
+		cacheSimplification(booleanExpression, value);
+	}
+
+	private void declareClauseFact(BooleanExpression clause) {
+		if (isNumericRelational(clause)) {
+			if (clause.operator() == SymbolicOperator.NEQ) {
+				BooleanExpression eq0 = (BooleanExpression) info.universe
+						.not(clause);
+
+				declareFact(eq0, false);
+			}
+		} else
+			declareFact(clause, true);
+	}
+
+	/**
+	 * This method inserts into the simplification cache all facts from the
+	 * assumption that are not otherwise encoded in the {@link #constantMap},
+	 * {@link #booleanMap}, or {@link #boundMap}. It is to be invoked only after
+	 * the assumption has been simplified for the final time.
+	 */
+	private void extractRemainingFacts() {
+		SymbolicOperator operator = assumption.operator();
+
+		if (operator == SymbolicOperator.AND) {
+			for (BooleanExpression or : assumption.booleanCollectionArg(0)) {
+				declareClauseFact(or);
+			}
+		} else {
+			declareClauseFact(assumption);
+		}
+	}
+
+	// ****************************************************************
+	// * ................. Simplification Routines................... *
+	// ****************************************************************
 
 	/**
 	 * Simplifies a {@link Monic}.
@@ -244,22 +993,6 @@ public class IdealSimplifier extends CommonSimplifier {
 		}
 		return result;
 	}
-
-	/**
-	 * Simplifies a {@link Polynomial}. First, there must be no known
-	 * factorization, else it would not be a {@link Polynomial}. Try expanding
-	 * the terms and if any of them change, adding the resulting term maps and
-	 * refactoring to form a {@link Monomial}. (There may be cancellations that
-	 * only appear at this time.) However, only expand if the term map's size is
-	 * below a threshold. Example: (X+Y)^2 + X^2 --> 2X^2+2XY+Y^2. But is this
-	 * better? (Determine metric for "better"?)
-	 * 
-	 * @param poly
-	 * @return
-	 */
-	// private Monomial simplifyPolynomial(Polynomial poly) {
-	// return info.idealFactory.factorTermMap(poly.expand(info.idealFactory));
-	// }
 
 	/**
 	 * Determines if the operator is one of the relation operators
@@ -788,729 +1521,6 @@ public class IdealSimplifier extends CommonSimplifier {
 		if (rightSign < 0 || (rightSign == 0 && oldBounds.strictUpper()))
 			return info.falseExpr;
 		return null;
-	}
-
-	/***********************************************************************
-	 * End of Simplification Routines..................................... *
-	 ***********************************************************************/
-
-	/**
-	 * Converts the bound to a boolean expression in canonical form. Returns
-	 * null if both upper and lower bound are infinite (equivalent to "true").
-	 * Note that the variable in the bound is simplified.
-	 */
-	private BooleanExpression boundToIdeal(BoundsObject bound) {
-		Number lower = bound.lower(), upper = bound.upper();
-		BooleanExpression result = null;
-		Monic fp = (Monic) bound.expression;
-		Monomial ideal = (Monomial) apply(fp);
-
-		if (lower != null) {
-			if (bound.strictLower())
-				result = info.idealFactory
-						.lessThan(info.idealFactory.constant(lower), ideal);
-			else
-				result = info.idealFactory.lessThanEquals(
-						info.idealFactory.constant(lower), ideal);
-		}
-		if (upper != null) {
-			BooleanExpression upperResult;
-
-			if (bound.strictUpper())
-				upperResult = info.idealFactory.lessThan(ideal,
-						info.idealFactory.constant(upper));
-			else
-				upperResult = info.idealFactory.lessThanEquals(ideal,
-						info.idealFactory.constant(upper));
-			if (result == null)
-				result = upperResult;
-			else
-				result = info.booleanFactory.and(result, upperResult);
-		}
-		return result;
-	}
-
-	private void initialize() {
-		while (true) {
-			// because simplifications can improve...
-			clearSimplificationCache();
-
-			boolean satisfiable = extractBounds();
-
-			if (!satisfiable) {
-				if (info.verbose) {
-					info.out.println("Path condition is unsatisfiable.");
-					info.out.flush();
-				}
-				rawAssumption = assumption = info.falseExpr;
-				return;
-			}
-
-			// need to substitute into assumption new value of symbolic
-			// constants.
-			BooleanExpression newAssumption = (BooleanExpression) simplifyExpression(
-					assumption);
-
-			rawAssumption = newAssumption;
-			// at this point, rawAssumption contains only those facts that
-			// could not be
-			// determined from the booleanMap, boundMap, or constantMap.
-			// these facts need to be added back in---except for the case
-			// where
-			// a symbolic constant is mapped to a concrete value in the
-			// constantMap.
-			// such symbolic constants will be entirely eliminated from the
-			// assumption
-
-			// after SimplifyExpression, the removable symbolic constants
-			// should all be gone, replaced with their concrete values.
-			// However, as we add back in facts from the constant map,
-			// bound map and boolean
-			// map, those symbolic constants might sneak back in!
-			// We will remove them again later.
-
-			for (BoundsObject bound : boundMap.values()) {
-				BooleanExpression constraint = boundToIdeal(bound);
-
-				if (constraint != null)
-					newAssumption = info.booleanFactory.and(newAssumption,
-							constraint);
-			}
-			// also need to add facts from constant map.
-			// but can eliminate any constant values for primitives since
-			// those will never occur in the state.
-			for (Entry<Monic, Number> entry : constantMap.entrySet()) {
-				Monic fp = entry.getKey();
-
-				if (fp instanceof SymbolicConstant) {
-					// symbolic constant: will be entirely eliminated
-				} else {
-					BooleanExpression constraint = info.idealFactory.equals(fp,
-							info.idealFactory.constant(entry.getValue()));
-
-					newAssumption = info.booleanFactory.and(newAssumption,
-							constraint);
-				}
-			}
-
-			for (Entry<SymbolicExpression, SymbolicExpression> entry : otherConstantMap
-					.entrySet()) {
-				SymbolicExpression key = entry.getKey();
-
-				if (key instanceof SymbolicConstant) {
-					// symbolic constant: will be entirely eliminated
-				} else {
-					BooleanExpression constraint = info.universe.equals(key,
-							entry.getValue());
-
-					newAssumption = info.booleanFactory.and(newAssumption,
-							constraint);
-				}
-			}
-
-			for (Entry<BooleanExpression, Boolean> entry : booleanMap
-					.entrySet()) {
-				BooleanExpression primitive = entry.getKey();
-
-				if (primitive instanceof SymbolicConstant) {
-					// symbolic constant: will be entirely eliminated
-				} else {
-					newAssumption = info.booleanFactory.and(newAssumption,
-							entry.getValue() ? primitive
-									: info.booleanFactory.not(primitive));
-				}
-			}
-
-			// now we remove those removable symbolic constants...
-
-			Map<SymbolicExpression, SymbolicExpression> substitutionMap = new HashMap<>();
-
-			for (Entry<Monic, Number> entry : constantMap.entrySet()) {
-				SymbolicExpression key = entry.getKey();
-
-				if (key.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
-					substitutionMap.put(key, universe.number(entry.getValue()));
-			}
-			for (Entry<SymbolicExpression, SymbolicExpression> entry : otherConstantMap
-					.entrySet()) {
-				SymbolicExpression key = entry.getKey();
-
-				if (key.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
-					substitutionMap.put(key, entry.getValue());
-			}
-			newAssumption = (BooleanExpression) universe
-					.mapSubstituter(substitutionMap).apply(newAssumption);
-
-			if (assumption.equals(newAssumption))
-				break;
-			assumption = (BooleanExpression) universe.canonic(newAssumption);
-		}
-		extractRemainingFacts();
-	}
-
-	/*
-	 * Extraction of information from the assumption.
-	 */
-
-	/**
-	 * Attempts to determine bounds (upper and lower) on primitive expressions
-	 * by examining the assumption. Returns false if assumption is determined to
-	 * be unsatisfiable.
-	 */
-	private boolean extractBounds() {
-		if (assumption.operator() == SymbolicOperator.AND) {
-			for (BooleanExpression clause : assumption.booleanCollectionArg(0))
-				if (!extractBoundsOr(clause, boundMap, booleanMap))
-					return false;
-		} else if (!extractBoundsOr(assumption, boundMap, booleanMap))
-			return false;
-		return updateConstantMap();
-	}
-
-	private void processHerbrandCast(Monomial poly, Number value) {
-		if (poly.operator() == SymbolicOperator.CAST) {
-			SymbolicType type = poly.type();
-			SymbolicExpression original = (SymbolicExpression) poly.argument(0);
-			SymbolicType originalType = original.type();
-
-			if (originalType.isHerbrand() && originalType.isInteger()
-					&& type.isInteger()
-					|| originalType.isReal() && type.isReal()) {
-				SymbolicExpression constant = universe.cast(originalType,
-						universe.number(value));
-
-				cacheSimplification(original, constant);
-			}
-		}
-	}
-
-	private boolean updateConstantMap() {
-		// The constant map doesn't get cleared because we want to keep
-		// accumulating facts. Thus the map might not be empty at this point.
-		for (BoundsObject bounds : boundMap.values()) {
-			Number lower = bounds.lower();
-
-			if (lower != null && lower.equals(bounds.upper)) {
-				Monic expression = (Monic) bounds.expression;
-
-				assert !bounds.strictLower && !bounds.strictUpper;
-				constantMap.put(expression, lower);
-				processHerbrandCast(expression, lower);
-			}
-		}
-
-		boolean satisfiable = LinearSolver.reduceConstantMap(info.idealFactory,
-				constantMap);
-
-		if (debug) {
-			printBoundMap(info.out);
-			printConstantMap(info.out);
-			printBooleanMap(info.out);
-		}
-		return satisfiable;
-	}
-
-	private void printBoundMap(PrintStream out) {
-		out.println("Bounds map:");
-		for (BoundsObject boundObject : boundMap.values()) {
-			out.println(boundObject);
-		}
-		out.println();
-		out.flush();
-	}
-
-	private void printConstantMap(PrintStream out) {
-		out.println("Constant map:");
-		for (Entry<Monic, Number> entry : constantMap.entrySet()) {
-			out.print(entry.getKey() + " = ");
-			out.println(entry.getValue());
-		}
-		out.println();
-		out.flush();
-	}
-
-	private void printBooleanMap(PrintStream out) {
-		out.println("Boolean map:");
-		for (Entry<BooleanExpression, Boolean> entry : booleanMap.entrySet()) {
-			out.print(entry.getKey() + " = ");
-			out.println(entry.getValue());
-		}
-		out.println();
-		out.flush();
-	}
-
-	/**
-	 * Performs deep copy of a bounds map. Temporary fix: once persistent maps
-	 * and an immutable BoundsObject are used, this will not be needed.
-	 * 
-	 * @param map
-	 *            a bounds map
-	 * @return a deep copy of that map that does not share anything that is
-	 *         mutable, such as a BoundsObject
-	 */
-	private Map<Monic, BoundsObject> copyBoundMap(
-			Map<Monic, BoundsObject> map) {
-		HashMap<Monic, BoundsObject> result = new HashMap<>();
-
-		for (Entry<Monic, BoundsObject> entry : map.entrySet()) {
-			result.put(entry.getKey(), entry.getValue().clone());
-		}
-		return result;
-	}
-
-	private Map<BooleanExpression, Boolean> copyBooleanMap(
-			Map<BooleanExpression, Boolean> map) {
-		return new HashMap<>(map);
-	}
-
-	private boolean extractBoundsOr(BooleanExpression or,
-			Map<Monic, BoundsObject> aBoundMap,
-			Map<BooleanExpression, Boolean> aBooleanMap) {
-		SymbolicOperator op = or.operator();
-
-		if (op == SymbolicOperator.OR) {
-			// p & (q0 | ... | qn) = (p & q0) | ... | (p & qn)
-			// copies of original maps, corresponding to p. these never
-			// change...
-			Map<Monic, BoundsObject> originalBoundMap = copyBoundMap(aBoundMap);
-			Map<BooleanExpression, Boolean> originalBooleanMap = copyBooleanMap(
-					aBooleanMap);
-			Iterator<? extends BooleanExpression> clauses = or
-					.booleanCollectionArg(0).iterator();
-			boolean satisfiable = extractBoundsBasic(clauses.next(), aBoundMap,
-					aBooleanMap); // result <- p & q0:
-
-			// result <- result | ((p & q1) | ... | (p & qn)) :
-			while (clauses.hasNext()) {
-				BooleanExpression clause = clauses.next();
-				Map<Monic, BoundsObject> newBoundMap = copyBoundMap(
-						originalBoundMap);
-				Map<BooleanExpression, Boolean> newBooleanMap = copyBooleanMap(
-						originalBooleanMap);
-				// compute p & q_i:
-				boolean newSatisfiable = extractBoundsBasic(clause, newBoundMap,
-						newBooleanMap);
-
-				// result <- result | (p & q_i) where result is (aBoundMap,
-				// aBooleanMap)....
-				satisfiable = satisfiable || newSatisfiable;
-				if (newSatisfiable) {
-					LinkedList<SymbolicExpression> boundRemoveList = new LinkedList<>();
-					LinkedList<BooleanExpression> booleanRemoveList = new LinkedList<>();
-
-					for (Map.Entry<Monic, BoundsObject> entry : aBoundMap
-							.entrySet()) {
-						SymbolicExpression primitive = entry.getKey();
-						BoundsObject oldBound = entry.getValue();
-						BoundsObject newBound = newBoundMap.get(primitive);
-
-						if (newBound == null) {
-							boundRemoveList.add(primitive);
-						} else {
-							oldBound.enlargeTo(newBound);
-							if (oldBound.isUniversal())
-								boundRemoveList.add(primitive);
-						}
-					}
-					for (SymbolicExpression primitive : boundRemoveList)
-						aBoundMap.remove(primitive);
-					for (Map.Entry<BooleanExpression, Boolean> entry : aBooleanMap
-							.entrySet()) {
-						BooleanExpression primitive = entry.getKey();
-						Boolean oldValue = entry.getValue();
-						Boolean newValue = newBooleanMap.get(primitive);
-
-						if (newValue == null || !newValue.equals(oldValue))
-							booleanRemoveList.add(primitive);
-					}
-					for (BooleanExpression primitive : booleanRemoveList)
-						aBooleanMap.remove(primitive);
-				}
-			}
-			return satisfiable;
-		} else { // 1 clause
-			// if this is of the form EQ x,y where y is a constant and
-			// x and y are not-numeric, add to otherConstantMap
-			if (op == SymbolicOperator.EQUALS) {
-				SymbolicExpression arg0 = (SymbolicExpression) or.argument(0),
-						arg1 = (SymbolicExpression) or.argument(1);
-				SymbolicType type = arg0.type();
-
-				if (!type.isNumeric()) {
-					boolean const0 = arg0
-							.operator() == SymbolicOperator.CONCRETE;
-					boolean const1 = (arg1
-							.operator() == SymbolicOperator.CONCRETE);
-
-					if (const1 && !const0) {
-						otherConstantMap.put(arg0, arg1);
-						return true;
-					} else if (const0 && !const1) {
-						otherConstantMap.put(arg1, arg0);
-						return true;
-					} else if (const0 && const1) {
-						return arg0.equals(arg1);
-					} else {
-						return true;
-					}
-				}
-			}
-			return extractBoundsBasic(or, aBoundMap, aBooleanMap);
-		}
-	}
-
-	/**
-	 * A basic expression is either a boolean constant (true/false), a
-	 * LiteralExpression (p or !p) or QuantifierExpression
-	 */
-	private boolean extractBoundsBasic(BooleanExpression basic,
-			Map<Monic, BoundsObject> aBoundMap,
-			Map<BooleanExpression, Boolean> aBooleanMap) {
-		SymbolicOperator operator = basic.operator();
-
-		if (operator == SymbolicOperator.CONCRETE)
-			return ((BooleanObject) basic.argument(0)).getBoolean();
-		if (isRelational(operator)) {
-
-			// Cases: 0=Primitive, 0<Monic, 0<=Monic, Monic<0, Monic<=0,
-			// 0!=Primitive.
-
-			SymbolicExpression arg0 = (SymbolicExpression) basic.argument(0);
-			SymbolicExpression arg1 = (SymbolicExpression) basic.argument(1);
-
-			if (arg0.type().isNumeric()) {
-				switch (operator) {
-				case EQUALS: // 0==x
-					return extractEQ0Bounds((Primitive) arg1, aBoundMap,
-							aBooleanMap);
-				case NEQ:
-					return extractNEQ0Bounds((Primitive) arg1, aBoundMap,
-							aBooleanMap);
-				case LESS_THAN: // 0<x or x<0
-				case LESS_THAN_EQUALS: // 0<=x or x<=0
-					if (arg0.isZero()) {
-						return extractIneqBounds((Monic) arg1, true,
-								operator == LESS_THAN, aBoundMap, aBooleanMap);
-					} else {
-						return extractIneqBounds((Monic) arg0, false,
-								operator == LESS_THAN, aBoundMap, aBooleanMap);
-					}
-				default:
-					throw new RuntimeException(
-							"Unknown RelationKind: " + operator);
-				}
-			}
-		} else if (operator == SymbolicOperator.EXISTS
-				|| operator == SymbolicOperator.FORALL) {
-			// forall or exists: difficult
-			// forall x: ()bounds: can substitute whatever you want for x
-			// and extract bounds.
-			// example: forall i: a[i]<7. Look for all occurrence of a[*]
-			// and add bounds
-			return true;
-		} else if (operator == SymbolicOperator.NOT) {
-			BooleanExpression primitive = basic.booleanArg(0);
-			Boolean value = aBooleanMap.get(primitive);
-
-			if (value != null)
-				return !value;
-			aBooleanMap.put(primitive, false);
-			return true;
-		}
-
-		Boolean value = aBooleanMap.get(basic);
-
-		if (value != null)
-			return value;
-		aBooleanMap.put(basic, true);
-		return true;
-	}
-
-	private boolean extractEQ0Bounds(Primitive primitive,
-			Map<Monic, BoundsObject> aBoundMap,
-			Map<BooleanExpression, Boolean> aBooleanMap) {
-		if (primitive instanceof Polynomial)
-			return extractEQ0BoundsPoly((Polynomial) primitive, aBoundMap,
-					aBooleanMap);
-
-		BoundsObject bound = aBoundMap.get(primitive);
-		Number zero = primitive.type().isInteger()
-				? info.numberFactory.zeroInteger()
-				: info.numberFactory.zeroRational();
-
-		if (bound == null) {
-			bound = BoundsObject.newTightBound(primitive, zero);
-			aBoundMap.put(primitive, bound);
-		} else {
-			if (!bound.contains(zero))
-				return false;
-			bound.makeConstant(zero);
-		}
-		return true;
-	}
-
-	/**
-	 * Given the fact that poly==0, for some {@link Polynomial} poly, updates
-	 * the specified bound map and boolean map appropriately.
-	 * 
-	 * @param poly
-	 *            a non-<code>null</code> polynomial
-	 * @param aBoundMap
-	 *            a bound map: a map from pseudo-primitive polynomials to bound
-	 *            objects specifying an interval bound for those polynomials
-	 * @param aBooleanMap
-	 *            a map specifying a concrete boolean value for some set of
-	 *            boolean-valued symbolic expressions
-	 * @return <code>false</code> if it is determined that the given assertion
-	 *         is inconsistent with the information in the bound map and boolean
-	 *         map; else <code>true</code>
-	 */
-	private boolean extractEQ0BoundsPoly(Polynomial poly,
-			Map<Monic, BoundsObject> aBoundMap,
-			Map<BooleanExpression, Boolean> aBooleanMap) {
-		AffineExpression affine = info.affineFactory.affine(poly);
-		Monic pseudo = affine.pseudo();
-		RationalNumber coefficient = info.numberFactory
-				.rational(affine.coefficient());
-		RationalNumber offset = info.numberFactory.rational(affine.offset());
-		RationalNumber rationalValue = info.numberFactory
-				.negate(info.numberFactory.divide(offset, coefficient));
-		Number value; // same as rationalValue but IntegerNumber if type is
-						// integer
-		BoundsObject bound = aBoundMap.get(pseudo);
-
-		if (pseudo.type().isInteger()) {
-			if (info.numberFactory.isIntegral(rationalValue)) {
-				value = info.numberFactory.integerValue(rationalValue);
-			} else {
-				return false;
-			}
-		} else {
-			value = rationalValue;
-		}
-		if (bound == null) {
-			bound = BoundsObject.newTightBound(pseudo, value);
-			aBoundMap.put(pseudo, bound);
-		} else {
-			if (!bound.contains(value))
-				return false;
-			bound.makeConstant(value);
-		}
-		return true;
-	}
-
-	private boolean extractNEQ0Bounds(Primitive primitive,
-			Map<Monic, BoundsObject> aBoundMap,
-			Map<BooleanExpression, Boolean> aBooleanMap) {
-
-		if (primitive instanceof Polynomial)
-			return extractNEQ0BoundsPoly((Polynomial) primitive, aBoundMap,
-					aBooleanMap);
-
-		BoundsObject bound = aBoundMap.get(primitive);
-		SymbolicType type = primitive.type();
-		Constant zero = info.idealFactory.zero(type);
-
-		if (bound == null) {
-			// for now, nothing can be done, since the bounds are
-			// plain intervals. we need a more precise abstraction
-			// than intervals here.
-		} else if (bound.contains(zero.number())) {
-			// is value an end-point? Might be able to sharpen bound...
-			if (bound.lower != null && bound.lower.isZero()
-					&& !bound.strictLower) {
-				bound.restrictLower(bound.lower, true);
-			}
-			if (bound.upper != null && bound.upper.isZero()
-					&& !bound.strictUpper) {
-				bound.restrictUpper(bound.upper, true);
-			}
-			if (bound.isEmpty()) {
-				return false;
-			}
-		}
-		aBooleanMap.put(info.universe.neq(zero, primitive), true);
-		return true;
-	}
-
-	/**
-	 * Given the fact that poly!=0, for some {@link Polynomial} poly, updates
-	 * the specified bound map and boolean map appropriately.
-	 * 
-	 * @param poly
-	 *            a non-<code>null</code> polynomial
-	 * @param aBoundMap
-	 *            a bound map: a map from pseudo-primitive polynomials to bound
-	 *            objects specifying an interval bound for those polynomials
-	 * @param aBooleanMap
-	 *            a map specifying a concrete boolean value for some set of
-	 *            boolean-valued symbolic expressions
-	 * @return <code>false</code> if it is determined that the given assertion
-	 *         is inconsistent with the information in the bound map and boolean
-	 *         map; else <code>true</code>
-	 */
-	private boolean extractNEQ0BoundsPoly(Polynomial poly,
-			Map<Monic, BoundsObject> aBoundMap,
-			Map<BooleanExpression, Boolean> aBooleanMap) {
-		// poly=aX+b. if X=-b/a, contradiction.
-		SymbolicType type = poly.type();
-		AffineExpression affine = info.affineFactory.affine(poly);
-		Monic pseudo = affine.pseudo();
-		RationalNumber coefficient = info.numberFactory
-				.rational(affine.coefficient());
-		RationalNumber offset = info.numberFactory.rational(affine.offset());
-		RationalNumber rationalValue = info.numberFactory
-				.negate(info.numberFactory.divide(offset, coefficient));
-		Number value; // same as rationalValue but IntegerNumber if type is
-						// integer
-		BoundsObject bound = aBoundMap.get(pseudo);
-		Monomial zero = info.idealFactory.zero(type);
-
-		if (type.isInteger()) {
-			if (info.numberFactory.isIntegral(rationalValue)) {
-				value = info.numberFactory.integerValue(rationalValue);
-			} else {
-				// an integer cannot equal a non-integer.
-				aBooleanMap.put(info.idealFactory.neq(zero, poly), true);
-				return true;
-			}
-		} else {
-			value = rationalValue;
-		}
-		// interpret fact pseudo!=value, where pseudo is in bound
-		if (bound == null) {
-			// for now, nothing can be done, since the bounds are
-			// plain intervals. we need a more precise abstraction
-			// than intervals here.
-		} else if (bound.contains(value)) {
-			// is value an end-point? Might be able to sharpen bound...
-			if (bound.lower != null && bound.lower.equals(value)
-					&& !bound.strictLower) {
-				bound.restrictLower(bound.lower, true);
-			}
-			if (bound.upper != null && bound.upper.equals(value)
-					&& !bound.strictUpper) {
-				bound.restrictUpper(bound.upper, true);
-			}
-			if (bound.isEmpty()) {
-				return false;
-			}
-		}
-		aBooleanMap.put(info.universe.neq(zero, poly), true);
-		return true;
-	}
-
-	private boolean extractIneqBounds(Monic monic, boolean gt, boolean strict,
-			Map<Monic, BoundsObject> aBoundMap,
-			Map<BooleanExpression, Boolean> aBooleanMap) {
-		// extract meaning from XYZ>0, >=0, <0, <=0
-		if (monic instanceof Polynomial)
-			return extractIneqBoundsPoly((Polynomial) monic, gt, strict,
-					aBoundMap, aBooleanMap);
-
-		BoundsObject boundsObject = aBoundMap.get(monic);
-		Number zero = monic.type().isInteger()
-				? info.numberFactory.zeroInteger()
-				: info.numberFactory.zeroRational();
-
-		if (gt) { // lower bound
-			if (boundsObject == null) {
-				boundsObject = BoundsObject.newLowerBound(monic, zero, strict);
-				aBoundMap.put(monic, boundsObject);
-			} else {
-				boundsObject.restrictLower(zero, strict);
-				return boundsObject.isConsistent();
-			}
-		} else { // upper bound
-			if (boundsObject == null) {
-				boundsObject = BoundsObject.newUpperBound(monic, zero, strict);
-				aBoundMap.put(monic, boundsObject);
-			} else {
-				boundsObject.restrictUpper(zero, strict);
-				return boundsObject.isConsistent();
-			}
-		}
-		return true;
-	}
-
-	private boolean extractIneqBoundsPoly(Polynomial fp, boolean gt,
-			boolean strict, Map<Monic, BoundsObject> aBoundMap,
-			Map<BooleanExpression, Boolean> aBooleanMap) {
-		AffineExpression affine = info.affineFactory.affine(fp);
-		Monic pseudo;
-
-		if (affine == null)
-			return true;
-		pseudo = affine.pseudo();
-		assert pseudo != null;
-
-		BoundsObject boundsObject = aBoundMap.get(pseudo);
-		Number coefficient = affine.coefficient();
-		boolean pos = coefficient.signum() > 0;
-		Number bound = info.affineFactory.bound(affine, gt, strict);
-		// aX+b>0.
-		// a>0:lower bound (X>-b/a).
-		// a<0: upper bound (X<-b/a).
-
-		if (pseudo.type().isInteger())
-			strict = false;
-		if ((pos && gt) || (!pos && !gt)) { // lower bound
-			if (boundsObject == null) {
-				boundsObject = BoundsObject.newLowerBound(pseudo, bound,
-						strict);
-				aBoundMap.put(pseudo, boundsObject);
-			} else {
-				boundsObject.restrictLower(bound, strict);
-				return boundsObject.isConsistent();
-			}
-		} else { // upper bound
-			if (boundsObject == null) {
-				boundsObject = BoundsObject.newUpperBound(pseudo, bound,
-						strict);
-				aBoundMap.put(pseudo, boundsObject);
-			} else {
-				boundsObject.restrictUpper(bound, strict);
-				return boundsObject.isConsistent();
-			}
-		}
-		return true;
-	}
-
-	private void declareFact(SymbolicExpression booleanExpression,
-			boolean truth) {
-		BooleanExpression value = truth ? info.trueExpr : info.falseExpr;
-
-		cacheSimplification(booleanExpression, value);
-	}
-
-	private void declareClauseFact(BooleanExpression clause) {
-		if (isNumericRelational(clause)) {
-			if (clause.operator() == SymbolicOperator.NEQ) {
-				BooleanExpression eq0 = (BooleanExpression) info.universe
-						.not(clause);
-
-				declareFact(eq0, false);
-			}
-		} else
-			declareFact(clause, true);
-	}
-
-	/**
-	 * This method inserts into the simplification cache all facts from the
-	 * assumption that are not otherwise encoded in the {@link #constantMap},
-	 * {@link #booleanMap}, or {@link #boundMap}. It is to be invoked only after
-	 * the assumption has been simplified for the final time.
-	 */
-	private void extractRemainingFacts() {
-		SymbolicOperator operator = assumption.operator();
-
-		if (operator == SymbolicOperator.AND) {
-			for (BooleanExpression or : assumption.booleanCollectionArg(0)) {
-				declareClauseFact(or);
-			}
-		} else {
-			declareClauseFact(assumption);
-		}
 	}
 
 	// Exported methods.............................................
