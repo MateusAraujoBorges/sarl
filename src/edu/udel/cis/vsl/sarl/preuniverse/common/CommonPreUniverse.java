@@ -2136,7 +2136,7 @@ public class CommonPreUniverse implements PreUniverse {
 		SymbolicOperator op = tuple.operator();
 		int indexInt = index.getInt();
 
-		if (type.typeKind() != SymbolicTypeKind.TUPLE)
+		if (type == null || type.typeKind() != SymbolicTypeKind.TUPLE)
 			throw new SARLException(
 					"Argument tuple to tupleRead does not have tuple type:\n"
 							+ tuple);
