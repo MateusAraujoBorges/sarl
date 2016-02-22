@@ -1972,7 +1972,7 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	public Interval singletonInterval(Number x) {
-		//TODO: Testing
+		// TODO: Testing
 		assert x != null;
 		return newInterval(x instanceof IntegerNumber, x, false, x, false);
 	}
@@ -1980,7 +1980,7 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	public Interval restrictUpper(Interval interval, Number bound,
 			boolean strict) {
-		//TODO: Testing
+		// TODO: Testing
 		assert interval != null;
 		assert interval.isIntegral() == bound instanceof IntegerNumber;
 
@@ -2018,18 +2018,21 @@ public class RealNumberFactory implements NumberFactory {
 			}
 		} else {
 			int compareUpperBound = upper.compareTo(bound);
-			int compareLowerBound = lower.compareTo(bound);
 
 			if (compareUpperBound < 0) {
 				return interval;
 			} else if (compareUpperBound == 0) {
 				return newInterval(isInt, lower, strictLower, bound, strict
 						|| strictUpper);
-			} else if ((compareLowerBound < 0 && compareUpperBound > 0)
-					|| (compareLowerBound == 0 && !strict && !strictLower)) {
-				return newInterval(isInt, lower, strictLower, bound, strict);
 			} else {
-				return isInt ? emptyIntegerInterval : emptyRationalInterval;
+				int compareLowerBound = lower.compareTo(bound);
+
+				if ((compareLowerBound < 0)
+						|| (compareLowerBound == 0 && !strict && !strictLower)) {
+					return newInterval(isInt, lower, strictLower, bound, strict);
+				} else {
+					return isInt ? emptyIntegerInterval : emptyRationalInterval;
+				}
 			}
 		}
 	}
@@ -2037,7 +2040,7 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	public Interval restrictLower(Interval interval, Number bound,
 			boolean strict) {
-		//TODO: Testing
+		// TODO: Testing
 		assert interval != null;
 		assert interval.isIntegral() == bound instanceof IntegerNumber;
 
@@ -2074,7 +2077,6 @@ public class RealNumberFactory implements NumberFactory {
 						strictUpper);
 			}
 		} else {
-			int compareUpperBound = upper.compareTo(bound);
 			int compareLowerBound = lower.compareTo(bound);
 
 			if (compareLowerBound > 0) {
@@ -2082,18 +2084,22 @@ public class RealNumberFactory implements NumberFactory {
 			} else if (compareLowerBound == 0) {
 				return newInterval(isInt, bound, strict || strictLower, upper,
 						strictUpper);
-			} else if ((compareLowerBound < 0 && compareUpperBound > 0)
-					|| (compareUpperBound == 0 && !strict && !strictUpper)) {
-				return newInterval(isInt, bound, strict, upper, strictUpper);
 			} else {
-				return isInt ? emptyIntegerInterval : emptyRationalInterval;
+				int compareUpperBound = upper.compareTo(bound);
+
+				if (compareUpperBound > 0
+						|| (compareUpperBound == 0 && !strict && !strictUpper)) {
+					return newInterval(isInt, bound, strict, upper, strictUpper);
+				} else {
+					return isInt ? emptyIntegerInterval : emptyRationalInterval;
+				}
 			}
 		}
 	}
 
 	@Override
 	public Interval join(Interval i1, Interval i2) {
-		//TODO: Testing
+		// TODO: Testing
 		assert i1 != null && i2 != null;
 		assert i1.isIntegral() == i2.isIntegral();
 
