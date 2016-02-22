@@ -50,7 +50,7 @@ public class CommonInterval implements Interval {
 			assert (lower == null && strictLower)
 					|| (lower != null && !strictLower) || lower.isZero();
 			assert (upper == null && strictUpper)
-					|| (upper != null && !strictUpper) || lower.isZero();
+					|| (upper != null && !strictUpper) || upper.isZero();
 		} else {
 			assert (lower == null || lower instanceof RationalNumber)
 					&& (upper == null || upper instanceof RationalNumber);
@@ -230,6 +230,6 @@ public class CommonInterval implements Interval {
 	@Override
 	public boolean isZero() {
 		return lower != null && upper != null && lower.isZero()
-				&& upper.isZero() && !strictLower && !strictLower;
+				&& upper.isZero() && !strictLower && !strictUpper;
 	}
 }
