@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.PrintStream;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -140,30 +139,18 @@ public class RealArithmeticTest {
 	 * Adds two polynomials by forming the factorization and by factoring out 
 	 * the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p1 = a^2 + 1
-	 * 
-	 * @param p2 = 2*a^2 + 1
-	 * 
-	 * @param p3 = 0 * a
-	 * 
-	 * @param p4 = 3*a^2 + 2
-	 * 
-	 * @param b1 = a^2 + 1 + 2*a^2 + 1
-	 * 
-	 * @param b2 = 0*a + 2*a^2 + 1
-	 * 
 	 * @param type NumericExpression
 	 * 
 	 */
 	@Test
 	public void addPolyToPoly(){
-		NumericExpression p1 = universe.add(universe.multiply(a, a), one);
-		NumericExpression p2 = universe.add(universe.multiply(two, universe.multiply(a, a)), one);
-		NumericExpression p3 = universe.multiply(zero, a);
-		NumericExpression p4 = universe.add(universe.multiply(three, universe.multiply(a, a)), two);
+		NumericExpression p1 = universe.add(universe.multiply(a, a), one); //p1 = a^2 + 1
+		NumericExpression p2 = universe.add(universe.multiply(two, universe.multiply(a, a)), one); //2*a^2 + 1
+		NumericExpression p3 = universe.multiply(zero, a);//p3 = 0 * a
+		NumericExpression p4 = universe.add(universe.multiply(three, universe.multiply(a, a)), two);//p4 = 3*a^2 + 2
 		
-		NumericExpression b1 = universe.add(p1, p2);
-		NumericExpression b2 = universe.add(p3, p2);
+		NumericExpression b1 = universe.add(p1, p2);//b1 = a^2 + 1 + 2*a^2 + 1
+		NumericExpression b2 = universe.add(p3, p2);//b2 = 0*a + 2*a^2 + 1
 		
 		assertEquals(p4, b1);
 		assertEquals(p2, b2);
@@ -173,22 +160,16 @@ public class RealArithmeticTest {
 	 * Adds a monomial and a polynomial by forming the factorization and by 
 	 * factoring out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p1 = 2a^2 + 1
-	 * 
-	 * @param p2 = 10a
-	 * 
-	 * @param p3 = 10a + 2a^2 + 1
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
 	public void addPolyToMonomial() {
-		NumericExpression p1 = universe.add(universe.multiply(two, universe.multiply(a, a)), one);
-		NumericExpression p2 = universe.multiply(ten, a);
+		NumericExpression p1 = universe.add(universe.multiply(two, universe.multiply(a, a)), one);// p1 = 2a^2 + 1
+		NumericExpression p2 = universe.multiply(ten, a);//p2 = 10a
 		NumericExpression p3 = universe.add(universe.multiply(ten, a), universe.add(universe.multiply(
-						two, universe.multiply(a, a)), one));
+						two, universe.multiply(a, a)), one));// p3 = 10a + 2a^2 + 1
 				
 		NumericExpression b1 = universe.add(p1, p2);
 		
@@ -199,18 +180,14 @@ public class RealArithmeticTest {
 	 * Adds two monomials by forming the factorization and by 
 	 * factoring out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p1 = 10a
-	 * 
-	 * @param p2 = 20a
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
 	public void addMonomialToMonomial() {
-		NumericExpression p1 = universe.multiply(ten, a);
-		NumericExpression p2 = universe.multiply(twenty, a);
+		NumericExpression p1 = universe.multiply(ten, a);// p1 = 10a
+		NumericExpression p2 = universe.multiply(twenty, a);// p2 = 20a
 				
 		NumericExpression b1 = universe.add(p1, p1);
 		
@@ -221,20 +198,14 @@ public class RealArithmeticTest {
 	 * Adds a monomial and a primitive power by forming the factorization and by 
 	 * factoring out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p1 = 10a
-	 * 
-	 * @param p2 = a^2
-	 * 
-	 * @param p3 = a * (10 + a)
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 */
 	@Test
 	public void addMonomialToPrimitivePower() {
-		NumericExpression p1 = universe.multiply(ten, a);
-		NumericExpression p2 = universe.multiply(a, a);
-		NumericExpression p3 = universe.multiply(a, universe.add(ten, a));
+		NumericExpression p1 = universe.multiply(ten, a);// p1 = 10a
+		NumericExpression p2 = universe.multiply(a, a);// p2 = a^2
+		NumericExpression p3 = universe.multiply(a, universe.add(ten, a));// p3 = a * (10 + a)
 		
 		NumericExpression b1 = universe.add(p1, p2);
 		
@@ -245,20 +216,14 @@ public class RealArithmeticTest {
 	 * Adds a monomial and a monic by forming the factorization and by 
 	 * factoring out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p1 = 10a
-	 * 
-	 * @param p2 = ab
-	 * 
-	 * @param p3 = a * (10 + b)
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 */
 	@Test
 	public void addMonomialToMonic() {
-		NumericExpression p1 = universe.multiply(ten, a);
-		NumericExpression p2 = universe.multiply(a, b);
-		NumericExpression p3 = universe.multiply(a, universe.add(ten, b));
+		NumericExpression p1 = universe.multiply(ten, a);// p1 = 10a
+		NumericExpression p2 = universe.multiply(a, b);// p2 = ab
+		NumericExpression p3 = universe.multiply(a, universe.add(ten, b));// p3 = a * (10 + b)
 		
 		NumericExpression b1 = universe.add(p1, p2);
 		
@@ -271,33 +236,22 @@ public class RealArithmeticTest {
 	 * Subtracts a rational expression and a polynomial by forming the factorization and by factoring out 
 	 * the common factors that are produced from the two factorizations.
 	 * 
-	 * @param x2 = a^2
-	 * 
-	 * @param monic = a^2 * b
-	 * 
-	 * @param monomial = 3a^2 * b
-	 * 
-	 * @param polynomial = 3a^2 * b + a^2
-	 * 
-	 * @param result = (-(3a^2 + x^2)*y + x)/y
-	 * 
-	 * @param subPolynomial = x/y - polynomial
 	 * 
 	 * @param type
 	 * 				NumericExpression
 	 */
 	@Test
 	public void subRationalToPolynomial() {
-		NumericExpression a2 = (NumericExpression) universe.multiply(a, a); 
-		NumericExpression monic = (NumericExpression) universe.multiply(a2, b); 
+		NumericExpression a2 = (NumericExpression) universe.multiply(a, a); // a2 = a^2
+		NumericExpression monic = (NumericExpression) universe.multiply(a2, b); // monic = a^2 * b
 		NumericExpression monomial = (NumericExpression) universe.multiply(three, 
-				monic); 
-		NumericExpression polynomial = (NumericExpression) universe.add(monomial, a2); 
+				monic); // monomial = 3a^2 * b
+		NumericExpression polynomial = (NumericExpression) universe.add(monomial, a2); // polynomial = 3a^2 * b + a^2
 		NumericExpression result = universe.divide(universe.
 				add(universe.minus(universe.multiply(polynomial, b)),
-						a), b); 
+						a), b); // result = (-(3a^2 + x^2)*y + x)/y
 		
-		NumericExpression subPolynomial = universe.subtract(aDBb, polynomial);
+		NumericExpression subPolynomial = universe.subtract(aDBb, polynomial);// subPolynomial = x/y - polynomial
 		
 		assertEquals(result, subPolynomial);
 	}
@@ -306,30 +260,20 @@ public class RealArithmeticTest {
 	 * Subtracts a rational expression and a monomial by forming the factorization and by factoring out 
 	 * the common factors that are produced from the two factorizations.
 	 * 
-	 * @param x2 = a^2
-	 * 
-	 * @param monic = a^2 * b
-	 * 
-	 * @param monomial = 3a^2 * b
-	 * 
-	 * @param result = ((3*a^2*y^2)+x)/y
-	 * 
-	 * @param subMonomial = (a - 3*a^2*a^2)/b
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
 	public void subRationalToMonomial() {
-		NumericExpression a2 = (NumericExpression) universe.multiply(a, a);
-		NumericExpression monic = (NumericExpression) universe.multiply(a2, b);
+		NumericExpression a2 = (NumericExpression) universe.multiply(a, a);// x2 = a^2
+		NumericExpression monic = (NumericExpression) universe.multiply(a2, b);// monic = a^2 * b
 		NumericExpression monomial = (NumericExpression) universe.multiply(three, 
-				monic); 
+				monic); // monomial = 3a^2 * b
 		NumericExpression result = universe.divide(universe.
-				subtract(a, universe.multiply(monomial, b)), b); 
+				subtract(a, universe.multiply(monomial, b)), b); // result = ((3*a^2*y^2)+x)/y
 		
-		NumericExpression subMonomial = universe.subtract(aDBb, monomial);
+		NumericExpression subMonomial = universe.subtract(aDBb, monomial);// subMonomial = (a - 3*a^2*a^2)/b
 		
 		assertEquals(result, subMonomial);
 	}
@@ -356,39 +300,24 @@ public class RealArithmeticTest {
 	 * Multiplies two polynomials by forming the factorization and by 
 	 * factoring out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p1 = a^2 + 1
-	 * 
-	 * @param p2 = 2*a^2 + 1
-	 * 
-	 * @param p3 = 0 * a
-	 * 
-	 * @param p4 = 3 * a^2 + 1
-	 * 
-	 * @param p5 = 2a^4 +p4
-	 * 
-	 * @param b1 = (a^2 + 1) * (2*a^2 + 1)
-	 * 
-	 * @param b2 = (a^2 + 1)* (0 * a)
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
-	@Ignore
     public void mulPolyToPoly() {
-		NumericExpression p1 = universe.add(universe.multiply(a, a), one); // a^2 + 1
+		NumericExpression p1 = universe.add(universe.multiply(a, a), one); // p1 = a^2 + 1
 		NumericExpression p2 = universe.add(universe.multiply(two,
-				universe.multiply(a, a)), one); // 2*a^2 + 1
-		NumericExpression p3 = universe.multiply(zero, a);
-        NumericExpression a2 = universe.multiply(a, a);
-        NumericExpression a4 = universe.multiply(a2, a2);
+				universe.multiply(a, a)), one); // p2 = 2*a^2 + 1
+		NumericExpression p3 = universe.multiply(zero, a);// p3 = 0 * a
+        NumericExpression a2 = universe.multiply(a, a);//p4 = 3 * a^2 + 1 
+        NumericExpression a4 = universe.multiply(a2, a2);// p5 = 2a^4 +p4
         NumericExpression p4 = universe.add(universe.multiply(three, universe.multiply(a, a)), one);
         NumericExpression p5 = universe.add(universe.
-                multiply(two, a4), p4);
+                multiply(two, a4), p4);// p5 = 2a^4 +p4
                
-        NumericExpression b1 = universe.multiply(p1, p2);
-        NumericExpression b2 = universe.multiply(p1, p3);
+        NumericExpression b1 = universe.multiply(p1, p2);// b1 = (a^2 + 1) * (2*a^2 + 1)
+        NumericExpression b2 = universe.multiply(p1, p3);// b2 = (a^2 + 1)* (0 * a)
        
         assertEquals(p5, b1);
         assertEquals(zero, b2);
@@ -398,27 +327,19 @@ public class RealArithmeticTest {
 	 * Multiplies a polynomial with a monomial by forming the factorization 
 	 * and by factoring out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p1 = a^2 + 1
-	 * 
-	 * @param p2 = 10a
-	 * 
-	 * @param p3 = 10a^3 + 10a
-	 * 
-	 * @param b1 = 10a * (a^2+1)
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
 	public void mulPolyToMonomial() {
-		NumericExpression p1 = universe.add(universe.multiply(a, a), one);
-		NumericExpression p2 = universe.multiply(ten, a);
+		NumericExpression p1 = universe.add(universe.multiply(a, a), one);// p1 = a^2 + 1
+		NumericExpression p2 = universe.multiply(ten, a);// p2 = 10a
 		NumericExpression a2 = universe.multiply(a, a);
 		NumericExpression p3 = universe.add(universe.multiply(ten, 
-				universe.multiply(a2, a)), p2);
+				universe.multiply(a2, a)), p2);// p3 = 10a^3 + 10a
 		
-		NumericExpression b1 = universe.multiply(p2, p1);
+		NumericExpression b1 = universe.multiply(p2, p1);// b1 = 10a * (a^2+1)
 		
 		assertEquals(p3, b1);
 	}
@@ -427,33 +348,47 @@ public class RealArithmeticTest {
 	 * Multiplies a monomial with a primitive power by forming the factorization 
 	 * and by factoring out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p1 = 10a
-	 * 
-	 * @param p2 = 10 * (a^2 * a)
-	 * 
-	 * @param b1 = 10a * a^2
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
 	public void mulMonomialToPrimitivePower() {
-		NumericExpression p1 = universe.multiply(ten, a);
+		NumericExpression p1 = universe.multiply(ten, a);// p1 = 10a
 		NumericExpression a2 = universe.multiply(a, a);
-		NumericExpression p2 = universe.multiply(ten, universe.multiply(a2, a));
+		NumericExpression p2 = universe.multiply(ten, universe.multiply(a2, a));// p2 = 10 * (a^2 * a)
 		
-		NumericExpression b1 = universe.multiply(p1, a2);
+		NumericExpression b1 = universe.multiply(p1, a2);// b1 = 10a * a^2
 		
 		assertEquals(p2, b1);
 	}
 	
 	/**
 	 * (a+1) * (a-1) == a^2 - 1
-	 * 
+	 * TODO
+	 * @param type
+	 * 				SymbolicExpression of Numeric type
 	 */
 	@Test
 	public void xp1xm1() {
+		NumericExpression xp1 = universe.add(a, one);
+		NumericExpression xm1 = universe.add(a, (NumericExpression) universe.minus(one));
+		NumericExpression xp1xm1 = universe.multiply(xp1, xm1);		
+		NumericExpression x2m1 = universe.subtract(universe.multiply(a, a),
+				universe.multiply(one,one));
+		
+		out.println("xp1xm1=" + xp1xm1);
+		out.println("x2m1=" + x2m1);
+		
+		assertEquals(x2m1, xp1xm1);
+	}
+	
+	/**
+	 * (a+1) * (a-1) == a^2 - 1
+	 * TODO
+	 */
+	@Test
+	public void xp1xm1test() {
 		NumericExpression xp1 = universe.add(a, one);
 		NumericExpression xm1 = universe.add(a, (NumericExpression) universe.minus(one));
 		NumericExpression xp1xm1 = universe.multiply(xp1, xm1);		
@@ -478,20 +413,14 @@ public class RealArithmeticTest {
 	 * Divides two polynomials by forming the factorization and by factoring 
 	 * out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p01 = 10 + 10a
-	 * 
-	 * @param p02 = 2 + 2a
-	 * 
-	 * 5 == p01/p02 ?
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
 	public void dividePolyByPoly() {
-		NumericExpression p01 = universe.add(ten, universe.multiply(ten, a));
-		NumericExpression p02 = universe.add(two, universe.multiply(two, a));
+		NumericExpression p01 = universe.add(ten, universe.multiply(ten, a));// p01 = 10 + 10a
+		NumericExpression p02 = universe.add(two, universe.multiply(two, a));// p02 = 2 + 2a
 		NumericExpression b1 = universe.divide(p01, p02);
 		
 		assertEquals(five, b1);
@@ -501,28 +430,18 @@ public class RealArithmeticTest {
 	 * Divides a polynomial with a monomial by forming the factorization and 
 	 * by factoring out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p01 = a^2
-	 * 
-	 * @param p02 = 10a
-	 * 
-	 * @param p03 = 10a + 10a^2
-	 * 
-	 * @param p04 = a+1
-	 * 
-	 * @param b1 = p03/p02
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
 	public void dividePolyToMonomial() {
-		NumericExpression p01 = universe.multiply(a, a);
-		NumericExpression p02 = universe.multiply(ten, a);
-		NumericExpression p03 = universe.add(p02, universe.multiply(ten, p01));
-		NumericExpression p04 = universe.add(a, one);
+		NumericExpression p01 = universe.multiply(a, a);// p01 = a^2
+		NumericExpression p02 = universe.multiply(ten, a);// p02 = 10a
+		NumericExpression p03 = universe.add(p02, universe.multiply(ten, p01));// p03 = 10a + 10a^2
+		NumericExpression p04 = universe.add(a, one);// p04 = a+1
 		
-		NumericExpression b1 = universe.divide(p03, p02);
+		NumericExpression b1 = universe.divide(p03, p02);// b1 = p03/p02
 		
 		assertEquals(p04, b1);
 	}
@@ -531,18 +450,14 @@ public class RealArithmeticTest {
 	 * Divides two monomials by forming the factorization 
 	 * and by factoring out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p1 = 10a
-	 * 
-	 * @param p2 = 2a
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 *
 	 */
 	@Test
 	public void divideMonomialToMonomial() {
-		NumericExpression p01 = universe.multiply(ten, a);
-		NumericExpression p02 = universe.multiply(two, a);
+		NumericExpression p01 = universe.multiply(ten, a);// p1 = 10a
+		NumericExpression p02 = universe.multiply(two, a);// p2 = 2a
 		
 		NumericExpression b1 = universe.divide(p01, p02);
 		
@@ -553,22 +468,16 @@ public class RealArithmeticTest {
 	 * Divides a monomial with a primitive power by forming the factorization 
 	 * and by factoring out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p01 = a^2
-	 * 
-	 * @param p02 = a^2*b
-	 * 
-	 * @param b1 = p02/p01
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
 	public void divideMonicToPrimitivePower() {
-		NumericExpression p01 = universe.multiply(a, a);
-		NumericExpression p02 = universe.multiply(universe.multiply(a, a), b);
+		NumericExpression p01 = universe.multiply(a, a);// p01 = a^2
+		NumericExpression p02 = universe.multiply(universe.multiply(a, a), b);// p02 = a^2*b
 		
-		NumericExpression b1 = universe.divide(p02, p01);
+		NumericExpression b1 = universe.divide(p02, p01);// b1 = p02/p01
 		
 		assertEquals(b, b1);
 	}
@@ -577,47 +486,23 @@ public class RealArithmeticTest {
 	 * Divides a primitive with a constant by forming the factorization and 
 	 * by factoring out the common factors that are produced from the two factorizations.
 	 * 
-	 * @param p01 = a^2
-	 * 
-	 * @param p02 = 10a
-	 * 
-	 * @param p03 = p01/p02
-	 * 
-	 * @param b3 = a/10
-	 * 
-	 * p03 == b3 ?
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
 	public void dividePrimitiveToConstant() {
-		NumericExpression p01 = universe.multiply(a, a);
-		NumericExpression p02 = universe.multiply(ten, a);
-		NumericExpression p03 = universe.divide(p01, p02);
+		NumericExpression p01 = universe.multiply(a, a);// p01 = a^2
+		NumericExpression p02 = universe.multiply(ten, a);// p02 = 10a
+		NumericExpression p03 = universe.divide(p01, p02);// p03 = p01/p02
 		
-		NumericExpression b3 = universe.divide(a, ten);
+		NumericExpression b3 = universe.divide(a, ten);// b3 = a/10
 		
 		assertEquals(p03, b3);
 	}
 	
 	/**
 	 * Divides two polynomials by removing the common factors between them
-	 * 
-	 * @param p01 = ((a-1)*(a+1))*(ab+2)
-	 * 
-	 * @param p02 = ((a-1)*c)*(ab+3)
-	 * 
-	 * @param p03 = (a+1)*(ab+2)
-	 * 
-	 * @param p04 = (c)*(ab+3)
-	 * 
-	 * @param p05 = p03/p04
-	 * 
-	 * @param b1 = p01/p02
-	 * 
-	 * p05 == b1 ?
 	 * 
 	 * @param type
 	 * 				NumericExpression
@@ -627,17 +512,17 @@ public class RealArithmeticTest {
 	public void factorization() {
 		NumericExpression p01 = universe.multiply(universe.multiply((NumericExpression) universe.
 				subtract(a, one),universe.add(a, one)), universe.add(universe.multiply(
-						a, b), two));
+						a, b), two));// p01 = ((a-1)*(a+1))*(ab+2)
 		NumericExpression p02 = universe.multiply(universe.multiply((NumericExpression) universe.
 				subtract(a, one), c), universe.add(universe.multiply(a, 
-						b), three));
+						b), three));// p02 = ((a-1)*c)*(ab+3)
 		NumericExpression p03 = universe.multiply(universe.add(a, one), universe.add(universe.multiply(
-				a, b), two));
+				a, b), two));// p03 = (a+1)*(ab+2)
 		NumericExpression p04 = universe.multiply(c, universe.add(universe.multiply(a, b), 
-				three));
-		NumericExpression p05 = universe.divide(p03, p04);
+				three));// p04 = (c)*(ab+3)
+		NumericExpression p05 = universe.divide(p03, p04);// p05 = p03/p04
 		
-		NumericExpression b1 = universe.divide(p01, p02);
+		NumericExpression b1 = universe.divide(p01, p02);// b1 = p01/p02
 		
 		assertEquals(p05, b1);
 	}
@@ -648,48 +533,30 @@ public class RealArithmeticTest {
 	 * Returns true if the first argument is 'less than' the second 
 	 * argument and vice-versa.
 	 * 
-	 * @param n1 = a-1
-	 * 
-	 * @param n2 = a+1
-	 * 
-	 * r1 := (n2 < n1)
-	 * 
-	 * r2 := (n1 < n2)
-	 * 
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
 	public void lessThan() {
-		NumericExpression n1 = universe.subtract(a,one);
-		NumericExpression n2 = universe.add(a, one);
+		NumericExpression n1 = universe.subtract(a,one);// n1 = a-1
+		NumericExpression n2 = universe.add(a, one);// n2 = a+1
 		
-		BooleanExpression r1 = universe.lessThan(n2, n1);
-		BooleanExpression r2 = universe.lessThan(n1, n2);
+		BooleanExpression r1 = universe.lessThan(n2, n1);// r1 := (n2 < n1)
+		BooleanExpression r2 = universe.lessThan(n1, n2);// r2 := (n1 < n2)
 		
 		assertEquals(r1, f);
 		assertEquals(r2, t);
 	}
 	
-	/**
-	 * @param num1 = a+1
-	 * 
-	 * @param num2 = a-1
-	 * 
-	 * @param result1 := a <= a+1 ?
-	 * 
-	 * @param result2 := a-1 <= a ?
-	 * 
-	 * @param result3 := a <= a ?
-	 */
+	
 	@Test
 	public void lessThanEquals(){
-		NumericExpression num1 = universe.add(a, one);
-		NumericExpression num2 = universe.subtract(a, one);
-		BooleanExpression result1 = universe.lessThanEquals(a, num1);
-		BooleanExpression result2 = universe.lessThanEquals(num2, a);
-		BooleanExpression result3 = universe.lessThanEquals(a, a);
+		NumericExpression num1 = universe.add(a, one);// num1 = a+1
+		NumericExpression num2 = universe.subtract(a, one);// num2 = a-1
+		BooleanExpression result1 = universe.lessThanEquals(a, num1);// result1 := a <= a+1 ?
+		BooleanExpression result2 = universe.lessThanEquals(num2, a);// result2 := a-1 <= a ?
+		BooleanExpression result3 = universe.lessThanEquals(a, a);// result3 := a <= a ?
 
 		assertEquals(t, result1);
 		assertEquals(t, result2);
@@ -700,26 +567,19 @@ public class RealArithmeticTest {
 	 * Returns true if the first argument is 'equal' 
 	 * to the second argument and returns false otherwise.
 	 * 
-	 * @param n1 = a+1
-	 * 
-	 * @param n2 = (1*a^2)+a
-	 * 
-	 * @param n3 = 2ab + a
-	 * 
-	 * @param r1 = (a+b)/a
 	 * @param type
 	 * 				NumericExpression
 	 * 
 	 */
 	@Test
 	public void equals() {
-		NumericExpression n1 = universe.add(a, one);
+		NumericExpression n1 = universe.add(a, one);// n1 = a+1
 		NumericExpression n2 = universe.add(universe.
-				multiply(one, universe.multiply(a, a)), a);
+				multiply(one, universe.multiply(a, a)), a);// n2 = (1*a^2)+a
 		NumericExpression n3 = universe.add(universe.
-				multiply(two, universe.multiply(a, b)), a);
+				multiply(two, universe.multiply(a, b)), a);// n3 = 2ab + a
 		NumericExpression r1 = universe.
-				divide(universe.add(a, b), a);	// (x-y)/y	
+				divide(universe.add(a, b), a);	// r1 = (a+b)/a
 		
 		BooleanExpression b0 = universe.equals(a, n1);
 		BooleanExpression b1 = universe.equals(a, n2);
@@ -734,7 +594,4 @@ public class RealArithmeticTest {
 		assertEquals(f, b0);
 		assertEquals(t, b3);
 	}
-	
-	
-	
 }
