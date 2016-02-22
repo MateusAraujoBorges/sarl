@@ -130,12 +130,12 @@ public class IntegerArithmeticTest {
 	@Test
 	public void divideIntTest() {
 		/**
-		 * concrete test: 2 * 1 = 2
+		 * concrete test: 2 / 1 = 2
 		 */
 		NumericExpression result = universe.divide(twoInt, oneInt);
 		assertEquals(twoInt, result);
 		/**
-		 * symbolic test: 0 * x = 0;
+		 * symbolic test: 0 / x = 0;
 		 */
 		NumericExpression x = (NumericExpression) universe
 				.symbolicConstant(x_obj, intType);
