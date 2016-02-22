@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.PrintStream;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -369,7 +370,7 @@ public class RealArithmeticTest {
 	 * @param type
 	 * 				SymbolicExpression of Numeric type
 	 */
-	@Test
+	@Ignore
 	public void xp1xm1() {
 		NumericExpression xp1 = universe.add(a, one);
 		NumericExpression xm1 = universe.add(a, (NumericExpression) universe.minus(one));
@@ -387,7 +388,7 @@ public class RealArithmeticTest {
 	 * (a+1) * (a-1) == a^2 - 1
 	 * TODO
 	 */
-	@Test
+	@Ignore
 	public void xp1xm1test() {
 		NumericExpression xp1 = universe.add(a, one);
 		NumericExpression xm1 = universe.add(a, (NumericExpression) universe.minus(one));
