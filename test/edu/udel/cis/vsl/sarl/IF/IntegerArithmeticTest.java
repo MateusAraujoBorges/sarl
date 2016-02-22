@@ -1,7 +1,6 @@
 package edu.udel.cis.vsl.sarl.IF;
 
-import static org.junit.Assert.*;
-
+import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,26 +22,30 @@ public class IntegerArithmeticTest {
 	private SymbolicType intType = universe.integerType();
 
 	/**
-	 * Testing the add method for two IntegerNumbers.
+	 * Testing the add method for two concrete IntegerNumbers;test: 1 + 2 = 3
 	 */
 	@Test
-	public void addTwoIntTest() {
-		/**
-		 * concrete test: 1 + 2 = 3
-		 */
+	public void addTwoConcreteIntTest() {
 		NumericExpression result = universe.add(oneInt, twoInt);
+
 		assertEquals(threeInt, result);
-		/**
-		 * symbolic test: x + 0 = x;
-		 */
-		NumericExpression x = (NumericExpression) universe
-				.symbolicConstant(x_obj, intType);
-		NumericExpression result1 = universe.add(x, zero);
-		assertEquals(x, result1);
 	}
 
 	/**
-	 * Testing the add method for a sequence of IntegerNumbers.
+	 * Testing the add method for two symbolic IntegerNumbers;test: x + 0 = x;
+	 */
+	@Test
+	public void addTwoSymbolicIntTest() {
+		NumericExpression x = (NumericExpression) universe
+				.symbolicConstant(x_obj, intType);
+		NumericExpression result = universe.add(x, zero);
+
+		assertEquals(x, result);
+	}
+
+	/**
+	 * Testing the add method for a sequence of IntegerNumbers;test: 0 + 1 + 2 =
+	 * 3; x + 0 = x;
 	 */
 	@Test
 	public void addSeqIntTest() {
@@ -50,60 +53,71 @@ public class IntegerArithmeticTest {
 		List<NumericExpression> numList2 = new ArrayList<NumericExpression>();
 		NumericExpression x = (NumericExpression) universe
 				.symbolicConstant(x_obj, intType);
+		NumericExpression result, result1;
+
 		numList.add(zero);
 		numList.add(oneInt);
 		numList.add(twoInt);
 		numList2.add(x);
 		numList2.add(zero);
-		NumericExpression result = universe.add(numList);
-		NumericExpression result1 = universe.add(numList2);
+		result = universe.add(numList);
+		result1 = universe.add(numList2);
 		assertEquals(threeInt, result);
 		assertEquals(x, result1);
 	}
 
 	/**
-	 * Testing the subtract method for two IntegerNumbers.
+	 * Testing the subtract method for two concrete IntegerNumbers;test: 3 - 2 =
+	 * 1;
 	 */
 	@Test
-	public void substractIntTest() {
-		/**
-		 * concrete test: 3 - 2 = 1
-		 */
+	public void substractConcreteIntTest() {
 		NumericExpression result = universe.subtract(threeInt, twoInt);
-		assertEquals(oneInt, result);
 
-		/**
-		 * symbolic test: (x + y) - x = y;
-		 */
+		assertEquals(oneInt, result);
+	}
+
+	/**
+	 * Testing the subtract method for two symbolic IntegerNumbers;test: (x + y)
+	 * - x = y;
+	 */
+	@Test
+	public void substractSymbolicIntTest() {
 		NumericExpression x = (NumericExpression) universe
 				.symbolicConstant(x_obj, intType);
 		NumericExpression y = (NumericExpression) universe
 				.symbolicConstant(y_obj, intType);
-		NumericExpression result2 = universe.subtract(universe.add(x, y), x);
-		assertEquals(y, result2);
+		NumericExpression result = universe.subtract(universe.add(x, y), x);
+
+		assertEquals(y, result);
 	}
 
 	/**
-	 * Testing the multiply method for two IntegerNumbers.
+	 * Testing the multiply method for two concrete IntegerNumbers;test: 1 * 2 =
+	 * 2;
 	 */
 	@Test
-	public void multiplyTwoIntTest() {
-		/**
-		 * concrete test: 1 * 2 = 2
-		 */
+	public void multiplyTwoConcreteIntTest() {
 		NumericExpression result = universe.multiply(oneInt, twoInt);
+
 		assertEquals(twoInt, result);
-		/**
-		 * symbolic test: x * 0 = 0;
-		 */
-		NumericExpression x = (NumericExpression) universe
-				.symbolicConstant(x_obj, intType);
-		NumericExpression result1 = universe.multiply(x, zero);
-		assertEquals(zero, result1);
 	}
 
 	/**
-	 * Testing the multiply method for a sequence of IntegerNumbers.
+	 * Testing the multiply method for symbolic IntegerNumbers;test: x * 0 = 0;
+	 */
+	@Test
+	public void multiplyTwoSymbolicIntTest() {
+		NumericExpression x = (NumericExpression) universe
+				.symbolicConstant(x_obj, intType);
+		NumericExpression result = universe.multiply(x, zero);
+
+		assertEquals(zero, result);
+	}
+
+	/**
+	 * Testing the multiply method for a sequence of IntegerNumbers;test: 1 * 2
+	 * = 2; test: x * y * 0 = 0;
 	 */
 	@Test
 	public void multiplySeqIntTest() {
@@ -113,33 +127,39 @@ public class IntegerArithmeticTest {
 				.symbolicConstant(x_obj, intType);
 		NumericExpression y = (NumericExpression) universe
 				.symbolicConstant(y_obj, intType);
+		NumericExpression result, result1;
+
 		numList.add(oneInt);
 		numList.add(twoInt);
 		numList2.add(x);
 		numList2.add(y);
 		numList2.add(zero);
-		NumericExpression result = universe.multiply(numList);
-		NumericExpression result1 = universe.multiply(numList2);
+		result = universe.multiply(numList);
+		result1 = universe.multiply(numList2);
 		assertEquals(twoInt, result);
 		assertEquals(zero, result1);
 	}
 
 	/**
-	 * Testing the divide method for two IntegerNumbers.
+	 * Testing the divide method for two concrete IntegerNumbers;test: 2 / 1 =
+	 * 2;
 	 */
 	@Test
-	public void divideIntTest() {
-		/**
-		 * concrete test: 2 / 1 = 2
-		 */
+	public void divideConcreteIntTest() {
 		NumericExpression result = universe.divide(twoInt, oneInt);
+
 		assertEquals(twoInt, result);
-		/**
-		 * symbolic test: 0 / x = 0;
-		 */
+	}
+
+	/**
+	 * Testing the divide method for symbolic IntegerNumbers;test: 0 / x = 0;
+	 */
+	@Test
+	public void divideSymblicIntTest() {
 		NumericExpression x = (NumericExpression) universe
 				.symbolicConstant(x_obj, intType);
 		NumericExpression result2 = universe.divide(zero, x);
+
 		assertEquals(zero, result2);
 	}
 }
