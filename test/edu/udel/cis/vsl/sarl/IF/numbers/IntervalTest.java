@@ -19,11 +19,9 @@ public class IntervalTest {
 	private static IntegerNumber INT_POS_ONE = numFactory.integer(1);
 	private static IntegerNumber INT_POS_TWO = numFactory.integer(2);
 	private static IntegerNumber INT_POS_FOUR = numFactory.integer(4);
-	private static IntegerNumber INT_POS_TEN = numFactory.integer(10);
 	private static IntegerNumber INT_NEG_ONE = numFactory.negate(INT_POS_ONE);
 	private static IntegerNumber INT_NEG_TWO = numFactory.negate(INT_POS_TWO);
 	private static IntegerNumber INT_NEG_FOUR = numFactory.negate(INT_POS_FOUR);
-	private static IntegerNumber INT_NEG_TEN = numFactory.negate(INT_POS_TEN);
 	private static RationalNumber RAT_ZERO = numFactory.fraction(INT_ZERO,
 			INT_POS_ONE);
 	private static RationalNumber RAT_POS_ONE = numFactory.fraction(
@@ -32,24 +30,18 @@ public class IntervalTest {
 			INT_POS_TWO, INT_POS_ONE);
 	private static RationalNumber RAT_POS_FOUR = numFactory.fraction(
 			INT_POS_FOUR, INT_POS_ONE);
-	private static RationalNumber RAT_POS_TEN = numFactory.fraction(
-			INT_POS_TEN, INT_POS_ONE);
 	private static RationalNumber RAT_NEG_ONE = numFactory.fraction(
 			INT_NEG_ONE, INT_POS_ONE);
 	private static RationalNumber RAT_NEG_TWO = numFactory.fraction(
 			INT_NEG_TWO, INT_POS_ONE);
 	private static RationalNumber RAT_NEG_FOUR = numFactory.fraction(
 			INT_NEG_FOUR, INT_POS_ONE);
-	private static RationalNumber RAT_NEG_TEN = numFactory.fraction(
-			INT_NEG_TEN, INT_POS_ONE);
 	private static RationalNumber RAT_POS_HALF = numFactory.fraction(
 			INT_POS_ONE, INT_POS_TWO);
 	private static RationalNumber RAT_NEG_HALF = numFactory.fraction(
 			INT_NEG_ONE, INT_POS_TWO);
 	private static RationalNumber RAT_POS_QUART = numFactory.fraction(
 			INT_POS_ONE, INT_POS_FOUR);
-	private static RationalNumber RAT_NEG_QUART = numFactory.fraction(
-			INT_NEG_ONE, INT_POS_FOUR);
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -65,14 +57,6 @@ public class IntervalTest {
 
 	@After
 	public void tearDown() throws Exception {
-	}
-
-	private void p(String input) {
-		System.out.println(input);
-	}
-
-	private void p(Object input) {
-		System.out.println(input.toString());
 	}
 
 	// ADD

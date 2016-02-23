@@ -2,7 +2,6 @@ package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.PrintStream;
 import java.util.Arrays;
 
 import org.junit.After;
@@ -26,8 +25,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
  *
  */
 public class TupleTest {
-
-	private final static PrintStream out = System.out;
 
 	private SymbolicUniverse sUniverse;
 

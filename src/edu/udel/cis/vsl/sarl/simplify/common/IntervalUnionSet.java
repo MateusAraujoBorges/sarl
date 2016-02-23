@@ -258,8 +258,6 @@ public class IntervalUnionSet implements Range {
 			Number lower, boolean strictLower, Number upper, boolean strictUpper) {
 		Interval emptyInterval = isIntegral ? numberFactory
 				.emptyIntegerInterval() : numberFactory.emptyRealInterval();
-		Number zeroNumber = isIntegral ? numberFactory.zeroInteger()
-				: numberFactory.zeroRational();
 		Number oneInteger = numberFactory.oneInteger();
 		Number lo = lower, up = upper;
 		boolean sl = strictLower, su = strictUpper;
