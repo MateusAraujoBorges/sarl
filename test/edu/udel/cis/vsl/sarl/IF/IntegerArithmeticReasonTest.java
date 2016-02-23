@@ -32,12 +32,10 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class IntegerArithmeticReasonTest {
-	// private static PrintStream out = System.out;
 	private SymbolicUniverse universe;
 	private StringObject uobj; // "u"
 	private SymbolicType integerType;
 	private NumericSymbolicConstant u; // integer symbolic constant "u"
-	// private NumericSymbolicConstant v; // integer symbolic constant "v"
 	private BooleanExpression trueExpr, falseExpr;
 
 	@Before
@@ -141,7 +139,7 @@ public class IntegerArithmeticReasonTest {
 	}
 
 	/**
-	 * Integer modulus. true : (2u)%2 -> 0 true : (2u + 1) % 2 -> 1
+	 * Integer modulus. true : (2u)%2 -> 0; true : (2u + 1) % 2 -> 1.
 	 */
 	@Test
 	public void simplifyIntMod() {
