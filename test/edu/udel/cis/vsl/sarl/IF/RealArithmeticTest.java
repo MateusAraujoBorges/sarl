@@ -10,6 +10,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
+import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
@@ -418,7 +419,19 @@ public class RealArithmeticTest {
 		Reasoner r = universe.reasoner(universe.lessThan(zero, adb));
 		BooleanExpression greaterThanZero = universe.lessThan(zero, adbSqure);
 		
-		assertTrue(r.isValid(greaterThanZero));
+		ValidityResult result = r.valid(greaterThanZero);
+		assertEquals(ResultType.YES, result.getResultType());
+	}
+	
+	@Test
+	public void divideTest2(){
+		NumericExpression adb = universe.divide(a, b); //adb = a/b
+		NumericExpression adbSqure = universe.power(adb, two); // adbSqure = (a/b)^2
+		Reasoner r = universe.reasoner(universe.lessThanEquals(zero, adb));
+		BooleanExpression greaterThanZero = universe.lessThan(zero, adbSqure);
+		
+		ValidityResult result = r.valid(greaterThanZero);
+		assertEquals(ResultType.NO, result.getResultType());
 	}
 	
 	/**
