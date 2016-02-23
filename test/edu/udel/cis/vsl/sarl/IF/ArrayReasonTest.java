@@ -20,14 +20,11 @@ public class ArrayReasonTest {
 	
 	private SymbolicUniverse universe;
 	private StringObject a_obj; // "a"
-	private StringObject b_obj; // "b"
 	private StringObject c_obj; // "c"
 	private StringObject d_obj; // "d"
 	private NumericExpression one, two, six;
 	private SymbolicType integerType;
-	private SymbolicType realType;
 	private SymbolicExpression intArr_a;
-	private SymbolicExpression intArr_b;
 	private NumericExpression int_c;
 	private NumericExpression int_d;
 
@@ -38,15 +35,11 @@ public class ArrayReasonTest {
 		two = universe.integer(2);
 		six = universe.integer(6);
 		integerType = universe.integerType();
-		realType = universe.realType();
 		a_obj = universe.stringObject("a");
-		b_obj = universe.stringObject("b");
 		c_obj = universe.stringObject("c");
 		d_obj = universe.stringObject("d");
 		intArr_a = universe.symbolicConstant(
 				a_obj, universe.arrayType(integerType));
-		intArr_b = universe.symbolicConstant(
-				b_obj, universe.arrayType(integerType));
 		int_c = (NumericExpression) universe
 				.symbolicConstant(c_obj, integerType);
 		int_d = (NumericExpression) universe
