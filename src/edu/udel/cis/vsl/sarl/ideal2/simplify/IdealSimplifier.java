@@ -40,6 +40,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
@@ -166,7 +167,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	/**
 	 * A map that assigns bounds to monics.
 	 */
-	private Map<Monic, BoundsObject> boundMap = new HashMap<>();
+	private BoundMap boundMap;
 
 	/**
 	 * A map that assigns concrete boolean values to boolean primitive
@@ -193,7 +194,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * The interpretation of the context as an Interval, or <code>null</code> if
 	 * it cannot be so interpreted.
 	 */
-	private Interval interval = null;
+	private Interval theInterval = null;
 
 	/**
 	 * The variable bound by the interval.
@@ -218,6 +219,7 @@ public class IdealSimplifier extends CommonSimplifier {
 		super(info.universe);
 		this.info = info;
 		this.assumption = assumption;
+		this.boundMap = new BoundMap(info);
 		initialize();
 	}
 
@@ -272,8 +274,9 @@ public class IdealSimplifier extends CommonSimplifier {
 			// map, those symbolic constants might sneak back in!
 			// We will remove them again later.
 
-			for (BoundsObject bound : boundMap.values()) {
-				BooleanExpression constraint = boundToIdeal(bound);
+			for (Entry<Monic, Interval> entry : boundMap.entrySet()) {
+				BooleanExpression constraint = boundToIdeal(entry.getKey(),
+						entry.getValue());
 
 				if (constraint != null)
 					newAssumption = info.booleanFactory.and(newAssumption,
@@ -356,11 +359,10 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * null if both upper and lower bound are infinite (equivalent to "true").
 	 * Note that the variable in the bound is simplified.
 	 */
-	private BooleanExpression boundToIdeal(BoundsObject bound) {
+	private BooleanExpression boundToIdeal(Monic monic, Interval bound) {
 		Number lower = bound.lower(), upper = bound.upper();
 		BooleanExpression result = null;
-		Monic fp = (Monic) bound.expression;
-		Monomial ideal = (Monomial) apply(fp);
+		Monomial ideal = (Monomial) apply(monic);
 
 		if (lower != null) {
 			if (bound.strictLower())
@@ -422,13 +424,14 @@ public class IdealSimplifier extends CommonSimplifier {
 	private boolean updateConstantMap() {
 		// The constant map doesn't get cleared because we want to keep
 		// accumulating facts. Thus the map might not be empty at this point.
-		for (BoundsObject bounds : boundMap.values()) {
-			Number lower = bounds.lower();
+		for (Entry<Monic, Interval> entry : boundMap.entrySet()) {
+			Interval interval = entry.getValue();
+			Number lower = interval.lower();
 
-			if (lower != null && lower.equals(bounds.upper)) {
-				Monic expression = (Monic) bounds.expression;
+			if (lower != null && lower.equals(interval.upper())) {
+				Monic expression = entry.getKey();
 
-				assert !bounds.strictLower && !bounds.strictUpper;
+				assert !interval.strictLower() && !interval.strictUpper();
 				constantMap.put(expression, lower);
 				processHerbrandCast(expression, lower);
 			}
@@ -446,12 +449,8 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	private void printBoundMap(PrintStream out) {
-		out.println("Bounds map:");
-		for (BoundsObject boundObject : boundMap.values()) {
-			out.println(boundObject);
-		}
-		out.println();
-		out.flush();
+		out.println("Bound map:");
+		boundMap.print(out);
 	}
 
 	private void printConstantMap(PrintStream out) {
@@ -474,32 +473,18 @@ public class IdealSimplifier extends CommonSimplifier {
 		out.flush();
 	}
 
-	/**
-	 * Performs deep copy of a bounds map. Temporary fix: once persistent maps
-	 * and an immutable BoundsObject are used, this will not be needed.
-	 * 
-	 * @param map
-	 *            a bounds map
-	 * @return a deep copy of that map that does not share anything that is
-	 *         mutable, such as a BoundsObject
-	 */
-	private Map<Monic, BoundsObject> copyBoundMap(
-			Map<Monic, BoundsObject> map) {
-		HashMap<Monic, BoundsObject> result = new HashMap<>();
-
-		for (Entry<Monic, BoundsObject> entry : map.entrySet()) {
-			result.put(entry.getKey(), entry.getValue().clone());
-		}
-		return result;
-	}
-
+	@SuppressWarnings("unchecked")
 	private Map<BooleanExpression, Boolean> copyBooleanMap(
 			Map<BooleanExpression, Boolean> map) {
-		return new HashMap<>(map);
+		return (Map<BooleanExpression, Boolean>) (((HashMap<?, ?>) map)
+				.clone());
 	}
 
-	private boolean extractBoundsOr(BooleanExpression or,
-			Map<Monic, BoundsObject> aBoundMap,
+	// TODO: why not combine the boolean map into the BoundMap
+	// and call it Interpretation?
+	// make some of the code below methods
+
+	private boolean extractBoundsOr(BooleanExpression or, BoundMap aBoundMap,
 			Map<BooleanExpression, Boolean> aBooleanMap) {
 		SymbolicOperator op = or.operator();
 
@@ -507,7 +492,7 @@ public class IdealSimplifier extends CommonSimplifier {
 			// p & (q0 | ... | qn) = (p & q0) | ... | (p & qn)
 			// copies of original maps, corresponding to p. these never
 			// change...
-			Map<Monic, BoundsObject> originalBoundMap = copyBoundMap(aBoundMap);
+			BoundMap originalBoundMap = aBoundMap.clone();
 			Map<BooleanExpression, Boolean> originalBooleanMap = copyBooleanMap(
 					aBooleanMap);
 			Iterator<? extends BooleanExpression> clauses = or
@@ -518,8 +503,7 @@ public class IdealSimplifier extends CommonSimplifier {
 			// result <- result | ((p & q1) | ... | (p & qn)) :
 			while (clauses.hasNext()) {
 				BooleanExpression clause = clauses.next();
-				Map<Monic, BoundsObject> newBoundMap = copyBoundMap(
-						originalBoundMap);
+				BoundMap newBoundMap = originalBoundMap.clone();
 				Map<BooleanExpression, Boolean> newBooleanMap = copyBooleanMap(
 						originalBooleanMap);
 				// compute p & q_i:
@@ -530,26 +514,30 @@ public class IdealSimplifier extends CommonSimplifier {
 				// aBooleanMap)....
 				satisfiable = satisfiable || newSatisfiable;
 				if (newSatisfiable) {
-					LinkedList<SymbolicExpression> boundRemoveList = new LinkedList<>();
+					LinkedList<Monic> boundRemoveList = new LinkedList<>();
 					LinkedList<BooleanExpression> booleanRemoveList = new LinkedList<>();
 
-					for (Map.Entry<Monic, BoundsObject> entry : aBoundMap
-							.entrySet()) {
-						SymbolicExpression primitive = entry.getKey();
-						BoundsObject oldBound = entry.getValue();
-						BoundsObject newBound = newBoundMap.get(primitive);
+					for (Entry<Monic, Interval> entry : aBoundMap.entrySet()) {
+						Monic primitive = entry.getKey();
+						Interval oldBound = entry.getValue();
+						Interval newBound = newBoundMap.get(primitive);
 
 						if (newBound == null) {
 							boundRemoveList.add(primitive);
 						} else {
-							oldBound.enlargeTo(newBound);
-							if (oldBound.isUniversal())
-								boundRemoveList.add(primitive);
+							newBound = info.numberFactory.join(oldBound,
+									newBound);
+							if (!oldBound.equals(newBound)) {
+								if (newBound.isUniversal())
+									boundRemoveList.add(primitive);
+								else
+									entry.setValue(newBound);
+							}
 						}
 					}
-					for (SymbolicExpression primitive : boundRemoveList)
+					for (Monic primitive : boundRemoveList)
 						aBoundMap.remove(primitive);
-					for (Map.Entry<BooleanExpression, Boolean> entry : aBooleanMap
+					for (Entry<BooleanExpression, Boolean> entry : aBooleanMap
 							.entrySet()) {
 						BooleanExpression primitive = entry.getKey();
 						Boolean oldValue = entry.getValue();
@@ -599,8 +587,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * LiteralExpression (p or !p) or QuantifierExpression
 	 */
 	private boolean extractBoundsBasic(BooleanExpression basic,
-			Map<Monic, BoundsObject> aBoundMap,
-			Map<BooleanExpression, Boolean> aBooleanMap) {
+			BoundMap aBoundMap, Map<BooleanExpression, Boolean> aBooleanMap) {
 		SymbolicOperator operator = basic.operator();
 
 		if (operator == SymbolicOperator.CONCRETE)
@@ -631,16 +618,16 @@ public class IdealSimplifier extends CommonSimplifier {
 								operator == LESS_THAN, aBoundMap, aBooleanMap);
 					}
 				default:
-					throw new RuntimeException(
+					throw new SARLInternalException(
 							"Unknown RelationKind: " + operator);
 				}
 			}
 		} else if (operator == SymbolicOperator.EXISTS
 				|| operator == SymbolicOperator.FORALL) {
-			// forall or exists: difficult
-			// forall x: ()bounds: can substitute whatever you want for x
+			// TODO: forall and exists are difficult
+			// forall x: can substitute whatever you want for x
 			// and extract bounds.
-			// example: forall i: a[i]<7. Look for all occurrence of a[*]
+			// example: forall i: a[i]<7. Look for all occurrences of a[*]
 			// and add bounds
 			return true;
 		} else if (operator == SymbolicOperator.NOT) {
@@ -661,32 +648,20 @@ public class IdealSimplifier extends CommonSimplifier {
 		return true;
 	}
 
-	private boolean extractEQ0Bounds(Primitive primitive,
-			Map<Monic, BoundsObject> aBoundMap,
+	private boolean extractEQ0Bounds(Primitive primitive, BoundMap aBoundMap,
 			Map<BooleanExpression, Boolean> aBooleanMap) {
 		if (primitive instanceof Polynomial)
 			return extractEQ0BoundsPoly((Polynomial) primitive, aBoundMap,
 					aBooleanMap);
 
-		// TODO: Perhaps make a method to get the bounds
-		// on something. And a method to impose
-		// bounds on something (union or intersect).
-		// This method will create the bounds for int div
-		// or mod if needed.
+		NumberFactory nf = info.numberFactory;
+		Interval bound = aBoundMap.get(primitive);
+		Number zero = primitive.type().isInteger() ? nf.zeroInteger()
+				: nf.zeroRational();
 
-		BoundsObject bound = aBoundMap.get(primitive);
-		Number zero = primitive.type().isInteger()
-				? info.numberFactory.zeroInteger()
-				: info.numberFactory.zeroRational();
-
-		if (bound == null) {
-			bound = BoundsObject.newTightBound(primitive, zero);
-			aBoundMap.put(primitive, bound);
-		} else {
-			if (!bound.contains(zero))
-				return false;
-			bound.makeConstant(zero);
-		}
+		if (bound != null && !bound.contains(zero))
+			return false;
+		aBoundMap.set(primitive, zero);
 		return true;
 	}
 
@@ -706,49 +681,40 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *         is inconsistent with the information in the bound map and boolean
 	 *         map; else <code>true</code>
 	 */
-	private boolean extractEQ0BoundsPoly(Polynomial poly,
-			Map<Monic, BoundsObject> aBoundMap,
+	private boolean extractEQ0BoundsPoly(Polynomial poly, BoundMap aBoundMap,
 			Map<BooleanExpression, Boolean> aBooleanMap) {
+		NumberFactory nf = info.numberFactory;
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Monic pseudo = affine.pseudo();
-		RationalNumber coefficient = info.numberFactory
-				.rational(affine.coefficient());
-		RationalNumber offset = info.numberFactory.rational(affine.offset());
-		RationalNumber rationalValue = info.numberFactory
+		RationalNumber coefficient = nf.rational(affine.coefficient());
+		RationalNumber offset = nf.rational(affine.offset());
+		RationalNumber rationalValue = nf
 				.negate(info.numberFactory.divide(offset, coefficient));
 		Number value; // same as rationalValue but IntegerNumber if type is
 						// integer
-		BoundsObject bound = aBoundMap.get(pseudo);
+		Interval bound = aBoundMap.get(pseudo);
 
 		if (pseudo.type().isInteger()) {
-			if (info.numberFactory.isIntegral(rationalValue)) {
-				value = info.numberFactory.integerValue(rationalValue);
-			} else {
+			if (!nf.isIntegral(rationalValue))
 				return false;
-			}
+			value = nf.integerValue(rationalValue);
 		} else {
 			value = rationalValue;
 		}
-		if (bound == null) {
-			bound = BoundsObject.newTightBound(pseudo, value);
-			aBoundMap.put(pseudo, bound);
-		} else {
-			if (!bound.contains(value))
-				return false;
-			bound.makeConstant(value);
-		}
+		if (bound != null && !bound.contains(value))
+			return false;
+		aBoundMap.set(pseudo, value);
 		return true;
 	}
 
-	private boolean extractNEQ0Bounds(Primitive primitive,
-			Map<Monic, BoundsObject> aBoundMap,
+	private boolean extractNEQ0Bounds(Primitive primitive, BoundMap aBoundMap,
 			Map<BooleanExpression, Boolean> aBooleanMap) {
 
 		if (primitive instanceof Polynomial)
 			return extractNEQ0BoundsPoly((Polynomial) primitive, aBoundMap,
 					aBooleanMap);
 
-		BoundsObject bound = aBoundMap.get(primitive);
+		Interval bound = aBoundMap.get(primitive);
 		SymbolicType type = primitive.type();
 		Constant zero = info.idealFactory.zero(type);
 
@@ -757,18 +723,20 @@ public class IdealSimplifier extends CommonSimplifier {
 			// plain intervals. we need a more precise abstraction
 			// than intervals here.
 		} else if (bound.contains(zero.number())) {
+			NumberFactory nf = info.numberFactory;
+			Interval oldBound = bound;
+
 			// is value an end-point? Might be able to sharpen bound...
-			if (bound.lower != null && bound.lower.isZero()
-					&& !bound.strictLower) {
-				bound.restrictLower(bound.lower, true);
-			}
-			if (bound.upper != null && bound.upper.isZero()
-					&& !bound.strictUpper) {
-				bound.restrictUpper(bound.upper, true);
-			}
-			if (bound.isEmpty()) {
+			if (bound.lower() != null && bound.lower().isZero()
+					&& !bound.strictLower())
+				bound = nf.restrictLower(bound, bound.lower(), true);
+			if (bound.upper() != null && bound.upper().isZero()
+					&& !bound.strictUpper())
+				bound = nf.restrictUpper(bound, bound.upper(), true);
+			if (bound.isEmpty())
 				return false;
-			}
+			if (!bound.equals(oldBound))
+				aBoundMap.set(primitive, bound);
 		}
 		aBooleanMap.put(info.universe.neq(zero, primitive), true);
 		return true;
@@ -790,26 +758,25 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *         is inconsistent with the information in the bound map and boolean
 	 *         map; else <code>true</code>
 	 */
-	private boolean extractNEQ0BoundsPoly(Polynomial poly,
-			Map<Monic, BoundsObject> aBoundMap,
+	private boolean extractNEQ0BoundsPoly(Polynomial poly, BoundMap aBoundMap,
 			Map<BooleanExpression, Boolean> aBooleanMap) {
 		// poly=aX+b. if X=-b/a, contradiction.
+		NumberFactory nf = info.numberFactory;
 		SymbolicType type = poly.type();
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Monic pseudo = affine.pseudo();
-		RationalNumber coefficient = info.numberFactory
-				.rational(affine.coefficient());
-		RationalNumber offset = info.numberFactory.rational(affine.offset());
-		RationalNumber rationalValue = info.numberFactory
-				.negate(info.numberFactory.divide(offset, coefficient));
+		RationalNumber coefficient = nf.rational(affine.coefficient());
+		RationalNumber offset = nf.rational(affine.offset());
+		RationalNumber rationalValue = nf
+				.negate(nf.divide(offset, coefficient));
 		Number value; // same as rationalValue but IntegerNumber if type is
 						// integer
-		BoundsObject bound = aBoundMap.get(pseudo);
+		Interval bound = aBoundMap.get(pseudo);
 		Monomial zero = info.idealFactory.zero(type);
 
 		if (type.isInteger()) {
-			if (info.numberFactory.isIntegral(rationalValue)) {
-				value = info.numberFactory.integerValue(rationalValue);
+			if (nf.isIntegral(rationalValue)) {
+				value = nf.integerValue(rationalValue);
 			} else {
 				// an integer cannot equal a non-integer.
 				aBooleanMap.put(info.idealFactory.neq(zero, poly), true);
@@ -820,101 +787,65 @@ public class IdealSimplifier extends CommonSimplifier {
 		}
 		// interpret fact pseudo!=value, where pseudo is in bound
 		if (bound == null) {
+			// TODO:
 			// for now, nothing can be done, since the bounds are
 			// plain intervals. we need a more precise abstraction
-			// than intervals here.
+			// than intervals here, like Range.
 		} else if (bound.contains(value)) {
+			Interval oldBound = bound;
+
 			// is value an end-point? Might be able to sharpen bound...
-			if (bound.lower != null && bound.lower.equals(value)
-					&& !bound.strictLower) {
-				bound.restrictLower(bound.lower, true);
-			}
-			if (bound.upper != null && bound.upper.equals(value)
-					&& !bound.strictUpper) {
-				bound.restrictUpper(bound.upper, true);
-			}
-			if (bound.isEmpty()) {
+			if (bound.lower() != null && bound.lower().equals(value)
+					&& !bound.strictLower())
+				bound = nf.restrictLower(bound, bound.lower(), true);
+			if (bound.upper() != null && bound.upper().equals(value)
+					&& !bound.strictUpper())
+				bound = nf.restrictUpper(bound, bound.upper(), true);
+			if (bound.isEmpty())
 				return false;
-			}
+			if (!bound.equals(oldBound))
+				aBoundMap.set(pseudo, bound);
 		}
 		aBooleanMap.put(info.universe.neq(zero, poly), true);
 		return true;
 	}
 
 	private boolean extractIneqBounds(Monic monic, boolean gt, boolean strict,
-			Map<Monic, BoundsObject> aBoundMap,
-			Map<BooleanExpression, Boolean> aBooleanMap) {
-		// extract meaning from XYZ>0, >=0, <0, <=0
+			BoundMap aBoundMap, Map<BooleanExpression, Boolean> aBooleanMap) {
 		if (monic instanceof Polynomial)
 			return extractIneqBoundsPoly((Polynomial) monic, gt, strict,
 					aBoundMap, aBooleanMap);
 
-		BoundsObject boundsObject = aBoundMap.get(monic);
-		Number zero = monic.type().isInteger()
-				? info.numberFactory.zeroInteger()
-				: info.numberFactory.zeroRational();
+		NumberFactory nf = info.numberFactory;
+		Number zero = monic.type().isInteger() ? nf.zeroInteger()
+				: nf.zeroRational();
+		Interval interval = gt ? aBoundMap.restrictLower(monic, zero, strict)
+				: aBoundMap.restrictUpper(monic, zero, strict);
 
-		if (gt) { // lower bound
-			if (boundsObject == null) {
-				boundsObject = BoundsObject.newLowerBound(monic, zero, strict);
-				aBoundMap.put(monic, boundsObject);
-			} else {
-				boundsObject.restrictLower(zero, strict);
-				return boundsObject.isConsistent();
-			}
-		} else { // upper bound
-			if (boundsObject == null) {
-				boundsObject = BoundsObject.newUpperBound(monic, zero, strict);
-				aBoundMap.put(monic, boundsObject);
-			} else {
-				boundsObject.restrictUpper(zero, strict);
-				return boundsObject.isConsistent();
-			}
-		}
-		return true;
+		return !interval.isEmpty();
 	}
 
-	private boolean extractIneqBoundsPoly(Polynomial fp, boolean gt,
-			boolean strict, Map<Monic, BoundsObject> aBoundMap,
+	private boolean extractIneqBoundsPoly(Polynomial poly, boolean gt,
+			boolean strict, BoundMap aBoundMap,
 			Map<BooleanExpression, Boolean> aBooleanMap) {
-		AffineExpression affine = info.affineFactory.affine(fp);
-		Monic pseudo;
-
-		if (affine == null)
-			return true;
-		pseudo = affine.pseudo();
-		assert pseudo != null;
-
-		BoundsObject boundsObject = aBoundMap.get(pseudo);
+		AffineExpression affine = info.affineFactory.affine(poly);
+		Monic pseudo = affine.pseudo();
 		Number coefficient = affine.coefficient();
 		boolean pos = coefficient.signum() > 0;
-		Number bound = info.affineFactory.bound(affine, gt, strict);
+		Number theBound = info.affineFactory.bound(affine, gt, strict);
+		Interval interval;
+
 		// aX+b>0.
 		// a>0:lower bound (X>-b/a).
 		// a<0: upper bound (X<-b/a).
-
-		if (pseudo.type().isInteger())
+		assert pseudo != null;
+		if (poly.type().isInteger())
 			strict = false;
-		if ((pos && gt) || (!pos && !gt)) { // lower bound
-			if (boundsObject == null) {
-				boundsObject = BoundsObject.newLowerBound(pseudo, bound,
-						strict);
-				aBoundMap.put(pseudo, boundsObject);
-			} else {
-				boundsObject.restrictLower(bound, strict);
-				return boundsObject.isConsistent();
-			}
-		} else { // upper bound
-			if (boundsObject == null) {
-				boundsObject = BoundsObject.newUpperBound(pseudo, bound,
-						strict);
-				aBoundMap.put(pseudo, boundsObject);
-			} else {
-				boundsObject.restrictUpper(bound, strict);
-				return boundsObject.isConsistent();
-			}
-		}
-		return true;
+		if ((pos && gt) || (!pos && !gt)) // lower bound
+			interval = aBoundMap.restrictLower(pseudo, theBound, strict);
+		else // upper bound
+			interval = aBoundMap.restrictUpper(pseudo, theBound, strict);
+		return !interval.isEmpty();
 	}
 
 	private void declareFact(SymbolicExpression booleanExpression,
@@ -1174,11 +1105,11 @@ public class IdealSimplifier extends CommonSimplifier {
 		ALL
 	};
 
-	private BoundType boundType(BoundsObject bound) {
+	private BoundType boundType(Interval bound) {
 		if (bound.isEmpty())
 			return BoundType.EMPTY;
 
-		Number l = bound.lower, r = bound.upper;
+		Number l = bound.lower(), r = bound.upper();
 		int lsign = l == null ? -1 : l.signum();
 		int rsign = r == null ? 1 : r.signum();
 
@@ -1189,7 +1120,7 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		if (lsign < 0) {
 			if (rsign == 0) {
-				return bound.strictUpper ? BoundType.LT0 : BoundType.LE0;
+				return bound.strictUpper() ? BoundType.LT0 : BoundType.LE0;
 			} else { // rsign > 0
 				return BoundType.ALL;
 			}
@@ -1197,7 +1128,7 @@ public class IdealSimplifier extends CommonSimplifier {
 			if (rsign == 0) {
 				return BoundType.EQ0;
 			} else { // rsign > 0
-				return bound.strictLower ? BoundType.GT0 : BoundType.EQ0;
+				return bound.strictLower() ? BoundType.GT0 : BoundType.EQ0;
 			}
 		}
 	}
@@ -1211,25 +1142,25 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * @param strict
 	 * @return
 	 */
-	private BooleanExpression ineqFromBound(Monic monic, BoundsObject bound,
+	private BooleanExpression ineqFromBound(Monic monic, Interval bound,
 			boolean gt, boolean strict) {
-		Number l = bound.lower, r = bound.upper;
+		Number l = bound.lower(), r = bound.upper();
 
 		if (strict) { // bound>0 or bound<0
 			if (l != null) {
 				int lsign = l.signum();
 
-				if (lsign > 0 || (lsign == 0 && bound.strictLower))
+				if (lsign > 0 || (lsign == 0 && bound.strictLower()))
 					return gt ? info.trueExpr : info.falseExpr;
-				if (lsign == 0 && !bound.strictLower)
+				if (lsign == 0 && !bound.strictLower())
 					return gt ? simplifiedNEQ0Monic(monic) : info.falseExpr;
 			}
 			if (r != null) {
 				int rsign = r.signum();
 
-				if (rsign < 0 || (rsign == 0 && bound.strictUpper))
+				if (rsign < 0 || (rsign == 0 && bound.strictUpper()))
 					return gt ? info.falseExpr : info.trueExpr;
-				if (rsign == 0 && !bound.strictUpper)
+				if (rsign == 0 && !bound.strictUpper())
 					return gt ? info.falseExpr : simplifiedNEQ0Monic(monic);
 			}
 		} else { // bound>=0 or bound<=0
@@ -1242,7 +1173,7 @@ public class IdealSimplifier extends CommonSimplifier {
 					if (rsign < 0)
 						return info.falseExpr;
 					if (rsign == 0)
-						return bound.strictUpper ? info.falseExpr
+						return bound.strictUpper() ? info.falseExpr
 								: simplifiedEQ0Monic(monic);
 				}
 			} else {// bound<=0
@@ -1254,7 +1185,7 @@ public class IdealSimplifier extends CommonSimplifier {
 					if (lsign > 0)
 						return info.falseExpr;
 					if (lsign == 0)
-						return bound.strictLower ? info.falseExpr
+						return bound.strictLower() ? info.falseExpr
 								: simplifiedEQ0Monic(monic);
 				}
 			}
@@ -1279,7 +1210,7 @@ public class IdealSimplifier extends CommonSimplifier {
 			boolean strict) {
 		// see if there is a bound on this monic...
 		SymbolicType type = monic.type();
-		BoundsObject bound = boundMap.get(monic);
+		Interval bound = boundMap.get(monic);
 		BooleanExpression result;
 
 		if (bound != null) {
@@ -1303,7 +1234,7 @@ public class IdealSimplifier extends CommonSimplifier {
 		int count = 0, unconstrained = 0;
 
 		for (Primitive p : factorMap.keys()) {
-			BoundsObject pb = boundMap.get(p);
+			Interval pb = boundMap.get(p);
 
 			if (pb == null) {
 				mask[count] = true;
@@ -1405,7 +1336,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	private BooleanExpression simplifyIneq0Poly(Polynomial poly, boolean gt,
 			boolean strict) {
 		AffineExpression affine = info.affineFactory.affine(poly);
-		Monomial pseudo = affine.pseudo(); // non-null since zep non-constant
+		Monic pseudo = affine.pseudo(); // non-null since zep non-constant
 		Number pseudoValue = constantMap.get(pseudo);
 		AffineFactory af = info.affineFactory;
 
@@ -1423,14 +1354,14 @@ public class IdealSimplifier extends CommonSimplifier {
 			}
 		}
 
-		BoundsObject pseudoBound = boundMap.get(pseudo);
+		Interval pseudoBound = boundMap.get(pseudo);
 
 		if (pseudoBound == null)
 			return null;
 
-		// the following is a bound on poly (ignore the variable)
-		BoundsObject polyBound = pseudoBound
-				.affineTransform(affine.coefficient(), affine.offset());
+		// the following is a bound on poly
+		Interval polyBound = info.numberFactory.affineTransform(pseudoBound,
+				affine.coefficient(), affine.offset());
 
 		return ineqFromBound(poly, polyBound, gt, strict);
 	}
@@ -1460,7 +1391,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	private BooleanExpression simplifyEQ0Poly(Polynomial poly) {
 		SymbolicType type = poly.type();
 		AffineExpression affine = info.affineFactory.affine(poly);
-		Monomial pseudo = affine.pseudo(); // non-null since zep non-constant
+		Monic pseudo = affine.pseudo(); // non-null since zep non-constant
 		Number pseudoValue = constantMap.get(pseudo);
 
 		if (pseudoValue != null)
@@ -1482,7 +1413,7 @@ public class IdealSimplifier extends CommonSimplifier {
 		pseudoValue = info.numberFactory
 				.negate(info.numberFactory.divide(offset, coefficient));
 
-		BoundsObject oldBounds = boundMap.get(pseudo);
+		Interval oldBounds = boundMap.get(pseudo);
 
 		if (oldBounds == null)
 			return null;
@@ -1579,8 +1510,9 @@ public class IdealSimplifier extends CommonSimplifier {
 	@Override
 	public Interval assumptionAsInterval(SymbolicConstant symbolicConstant) {
 		if (intervalComputed) {
-			if (interval != null && intervalVariable.equals(symbolicConstant))
-				return interval;
+			if (theInterval != null
+					&& intervalVariable.equals(symbolicConstant))
+				return theInterval;
 			return null;
 		}
 		intervalComputed = true;
@@ -1599,21 +1531,21 @@ public class IdealSimplifier extends CommonSimplifier {
 			if (!fp1.equals(symbolicConstant)) {
 				return null;
 			}
-			interval = BoundsObject.newTightBound(symbolicConstant, value);
+			theInterval = info.numberFactory.singletonInterval(value);
 			intervalVariable = symbolicConstant;
-			return interval;
+			return theInterval;
 		}
 		if (boundMap.size() == 1) {
-			Entry<Monic, BoundsObject> entry = boundMap.entrySet().iterator()
+			Entry<Monic, Interval> entry = boundMap.entrySet().iterator()
 					.next();
 			Monic fp1 = entry.getKey();
 
 			if (!fp1.equals(symbolicConstant)) {
 				return null;
 			}
-			interval = entry.getValue();
+			theInterval = entry.getValue();
 			intervalVariable = symbolicConstant;
-			return interval;
+			return theInterval;
 		}
 		return null;
 	}

@@ -10,9 +10,6 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
-import edu.udel.cis.vsl.sarl.ideal2.simplify.BoundsObject;
-import edu.udel.cis.vsl.sarl.ideal2.simplify.IdealSimplifier;
-import edu.udel.cis.vsl.sarl.ideal2.simplify.IdealSimplifierFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
@@ -111,8 +108,6 @@ public class CommonObjects {
 
 	static NumericExpression xpyInt, xyInt, xxInt, x4thInt, threeX4thInt,
 			xxyInt, xyyInt;
-
-	static BoundsObject boundObj, boundObj2, boundObj3;
 
 	static edu.udel.cis.vsl.sarl.IF.number.Number num3, num5, numNeg2000,
 			num10000, num0, num10pt5;

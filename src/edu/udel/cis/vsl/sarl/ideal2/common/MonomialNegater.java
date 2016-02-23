@@ -21,6 +21,8 @@ package edu.udel.cis.vsl.sarl.ideal2.common;
 import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 
+// TODO: delete this class if not used
+
 class MonomialNegater implements UnaryOperator<Monomial> {
 	private CommonIdealFactory factory;
 

@@ -165,7 +165,7 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  * @author Stephen F. Siegel
  */
 public class CommonIdealFactory implements Ideal2Factory {
-	
+
 	public final static boolean debug = false;
 
 	/**
@@ -247,9 +247,9 @@ public class CommonIdealFactory implements Ideal2Factory {
 	 */
 	private One oneInt;
 
-	private Constant negOneInt;
-
-	private Constant negOneReal;
+	// private Constant negOneInt;
+	//
+	// private Constant negOneReal;
 
 	/**
 	 * The real number 1, which in the ideal factory is represented as an
@@ -297,7 +297,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 	/**
 	 * An object used to negate (multiply by -1) a monomial.
 	 */
-	private MonomialNegater monomialNegater;
+	// private MonomialNegater monomialNegater;
 
 	/**
 	 * An object used to multiply two primitive powers over the same primitive
@@ -367,8 +367,8 @@ public class CommonIdealFactory implements Ideal2Factory {
 				objectFactory.numberObject(numberFactory.oneInteger())));
 		this.oneReal = objectFactory.canonic(new One(realType,
 				objectFactory.numberObject(numberFactory.oneRational())));
-		this.negOneInt = canonicIntConstant(-1);
-		this.negOneReal = canonicRealConstant(-1);
+		// this.negOneInt = canonicIntConstant(-1);
+		// this.negOneReal = canonicRealConstant(-1);
 		this.zeroInt = canonicIntConstant(0);
 		this.zeroReal = canonicRealConstant(0);
 		this.oneTermMapInt = objectFactory
@@ -376,7 +376,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 		this.oneTermMapReal = objectFactory
 				.canonic(monicSingletonMap(oneReal, oneReal));
 		this.monomialAdder = new MonomialAdder(this);
-		this.monomialNegater = new MonomialNegater(this);
+		// this.monomialNegater = new MonomialNegater(this);
 		this.primitivePowerMultiplier = new PrimitivePowerMultiplier(this);
 		this.primitivePowerDivider = new PrimitivePowerDivider(this);
 		this.integerExponentiator = new Exponentiator<NumericExpression>(
@@ -565,23 +565,23 @@ public class CommonIdealFactory implements Ideal2Factory {
 	 * @return the constant factor as specified above, which will be a non-zero
 	 *         constant of the specified type
 	 */
-	private Constant getConstantFactor(SymbolicType type,
-			SymbolicMap<Monic, Monomial> termMap) {
-		if (type.isReal())
-			return termMap.getFirst().monomialConstant(this);
-		else {
-			Iterator<Monomial> monomialIter = termMap.values().iterator();
-			IntegerNumber gcd = (IntegerNumber) monomialIter.next()
-					.monomialConstant(this).number();
-
-			if (gcd.signum() < 0)
-				gcd = numberFactory.negate(gcd);
-			while (!gcd.isOne() && monomialIter.hasNext())
-				gcd = numberFactory.gcd(gcd, (IntegerNumber) numberFactory.abs(
-						monomialIter.next().monomialConstant(this).number()));
-			return constant(gcd);
-		}
-	}
+	// private Constant getConstantFactor(SymbolicType type,
+	// SymbolicMap<Monic, Monomial> termMap) {
+	// if (type.isReal())
+	// return termMap.getFirst().monomialConstant(this);
+	// else {
+	// Iterator<Monomial> monomialIter = termMap.values().iterator();
+	// IntegerNumber gcd = (IntegerNumber) monomialIter.next()
+	// .monomialConstant(this).number();
+	//
+	// if (gcd.signum() < 0)
+	// gcd = numberFactory.negate(gcd);
+	// while (!gcd.isOne() && monomialIter.hasNext())
+	// gcd = numberFactory.gcd(gcd, (IntegerNumber) numberFactory.abs(
+	// monomialIter.next().monomialConstant(this).number()));
+	// return constant(gcd);
+	// }
+	// }
 
 	/**
 	 * Constructs new instance of {@link NTRationalExpression}. Nothing is
@@ -809,19 +809,22 @@ public class CommonIdealFactory implements Ideal2Factory {
 	public SymbolicMap<Monic, Monomial> multiplyTermMaps(
 			SymbolicMap<Monic, Monomial> termMap1,
 			SymbolicMap<Monic, Monomial> termMap2) {
-		int n1 = termMap1.size(), n2 = termMap2.size();
 		SymbolicMap<Monic, Monomial> result;
 
-		// System.out
-		// .println("Debug: multiplying maps of size: " + n1 + ", " + n2);
-		// System.out.flush();
+		if (debug) {
+			int n1 = termMap1.size(), n2 = termMap2.size();
 
+			System.out.println(
+					"Debug: multiplying maps of size: " + n1 + ", " + n2);
+			System.out.flush();
+		}
 		result = multiplyTermMaps2(termMap1, termMap2);
-
-		// System.out.println("Debug: completed multiplication with result size:
-		// "
-		// + result.size());
-		// System.out.flush();
+		if (debug) {
+			System.out.println(
+					"Debug: completed multiplication with result size: "
+							+ result.size());
+			System.out.flush();
+		}
 		return result;
 	}
 
@@ -941,12 +944,12 @@ public class CommonIdealFactory implements Ideal2Factory {
 	 *            a constant
 	 * @return termMap resulting from dividing all monomials by the constant
 	 */
-	private SymbolicMap<Monic, Monomial> divideTermMapConstant(
-			SymbolicMap<Monic, Monomial> termMap, Constant constant) {
-		MonomialDivider divider = new MonomialDivider(this, constant.number());
-
-		return termMap.apply(divider);
-	}
+	// private SymbolicMap<Monic, Monomial> divideTermMapConstant(
+	// SymbolicMap<Monic, Monomial> termMap, Constant constant) {
+	// MonomialDivider divider = new MonomialDivider(this, constant.number());
+	//
+	// return termMap.apply(divider);
+	// }
 
 	/**
 	 * Divides the monomial by the non-zero constant. The monomial and constant
@@ -1238,11 +1241,11 @@ public class CommonIdealFactory implements Ideal2Factory {
 	 * @return the term map in which every coefficient <i>c</i> is replaced with
 	 *         <i>-c</i>
 	 */
-	private SymbolicMap<Monic, Monomial> negate(
-			SymbolicMap<Monic, Monomial> termMap) {
-		return termMap.apply(monomialNegater);
-
-	}
+	// private SymbolicMap<Monic, Monomial> negate(
+	// SymbolicMap<Monic, Monomial> termMap) {
+	// return termMap.apply(monomialNegater);
+	//
+	// }
 
 	/**
 	 * Negates a rational expression, i.e., given a rational expression p/q,
