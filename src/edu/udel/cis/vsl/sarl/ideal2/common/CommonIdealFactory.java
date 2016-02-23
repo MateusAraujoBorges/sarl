@@ -265,6 +265,8 @@ public class CommonIdealFactory implements Ideal2Factory {
 	 */
 	private Constant zeroInt;
 
+	private Constant negOneInt;
+
 	/**
 	 * The real number 0 as a symbolic expression, which in this ideal universe
 	 * is an instance of {@link Constant}.
@@ -359,6 +361,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 		this.oneReal = objectFactory.canonic(new One(realType,
 				objectFactory.numberObject(numberFactory.oneRational())));
 		this.zeroInt = canonicIntConstant(0);
+		this.negOneInt = canonicIntConstant(-1);
 		this.zeroReal = canonicRealConstant(0);
 		this.oneTermMapInt = objectFactory
 				.canonic(monicSingletonMap(oneInt, oneInt));
@@ -998,29 +1001,26 @@ public class CommonIdealFactory implements Ideal2Factory {
 			Monic reducedMonic = monic(type, collectionFactory
 					.sortedMap(primitiveComparator, reducedEntries));
 
-			// TODO: special handling for integers??? so that they don't
-			// use LESS_THAN?
-
-			// XYZ>0 ===> XYZ-1>=0. The first form is superior.
-			// XYZ+1>0 ===> XYZ>=0. The second form is superior.
-			// Heuristic:
-
-			// monic-1>=0 ==> monic>0
-			// monic+1<=0 ==> monic<0
-			// monic+1>0 ==> monic>=0
-			// monic-1<0 ==> monic<=0
-
-			result = signum > 0
-					? booleanFactory.booleanExpression(
-							SymbolicOperator.LESS_THAN, zero, reducedMonic)
-					: booleanFactory.booleanExpression(
-							SymbolicOperator.LESS_THAN, reducedMonic, zero);
+			if (type.isInteger()) {
+				// 0<reducedMonic <=> 0<=reducedMonic-1
+				// reducedMonic<0 <=> reducedMonic+1<=0
+				result = signum > 0
+						? isNonnegative(addNoCommon(reducedMonic, negOneInt))
+						: isNonpositive(addNoCommon(reducedMonic, oneInt));
+			} else {
+				result = signum > 0
+						? booleanFactory.booleanExpression(
+								SymbolicOperator.LESS_THAN, zero, reducedMonic)
+						: booleanFactory.booleanExpression(
+								SymbolicOperator.LESS_THAN, reducedMonic, zero);
+			}
 		}
 		for (Primitive p : nonzeros) {
 			result = booleanFactory.and(result, booleanFactory
 					.booleanExpression(SymbolicOperator.NEQ, zero, p));
 		}
 		return result;
+
 	}
 
 	/**
@@ -1039,21 +1039,28 @@ public class CommonIdealFactory implements Ideal2Factory {
 
 	/**
 	 * Given a <code>monomial</code>, returns an expression equivalent to
-	 * <code>0&le;monomial</code>. Basic simplifications are performed, e.g., if
-	 * <code>monomial</code> is concrete, a concrete boolean expression is
-	 * returned.
+	 * <code>monomial&ge;0</code> (if <code>geq</code> is <code>true</code>) or
+	 * <code>monomial&le;0</code> (if <code>geq</code> is <code>false</code>).
+	 * 
+	 * Basic simplifications are performed, e.g., if <code>monomial</code> is
+	 * concrete, a concrete boolean expression is returned.
 	 * 
 	 * @param monomial
 	 *            a non-<code>null</code> {@link Monomial}
-	 * @return an expression equivalent to <code>0&le;monomial</code>
+	 * @return an expression equivalent to <<code>monomial&ge;0</code> or
+	 *         <code>monomial&le;0</code>
 	 */
-	private BooleanExpression isNonnegative(Monomial monomial) {
+	private BooleanExpression isLEQ0orGEQ0(Monomial monomial, boolean geq) {
 		// X1^2n * X2^2n * Y1^(2n+1) * Y2^(2n+1) >= 0 IFF
 		// X1=0 || X2=0 || Y1*Y2>=0
 		Number number = extractNumber(monomial);
 
-		if (number != null)
-			return number.signum() >= 0 ? trueExpr : falseExpr;
+		if (number != null) {
+			if (geq)
+				return number.signum() >= 0 ? trueExpr : falseExpr;
+			else
+				return number.signum() <= 0 ? trueExpr : falseExpr;
+		}
 
 		SymbolicType type = monomial.type();
 		Constant zero = zero(type);
@@ -1062,7 +1069,11 @@ public class CommonIdealFactory implements Ideal2Factory {
 		SymbolicMap<Primitive, PrimitivePower> factorMap = monic
 				.monicFactors(this);
 		List<Primitive> evens = new LinkedList<>(), odds = new LinkedList<>();
+		boolean direction = geq ? signum > 0 : signum < 0;
+		// direction true means the monic should be >=0: 3x^2>=0 or -3x^2<=0.
+		// direction false means the monic should be <=0: 3x^2<=0 or -3x^2>=0
 
+		assert signum != 0;
 		for (Entry<Primitive, PrimitivePower> entry : factorMap.entries()) {
 			PrimitivePower primitivePower = entry.getValue();
 			Primitive p = entry.getKey();
@@ -1076,7 +1087,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 
 		int numOdds = odds.size();
 
-		if (numOdds == 0 && signum >= 0)
+		if (numOdds == 0 && direction)
 			return trueExpr;
 
 		BooleanExpression result = falseExpr;
@@ -1098,7 +1109,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 					.sortedMap(primitiveComparator, reducedEntries));
 
 			result = booleanFactory.or(result,
-					signum > 0
+					direction
 							? booleanFactory.booleanExpression(
 									SymbolicOperator.LESS_THAN_EQUALS, zero,
 									reducedMonic)
@@ -1107,6 +1118,24 @@ public class CommonIdealFactory implements Ideal2Factory {
 									reducedMonic, zero));
 		}
 		return result;
+	}
+
+	/**
+	 * Given a <code>monomial</code>, returns an expression equivalent to
+	 * <code>0&le;monomial</code>. Basic simplifications are performed, e.g., if
+	 * <code>monomial</code> is concrete, a concrete boolean expression is
+	 * returned.
+	 * 
+	 * @param monomial
+	 *            a non-<code>null</code> {@link Monomial}
+	 * @return an expression equivalent to <code>0&le;monomial</code>
+	 */
+	private BooleanExpression isNonnegative(Monomial monomial) {
+		return isLEQ0orGEQ0(monomial, true);
+	}
+
+	private BooleanExpression isNonpositive(Monomial monomial) {
+		return isLEQ0orGEQ0(monomial, false);
 	}
 
 	private BooleanExpression isZero(Monomial monomial) {
@@ -2092,11 +2121,6 @@ public class CommonIdealFactory implements Ideal2Factory {
 		}
 
 		NumericExpression difference = subtract(arg1, arg0);
-
-		// TODO: choose one form for integers?
-		// how to choose: which one factors more?
-		// for integer type:
-		// 0<X <=> 0<=X-1
 
 		return difference instanceof Monomial
 				? isPositive((Monomial) difference)

@@ -79,7 +79,8 @@ public class SimplifierIntervalTest {
 		//out.println(intNeg1.toString());
 		//out.println(idealSimplifier.assumptionAsInterval(xInt));
 		//out.println(assumption.atomString());
-		assertEquals(intNeg1.toString(),idealSimplifier.assumptionAsInterval(xInt).upper().toString());
+		assertEquals(intNeg1.toString(),
+				idealSimplifier.assumptionAsInterval(xInt).upper().toString());
 	}
 
 }
