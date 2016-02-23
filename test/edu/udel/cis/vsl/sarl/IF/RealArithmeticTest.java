@@ -411,6 +411,15 @@ public class RealArithmeticTest {
 	}
 	
 	/**************************divide test******************************/
+	@Test
+	public void divideTest1(){
+		NumericExpression adb = universe.divide(a, b); //adb = a/b
+		NumericExpression adbSqure = universe.power(adb, two); // adbSqure = (a/b)^2
+		Reasoner r = universe.reasoner(universe.lessThan(zero, adb));
+		BooleanExpression greaterThanZero = universe.lessThan(zero, adbSqure);
+		
+		assertTrue(r.isValid(greaterThanZero));
+	}
 	
 	/**
 	 * Divides two polynomials by forming the factorization and by factoring 
