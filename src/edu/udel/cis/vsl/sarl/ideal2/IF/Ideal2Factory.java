@@ -35,8 +35,10 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * an arbitrary {@link NumericExpressionFactory}.
  * </p>
  * 
+ * <p>
  * The ideal factory produces and manipulates the following kinds of numeric
  * expressions:
+ * </p>
  * 
  * <p>
  * A {@link Constant} represents a concrete value. Each constant has either
@@ -44,11 +46,14 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * </p>
  * 
  * <p>
- * A {@link Primitive} expression is one which is not concrete and cannot be
- * expressed as a sum or product or quotient of other expressions. Examples:
- * symbolic constants, array read expressions of integer or real type, tuple
- * read expressions of integer or real types, function applications for
- * functions returning integer or real.
+ * A {@link Primitive} expression is one which is not concrete and which is to
+ * be treated as an atomic expression, such as a variable, from the point of
+ * view of ideal mathematical arithmetic. Examples: symbolic constants, array
+ * read expressions of integer or real type, tuple read expressions of integer
+ * or real types, function applications for functions returning integer or real
+ * are all primitive expressions. In addition, in this factory a
+ * {@link Polynomial} is a {@link Primitive} so that it can be treated as a
+ * "variable" in a factorization.
  * </p>
  * 
  * <p>
@@ -72,8 +77,6 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * Any {@link Monic} is also a {@link Monomial} by taking 1 for the constant.
  * </p>
  * 
- * 
- * 
  * <p>
  * A <i>term map</i> is a map from {@link Monic} to {@link Monomial} with the
  * property that a monic <i>m</i> in the key set maps to a monomial of the form
@@ -83,10 +86,10 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * 
  * <p>
  * A {@link Polynomial} is a sum of the {@link Monomial} values of a term map.
- * {@link Polynomial} is also a subtype of {@link Primitive}, which is a subtype
- * of {@link PrimitivePower}, which is a subtype of {@link Monic}, which is a
- * subtype of {@link Monomial}. In this factory, each instance <code>p</code>of
- * {@link Polynomial} satisfies all of the following:
+ * {@link Polynomial} is also a sub-type of {@link Primitive}, which is a
+ * subtype of {@link PrimitivePower}, which is a sub-type of {@link Monic},
+ * which is a sub-type of {@link Monomial}. In this factory, each instance
+ * <code>p</code> of {@link Polynomial} satisfies all of the following:
  * <ol>
  * <li><code>p</code> is the sum of at least 2 non-zero monomials</li>
  * <li>no term of <code>p</code> is a {@link Polynomial}</li>
@@ -158,7 +161,7 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * is {<i>X</i><sup>2</sup>}</li>
  * <li>the fully expanded term map of the {@link Monomial} (<i>X</i>+<i>Y</i>)
  * <sup>2</sup> is {<i>X</i><sup>2</sup>, 2*<i>XY</i>, <i>Y</i> <sup>2</sup>
- * </li>}</li>
+ * </li>
  * </ul>
  * 
  * <p>
@@ -224,6 +227,7 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * Equality and inequality reductions are easier because <i>xy</i>=0 iff (
  * <i>x</i>=0 &or; <i>y</i>=0), which does not involve an expansion in formula
  * size. Similarly, <i>xy</i>&ne;0 iff (<i>x</i>&ne;0 &and; <i>y</i>&ne;0).
+ * </p>
  * 
  * 
  * @author siegel
@@ -231,64 +235,71 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  */
 public interface Ideal2Factory extends NumericExpressionFactory {
 
+	/**
+	 * The {@link Comparator} on {@link Monic}s. This places some well-defined
+	 * total order on the set of all instances of {@link Monic}.
+	 * 
+	 * @return the comparator on {@link Monic}s
+	 */
 	Comparator<Monic> monicComparator();
 
 	/**
-	 * The empty map from Primitive to V, i.e., the map containing no entries.
+	 * The empty map from {@link Primitive} to <code>V</code>, i.e., the map
+	 * containing no entries.
 	 *
 	 * @return the empty map
 	 */
 	<V extends SymbolicExpression> SymbolicMap<Primitive, V> emptyPrimitiveMap();
 
 	/**
-	 * The empty map from Monic to V, i.e., the map containing no entries.
+	 * The empty map from {@link Monic} to <code>V</code>, i.e., the map
+	 * containing no entries.
 	 *
 	 * @return the empty map
 	 */
 	<V extends SymbolicExpression> SymbolicMap<Monic, V> emptyMonicMap();
 
 	/**
-	 * The singleton map from Monic to V consisting of one entry (key,value).
+	 * The singleton map from {@link Monic} to <code>V</code> consisting of one
+	 * entry <code>(key,value)</code>.
 	 * 
 	 * @param key
-	 *            a Monic
+	 *            a non-<code>null</code> {@link Monic}
 	 * @param value
-	 *            an element of V
-	 * @return symbolic map consisting of one entry (key,value)
+	 *            an element of <code>V</code>
+	 * @return symbolic map consisting of one entry <code>(key,value)</code>
 	 */
 	<V extends SymbolicExpression> SymbolicMap<Monic, V> monicSingletonMap(
 			Monic key, V value);
 
 	/**
-	 * The singleton map from Primitive to V consisting of one entry
-	 * (key,value).
+	 * The singleton map from {@link Primitive} to <code>V</code> consisting of
+	 * one entry <code>(key,value)</code>.
 	 * 
 	 * @param key
-	 *            a Primitive
+	 *            a non-<code>null</code> {@link Primitive}
 	 * @param value
-	 *            an element of V
+	 *            an element of <code>V</code>
 	 * @return symbolic map consisting of one entry (key,value)
 	 */
 	<V extends SymbolicExpression> SymbolicMap<Primitive, V> primitiveSingletonMap(
 			Primitive key, V value);
 
 	/**
-	 * Returns an int-object wrapping the int 1.
+	 * Returns an {@link IntObject} wrapping the int 1.
 	 * 
-	 * @return a value 1 of type IntObject
+	 * @return the integer 1 as an {@link IntObject}
 	 */
 	IntObject oneIntObject();
 
 	/**
-	 * Creates an integer constant
+	 * Returns an integer {@link Constant}.
 	 * 
 	 * @param value
-	 *            - a normal integer value
+	 *            any Java <code>int</code>
 	 * 
-	 * @param type
-	 *            Integer
-	 * 
-	 * @return an integer of type Constant
+	 * @return the integer {@link Constant} wrapping the given
+	 *         <code>value</code>
 	 */
 	Constant intConstant(int value);
 
