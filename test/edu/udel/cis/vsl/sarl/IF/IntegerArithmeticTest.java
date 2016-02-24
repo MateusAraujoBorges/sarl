@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -22,8 +21,11 @@ public class IntegerArithmeticTest {
 	private NumericExpression negThreeInt;//integer -3
 	private NumericExpression negFourInt; //integer -4
 	private NumericExpression fourInt;    //integer  4
+	private NumericExpression x;
+	private NumericExpression y;
+	//private NumericExpression _x;   // -x
 	private StringObject x_obj;		// "x"
-	private StringObject negX_obj;		// "x"
+	//private StringObject negX_obj;	// "-x"
 	private StringObject y_obj;		// "y"
 	private SymbolicType intType;
 	
@@ -37,9 +39,12 @@ public class IntegerArithmeticTest {
 		fourInt = universe.integer(4);
 		negFourInt = universe.integer(-4);
 		x_obj = universe.stringObject("x");
-		negX_obj = universe.stringObject("-x");
+		//negX_obj = universe.stringObject("-x");
 		y_obj = universe.stringObject("y");
 		intType = universe.integerType();
+		x = (NumericExpression) universe.symbolicConstant(x_obj, intType);
+		y = (NumericExpression) universe.symbolicConstant(y_obj, intType);
+		//_x = (NumericExpression) universe.symbolicConstant(negX_obj, intType);
 	}
 
 	@After
@@ -47,13 +52,13 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the add method for two concrete IntegerNumbers;test: 1 + 2 = 3
+	 * Testing the add method for two concrete IntegerNumbers;test: 1 + (-4) = -3
 	 */
 	@Test
 	public void addTwoConcreteIntTest() {
-		NumericExpression result = universe.add(universe.oneInt(), twoInt);
+		NumericExpression result = universe.add(universe.oneInt(), negFourInt);
 
-		assertEquals(threeInt, result);
+		assertEquals(negThreeInt, result);
 	}
 
 	/**
@@ -61,10 +66,8 @@ public class IntegerArithmeticTest {
 	 */
 	@Test
 	public void addTwoSymbolicIntTest() {
-		NumericExpression x = (NumericExpression) universe
-				.symbolicConstant(x_obj, intType);
 		NumericExpression result = universe.add(x, universe.zeroInt());
-
+		
 		assertEquals(x, result);
 	}
 
@@ -76,8 +79,6 @@ public class IntegerArithmeticTest {
 	public void addSeqIntTest() {
 		List<NumericExpression> numList = new ArrayList<NumericExpression>();
 		List<NumericExpression> numList2 = new ArrayList<NumericExpression>();
-		NumericExpression x = (NumericExpression) universe
-				.symbolicConstant(x_obj, intType);
 		NumericExpression result, result1;
 
 		numList.add(universe.zeroInt());
@@ -92,14 +93,14 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the subtract method for two concrete IntegerNumbers;test: 3 - 2 =
-	 * 1;
+	 * Testing the subtract method for two concrete IntegerNumbers;test: 3 - (-1) =
+	 * 4;
 	 */
 	@Test
 	public void substractConcreteIntTest() {
-		NumericExpression result = universe.subtract(threeInt, twoInt);
+		NumericExpression result = universe.subtract(threeInt, negOneInt);
 
-		assertEquals(universe.oneInt(), result);
+		assertEquals(fourInt, result);
 	}
 
 	/**
@@ -108,24 +109,20 @@ public class IntegerArithmeticTest {
 	 */
 	@Test
 	public void substractSymbolicIntTest() {
-		NumericExpression x = (NumericExpression) universe
-				.symbolicConstant(x_obj, intType);
-		NumericExpression y = (NumericExpression) universe
-				.symbolicConstant(y_obj, intType);
 		NumericExpression result = universe.subtract(universe.add(x, y), x);
 
 		assertEquals(y, result);
 	}
 
 	/**
-	 * Testing the multiply method for two concrete IntegerNumbers;test: 1 * 2 =
-	 * 2;
+	 * Testing the multiply method for two concrete IntegerNumbers;test: (-1) * 3 =
+	 * -3;
 	 */
 	@Test
 	public void multiplyTwoConcreteIntTest() {
-		NumericExpression result = universe.multiply(universe.oneInt(), twoInt);
+		NumericExpression result = universe.multiply(negOneInt, threeInt);
 
-		assertEquals(twoInt, result);
+		assertEquals(negThreeInt, result);
 	}
 
 	/**
@@ -133,8 +130,6 @@ public class IntegerArithmeticTest {
 	 */
 	@Test
 	public void multiplyTwoSymbolicIntTest() {
-		NumericExpression x = (NumericExpression) universe
-				.symbolicConstant(x_obj, intType);
 		NumericExpression result = universe.multiply(x, universe.zeroInt());
 
 		assertEquals(universe.zeroInt(), result);
@@ -148,10 +143,6 @@ public class IntegerArithmeticTest {
 	public void multiplySeqIntTest() {
 		List<NumericExpression> numList = new ArrayList<NumericExpression>();
 		List<NumericExpression> numList2 = new ArrayList<NumericExpression>();
-		NumericExpression x = (NumericExpression) universe
-				.symbolicConstant(x_obj, intType);
-		NumericExpression y = (NumericExpression) universe
-				.symbolicConstant(y_obj, intType);
 		NumericExpression result, result1;
 
 		numList.add(universe.oneInt());
@@ -192,8 +183,6 @@ public class IntegerArithmeticTest {
 	 */
 	@Test
 	public void divideSymblicIntTest() {
-		NumericExpression x = (NumericExpression) universe
-				.symbolicConstant(x_obj, intType);
 		NumericExpression result = universe.divide(universe.subtract(x, x), x);
 
 		assertEquals(universe.zeroInt(), result);
@@ -238,20 +227,29 @@ public class IntegerArithmeticTest {
 		assertEquals(negFourInt, result1);
 		assertEquals(universe.zeroInt(), result2);
 	}
-	
+
 	/**
-	 * Testing the minus method for symbolic IntegerNumbers;
+	 * Testing the minus method for symbolic IntegerNumbers; x + (-x) = 0;
 	 */
-	@Ignore
 	@Test
 	public void minusSymbolicIntTest() {
-		NumericExpression x = (NumericExpression) universe
-				.symbolicConstant(x_obj, intType);
-		NumericExpression negX = (NumericExpression) universe
-				.symbolicConstant(negX_obj, intType);
-		NumericExpression result = universe.minus(x);
-		
-		assertEquals(negX, result);
+		NumericExpression result = universe.add(x, universe.minus(x));
+
+		assertEquals(universe.zeroInt(), result);
+	}
+
+	/**
+	 * Testing the power method for concrete IntegerNumbers; test: 3^1=2; 4^0=1;
+	 */
+	@Test
+	public void powerConcreteIntTest() {
+		NumericExpression result = universe.power(threeInt, universe.oneInt());
+		NumericExpression result1 = universe.power(fourInt, universe.zeroInt());
+		NumericExpression result2 = universe.power(x, universe.zeroInt());
+
+		assertEquals(threeInt, result);
+		assertEquals(universe.oneInt(), result1);
+		assertEquals(universe.oneInt(), result2);
 	}
 
 	/**
