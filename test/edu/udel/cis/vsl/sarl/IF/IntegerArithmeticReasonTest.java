@@ -22,10 +22,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
@@ -36,7 +38,12 @@ public class IntegerArithmeticReasonTest {
 	private StringObject uobj; // "u"
 	private SymbolicType integerType;
 	private NumericSymbolicConstant u; // integer symbolic constant "u"
+	private NumericExpression negOneInt;
+	private NumericExpression threeInt;
+	private NumericExpression fiveInt;
 	private BooleanExpression trueExpr, falseExpr;
+	private BooleanExpression assumption;
+	private Reasoner reasoner;
 
 	@Before
 	public void setUp() throws Exception {
@@ -45,6 +52,9 @@ public class IntegerArithmeticReasonTest {
 		integerType = universe.integerType();
 		u = (NumericSymbolicConstant) universe.symbolicConstant(uobj,
 				integerType);
+		negOneInt = universe.integer(-1);
+		threeInt = universe.integer(3);
+		fiveInt = universe.integer(5);
 		trueExpr = universe.bool(true);
 		falseExpr = universe.bool(false);
 	}
@@ -134,22 +144,68 @@ public class IntegerArithmeticReasonTest {
 	public void simplifyIntDivYes() {
 		SymbolicExpression e = universe.divide(
 				universe.multiply(universe.integer(2), u), universe.integer(2));
+		Reasoner reasoner = universe.reasoner(trueExpr);
 
-		assertEquals(u, e);
+		assertEquals(u, reasoner.simplify(e));
 	}
 
 	/**
-	 * Integer modulus. true : (2u)%2 -> 0; true : (2u + 1) % 2 -> 1.
+	 * Integer modulus. true : 0 <= u/3 <=1 -> u <= 5
+	 */
+	@Ignore
+	@Test
+	public void simplifyIntDivTest() {
+		assumption = universe.and(
+				universe.lessThanEquals(universe.zeroInt(),
+						universe.divide(u, threeInt)),
+				universe.lessThanEquals(universe.divide(u, threeInt),
+						universe.oneInt()));
+		reasoner = universe.reasoner(assumption);
+		SymbolicExpression e = universe.lessThanEquals(u, fiveInt);
+
+		assertEquals(trueExpr, reasoner.simplify(e));
+	}
+
+	/**
+	 * Integer modulus. true : (2u)%2 -> 0 for all u;
 	 */
 	@Test
 	public void simplifyIntMod() {
 		SymbolicExpression e = universe.modulo(
 				universe.multiply(universe.integer(2), u), universe.integer(2));
-		SymbolicExpression e2 = universe
+		reasoner = universe.reasoner(trueExpr);
+
+		assertEquals(universe.zeroInt(), reasoner.simplify(e));
+	}
+
+	/**
+	 * Integer modulus. true : (2u + 1) % 2 -> 1 only if u >= 0.
+	 */
+	@Ignore
+	@Test
+	public void simplifyIntMod2() {
+		assumption = universe.lessThanEquals(universe.zeroInt(), u);
+		reasoner = universe.reasoner(assumption);
+		SymbolicExpression e = universe
 				.modulo(universe.add(universe.multiply(universe.integer(2), u),
 						universe.oneInt()), universe.integer(2));
 
-		assertEquals(universe.zeroInt(), e);
-		assertEquals(universe.oneInt(), e2);
+		assertEquals(universe.oneInt(), reasoner.simplify(e));
 	}
+
+	/**
+	 * Integer modulus. true : (2u + 1) % 2 -> -1 only if u < 0.
+	 */
+	@Ignore
+	@Test
+	public void simplifyIntMod3() {
+		assumption = universe.lessThan(u, universe.zeroInt());
+		reasoner = universe.reasoner(assumption);
+		SymbolicExpression e = universe
+				.modulo(universe.add(universe.multiply(universe.integer(2), u),
+						universe.oneInt()), universe.integer(2));
+
+		assertEquals(negOneInt, reasoner.simplify(e));
+	}
+
 }
