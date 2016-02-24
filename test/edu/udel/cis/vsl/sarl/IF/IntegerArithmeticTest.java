@@ -166,15 +166,23 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the divide method for symbolic IntegerNumbers;test: 0 / x = 0;
+	 * Testing the divide method for symbolic IntegerNumbers;test: (x - x) / x =
+	 * 0;
 	 */
 	@Test
 	public void divideSymblicIntTest() {
 		NumericExpression x = (NumericExpression) universe
 				.symbolicConstant(x_obj, intType);
-		NumericExpression result2 = universe.divide(universe.zeroInt(), x);
+		NumericExpression result = universe.divide(universe.subtract(x, x), x);
 
-		assertEquals(universe.zeroInt(), result2);
+		assertEquals(universe.zeroInt(), result);
+	}
+
+	/**
+	 * Testing the modulo method for symbolic IntegerNumbers;test: % ;
+	 */
+	@Test
+	public void modoluIntTest() {
 	}
 
 	/**
