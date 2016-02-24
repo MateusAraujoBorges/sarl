@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -12,21 +14,33 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class IntegerArithmeticTest {
-	SymbolicUniverse universe = SARL.newStandardUniverse();
-	private NumericExpression zero = universe.integer(0);
-	private NumericExpression oneInt = universe.integer(1);
-	private NumericExpression twoInt = universe.integer(2);
-	private NumericExpression threeInt = universe.integer(3);
-	private StringObject x_obj = universe.stringObject("x");
-	private StringObject y_obj = universe.stringObject("y");
-	private SymbolicType intType = universe.integerType();
+	private SymbolicUniverse universe;
+	private NumericExpression twoInt;
+	private NumericExpression threeInt;
+	private StringObject x_obj;
+	private StringObject y_obj;
+	private SymbolicType intType;
+
+	@Before
+	public void setUp() throws Exception {
+		universe = SARL.newStandardUniverse();
+		twoInt = universe.integer(2);
+		threeInt = universe.integer(3);
+		x_obj = universe.stringObject("x");
+		y_obj = universe.stringObject("y");
+		intType = universe.integerType();
+	}
+
+	@After
+	public void tearDown() throws Exception {
+	}
 
 	/**
 	 * Testing the add method for two concrete IntegerNumbers;test: 1 + 2 = 3
 	 */
 	@Test
 	public void addTwoConcreteIntTest() {
-		NumericExpression result = universe.add(oneInt, twoInt);
+		NumericExpression result = universe.add(universe.oneInt(), twoInt);
 
 		assertEquals(threeInt, result);
 	}
@@ -38,14 +52,14 @@ public class IntegerArithmeticTest {
 	public void addTwoSymbolicIntTest() {
 		NumericExpression x = (NumericExpression) universe
 				.symbolicConstant(x_obj, intType);
-		NumericExpression result = universe.add(x, zero);
+		NumericExpression result = universe.add(x, universe.zeroInt());
 
 		assertEquals(x, result);
 	}
 
 	/**
-	 * Testing the add method for a sequence of IntegerNumbers;test: 0 + 1 + 2 =
-	 * 3; x + 0 = x;
+	 * Testing the add method for a sequence of IntegerNumbers; test: 0 + 1 + 2
+	 * = 3; x + 0 = x;
 	 */
 	@Test
 	public void addSeqIntTest() {
@@ -55,11 +69,11 @@ public class IntegerArithmeticTest {
 				.symbolicConstant(x_obj, intType);
 		NumericExpression result, result1;
 
-		numList.add(zero);
-		numList.add(oneInt);
+		numList.add(universe.zeroInt());
+		numList.add(universe.oneInt());
 		numList.add(twoInt);
 		numList2.add(x);
-		numList2.add(zero);
+		numList2.add(universe.zeroInt());
 		result = universe.add(numList);
 		result1 = universe.add(numList2);
 		assertEquals(threeInt, result);
@@ -74,7 +88,7 @@ public class IntegerArithmeticTest {
 	public void substractConcreteIntTest() {
 		NumericExpression result = universe.subtract(threeInt, twoInt);
 
-		assertEquals(oneInt, result);
+		assertEquals(universe.oneInt(), result);
 	}
 
 	/**
@@ -98,7 +112,7 @@ public class IntegerArithmeticTest {
 	 */
 	@Test
 	public void multiplyTwoConcreteIntTest() {
-		NumericExpression result = universe.multiply(oneInt, twoInt);
+		NumericExpression result = universe.multiply(universe.oneInt(), twoInt);
 
 		assertEquals(twoInt, result);
 	}
@@ -110,9 +124,9 @@ public class IntegerArithmeticTest {
 	public void multiplyTwoSymbolicIntTest() {
 		NumericExpression x = (NumericExpression) universe
 				.symbolicConstant(x_obj, intType);
-		NumericExpression result = universe.multiply(x, zero);
+		NumericExpression result = universe.multiply(x, universe.zeroInt());
 
-		assertEquals(zero, result);
+		assertEquals(universe.zeroInt(), result);
 	}
 
 	/**
@@ -129,15 +143,15 @@ public class IntegerArithmeticTest {
 				.symbolicConstant(y_obj, intType);
 		NumericExpression result, result1;
 
-		numList.add(oneInt);
+		numList.add(universe.oneInt());
 		numList.add(twoInt);
 		numList2.add(x);
 		numList2.add(y);
-		numList2.add(zero);
+		numList2.add(universe.zeroInt());
 		result = universe.multiply(numList);
 		result1 = universe.multiply(numList2);
 		assertEquals(twoInt, result);
-		assertEquals(zero, result1);
+		assertEquals(universe.zeroInt(), result1);
 	}
 
 	/**
@@ -146,7 +160,7 @@ public class IntegerArithmeticTest {
 	 */
 	@Test
 	public void divideConcreteIntTest() {
-		NumericExpression result = universe.divide(twoInt, oneInt);
+		NumericExpression result = universe.divide(twoInt, universe.oneInt());
 
 		assertEquals(twoInt, result);
 	}
@@ -158,8 +172,27 @@ public class IntegerArithmeticTest {
 	public void divideSymblicIntTest() {
 		NumericExpression x = (NumericExpression) universe
 				.symbolicConstant(x_obj, intType);
-		NumericExpression result2 = universe.divide(zero, x);
+		NumericExpression result2 = universe.divide(universe.zeroInt(), x);
 
-		assertEquals(zero, result2);
+		assertEquals(universe.zeroInt(), result2);
 	}
+
+	/**
+	 * n1 = (c^2 + c)/d d = c+1
+	 * 
+	 * n1 == c valid?
+	 */
+	// @Ignore
+	// @Test
+	// public void arrayReasonSimplifyTest2() {
+	// NumericExpression n1 =
+	// universe.divide(universe.add(universe.multiply(int_c, int_c), int_c),
+	// int_d);// n1 = (c^2 + c)/d
+	// NumericExpression n2 = universe.add(int_c, one);// n2 = c+1
+	// Reasoner r = universe.reasoner(universe.equals(int_d, n2)); // d == n2
+	// out.println(r.simplify(n1));
+	//
+	// BooleanExpression eq = universe.equals(n1, int_c); //n1 == c?
+	// assertTrue(r.isValid(eq));
+	// }
 }
