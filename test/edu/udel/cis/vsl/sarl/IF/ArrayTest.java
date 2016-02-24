@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -48,6 +49,7 @@ public class ArrayTest {
 																			// constants
 	private List<NumericExpression> list1; // {5,6}
 	private List<NumericExpression> list2; // {17}
+	private List<NumericExpression> list3; // {}
 
 	private SymbolicExpression write2d(SymbolicExpression array,
 			NumericExpression i, NumericExpression j,
@@ -80,15 +82,13 @@ public class ArrayTest {
 		seventeen = universe.integer(17);
 		list1 = Arrays.asList(new NumericExpression[] { five, six });
 		list2 = Arrays.asList(new NumericExpression[] { seventeen });
+		list3 = Arrays.asList(new NumericExpression[] { });
 	}
 
 	@After
 	public void tearDown() throws Exception {
 	}
 
-	/**
-	 * array read and write test
-	 */
 	@Test
 	public void writeAndReadTest() {
 		SymbolicExpression a = universe.symbolicConstant(a_obj,
@@ -98,21 +98,9 @@ public class ArrayTest {
 		NumericExpression j = universe.integer(1);
 		SymbolicExpression c = universe.arrayWrite(a, j, b);
 		SymbolicExpression d = universe.arrayRead(c, j);
-		assertEquals(b ,d);
+		assertEquals(b, d);
 	}
 
-	/**
-	 * get the length of an array
-	 */
-	@Test
-	public void lengthTest() {
-		SymbolicExpression a = universe.array(integerType, list1);
-		assertEquals(two, universe.length(a));
-	}
-
-	/**
-	 * append a number after an array {5,6} ==> {5,6,b}
-	 */
 	@Test
 	public void appendTest() {
 
@@ -128,9 +116,24 @@ public class ArrayTest {
 
 	}
 
-	/**
-	 * append an element into an empty array {} ==> {b}
-	 */
+	@Test
+	public void append2DTest() {
+		List<SymbolicExpression> lists = new ArrayList<SymbolicExpression>();
+		lists.add(universe.array(integerType, list1));
+		SymbolicExpression a1 = universe.array(universe.arrayType(integerType),
+				lists);
+		SymbolicExpression a2 = universe.append(a1,
+				universe.array(integerType, list2));
+		SymbolicExpression r1 = universe.arrayRead(a2, one);
+		SymbolicExpression r2 = universe.arrayRead(a2, zero);
+		NumericExpression v1 = (NumericExpression) universe.arrayRead(r1, zero);
+		NumericExpression v2 = (NumericExpression) universe.arrayRead(r2, one);
+
+		assertEquals(two, universe.length(a2));
+		assertEquals(seventeen, v1);
+		assertEquals(six, v2);
+	}
+
 	@Test
 	public void appendEmptyArrayTest() {
 		SymbolicExpression a = universe.emptyArray(integerType);
@@ -143,21 +146,26 @@ public class ArrayTest {
 		assertEquals(b, d);
 	}
 
-	/**
-	 * remove an element from an array {5, 6} ==> {6}
-	 */
 	@Test
 	public void removeElementTest() {
-		SymbolicExpression a = universe.array(integerType, list1);
-		SymbolicExpression b = universe.removeElementAt(a, 0);
-
-		assertEquals(universe.arrayType(integerType, one), b.type());
-		assertEquals(six, universe.arrayRead(b, zero));
+		List<SymbolicExpression> lists = new ArrayList<SymbolicExpression>();
+		lists.add(universe.array(integerType, list1));
+		lists.add(universe.array(integerType, list2));
+		lists.add(universe.array(integerType, list3));
+		SymbolicExpression a1 = universe.array(universe.arrayType(integerType),
+				lists);
+		SymbolicExpression a2 = universe.removeElementAt(a1, 2);
+		SymbolicExpression r1 = universe.arrayRead(a2, zero);
+		SymbolicExpression r2 = universe.removeElementAt(r1, 0);
+		SymbolicExpression a3 = universe.arrayWrite(a2, zero, r2);
+		SymbolicExpression r3 = universe.arrayRead(a3, zero);
+		NumericExpression v1 = (NumericExpression)universe.arrayRead(r3, zero);
+		
+		assertEquals(universe.length(a1), universe.add(universe.length(a3), one));
+		assertEquals(universe.length(r1), universe.add(universe.length(r3), one));
+		assertEquals(six, v1);
 	}
 
-	/**
-	 * insert an element into an array {5,6} ==> {5,17,6}
-	 */
 	@Test
 	public void insertElementTest() {
 
@@ -171,10 +179,6 @@ public class ArrayTest {
 		assertEquals(b, d);
 	}
 
-	/**
-	 * 
-	 * constant array test {a,a,a}
-	 */
 	@Test
 	public void constantArrayTest() {
 		SymbolicExpression a = universe.symbolicConstant(a_obj, integerType);
