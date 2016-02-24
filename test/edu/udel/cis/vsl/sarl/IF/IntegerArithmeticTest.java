@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -15,16 +16,17 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class IntegerArithmeticTest {
 	private SymbolicUniverse universe;
-	private NumericExpression negOneInt;
-	private NumericExpression twoInt;
-	private NumericExpression threeInt;
-	private NumericExpression negThreeInt;
-	private NumericExpression negFourInt;
-	private NumericExpression fourInt;
-	private StringObject x_obj;
-	private StringObject y_obj;
+	private NumericExpression negOneInt;  //integer -1
+	private NumericExpression twoInt;     //integer  2
+	private NumericExpression threeInt;   //integer  3
+	private NumericExpression negThreeInt;//integer -3
+	private NumericExpression negFourInt; //integer -4
+	private NumericExpression fourInt;    //integer  4
+	private StringObject x_obj;		// "x"
+	private StringObject negX_obj;		// "x"
+	private StringObject y_obj;		// "y"
 	private SymbolicType intType;
-
+	
 	@Before
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
@@ -35,6 +37,7 @@ public class IntegerArithmeticTest {
 		fourInt = universe.integer(4);
 		negFourInt = universe.integer(-4);
 		x_obj = universe.stringObject("x");
+		negX_obj = universe.stringObject("-x");
 		y_obj = universe.stringObject("y");
 		intType = universe.integerType();
 	}
@@ -220,6 +223,35 @@ public class IntegerArithmeticTest {
 
 		assertEquals(universe.oneInt(), result1);
 		assertEquals(negOneInt, result3);
+	}
+	
+	/**
+	 * Testing the minus method for concrete IntegerNumbers;
+	 */
+	@Test
+	public void minusConcreteIntTest() {
+		NumericExpression result = universe.minus(negThreeInt);// negative int
+		NumericExpression result1 = universe.minus(fourInt); // positive int
+		NumericExpression result2 = universe.minus(universe.zeroInt()); // zero
+
+		assertEquals(threeInt, result);
+		assertEquals(negFourInt, result1);
+		assertEquals(universe.zeroInt(), result2);
+	}
+	
+	/**
+	 * Testing the minus method for symbolic IntegerNumbers;
+	 */
+	@Ignore
+	@Test
+	public void minusSymbolicIntTest() {
+		NumericExpression x = (NumericExpression) universe
+				.symbolicConstant(x_obj, intType);
+		NumericExpression negX = (NumericExpression) universe
+				.symbolicConstant(negX_obj, intType);
+		NumericExpression result = universe.minus(x);
+		
+		assertEquals(negX, result);
 	}
 
 	/**
