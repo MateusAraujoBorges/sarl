@@ -178,6 +178,15 @@ public class IntegerArithmeticReasonTest {
 		assertEquals(universe.zeroInt(), reasoner.simplify(e));
 	}
 
+	// TODO: Possible approaches:
+	// When evaluating x%constant: if x is a Monomial c*m,
+	// (c*m)%d = ((c%d)*m)%d, and (c1*m1 + c2*m2)%d =...
+	// (x^n)%d = ((x%d)^n)%d. In short, apply %d to all
+	// constants...
+	// (a*b)%d = ((a%d)*b)%d
+	// (a+b)%d = ((a%d)+b)%d
+	// sign?
+
 	/**
 	 * Integer modulus. true : (2u + 1) % 2 -> 1 only if u >= 0.
 	 */

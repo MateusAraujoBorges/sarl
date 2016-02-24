@@ -352,8 +352,8 @@ public class FastList<T> {
 		if (first == null)
 			return result;
 
-		FastNode<T> prev = new FastNode<T>(first.getData()), curr = prev, old = first
-				.getNext();
+		FastNode<T> prev = new FastNode<T>(first.getData()), curr = prev,
+				old = first.getNext();
 
 		result.first = prev;
 
@@ -379,5 +379,22 @@ public class FastList<T> {
 				out.print(data);
 		}
 		out.flush();
+	}
+
+	public StringBuffer toStringBuffer() {
+		StringBuffer result = new StringBuffer();
+
+		for (FastNode<T> node = first; node != null; node = node.getNext()) {
+			T data = node.getData();
+
+			if (data != null)
+				result.append(data);
+		}
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return toStringBuffer().toString();
 	}
 }

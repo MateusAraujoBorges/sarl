@@ -102,6 +102,7 @@ public class BoundMap {
 		boolean isIntegral = key.type().isInteger();
 
 		if (original == null) {
+			// TODO: if integer type, correct
 			result = info.numberFactory.newInterval(isIntegral, null, true,
 					value, strict);
 			map.put(key, result);
@@ -112,7 +113,7 @@ public class BoundMap {
 		}
 		return result;
 	}
-	
+
 	// TODO: add methods to say monic==value, monic!=value
 
 	public void print(PrintStream out) {

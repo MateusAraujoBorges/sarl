@@ -1057,6 +1057,38 @@ public class CVCTranslator {
 		result.add(") ENDIF");
 		return result;
 	}
+	
+	// TODO: problem occurs if arg1 or arg2 involves a quantified variable.
+	// The auxiliary constraints need to go inside the current scope:
+	// need to back up to the beginning of the scope
+	
+	// when you translate a FORALL:
+	// translation of body should return a pair, second component of which
+	// is the aux. vars and relations.
+	// take the second part and insert it, then insert the first part.
+	
+	// now the decls are going into a global cvcDeclarations, but
+	// we need this to be returned instead --- maybe a triple?
+
+	
+	//While we are at it: the reasoner should translate a query of the
+	// form forall x.phi by making x a free variable and making the query
+	// phi.
+	
+	// now every translation method should return a structure?
+	// 1. list of decls
+	// 2. list of constraints on those decls
+	// 3. translation of expr
+	
+	// what do with 1, 2, and 3 depends on whether you are at
+	// the outermost (global) scope.  If you are, then the decls
+	// all get added to the cvcDeclarations, and the constraints get
+	// inserted there as assertions too, and the translation become
+	// cvcTranslation.  Otherwise the extras (1 and 2) keep
+	// bubbling up the call stack until they hit a quantifier,
+	// then they get inserted as follows:
+	
+	// forall x:T (
 
 	private Pair<FastList<String>, FastList<String>> getIntDivInfo(
 			NumericExpression arg1, NumericExpression arg2) {

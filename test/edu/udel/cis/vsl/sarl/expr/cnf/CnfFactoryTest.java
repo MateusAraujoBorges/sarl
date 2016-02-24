@@ -462,6 +462,18 @@ public class CnfFactoryTest {
 		// X div 2 > (X/2)-1 >= 3/2-1 >= .5 -> X div 2 >= 1
 		// -> X div 2 = 1
 		// X/2<X div 2 + 1 = 2 -> X<4 -> X=3
+		
+		// Here is how to do it:
+		
+		// To get a bound on a%b, where b>0 is constant:		
+		// first, get a bound on a.  if a>=0: a%b is in [0,b-1].
+		// if a<=0 a%b in [1-b,0].  In any case: a%b in [1-b,b-1].
+		
+		// if a bound I1 is created on a div b:
+		// 1. get bound I2 on a%b as above (if not already present)
+		// 2. use fact that a=(a div b)*b+a%b to get bound on a:
+		//   b*I1+I2
+		
 
 	}
 }
