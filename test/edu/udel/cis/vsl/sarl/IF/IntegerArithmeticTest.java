@@ -15,8 +15,12 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class IntegerArithmeticTest {
 	private SymbolicUniverse universe;
+	private NumericExpression negOneInt;
 	private NumericExpression twoInt;
 	private NumericExpression threeInt;
+	private NumericExpression negThreeInt;
+	private NumericExpression negFourInt;
+	private NumericExpression fourInt;
 	private StringObject x_obj;
 	private StringObject y_obj;
 	private SymbolicType intType;
@@ -24,8 +28,12 @@ public class IntegerArithmeticTest {
 	@Before
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
+		negOneInt = universe.integer(-1);
 		twoInt = universe.integer(2);
 		threeInt = universe.integer(3);
+		negThreeInt = universe.integer(-3);
+		fourInt = universe.integer(4);
+		negFourInt = universe.integer(-4);
 		x_obj = universe.stringObject("x");
 		y_obj = universe.stringObject("y");
 		intType = universe.integerType();
@@ -155,14 +163,24 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the divide method for two concrete IntegerNumbers;test: 2 / 1 =
-	 * 2;
+	 * Testing the divide method for two concrete IntegerNumbers;
+	 * In C, a%b=a-(a/b)*b. test examples:
+	 * a=4, b=3: a/b=1, a%b=4-3=1
+	 * a=4, b=-3: a/b=-1, a%b=4-(-1)(-3)=1
+	 * a=-4, b=3: a/b=-1, a%b=-4-(-1)3=-1
+	 * a=-4, b=-3: a/b=1, a%b=-4-1(-3)=-1
 	 */
 	@Test
 	public void divideConcreteIntTest() {
-		NumericExpression result = universe.divide(twoInt, universe.oneInt());
+		NumericExpression result = universe.divide(fourInt, threeInt);
+		NumericExpression result1 = universe.divide(fourInt, negThreeInt);
+		NumericExpression result2 = universe.divide(negFourInt, threeInt);
+		NumericExpression result3 = universe.divide(negFourInt, negThreeInt);
 
-		assertEquals(twoInt, result);
+		assertEquals(universe.oneInt(), result);
+		assertEquals(negOneInt, result1);
+		assertEquals(negOneInt, result2);
+		assertEquals(universe.oneInt(), result3);
 	}
 
 	/**
@@ -179,10 +197,29 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the modulo method for symbolic IntegerNumbers;test: % ;
+	 * Testing the modulo method for symbolic IntegerNumbers;
+	 * In C, a%b=a-(a/b)*b. test examples:
+	 * a=4, b=3: a/b=1, a%b=4-3=1
+	 * a=4, b=-3: a/b=-1, a%b=4-(-1)(-3)=1
+	 * a=-4, b=3: a/b=-1, a%b=-4-(-1)3=-1
+	 * a=-4, b=-3: a/b=1, a%b=-4-1(-3)=-1
 	 */
 	@Test
-	public void modoluIntTest() {
+	public void moduloIntTest() { // positive divisor
+		NumericExpression result = universe.modulo(fourInt, threeInt);
+		NumericExpression result2 = universe.modulo(negFourInt, threeInt);
+
+		assertEquals(universe.oneInt(), result);
+		assertEquals(negOneInt, result2);
+	}
+
+	@Test
+	public void moduloIntTest2() { // negative divisor
+		NumericExpression result1 = universe.modulo(fourInt, negThreeInt);
+		NumericExpression result3 = universe.modulo(negFourInt, negThreeInt);
+
+		assertEquals(universe.oneInt(), result1);
+		assertEquals(negOneInt, result3);
 	}
 
 	/**
