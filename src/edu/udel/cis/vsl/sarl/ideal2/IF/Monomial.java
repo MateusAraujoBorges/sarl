@@ -48,7 +48,25 @@ public interface Monomial extends RationalExpression {
 	 */
 	Monic monic(Ideal2Factory factory);
 
+	/**
+	 * Returns the degree of the monic where each factor is considered to have
+	 * degree 1. For example, (X^2+Y^2)^3*Z^2 has monomial degree 5: it has two
+	 * factors, one of degree 3 and one of degree 2.
+	 * 
+	 * @return the monomial degree with NO expansion
+	 */
 	int monomialDegree();
+
+	/**
+	 * The degree of this monomial if it were fully expanded to a polynomial in
+	 * which the variables cannot be expressed as the sum, product, difference,
+	 * or quotient of expressions. For example, (X^2+Y^2)^3*Z^2 has total degree
+	 * 8.
+	 * 
+	 * @return total degree of this monomial after full expansion to a
+	 *         polynomial
+	 */
+	int totalDegree();
 
 	/**
 	 * Returns the "fully expanded term map" of this monomial.
@@ -59,6 +77,8 @@ public interface Monomial extends RationalExpression {
 	 *         {@link Polynomial}s.
 	 */
 	SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory);
+	
+	boolean hasNontrivialExpansion(Ideal2Factory factory);
 
 	/**
 	 * Returns the "basic term map" of this monomial.

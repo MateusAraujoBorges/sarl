@@ -37,6 +37,8 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
  */
 public class One extends IdealExpression implements Constant, Monic {
 
+	private SymbolicMap<Monic, Monomial> expansion = null;
+
 	protected One(SymbolicType type, NumberObject oneObj) {
 		super(SymbolicOperator.CONCRETE, type, oneObj);
 		assert oneObj.isOne();
@@ -75,7 +77,10 @@ public class One extends IdealExpression implements Constant, Monic {
 
 	@Override
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
-		return factory.monicSingletonMap(this, this);
+		if (expansion == null) {
+			expansion = factory.monicSingletonMap(this, this);
+		}
+		return expansion;
 	}
 
 	@Override
@@ -104,13 +109,18 @@ public class One extends IdealExpression implements Constant, Monic {
 	}
 
 	@Override
-	public IdealKind idealKind() {
-		return IdealKind.Constant;
+	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
+		return factory.monicSingletonMap(this, this);
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
-		return factory.monicSingletonMap(this, this);
+	public int totalDegree() {
+		return 0;
+	}
+
+	@Override
+	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+		return false;
 	}
 
 }

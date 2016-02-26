@@ -3,20 +3,22 @@
  * 
  * This file is part of SARL.
  * 
- * SARL is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your
- * option) any later version.
+ * SARL is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
  * 
- * SARL is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
- * License for more details.
+ * SARL is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with SARL. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.object.common;
+
+import java.math.BigInteger;
 
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
@@ -24,8 +26,8 @@ import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 
-public class CommonNumberObject extends CommonSymbolicObject implements
-		NumberObject {
+public class CommonNumberObject extends CommonSymbolicObject
+		implements NumberObject {
 
 	private Number value;
 
@@ -93,8 +95,18 @@ public class CommonNumberObject extends CommonSymbolicObject implements
 
 	@Override
 	public StringBuffer toStringBuffer(boolean atomize) {
-		StringBuffer buffer = new StringBuffer(value.toString());
-		return buffer;
+		// fractions need to be enclosed in parentheses if they
+		// are going to be used inside other expressions...
+		if (atomize && value instanceof RationalNumber && !BigInteger.ONE
+				.equals(((RationalNumber) value).denominator())) {
+			StringBuffer buffer = new StringBuffer("(");
+
+			buffer.append(value.toString());
+			buffer.append(")");
+			return buffer;
+		} else {
+			return new StringBuffer(value.toString());
+		}
 	}
 
 	@Override

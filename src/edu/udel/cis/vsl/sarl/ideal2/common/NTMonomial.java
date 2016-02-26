@@ -34,6 +34,8 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
  */
 public class NTMonomial extends IdealExpression implements Monomial {
 
+	private SymbolicMap<Monic, Monomial> expansion = null;
+
 	protected NTMonomial(Constant constant, Monic monic) {
 		super(SymbolicOperator.MULTIPLY, constant.type(), constant, monic);
 		assert !constant.isZero();
@@ -76,23 +78,22 @@ public class NTMonomial extends IdealExpression implements Monomial {
 
 	@Override
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
-		Monic monic = this.monic();
-		SymbolicMap<Monic, Monomial> expandedMonic = monic.expand(factory);
+		if (expansion == null) {
+			Monic monic = this.monic();
+			SymbolicMap<Monic, Monomial> expandedMonic = monic.expand(factory);
 
-		if (monic == expandedMonic)
-			return factory.monicSingletonMap(monic, this);
-		return factory.multiplyConstantTermMap(monomialConstant(),
-				expandedMonic);
+			if (monic == expandedMonic)
+				expansion = factory.monicSingletonMap(monic, this);
+			else
+				expansion = factory.multiplyConstantTermMap(monomialConstant(),
+						expandedMonic);
+		}
+		return expansion;
 	}
 
 	@Override
 	public int monomialDegree() {
 		return monic().monomialDegree();
-	}
-
-	@Override
-	public IdealKind idealKind() {
-		return IdealKind.NTMonomial;
 	}
 
 	@Override
@@ -104,6 +105,16 @@ public class NTMonomial extends IdealExpression implements Monomial {
 					monic.termMap(factory));
 		}
 		return factory.monicSingletonMap(monic, this);
+	}
+
+	@Override
+	public int totalDegree() {
+		return monic().totalDegree();
+	}
+
+	@Override
+	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+		return monic().hasNontrivialExpansion(factory);
 	}
 
 }

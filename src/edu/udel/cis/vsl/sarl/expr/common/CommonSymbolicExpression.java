@@ -38,8 +38,8 @@ import edu.udel.cis.vsl.sarl.object.common.CommonSymbolicObject;
  * 
  * 
  */
-public class CommonSymbolicExpression extends CommonSymbolicObject implements
-		SymbolicExpression {
+public class CommonSymbolicExpression extends CommonSymbolicObject
+		implements SymbolicExpression {
 
 	/** Turn this one to print debugging information */
 	public static final boolean debug = false;
@@ -89,8 +89,8 @@ public class CommonSymbolicExpression extends CommonSymbolicObject implements
 	 * @param type
 	 * @param arg0
 	 */
-	protected CommonSymbolicExpression(SymbolicOperator kind,
-			SymbolicType type, SymbolicObject arg0) {
+	protected CommonSymbolicExpression(SymbolicOperator kind, SymbolicType type,
+			SymbolicObject arg0) {
 		this(kind, type, new SymbolicObject[] { arg0 });
 	}
 
@@ -103,8 +103,8 @@ public class CommonSymbolicExpression extends CommonSymbolicObject implements
 	 * @param arg0
 	 * @param arg1
 	 */
-	protected CommonSymbolicExpression(SymbolicOperator kind,
-			SymbolicType type, SymbolicObject arg0, SymbolicObject arg1) {
+	protected CommonSymbolicExpression(SymbolicOperator kind, SymbolicType type,
+			SymbolicObject arg0, SymbolicObject arg1) {
 		this(kind, type, new SymbolicObject[] { arg0, arg1 });
 	}
 
@@ -118,9 +118,8 @@ public class CommonSymbolicExpression extends CommonSymbolicObject implements
 	 * @param arg1
 	 * @param arg2
 	 */
-	protected CommonSymbolicExpression(SymbolicOperator kind,
-			SymbolicType type, SymbolicObject arg0, SymbolicObject arg1,
-			SymbolicObject arg2) {
+	protected CommonSymbolicExpression(SymbolicOperator kind, SymbolicType type,
+			SymbolicObject arg0, SymbolicObject arg1, SymbolicObject arg2) {
 		this(kind, type, new SymbolicObject[] { arg0, arg1, arg2 });
 	}
 
@@ -132,8 +131,8 @@ public class CommonSymbolicExpression extends CommonSymbolicObject implements
 	 * @param type
 	 * @param args
 	 */
-	protected CommonSymbolicExpression(SymbolicOperator kind,
-			SymbolicType type, Collection<SymbolicObject> args) {
+	protected CommonSymbolicExpression(SymbolicOperator kind, SymbolicType type,
+			Collection<SymbolicObject> args) {
 		this(kind, type, args.toArray(new SymbolicObject[args.size()]));
 	}
 
@@ -158,10 +157,9 @@ public class CommonSymbolicExpression extends CommonSymbolicObject implements
 	protected boolean intrinsicEquals(SymbolicObject o) {
 		CommonSymbolicExpression that = (CommonSymbolicExpression) o;
 
-		return this.getClass().equals(o.getClass())
-				&& operator == that.operator
-				&& ((type == null && that.type == null) || type
-						.equals(that.type))
+		return this.getClass().equals(o.getClass()) && operator == that.operator
+				&& ((type == null && that.type == null)
+						|| type.equals(that.type))
 				&& Arrays.equals(arguments, that.arguments);
 	}
 
@@ -274,6 +272,27 @@ public class CommonSymbolicExpression extends CommonSymbolicObject implements
 		}
 	}
 
+	private void accumulateSum(StringBuffer buffer,
+			SymbolicCollection<?> operands) {
+		boolean first = true;
+
+		for (SymbolicExpression arg : operands) {
+			StringBuffer argString = arg.toStringBuffer(false);
+
+			if (first)
+				first = false;
+			else {
+				if ("-".equals(argString.substring(0, 1))) {
+					argString.delete(0, 1);
+					buffer.append(" - ");
+				} else {
+					buffer.append(" + ");
+				}
+			}
+			buffer.append(argString);
+		}
+	}
+
 	/**
 	 * Computes string representation of a binary operator expression
 	 * 
@@ -294,6 +313,21 @@ public class CommonSymbolicExpression extends CommonSymbolicObject implements
 		buffer.append(arg0.toStringBuffer(atomizeArgs));
 		buffer.append(opString);
 		buffer.append(arg1.toStringBuffer(atomizeArgs));
+	}
+
+	private void processBinarySum(StringBuffer buffer, SymbolicObject arg0,
+			SymbolicObject arg1) {
+		buffer.append(arg0.toStringBuffer(false));
+
+		StringBuffer arg1String = arg1.toStringBuffer(false);
+
+		if ("-".equals(arg1String.substring(0, 1))) {
+			arg1String.delete(0, 1);
+			buffer.append(" - ");
+		} else {
+			buffer.append(" + ");
+		}
+		buffer.append(arg1String);
 	}
 
 	/**
@@ -324,6 +358,17 @@ public class CommonSymbolicExpression extends CommonSymbolicObject implements
 		}
 	}
 
+	private void processSum(StringBuffer buffer, boolean atomizeResult) {
+		if (arguments.length == 1)
+			accumulateSum(buffer, (SymbolicCollection<?>) arguments[0]);
+		else
+			processBinarySum(buffer, arguments[0], arguments[1]);
+		if (atomizeResult) {
+			buffer.insert(0, '(');
+			buffer.append(')');
+		}
+	}
+
 	@Override
 	public StringBuffer toStringBuffer(boolean atomize) {
 		if (debug)
@@ -346,7 +391,7 @@ public class CommonSymbolicExpression extends CommonSymbolicObject implements
 
 		switch (operator) {
 		case ADD:
-			processFlexibleBinary(result, "+", false, atomize);
+			processSum(result, atomize);
 			return result;
 		case AND:
 			processFlexibleBinary(result, " && ", true, atomize);
@@ -354,7 +399,8 @@ public class CommonSymbolicExpression extends CommonSymbolicObject implements
 		case APPLY: {
 			result.append(arguments[0].toStringBuffer(true));
 			result.append("(");
-			accumulate(result, ",", (SymbolicCollection<?>) arguments[1], false);
+			accumulate(result, ",", (SymbolicCollection<?>) arguments[1],
+					false);
 			result.append(")");
 			return result;
 		}
@@ -402,7 +448,7 @@ public class CommonSymbolicExpression extends CommonSymbolicObject implements
 						result.append(')');
 					}
 				}
-				result.append(arguments[0].toStringBuffer(false));
+				result.append(arguments[0].toStringBuffer(atomize));
 				if (type.isHerbrand())
 					result.append('h');
 			}

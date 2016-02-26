@@ -57,9 +57,9 @@ public class NTRationalExpression extends IdealExpression
 		return (Monomial) argument(1);
 	}
 
-	@Override
-	public IdealKind idealKind() {
-		return IdealKind.NTRationalExpression;
-	}
+//	@Override
+//	public IdealKind idealKind() {
+//		return IdealKind.NTRationalExpression;
+//	}
 
 }

@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
+import java.io.PrintStream;
+
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
@@ -36,6 +38,10 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
  */
 public class NTPrimitivePower extends IdealExpression
 		implements PrimitivePower {
+
+	public final static boolean debug = true;
+
+	public final static PrintStream out = System.out;
 
 	/**
 	 * Cached result of {@link #expand(Ideal2Factory)}.
@@ -112,6 +118,17 @@ public class NTPrimitivePower extends IdealExpression
 	@Override
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		if (expansion == null) {
+			IntObject exponent = exponent();
+			int totalDegree;
+
+			if (debug) {
+				totalDegree = totalDegree();
+				out.println(
+						"Starting: expanding primitive power of total degree "
+								+ totalDegree + " with exponent " + exponent);
+				out.flush();
+			}
+
 			NumericPrimitive primitive = primitive();
 			SymbolicMap<Monic, Monomial> expandedPrimitive = primitive
 					.expand(factory);
@@ -120,7 +137,14 @@ public class NTPrimitivePower extends IdealExpression
 				expansion = factory.monicSingletonMap(this, this);
 			else
 				expansion = factory.powerTermMap(type(), expandedPrimitive,
-						exponent());
+						exponent);
+			if (debug) {
+				out.println(
+						"Finished: expanding primitive power of total degree "
+								+ totalDegree + " with exponent " + exponent
+								+ ": result has size " + expansion.size());
+				out.flush();
+			}
 		}
 		return expansion;
 	}
@@ -136,13 +160,20 @@ public class NTPrimitivePower extends IdealExpression
 	}
 
 	@Override
-	public IdealKind idealKind() {
-		return IdealKind.NTPrimitivePower;
+	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
+		return factory.monicSingletonMap(this, this);
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
-		return factory.monicSingletonMap(this, this);
+	public int totalDegree() {
+		return exponent().getInt() * primitive().totalDegree();
+	}
+
+	@Override
+	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+		Primitive p = primitive();
+
+		return p instanceof NTPolynomial || p.hasNontrivialExpansion(factory);
 	}
 
 }

@@ -35,13 +35,11 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
  */
 public class NTConstant extends IdealExpression implements Constant {
 
+	private SymbolicMap<Monic, Monomial> expansion = null;
+
 	protected NTConstant(SymbolicType type, NumberObject value) {
 		super(SymbolicOperator.CONCRETE, type, value);
 		assert !value.isOne();
-	}
-
-	public IdealKind idealKind() {
-		return IdealKind.Constant;
 	}
 
 	public NumberObject value() {
@@ -82,12 +80,10 @@ public class NTConstant extends IdealExpression implements Constant {
 
 	@Override
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
-		return factory.monicSingletonMap(factory.one(type()), this);
-	}
-
-	@Override
-	public String toString() {
-		return number().toString();
+		if (expansion == null) {
+			expansion = factory.monicSingletonMap(factory.one(type()), this);
+		}
+		return expansion;
 	}
 
 	@Override
@@ -98,6 +94,16 @@ public class NTConstant extends IdealExpression implements Constant {
 	@Override
 	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
 		return factory.monicSingletonMap(factory.one(type()), this);
+	}
+
+	@Override
+	public int totalDegree() {
+		return isZero() ? -1 : 0;
+	}
+
+	@Override
+	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+		return false;
 	}
 
 }

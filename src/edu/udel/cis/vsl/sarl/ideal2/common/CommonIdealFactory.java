@@ -2413,6 +2413,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 
 		if (debug) {
 			int n1 = termMap1.size(), n2 = termMap2.size();
+			
 
 			System.out.println(
 					"Debug: multiplying maps of size: " + n1 + ", " + n2);

@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
+import java.io.PrintStream;
+
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
@@ -45,10 +47,22 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
  */
 public class NTMonic extends IdealExpression implements Monic {
 
+	public final static boolean debug = false;
+
+	public final static PrintStream out = System.out;
+
 	/**
 	 * Cached value returned by method {@link #degree()}.
 	 */
-	private int degree = -1;
+	private int monomialDegree = -1;
+
+	private int totalDegree = -1;
+
+	/**
+	 * Cached result for method {@link #hasNontrivialExpansion(Ideal2Factory)}.
+	 * -1 means this has not yet been computed. 0 means false. 1 means true.
+	 */
+	byte hasNTE = -1;
 
 	/**
 	 * Cached result of {@link #expand(Ideal2Factory)}.
@@ -100,11 +114,27 @@ public class NTMonic extends IdealExpression implements Monic {
 	@Override
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		if (expansion == null) {
-			expansion = factory.oneTermMap(type());
+			SymbolicMap<Primitive, PrimitivePower> factors = monicFactors();
+			int totalDegree, numFactors;
 
+			if (debug) {
+				totalDegree = totalDegree();
+				numFactors = factors.size();
+				out.println("Starting: expanding monic of total degree "
+						+ totalDegree + " with " + numFactors + " factors");
+				//out.println("monic: " + this);
+				out.flush();
+			}
+			expansion = factory.oneTermMap(type());
 			for (PrimitivePower ppower : monicFactors())
 				expansion = factory.multiplyTermMaps(expansion,
 						ppower.expand(factory));
+			if (debug) {
+				out.println("Finished: expanding monic of total degree "
+						+ totalDegree + " with " + numFactors
+						+ " factors: result has size " + expansion.size());
+				out.flush();
+			}
 		}
 		return expansion;
 	}
@@ -118,23 +148,43 @@ public class NTMonic extends IdealExpression implements Monic {
 	}
 
 	@Override
-	public IdealKind idealKind() {
-		return IdealKind.NTMonic;
+	public int monomialDegree() {
+		if (monomialDegree < 0) {
+			monomialDegree = 0;
+			for (PrimitivePower expr : monicFactors())
+				monomialDegree += expr.monomialDegree();
+		}
+		return monomialDegree;
 	}
 
 	@Override
-	public int monomialDegree() {
-		if (degree < 0) {
-			degree = 0;
+	public int totalDegree() {
+		if (totalDegree < 0) {
+			totalDegree = 0;
 			for (PrimitivePower expr : monicFactors())
-				degree += expr.monomialDegree();
+				totalDegree += expr.totalDegree();
 		}
-		return degree;
+		return totalDegree;
 	}
 
 	@Override
 	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
 		return factory.monicSingletonMap(this, this);
+	}
+
+	@Override
+	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+		if (hasNTE < 0) {
+			hasNTE = 0;
+			for (Primitive p : monicFactors().keys()) {
+				if (p instanceof NTPolynomial
+						|| p.hasNontrivialExpansion(factory)) {
+					hasNTE = 1;
+					break;
+				}
+			}
+		}
+		return hasNTE == 1;
 	}
 
 }

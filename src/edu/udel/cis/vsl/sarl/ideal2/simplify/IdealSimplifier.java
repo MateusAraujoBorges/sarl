@@ -130,6 +130,8 @@ public class IdealSimplifier extends CommonSimplifier {
 	 */
 	public final static boolean debug = false;
 
+	public final static PrintStream out = System.out;
+
 	// Instance fields...
 
 	/**
@@ -893,8 +895,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * Simplifies a {@link Monic}.
 	 * 
 	 * Look up in constant map. If found, great. Otherwise, if the Monic is a
-	 * {@link Polynomial}, apply {@link #simplifyPolynomial(Polynomial)}.
-	 * Otherwise, default.
+	 * {@link Polynomial}, try expanding.
 	 * 
 	 * 
 	 * @param monic
@@ -911,7 +912,8 @@ public class IdealSimplifier extends CommonSimplifier {
 		if (result != monic)
 			return result;
 
-		if (monic instanceof Polynomial) {
+		if (monic instanceof Polynomial
+				&& monic.hasNontrivialExpansion(info.idealFactory)) {
 			Polynomial poly = (Polynomial) monic;
 			SymbolicMap<Monic, Monomial> expansion = poly
 					.expand(info.idealFactory);
@@ -1034,10 +1036,43 @@ public class IdealSimplifier extends CommonSimplifier {
 						"unreachable: impossible expression " + expression);
 			return result == null ? expression : result;
 		}
-		case EQUALS:
+		case EQUALS: {
 			assert arg0.isZero();
+			// arg1 has already been simplified.
 			result = simplifyEQ0((Primitive) arg1);
+			// if (result != null && (result.isTrue() || result.isFalse()))
+			// return result;
+			//
+			// if (debug) {
+			// out.println("Starting: =0 expanding primitive of total degree "
+			// + arg1.totalDegree());
+			// out.flush();
+			// }
+
+			// SymbolicMap<Monic, Monomial> termMap = arg1
+			// .expand(info.idealFactory);
+			//
+			// if (debug) {
+			// out.println("Finsished: =0 expanding primitive of total degree "
+			// + arg1.totalDegree() + ": result has size "
+			// + termMap.size());
+			// out.flush();
+			// }
+			//
+			// if (termMap.isEmpty())
+			// return info.trueExpr;
+
+			// Monomial newArg = info.idealFactory.factorTermMap(termMap);
+
+			// TODO: to check if a poly==0, don't blindly expand.
+			// instead:
+			// (a/b+c/d)=0 <==> (a(d/g))+(c(b/g))=0, where g=gcd(b,d)
+
+			// if (arg0.equals(newArg))
 			return result == null ? expression : result;
+			// return (BooleanExpression) apply(
+			// info.idealFactory.equals(arg0, newArg));
+		}
 		case NEQ: {
 			assert arg0.isZero();
 

@@ -18,7 +18,6 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
@@ -39,11 +38,19 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
  */
 public class NTPolynomial extends NumericPrimitive implements Polynomial {
 
-	// /**
-	// * The degree of the polynomial, or -1 if the degree has not yet been
-	// * computed.
-	// */
-	// private int degree = -1;
+	/**
+	 * The total degree of the polynomial, or -1 if the degree has not yet been
+	 * computed.
+	 */
+	private int totalDegree = -1;
+
+	private SymbolicMap<Monic, Monomial> expansion = null;
+
+	/**
+	 * Cached result for method {@link #hasNontrivialExpansion(Ideal2Factory)}.
+	 * -1 means this has not yet been computed. 0 means false. 1 means true.
+	 */
+	byte hasNTE = -1;
 
 	protected NTPolynomial(SymbolicType type,
 			SymbolicMap<Monic, Monomial> termMap) {
@@ -61,35 +68,11 @@ public class NTPolynomial extends NumericPrimitive implements Polynomial {
 		return (SymbolicMap<Monic, Monomial>) argument(0);
 	}
 
-	public StringBuffer toStringBuffer() {
-		StringBuffer buffer = new StringBuffer();
-		boolean first = true;
-
-		for (SymbolicExpression expr : termMap()) {
-			if (first)
-				first = false;
-			else
-				buffer.append("+");
-			buffer.append(expr.toString());
-		}
-		return buffer;
-	}
-
-	@Override
-	public String toString() {
-		return toStringBuffer().toString();
-	}
-
 	@Override
 	public int polynomialDegree() {
 		// since the monics are ordered by decreasing degree,
 		// the first one should be the degree of this polynomial:
 		return termMap().getFirst().monomialDegree();
-	}
-
-	@Override
-	public IdealKind idealKind() {
-		return IdealKind.NTPolynomial;
 	}
 
 	@Override
@@ -102,29 +85,68 @@ public class NTPolynomial extends NumericPrimitive implements Polynomial {
 
 	@Override
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
-		SymbolicMap<Monic, Monomial> termMap = termMap();
-		int numTerms = termMap.size();
-		@SuppressWarnings("unchecked")
-		SymbolicMap<Monic, Monomial>[] newTerms = (SymbolicMap<Monic, Monomial>[]) new SymbolicMap<?, ?>[numTerms];
-		int count = 0;
-		boolean change = false;
+		if (expansion == null) {
+			SymbolicMap<Monic, Monomial> termMap = termMap();
+			int numTerms = termMap.size();
+			@SuppressWarnings("unchecked")
+			SymbolicMap<Monic, Monomial>[] newTerms = (SymbolicMap<Monic, Monomial>[]) new SymbolicMap<?, ?>[numTerms];
+			int count = 0;
+			boolean change = false;
 
-		for (Monomial oldTerm : termMap.values()) {
-			SymbolicMap<Monic, Monomial> newTerm = oldTerm.expand(factory);
+			for (Monomial oldTerm : termMap.values()) {
+				SymbolicMap<Monic, Monomial> newTerm = oldTerm.expand(factory);
 
-			newTerms[count] = newTerm;
-			count++;
-			change = change || newTerm.size() != 1;
+				newTerms[count] = newTerm;
+				count++;
+				change = change || newTerm.size() != 1;
+			}
+			if (change) {
+				expansion = factory.emptyMonicMap();
+				for (SymbolicMap<Monic, Monomial> newTerm : newTerms)
+					expansion = factory.addTermMaps(expansion, newTerm);
+			} else {
+				expansion = termMap;
+			}
 		}
-		if (change) {
-			SymbolicMap<Monic, Monomial> result = factory.emptyMonicMap();
+		return expansion;
+	}
 
-			for (SymbolicMap<Monic, Monomial> newTerm : newTerms)
-				result = factory.addTermMaps(result, newTerm);
-			return result;
-		} else {
-			return this.termMap();
+	@Override
+	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+		if (hasNTE < 0) {
+			hasNTE = 0;
+			for (Monic m : termMap().keys()) {
+				if (m.hasNontrivialExpansion(factory)) {
+					hasNTE = 1;
+					break;
+				}
+			}
 		}
+		return hasNTE == 1;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * <p>
+	 * Gets the maximum of the total degrees of the terms. Note that the terms
+	 * are sorted by decreasing monomial degrees (not total degrees), so we have
+	 * to search over all terms. We might consider changing the order to use
+	 * total degrees, in which case this method can just look at the first term.
+	 * </p>
+	 * 
+	 */
+	@Override
+	public int totalDegree() {
+		if (totalDegree < 0) {
+			for (Monic monic : termMap().keys()) {
+				int d = monic.totalDegree();
+
+				if (d > totalDegree)
+					totalDegree = d;
+			}
+		}
+		return totalDegree;
 	}
 
 }

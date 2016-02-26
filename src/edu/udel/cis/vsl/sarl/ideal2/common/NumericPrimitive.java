@@ -45,6 +45,8 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	 */
 	private SymbolicMap<Primitive, PrimitivePower> monicFactors = null;
 
+	private SymbolicMap<Monic, Monomial> expansion = null;
+
 	public NumericPrimitive(SymbolicOperator operator, SymbolicType type,
 			SymbolicObject[] arguments) {
 		super(operator, type, arguments);
@@ -120,18 +122,27 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	}
 
 	@Override
-	public IdealKind idealKind() {
-		return IdealKind.NumericPrimitive;
-	}
-
-	@Override
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
-		return factory.monicSingletonMap(this, this);
+		if (expansion == null) {
+			expansion = factory.monicSingletonMap(this, this);
+		}
+		return expansion;
 	}
 
 	@Override
 	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
 		return factory.monicSingletonMap(this, this);
+	}
+
+	@Override
+	public int totalDegree() {
+		return 1;
+	}
+
+	@Override
+	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+		// need to override this in NTPolynomial
+		return false;
 	}
 
 }
