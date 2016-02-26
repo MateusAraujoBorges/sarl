@@ -21,6 +21,7 @@ package edu.udel.cis.vsl.sarl.number.real;
 import java.math.BigInteger;
 
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+import edu.udel.cis.vsl.sarl.IF.number.Number;
 
 /**
  * An infinite precision representation of integer numbers, based on Java's
@@ -86,6 +87,16 @@ public class RealInteger extends RealNumber implements IntegerNumber {
 	@Override
 	public BigInteger bigIntegerValue() {
 		return value;
+	}
+
+	@Override
+	public int numericalCompareTo(Number other) {
+		assert other instanceof IntegerNumber;
+
+		RealInteger x = (RealInteger) this;
+		RealInteger y = (RealInteger) other;
+
+		return (x.value().subtract(y.value())).signum();
 	}
 
 }

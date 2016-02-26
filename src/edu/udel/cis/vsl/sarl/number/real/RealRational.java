@@ -20,6 +20,7 @@ package edu.udel.cis.vsl.sarl.number.real;
 
 import java.math.BigInteger;
 
+import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 
 /**
@@ -116,6 +117,19 @@ public class RealRational extends RealNumber implements RationalNumber {
 	@Override
 	public boolean isOne() {
 		return numerator.equals(denominator);
+	}
+
+	@Override
+	public int numericalCompareTo(Number other) {
+		assert other instanceof RationalNumber;
+
+		RealRational that = (RealRational) other;
+		BigInteger a = this.numerator(), b = this.denominator(), c = that
+				.numerator(), d = that.denominator();
+
+		// a/b - c/d = (ad - bc) / bd
+		return (a.multiply(d).subtract(b.multiply(c))).signum() * b.signum()
+				* d.signum();
 	}
 
 }
