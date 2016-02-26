@@ -84,7 +84,6 @@ public class IntervalUnionSet implements Range {
 	 *            set is empty.
 	 */
 	private IntervalUnionSet(boolean isIntegral, int size) {
-		// assert size > 0;
 		isInt = isIntegral;
 		intervalArray = new Interval[size];
 	}
@@ -111,7 +110,7 @@ public class IntervalUnionSet implements Range {
 	public IntervalUnionSet(Number number) {
 		assert number != null;
 
-		Interval interval = createIntervalwithInvariants(
+		Interval interval = numberFactory.newInterval(
 				number instanceof IntegerNumber, number, false, number, false);
 
 		isInt = number instanceof IntegerNumber;
@@ -137,7 +136,7 @@ public class IntervalUnionSet implements Range {
 	 */
 	public IntervalUnionSet(Number left, boolean strictLeft, Number right,
 			boolean strictRight, boolean isIntegral) {
-		Interval interval = createIntervalwithInvariants(isIntegral, left,
+		Interval interval = numberFactory.newInterval(isIntegral, left,
 				strictLeft, right, strictRight);
 
 		isInt = isIntegral;
@@ -155,7 +154,7 @@ public class IntervalUnionSet implements Range {
 		// intervals are immutable, so re-use:
 		assert interval != null;
 
-		Interval temp = createIntervalwithInvariants(interval.isIntegral(),
+		Interval temp = numberFactory.newInterval(interval.isIntegral(),
 				interval.lower(), interval.strictLower(), interval.upper(),
 				interval.strictUpper());
 
@@ -169,8 +168,8 @@ public class IntervalUnionSet implements Range {
 	}
 
 	/**
-	 * Constructs an {@link IntervalUnionSet} with an array of
-	 * {@link Interval}s.
+	 * Constructs an {@link IntervalUnionSet} with an array of {@link Interval}
+	 * s.
 	 * 
 	 * @param intervals
 	 *            an array of {@link Interval}s (with at least one element) with
@@ -241,52 +240,6 @@ public class IntervalUnionSet implements Range {
 	 */
 	public Interval[] intervals() {
 		return this.intervalArray;
-	}
-
-	/**
-	 * A wrapper function for function "numberFactory.newInterval()" to ensure
-	 * invariants.
-	 * 
-	 * @param isIntegral
-	 * @param lower
-	 * @param strictLower
-	 * @param upper
-	 * @param strictUpper
-	 * @return
-	 */
-	private Interval createIntervalwithInvariants(boolean isIntegral,
-			Number lower, boolean strictLower, Number upper, boolean strictUpper) {
-		Interval emptyInterval = isIntegral ? numberFactory
-				.emptyIntegerInterval() : numberFactory.emptyRealInterval();
-		Number oneInteger = numberFactory.oneInteger();
-		Number lo = lower, up = upper;
-		boolean sl = strictLower, su = strictUpper;
-		int compare = 0;
-		if (lo != null) {
-			if (isIntegral && sl) {
-				lo = numberFactory.add(lo, oneInteger);
-				sl = false;
-			}
-		} else {
-			sl = true;
-		}
-		if (up != null) {
-			if (isIntegral && su) {
-				up = numberFactory.subtract(up, oneInteger);
-				su = false;
-			}
-		} else {
-			su = true;
-		}
-		if (lo != null && up != null) {
-			compare = up.compareTo(lo);
-			if (compare < 0) {
-				return emptyInterval;
-			} else if (compare == 0 && !isIntegral && (sl || su)) {
-				return emptyInterval;
-			}
-		}
-		return numberFactory.newInterval(isIntegral, lo, sl, up, su);
 	}
 
 	/**
@@ -494,10 +447,8 @@ public class IntervalUnionSet implements Range {
 			start = start < 0 ? 0 : start;
 			end = end < size ? end : (size - 1);
 			list.subList(start, end + 1).clear();
-			list.add(
-					start,
-					createIntervalwithInvariants(isInt, lower, strictLower,
-							upper, strictUpper));
+			list.add(start, numberFactory.newInterval(isInt, lower,
+					strictLower, upper, strictUpper));
 
 		}
 	}
@@ -776,8 +727,9 @@ public class IntervalUnionSet implements Range {
 
 					System.arraycopy(intervalArray, 0, result.intervalArray, 0,
 							leftIndex);
-					result.intervalArray[leftIndex] = createIntervalwithInvariants(
-							isInt, leftLo, leftSl, rightUp, rightSu);
+					result.intervalArray[leftIndex] = numberFactory
+							.newInterval(isInt, leftLo, leftSl, rightUp,
+									rightSu);
 					System.arraycopy(intervalArray, rightIndex + 1,
 							result.intervalArray, rightIndex, size - rightIndex
 									- 1);
@@ -787,11 +739,12 @@ public class IntervalUnionSet implements Range {
 					IntervalUnionSet result = new IntervalUnionSet(this);
 
 					if (isInt) {
-						result.intervalArray[leftIndex] = createIntervalwithInvariants(
-								true, leftLo, false, number, false);
+						result.intervalArray[leftIndex] = numberFactory
+								.newInterval(true, leftLo, false, number, false);
 					} else {
-						result.intervalArray[leftIndex] = createIntervalwithInvariants(
-								false, leftLo, leftSl, number, false);
+						result.intervalArray[leftIndex] = numberFactory
+								.newInterval(false, leftLo, leftSl, number,
+										false);
 					}
 					return result;
 				} else if (rightJoint) {
@@ -799,11 +752,13 @@ public class IntervalUnionSet implements Range {
 					IntervalUnionSet result = new IntervalUnionSet(this);
 
 					if (isInt) {
-						result.intervalArray[rightIndex] = createIntervalwithInvariants(
-								true, number, false, rightUp, false);
+						result.intervalArray[rightIndex] = numberFactory
+								.newInterval(true, number, false, rightUp,
+										false);
 					} else {
-						result.intervalArray[rightIndex] = createIntervalwithInvariants(
-								false, number, false, rightUp, rightSu);
+						result.intervalArray[rightIndex] = numberFactory
+								.newInterval(false, number, false, rightUp,
+										rightSu);
 					}
 					return result;
 				} else {
@@ -814,14 +769,16 @@ public class IntervalUnionSet implements Range {
 					if (leftIndex == rightIndex) {
 						if (leftIndex == 0) {
 							// To add the number to the head
-							result.intervalArray[0] = createIntervalwithInvariants(
-									isInt, number, false, number, false);
+							result.intervalArray[0] = numberFactory
+									.newInterval(isInt, number, false, number,
+											false);
 							System.arraycopy(intervalArray, 0,
 									result.intervalArray, 1, size);
 						} else {
 							// To add the number to the tail
-							result.intervalArray[size] = createIntervalwithInvariants(
-									isInt, number, false, number, false);
+							result.intervalArray[size] = numberFactory
+									.newInterval(isInt, number, false, number,
+											false);
 							System.arraycopy(intervalArray, 0,
 									result.intervalArray, 0, size);
 						}
@@ -829,8 +786,9 @@ public class IntervalUnionSet implements Range {
 						// To insert the number to the body
 						System.arraycopy(intervalArray, 0,
 								result.intervalArray, 0, rightIndex);
-						result.intervalArray[rightIndex] = createIntervalwithInvariants(
-								isInt, number, false, number, false);
+						result.intervalArray[rightIndex] = numberFactory
+								.newInterval(isInt, number, false, number,
+										false);
 						System.arraycopy(intervalArray, rightIndex,
 								result.intervalArray, rightIndex + 1, size
 										- rightIndex);
@@ -1023,17 +981,25 @@ public class IntervalUnionSet implements Range {
 			return new IntervalUnionSet(other);
 		} else if (otherSize <= 0) {
 			return new IntervalUnionSet(this);
-		} else if (thisArray[0].isUniversal()) {
+		}
+		if (thisArray[0].isUniversal()) {
 			return new IntervalUnionSet(this);
 		} else if (otherArray[0].isUniversal()) {
 			return new IntervalUnionSet(other);
 		}
 		// Using binary method to union a set with single interval
 		if (thisSize == 1) {
-			thisArray = otherArray;
-			otherArray = intervalArray;
-			thisSize = otherSize;
-			otherSize = 1;
+			ArrayList<Interval> list = new ArrayList<Interval>();
+
+			for (Interval i : otherArray) {
+				list.add(i);
+			}
+			addInterval(list, thisArray[0]);
+
+			IntervalUnionSet result = new IntervalUnionSet(isInt, list.size());
+
+			list.toArray(result.intervalArray);
+			return result;
 		}
 		if (otherSize == 1) {
 			ArrayList<Interval> list = new ArrayList<Interval>();
@@ -1057,13 +1023,14 @@ public class IntervalUnionSet implements Range {
 		ArrayList<Interval> list = new ArrayList<Interval>();
 		int compareLower = compareLo(thisInterval, otherInterval);
 
+		// To find the left-most interval in two sets.
 		if (compareLower > 0) {
 			temp = otherInterval;
 			otherIndex++;
 		} else {
 			temp = thisInterval;
 			thisIndex++;
-		} // To find the left-most interval in two sets.
+		}
 		while (isChanged || thisIndex < thisSize || otherIndex < otherSize) {
 			isChanged = false;
 			while (thisIndex < thisSize) {
@@ -1077,8 +1044,9 @@ public class IntervalUnionSet implements Range {
 					int compareUpper = compareUp(temp, next);
 
 					if (compareUpper < 0) {
-						temp = createIntervalwithInvariants(isInt,
-								temp.lower(), temp.strictLower(), next.upper(),
+						// Intersected, then union next with temp
+						temp = numberFactory.newInterval(isInt, temp.lower(),
+								temp.strictLower(), next.upper(),
 								next.strictUpper());
 						isChanged = true;
 						thisIndex++;
@@ -1098,8 +1066,9 @@ public class IntervalUnionSet implements Range {
 					int compareUpper = compareUp(temp, next);
 
 					if (compareUpper < 0) {
-						temp = createIntervalwithInvariants(isInt,
-								temp.lower(), temp.strictLower(), next.upper(),
+						// Intersected, then union next with temp
+						temp = numberFactory.newInterval(isInt, temp.lower(),
+								temp.strictLower(), next.upper(),
 								next.strictUpper());
 						isChanged = true;
 						otherIndex++;
@@ -1111,6 +1080,7 @@ public class IntervalUnionSet implements Range {
 			if (!isChanged) {
 				list.add(temp);
 				if (thisIndex < thisSize && otherIndex < otherSize) {
+					// Get the new left-most interval
 					thisInterval = thisArray[thisIndex];
 					otherInterval = otherArray[otherIndex];
 					compareLower = compareLo(thisInterval, otherInterval);
@@ -1122,7 +1092,7 @@ public class IntervalUnionSet implements Range {
 						thisIndex++;
 					}
 				} else {
-					// To concatenate
+					// To add the remaining intervals
 					while (thisIndex < thisSize) {
 						list.add(thisArray[thisIndex]);
 						thisIndex++;
@@ -1157,6 +1127,7 @@ public class IntervalUnionSet implements Range {
 		int otherIndex = 0;
 
 		if (otherSize < 1 || thisSize < 1) {
+			// Any set intersects an empty set is empty
 			return new IntervalUnionSet(isInt);
 		} else if (thisArray[0].isUniversal()) {
 			return new IntervalUnionSet(other);
@@ -1175,30 +1146,36 @@ public class IntervalUnionSet implements Range {
 					int compareJoint = compareJoint(otherInterval, thisInterval);
 
 					if (compareJoint > 0) {
-						list.add(createIntervalwithInvariants(isInt,
+						// Add the intersection into result set.
+						list.add(numberFactory.newInterval(isInt,
 								thisInterval.lower(),
 								thisInterval.strictLower(),
 								otherInterval.upper(),
 								otherInterval.strictUpper()));
-						thisInterval = createIntervalwithInvariants(isInt,
+						thisInterval = numberFactory.newInterval(isInt,
 								otherInterval.upper(),
 								!otherInterval.strictUpper(),
 								thisInterval.upper(),
 								thisInterval.strictUpper());
 					}
+					// Else skip otherInterval
 					otherIndex++;
 				} else if (compareUpper > 0) {
+					// thisInterval is contained
 					list.add(thisInterval);
 					thisIndex++;
 				} else {
+					// thisInterval is contained
 					list.add(thisInterval);
 					thisIndex++;
 					otherIndex++;
 				}
 			} else if (compareLower > 0) {
 				if (compareUpper < 0) {
+					// otherInterval is contained
+					// Cut thisInterval
 					list.add(otherInterval);
-					thisInterval = createIntervalwithInvariants(isInt,
+					thisInterval = numberFactory.newInterval(isInt,
 							otherInterval.upper(),
 							!otherInterval.strictUpper(), thisInterval.upper(),
 							thisInterval.strictUpper());
@@ -1207,7 +1184,8 @@ public class IntervalUnionSet implements Range {
 					int compareJoint = compareJoint(thisInterval, otherInterval);
 
 					if (compareJoint > 0) {
-						list.add(createIntervalwithInvariants(isInt,
+						// Add intersection into result set
+						list.add(numberFactory.newInterval(isInt,
 								otherInterval.lower(),
 								otherInterval.strictLower(),
 								thisInterval.upper(),
@@ -1215,22 +1193,27 @@ public class IntervalUnionSet implements Range {
 					}
 					thisIndex++;
 				} else {
+					// otherInterval is contained
 					list.add(otherInterval);
 					otherIndex++;
 					thisIndex++;
 				}
 			} else {
 				if (compareUpper < 0) {
+					// otherInterval is contained
+					// Cut thisInterval
 					list.add(otherInterval);
-					thisInterval = createIntervalwithInvariants(isInt,
+					thisInterval = numberFactory.newInterval(isInt,
 							otherInterval.upper(),
 							!otherInterval.strictUpper(), thisInterval.upper(),
 							thisInterval.strictUpper());
 					otherIndex++;
 				} else if (compareUpper > 0) {
+					// thisInterval is contained
 					list.add(thisInterval);
 					thisIndex++;
 				} else {
+					// Both are equal
 					list.add(thisInterval);
 					thisIndex++;
 					otherIndex++;
@@ -1238,12 +1221,9 @@ public class IntervalUnionSet implements Range {
 			}
 		}
 
-		int newSize = list.size();
-		Interval[] newArray = new Interval[newSize];
-		IntervalUnionSet result = new IntervalUnionSet(isInt, newSize);
+		IntervalUnionSet result = new IntervalUnionSet(isInt, list.size());
 
-		list.toArray(newArray);
-		result.intervalArray = newArray; // To use assignment replacing copy
+		list.toArray(result.intervalArray);
 		return result;
 	}
 
@@ -1263,8 +1243,11 @@ public class IntervalUnionSet implements Range {
 		int otherIndex = 0;
 
 		if (otherSize < 1 || thisSize < 1) {
+			// If this is empty, it returns "this" as an empty set.
+			// If other is empty, it returns "this" as itself.
 			return new IntervalUnionSet(this);
 		} else if (otherArray[0].isUniversal()) {
+			// If other is universal, it reuturns an empty set.
 			return new IntervalUnionSet(isInt);
 		}
 		while (thisIndex < thisSize) {
@@ -1280,29 +1263,36 @@ public class IntervalUnionSet implements Range {
 								thisInterval);
 
 						if (compareJoint > 0) {
-							thisInterval = createIntervalwithInvariants(isInt,
+							// Intersected, then shrink thisInterval
+							thisInterval = numberFactory.newInterval(isInt,
 									otherInterval.upper(),
 									!otherInterval.strictUpper(),
 									thisInterval.upper(),
 									thisInterval.strictUpper());
 						}
+						// Else, skip otherInterval
 						otherIndex++;
 					} else if (compareUpper > 0) {
+						// thisInterval is contained by otherInterval, skip
+						// otherInterval may contain the next thisInterval
 						thisIndex++;
 						break;
 					} else {
+						// Skip both.
 						thisIndex++;
 						otherIndex++;
 						break;
 					}
 				} else if (compareLower > 0) {
 					if (compareUpper < 0) {
-						list.add(createIntervalwithInvariants(isInt,
+						// otherInterval is contained
+						// Add the first piece of thisInterval into result set
+						list.add(numberFactory.newInterval(isInt,
 								thisInterval.lower(),
 								thisInterval.strictLower(),
 								otherInterval.lower(),
 								!otherInterval.strictLower()));
-						thisInterval = createIntervalwithInvariants(isInt,
+						thisInterval = numberFactory.newInterval(isInt,
 								otherInterval.upper(),
 								!otherInterval.strictUpper(),
 								thisInterval.upper(),
@@ -1313,18 +1303,21 @@ public class IntervalUnionSet implements Range {
 								otherInterval);
 
 						if (compareJoint > 0) {
-							list.add(createIntervalwithInvariants(isInt,
+							// Cut the intersection
+							list.add(numberFactory.newInterval(isInt,
 									thisInterval.lower(),
 									thisInterval.strictLower(),
 									otherInterval.lower(),
 									!otherInterval.strictLower()));
 						} else {
+							// thisInterval is safe to add into result set/
 							list.add(thisInterval);
 						}
 						thisIndex++;
 						break;
 					} else {
-						list.add(createIntervalwithInvariants(isInt,
+						// Cut the intersection
+						list.add(numberFactory.newInterval(isInt,
 								thisInterval.lower(),
 								thisInterval.strictLower(),
 								otherInterval.lower(),
@@ -1335,16 +1328,20 @@ public class IntervalUnionSet implements Range {
 					}
 				} else {
 					if (compareUpper < 0) {
-						thisInterval = createIntervalwithInvariants(isInt,
+						// Cut the intersection
+						// Continue to check the next otherInterval
+						thisInterval = numberFactory.newInterval(isInt,
 								otherInterval.upper(),
 								!otherInterval.strictUpper(),
 								thisInterval.upper(),
 								thisInterval.strictUpper());
 						otherIndex++;
 					} else if (compareUpper > 0) {
+						// thisInterval is contained
 						thisIndex++;
 						break;
 					} else {
+						// Skip both
 						thisIndex++;
 						otherIndex++;
 						break;
@@ -1353,6 +1350,7 @@ public class IntervalUnionSet implements Range {
 			}
 			if (otherIndex == otherSize) {
 				if (thisIndex < thisSize) {
+					// Handling current remaining part of thisIntervals
 					int compareUp = compareUp(thisInterval,
 							thisArray[thisIndex]);
 
@@ -1361,6 +1359,7 @@ public class IntervalUnionSet implements Range {
 						thisIndex++;
 					}
 				}
+				// Handling remaining intervals of thisArray
 				while (thisIndex < thisSize) {
 					list.add(thisArray[thisIndex]);
 					thisIndex++;
@@ -1369,18 +1368,9 @@ public class IntervalUnionSet implements Range {
 			}
 		}
 
-		int newSize = list.size();
-		IntervalUnionSet result = null;
+		IntervalUnionSet result = new IntervalUnionSet(isInt, list.size());
 
-		if (newSize < 1) {
-			result = new IntervalUnionSet(isInt);
-		} else {
-			Interval[] newArray = new Interval[newSize];
-
-			result = new IntervalUnionSet(isInt, newSize);
-			list.toArray(newArray);
-			System.arraycopy(newArray, 0, result.intervalArray, 0, newSize);
-		}
+		list.toArray(result.intervalArray);
 		return result;
 	}
 
