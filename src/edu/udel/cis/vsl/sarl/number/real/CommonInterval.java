@@ -18,47 +18,56 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.number.real;
 
-import java.math.BigInteger;
-
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 
 /**
- * Immutable implementation of {@link Interval}. Under construction.
+ * Immutable implementation of {@link Interval}.
  */
 public class CommonInterval implements Interval {
+	// TODO: add Java-doc for fields, constructors and functions.
 
-	// private static NumberFactory numberFactory = Numbers.REAL_FACTORY;
+	// Constants ...
+
+	public final static Number POS_INFINITY = null;
+
+	public final static Number NEG_INFINITY = null;
+
+	// Private Fields ...
 
 	private boolean isIntegral;
 
-	protected Number lower;
+	private Number lower;
 
-	protected boolean strictLower;
+	private boolean strictLower;
 
-	protected Number upper;
+	private Number upper;
 
-	protected boolean strictUpper;
+	private boolean strictUpper;
 
+	// Constructors ...
+	// TODO: Java-doc should include pre-cond.
 	public CommonInterval(boolean isIntegral, Number lower,
 			boolean strictLower, Number upper, boolean strictUpper) {
 		if (isIntegral) {
-			assert (lower == null || lower instanceof IntegerNumber)
-					&& (upper == null || upper instanceof IntegerNumber);
-			assert (lower == null && strictLower)
-					|| (lower != null && !strictLower) || lower.isZero();
-			assert (upper == null && strictUpper)
-					|| (upper != null && !strictUpper) || upper.isZero();
+			assert (lower == NEG_INFINITY || lower instanceof IntegerNumber)
+					&& (upper == POS_INFINITY || upper instanceof IntegerNumber);
+			assert (lower == NEG_INFINITY && strictLower)
+					|| (lower != NEG_INFINITY && !strictLower)
+					|| lower.isZero();
+			assert (upper == POS_INFINITY && strictUpper)
+					|| (upper != POS_INFINITY && !strictUpper)
+					|| upper.isZero();
 		} else {
-			assert (lower == null || lower instanceof RationalNumber)
-					&& (upper == null || upper instanceof RationalNumber);
-			assert lower != null || strictLower;
-			assert upper != null || strictUpper;
+			assert (lower == NEG_INFINITY || lower instanceof RationalNumber)
+					&& (upper == POS_INFINITY || upper instanceof RationalNumber);
+			assert lower != NEG_INFINITY || strictLower;
+			assert upper != POS_INFINITY || strictUpper;
 		}
-		if (lower != null && upper != null) {
-			int compare = compares(lower, upper);
+		if (lower != NEG_INFINITY && upper != POS_INFINITY) {
+			int compare = lower.numericalCompareTo(upper);
 
 			// <a,b> with a>b is unacceptable
 			// (0,0) is fine: the unique representation of the empty set
@@ -74,37 +83,7 @@ public class CommonInterval implements Interval {
 		this.strictUpper = strictUpper;
 	}
 
-	private int compares(Number arg0, Number arg1) {
-		if (arg0 instanceof IntegerNumber && arg1 instanceof IntegerNumber) {
-			RealInteger x = (RealInteger) arg0;
-			RealInteger y = (RealInteger) arg1;
-
-			return (x.value().subtract(y.value())).intValue();
-		} else {
-			RealRational realRat0, realRat1;
-			BigInteger numerator, denominator;
-
-			if (arg0 instanceof IntegerNumber) {
-				numerator = ((RealInteger) arg0).value();
-				denominator = BigInteger.ONE;
-
-				realRat0 = new RealRational(numerator, denominator);
-			} else {
-				realRat0 = (RealRational) arg0;
-			}
-			if (arg1 instanceof IntegerNumber) {
-				numerator = ((RealInteger) arg1).value();
-				denominator = BigInteger.ONE;
-
-				realRat1 = new RealRational(numerator, denominator);
-			} else {
-				realRat1 = (RealRational) arg1;
-			}
-			return (realRat0.numerator().multiply(realRat1.denominator())
-					.subtract(realRat1.numerator().multiply(
-							realRat0.denominator()))).intValue();
-		}
-	}
+	// Methods specified by interface "Object"
 
 	@Override
 	public CommonInterval clone() {
@@ -121,24 +100,38 @@ public class CommonInterval implements Interval {
 					|| strictLower != that.strictLower
 					|| strictUpper != that.strictUpper)
 				return false;
-			if (upper == null) {
-				if (that.upper != null)
-					return false;
-			} else {
-				if (that.upper == null || !upper.equals(that.upper))
-					return false;
-			}
-			if (lower == null) {
-				if (that.lower != null)
-					return false;
-			} else {
-				if (that.lower == null || !lower.equals(that.lower))
-					return false;
-			}
+
+			Number thatUpper = that.upper();
+
+			if ((upper == null) != (thatUpper == null))
+				return false;
+
+			Number thatLower = that.lower();
+
+			if ((lower == null) != (thatLower == null))
+				return false;
+			if (upper != null && !upper.equals(thatUpper))
+				return false;
+			if (lower != null && !lower.equals(thatLower))
+				return false;
 			return true;
 		}
 		return false;
 	}
+
+	@Override
+	public String toString() {
+		String result;
+
+		result = strictLower ? "(" : "[";
+		result += lower == null ? "-infty" : lower.toString();
+		result += ",";
+		result += upper == null ? "+infty" : upper.toString();
+		result += strictUpper ? ")" : "]";
+		return result;
+	}
+
+	// Methods specified by interface "Interval"
 
 	@Override
 	public Number lower() {
@@ -171,38 +164,26 @@ public class CommonInterval implements Interval {
 	}
 
 	@Override
-	public String toString() {
-		String result;
-
-		result = strictLower ? "(" : "[";
-		result += lower == null ? "-infty" : lower.toString();
-		result += ",";
-		result += upper == null ? "+infty" : upper.toString();
-		result += strictUpper ? ")" : "]";
-		return result;
-	}
-
-	@Override
 	public boolean isEmpty() {
 		return strictLower && strictUpper && lower != null && upper != null
-				&& lower.equals(upper);
+				&& lower.isZero() && upper.isZero();
 	}
 
 	@Override
 	public boolean isUniversal() {
-		return strictLower && strictUpper && lower == null && upper == null;
+		return lower == null && upper == null;
 	}
 
 	@Override
 	public boolean contains(Number number) {
 		if (lower != null) {
-			int compare = compares(lower, number);
+			int compare = lower.numericalCompareTo(number);
 
 			if (compare > 0 || (compare == 0 && strictLower))
 				return false;
 		}
 		if (upper != null) {
-			int compare = compares(upper, number);
+			int compare = upper.numericalCompareTo(number);
 
 			if (compare < 0 || (compare == 0 && strictUpper))
 				return false;
@@ -213,13 +194,13 @@ public class CommonInterval implements Interval {
 	@Override
 	public int compare(Number number) {
 		if (lower != null) {
-			int compare = compares(lower, number);
+			int compare = lower.numericalCompareTo(number);
 
 			if (compare > 0 || (compare == 0 && strictLower))
 				return 1;
 		}
 		if (upper != null) {
-			int compare = compares(upper, number);
+			int compare = upper.numericalCompareTo(number);
 
 			if (compare < 0 || (compare == 0 && strictUpper))
 				return -1;
@@ -230,6 +211,6 @@ public class CommonInterval implements Interval {
 	@Override
 	public boolean isZero() {
 		return lower != null && upper != null && lower.isZero()
-				&& upper.isZero() && !strictLower && !strictUpper;
+				&& upper.isZero() && !strictLower;
 	}
 }

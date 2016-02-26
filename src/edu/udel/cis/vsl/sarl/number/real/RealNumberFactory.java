@@ -236,7 +236,7 @@ public class RealNumberFactory implements NumberFactory {
 	 * second argument is greater
 	 */
 	public int compare(RationalNumber arg0, RationalNumber arg1) {
-		return subtract(arg0, arg1).signum();
+		return arg0.numericalCompareTo(arg1);
 	}
 
 	@Override
@@ -246,7 +246,7 @@ public class RealNumberFactory implements NumberFactory {
 	 * argument is greater
 	 */
 	public int compare(IntegerNumber arg0, IntegerNumber arg1) {
-		return subtract(arg0, arg1).signum();
+		return arg0.numericalCompareTo(arg1);
 	}
 
 	@Override
@@ -955,12 +955,14 @@ public class RealNumberFactory implements NumberFactory {
 				strictUpper = false;
 			}
 		}
-		if (lower != null && upper != null) {// Check the illegal interval arguments.
+		if (lower != null && upper != null) {
+			// Check the illegal interval arguments.
 			int compareUpperLower = upper.compareTo(lower);
 
 			if ((compareUpperLower < 0)
 					|| (compareUpperLower == 0 && (strictLower || strictUpper))) {
-				return isIntegral ? emptyIntegerInterval : emptyRationalInterval;
+				return isIntegral ? emptyIntegerInterval
+						: emptyRationalInterval;
 			}
 		}
 		return new CommonInterval(isIntegral, lower, strictLower, upper,
@@ -1991,7 +1993,6 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	public Interval singletonInterval(Number x) {
-		// TODO: Testing
 		assert x != null;
 		return newInterval(x instanceof IntegerNumber, x, false, x, false);
 	}
@@ -1999,7 +2000,6 @@ public class RealNumberFactory implements NumberFactory {
 	// @Override
 	public Interval restrictUpperBAD(Interval interval, Number bound,
 			boolean strict) {
-		// TODO: Testing
 		assert interval != null;
 		assert interval.isIntegral() == bound instanceof IntegerNumber;
 
@@ -2059,7 +2059,6 @@ public class RealNumberFactory implements NumberFactory {
 	// @Override
 	public Interval restrictLowerBAD(Interval interval, Number bound,
 			boolean strict) {
-		// TODO: Testing
 		assert interval != null;
 		assert interval.isIntegral() == bound instanceof IntegerNumber;
 
@@ -2118,7 +2117,6 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	public Interval join(Interval i1, Interval i2) {
-		// TODO: Testing
 		assert i1 != null && i2 != null;
 		assert i1.isIntegral() == i2.isIntegral();
 
