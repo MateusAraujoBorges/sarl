@@ -189,7 +189,7 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the modulo method for symbolic IntegerNumbers;
+	 * Testing the modulo method for IntegerNumbers;
 	 * In C, a%b=a-(a/b)*b. test examples:
 	 * a=4, b=3: a/b=1, a%b=4-3=1
 	 * a=4, b=-3: a/b=-1, a%b=4-(-1)(-3)=1
