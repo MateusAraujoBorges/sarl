@@ -155,15 +155,15 @@ public class IntegerArithmeticReasonTest {
 	@Ignore
 	@Test
 	public void simplifyIntDivTest() {
-		assumption = universe.and(
+		BooleanExpression p0 = universe.and(
 				universe.lessThanEquals(universe.zeroInt(),
 						universe.divide(u, threeInt)),
 				universe.lessThanEquals(universe.divide(u, threeInt),
 						universe.oneInt()));
-		reasoner = universe.reasoner(assumption);
-		SymbolicExpression e = universe.lessThanEquals(u, fiveInt);
-
-		assertEquals(trueExpr, reasoner.simplify(e));
+		BooleanExpression p1 = universe.lessThanEquals(u, fiveInt);
+		reasoner = universe.reasoner(p0);
+		
+		assertEquals(p1, reasoner.getReducedContext());
 	}
 
 	/**
