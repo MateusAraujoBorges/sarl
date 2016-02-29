@@ -131,15 +131,18 @@ public class IntegerArithmeticTest {
 
 	/**
 	 * Testing the multiply method for symbolic IntegerNumbers;test: x * 0 = 0;
+	 * test: x * y = y * x; test: x * 1 = x;
 	 */
 	@Test
 	public void multiplyTwoSymbolicIntTest() {
 		NumericExpression result = universe.multiply(x, universe.zeroInt());
 		NumericExpression result1 = universe.multiply(x, y);
 		NumericExpression result2 = universe.multiply(y, x);
+		NumericExpression result3 = universe.multiply(x, universe.oneInt());
 
 		assertEquals(universe.zeroInt(), result);
 		assertEquals(result1, result2);
+		assertEquals(x, result3);
 	}
 
 	/**
