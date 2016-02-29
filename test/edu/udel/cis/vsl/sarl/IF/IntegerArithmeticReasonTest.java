@@ -204,7 +204,6 @@ public class IntegerArithmeticReasonTest {
 	/**
 	 * Integer modulus. true : (2u + 1) % 2 -> -1 only if u < 0.
 	 */
-	@Ignore
 	@Test
 	public void simplifyIntMod3() {
 		assumption = universe.lessThan(u, universe.zeroInt());
