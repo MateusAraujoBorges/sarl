@@ -23,10 +23,12 @@ public class IntegerArithmeticTest {
 	private NumericExpression fourInt;    //integer  4
 	private NumericExpression x;
 	private NumericExpression y;
+	private NumericExpression z;
 	//private NumericExpression _x;   // -x
 	private StringObject x_obj;		// "x"
 	//private StringObject negX_obj;	// "-x"
 	private StringObject y_obj;		// "y"
+	private StringObject z_obj;		// "z"
 	private SymbolicType intType;
 	
 	@Before
@@ -41,9 +43,11 @@ public class IntegerArithmeticTest {
 		x_obj = universe.stringObject("x");
 		//negX_obj = universe.stringObject("-x");
 		y_obj = universe.stringObject("y");
+		z_obj = universe.stringObject("z");
 		intType = universe.integerType();
 		x = (NumericExpression) universe.symbolicConstant(x_obj, intType);
 		y = (NumericExpression) universe.symbolicConstant(y_obj, intType);
+		z = (NumericExpression) universe.symbolicConstant(z_obj, intType);
 		//_x = (NumericExpression) universe.symbolicConstant(negX_obj, intType);
 	}
 
@@ -144,26 +148,51 @@ public class IntegerArithmeticTest {
 		assertEquals(result1, result2);
 		assertEquals(x, result3);
 	}
+	
+	/**
+	 * Testing the multiply method for symbolic IntegerNumbers;test:
+	 * (x*y)*z=x*(y*z);
+	 */
+	@Test
+	public void multiplyTwoSymbolicIntTest2() {
+		NumericExpression result = universe.multiply(universe.multiply(x, y),
+				z);
+		NumericExpression result1 = universe.multiply(x,
+				universe.multiply(y, z));
+
+		assertEquals(result, result1);
+	}
 
 	/**
 	 * Testing the multiply method for a sequence of IntegerNumbers;test: 1 * 2
-	 * = 2; test: x * y * 0 = 0;
+	 * = 2; test: x * y * 0 = 0; test: x*y*z = y*z*x;
 	 */
 	@Test
 	public void multiplySeqIntTest() {
 		List<NumericExpression> numList = new ArrayList<NumericExpression>();
 		List<NumericExpression> numList2 = new ArrayList<NumericExpression>();
-		NumericExpression result, result1;
+		List<NumericExpression> numList3 = new ArrayList<NumericExpression>();
+		List<NumericExpression> numList4 = new ArrayList<NumericExpression>();
+		NumericExpression result, result1, result2, result3;
 
 		numList.add(universe.oneInt());
 		numList.add(twoInt);
 		numList2.add(x);
 		numList2.add(y);
 		numList2.add(universe.zeroInt());
+		numList3.add(x);
+		numList3.add(y);
+		numList3.add(z);
+		numList4.add(y);
+		numList4.add(z);
+		numList4.add(x);
 		result = universe.multiply(numList);
 		result1 = universe.multiply(numList2);
+		result2 = universe.multiply(numList3);
+		result3 = universe.multiply(numList3);
 		assertEquals(twoInt, result);
 		assertEquals(universe.zeroInt(), result1);
+		assertEquals(result2, result3);
 	}
 
 	/**
