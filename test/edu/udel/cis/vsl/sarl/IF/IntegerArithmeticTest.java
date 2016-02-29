@@ -63,12 +63,16 @@ public class IntegerArithmeticTest {
 
 	/**
 	 * Testing the add method for two symbolic IntegerNumbers;test: x + 0 = x;
+	 * test: x + y = y + x;
 	 */
 	@Test
 	public void addTwoSymbolicIntTest() {
 		NumericExpression result = universe.add(x, universe.zeroInt());
+		NumericExpression result1 = universe.add(x, y);
+		NumericExpression result2 = universe.add(y, x);
 		
 		assertEquals(x, result);
+		assertEquals(result1, result2);
 	}
 
 	/**
@@ -131,8 +135,11 @@ public class IntegerArithmeticTest {
 	@Test
 	public void multiplyTwoSymbolicIntTest() {
 		NumericExpression result = universe.multiply(x, universe.zeroInt());
+		NumericExpression result1 = universe.multiply(x, y);
+		NumericExpression result2 = universe.multiply(y, x);
 
 		assertEquals(universe.zeroInt(), result);
+		assertEquals(result1, result2);
 	}
 
 	/**
