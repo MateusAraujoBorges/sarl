@@ -1100,22 +1100,22 @@ public class RealNumberFactory implements NumberFactory {
 					// Disjoint
 					result.status = -1;
 				}
-			} else { // hi1>lo2
+			} else { // up1 > lo2
 				int compare2 = 0;
 
 				if (lo1 == null || up2 == null) {
 					compare2 = -1;
 				} else {
-					compare2 = lo1.compareTo(up2);
+					compare2 = lo1.numericalCompareTo(up2);
 				}
-				if (compare2 < 0) { // lo1<hi2
+				if (compare2 < 0) { // lo1<up2
 					int compareLo = 0;
 					if (lo1 == null) {
 						compareLo = -1;
 					} else if (lo2 == null) {
 						compareLo = 1;
 					} else {
-						compareLo = lo1.compareTo(lo2);
+						compareLo = lo1.numericalCompareTo(lo2);
 					}
 
 					if (compareLo < 0) { // lo1<lo2
@@ -1136,7 +1136,7 @@ public class RealNumberFactory implements NumberFactory {
 					} else if (up2 == null) {
 						compareHi = -1;
 					} else {
-						compareHi = up1.compareTo(up2);
+						compareHi = up1.numericalCompareTo(up2);
 					}
 					if (compareHi < 0) {
 						hi = up2;
@@ -1149,7 +1149,7 @@ public class RealNumberFactory implements NumberFactory {
 						su = su1;
 					}
 					result.status = 0;
-				} else if (compare2 == 0) { // lo1=hi2
+				} else if (compare2 == 0) { // lo1=up2
 					if (!sl1 || !su2) {
 						lo = lo2;
 						hi = up1;
@@ -1159,7 +1159,7 @@ public class RealNumberFactory implements NumberFactory {
 					} else {
 						result.status = 1;
 					}
-				} else { // lo1>hi2
+				} else { // lo1>up2
 					result.status = 1;
 				}
 			}
