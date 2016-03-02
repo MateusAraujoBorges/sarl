@@ -21,7 +21,7 @@ package edu.udel.cis.vsl.sarl.type.common;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * an implementation of {@link SymbolicRealType}
@@ -29,8 +29,8 @@ import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
  * @author mohammedalali
  *
  */
-public class CommonSymbolicRealType extends CommonSymbolicType implements
-		SymbolicRealType {
+public class CommonSymbolicRealType extends CommonSymbolicType
+		implements SymbolicRealType {
 
 	private final static int classCode = CommonSymbolicRealType.class
 			.hashCode();
@@ -65,7 +65,7 @@ public class CommonSymbolicRealType extends CommonSymbolicType implements
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 	}
 
 	@Override

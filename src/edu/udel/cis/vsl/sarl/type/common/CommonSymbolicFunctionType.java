@@ -21,15 +21,15 @@ package edu.udel.cis.vsl.sarl.type.common;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * @author jthakkar
  * 
  *         implementation of {@link SymbolicFunctionType}
  */
-public class CommonSymbolicFunctionType extends CommonSymbolicType implements
-		SymbolicFunctionType {
+public class CommonSymbolicFunctionType extends CommonSymbolicType
+		implements SymbolicFunctionType {
 
 	/**
 	 * a constant to store the hashCode of this object, so that it will be
@@ -92,7 +92,7 @@ public class CommonSymbolicFunctionType extends CommonSymbolicType implements
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 		if (!inputTypes.isCanonic())
 			inputTypes = (SymbolicTypeSequence) factory.canonic(inputTypes);
 		if (!outputType.isCanonic())

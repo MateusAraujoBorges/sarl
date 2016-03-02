@@ -39,8 +39,8 @@ public abstract class CommonSymbolicCollection<T extends SymbolicExpression>
 	}
 
 	/**
-	 * Tells whether the two collections (o and this) are equal, assuming o and
-	 * this have the same kind and same size.
+	 * Tells whether the two collections (<code>o</code> and <code>this</code>)
+	 * are equal, assuming they have the same kind and same size.
 	 * 
 	 * @param o
 	 *            a symbolic collection with the same

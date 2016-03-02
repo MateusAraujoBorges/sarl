@@ -21,10 +21,10 @@ package edu.udel.cis.vsl.sarl.type.common;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicMapType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
-public class CommonSymbolicMapType extends CommonSymbolicType implements
-		SymbolicMapType {
+public class CommonSymbolicMapType extends CommonSymbolicType
+		implements SymbolicMapType {
 
 	private final static int classCode = CommonSymbolicMapType.class.hashCode();
 
@@ -98,7 +98,7 @@ public class CommonSymbolicMapType extends CommonSymbolicType implements
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 		if (!keyType.isCanonic())
 			keyType = factory.canonic(keyType);
 		if (!valueType.isCanonic())

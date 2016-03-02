@@ -10,7 +10,7 @@ import edu.udel.cis.vsl.sarl.IF.Transform;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * Implementation based on arrays. The entire array is copied with every
@@ -22,8 +22,8 @@ import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
  *            the kind of symbolic expressions that will be put in the
  *            collection
  */
-public class SimpleSequence<T extends SymbolicExpression> extends
-		CommonSymbolicCollection<T> implements SymbolicSequence<T> {
+public class SimpleSequence<T extends SymbolicExpression>
+		extends CommonSymbolicCollection<T> implements SymbolicSequence<T> {
 
 	private final static int classCode = SymbolicCollectionKind.SEQUENCE
 			.hashCode();
@@ -153,8 +153,8 @@ public class SimpleSequence<T extends SymbolicExpression> extends
 				first = false;
 			else
 				result.append(",");
-			result.append(element == null ? "null" : element
-					.toStringBuffer(false));
+			result.append(
+					element == null ? "null" : element.toStringBuffer(false));
 		}
 		result.append(">");
 		return result;
@@ -241,7 +241,8 @@ public class SimpleSequence<T extends SymbolicExpression> extends
 		int newNumNull = elements[index].isNull() ? numNull - 1 : numNull;
 
 		System.arraycopy(elements, 0, newArray, 0, index);
-		System.arraycopy(elements, index + 1, newArray, index, size - index - 1);
+		System.arraycopy(elements, index + 1, newArray, index,
+				size - index - 1);
 		return new SimpleSequence<T>(newArray, newNumNull);
 	}
 
@@ -344,7 +345,7 @@ public class SimpleSequence<T extends SymbolicExpression> extends
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 		int size = elements.length;
 
 		for (int i = 0; i < size; i++)
@@ -360,8 +361,8 @@ public class SimpleSequence<T extends SymbolicExpression> extends
 		System.arraycopy(elements, 0, newArray, 0, index);
 		newArray[index] = element;
 		System.arraycopy(elements, index, newArray, index + 1, size - index);
-		return new SimpleSequence<T>(newArray, element.isNull() ? numNull + 1
-				: numNull);
+		return new SimpleSequence<T>(newArray,
+				element.isNull() ? numNull + 1 : numNull);
 	}
 
 	@Override

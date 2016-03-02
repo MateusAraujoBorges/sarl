@@ -118,6 +118,11 @@ public abstract class CommonSymbolicMap<K extends SymbolicExpression, V extends 
 
 	@Override
 	protected int computeHashCode() {
+		// problem: does not take into consideration that
+		// sorted maps may have different comparators!
+		// also does not distinguish between sorted and unsorted.
+		// override this.
+
 		int result = this.collectionKind().hashCode();
 
 		for (V value : this) {

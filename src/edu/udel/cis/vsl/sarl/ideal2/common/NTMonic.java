@@ -29,6 +29,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * <p>
@@ -68,6 +69,11 @@ public class NTMonic extends IdealExpression implements Monic {
 	 * Cached result of {@link #expand(Ideal2Factory)}.
 	 */
 	private SymbolicMap<Monic, Monomial> expansion = null;
+
+	/**
+	 * Cached result of {@link #termMap(Ideal2Factory)}.
+	 */
+	private SymbolicMap<Monic, Monomial> termMap = null;
 
 	protected NTMonic(SymbolicType type,
 			SymbolicMap<Primitive, PrimitivePower> factorMap) {
@@ -114,26 +120,32 @@ public class NTMonic extends IdealExpression implements Monic {
 	@Override
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		if (expansion == null) {
-			SymbolicMap<Primitive, PrimitivePower> factors = monicFactors();
-			int totalDegree, numFactors;
+			if (!hasNontrivialExpansion(factory)) {
+				expansion = termMap(factory);
+			} else {
+				SymbolicMap<Primitive, PrimitivePower> factors = monicFactors();
+				int totalDegree, numFactors;
 
-			if (debug) {
-				totalDegree = totalDegree();
-				numFactors = factors.size();
-				out.println("Starting: expanding monic of total degree "
-						+ totalDegree + " with " + numFactors + " factors");
-				//out.println("monic: " + this);
-				out.flush();
-			}
-			expansion = factory.oneTermMap(type());
-			for (PrimitivePower ppower : monicFactors())
-				expansion = factory.multiplyTermMaps(expansion,
-						ppower.expand(factory));
-			if (debug) {
-				out.println("Finished: expanding monic of total degree "
-						+ totalDegree + " with " + numFactors
-						+ " factors: result has size " + expansion.size());
-				out.flush();
+				if (debug) {
+					totalDegree = totalDegree();
+					numFactors = factors.size();
+					out.println("Starting: expanding monic of total degree "
+							+ totalDegree + " with " + numFactors + " factors");
+					// out.println("monic: " + this);
+					out.flush();
+				}
+				expansion = factory.oneTermMap(type());
+				for (PrimitivePower ppower : monicFactors())
+					expansion = factory.multiplyTermMaps(expansion,
+							ppower.expand(factory));
+				if (debug) {
+					out.println("Finished: expanding monic of total degree "
+							+ totalDegree + " with " + numFactors
+							+ " factors: result has size " + expansion.size());
+					out.flush();
+				}
+				if (isCanonic())
+					expansion = factory.objectFactory().canonic(expansion);
 			}
 		}
 		return expansion;
@@ -169,7 +181,12 @@ public class NTMonic extends IdealExpression implements Monic {
 
 	@Override
 	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
-		return factory.monicSingletonMap(this, this);
+		if (termMap == null) {
+			termMap = factory.monicSingletonMap(this, (Monomial) this);
+			if (isCanonic())
+				termMap = factory.objectFactory().canonic(termMap);
+		}
+		return termMap;
 	}
 
 	@Override
@@ -185,6 +202,15 @@ public class NTMonic extends IdealExpression implements Monic {
 			}
 		}
 		return hasNTE == 1;
+	}
+
+	@Override
+	public void canonizeChildren(ObjectFactory of) {
+		super.canonizeChildren(of);
+		if (expansion != null && !expansion.isCanonic())
+			expansion = of.canonic(expansion);
+		if (termMap != null && !termMap.isCanonic())
+			termMap = of.canonic(termMap);
 	}
 
 }

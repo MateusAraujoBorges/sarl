@@ -29,7 +29,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.object.common.CommonSymbolicObject;
 
 /**
@@ -677,7 +677,7 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 		int numArgs = arguments.length;
 
 		if (type != null && !type.isCanonic())

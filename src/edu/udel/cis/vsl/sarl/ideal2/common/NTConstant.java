@@ -26,6 +26,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * A constant which is not 1.
@@ -81,7 +82,10 @@ public class NTConstant extends IdealExpression implements Constant {
 	@Override
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		if (expansion == null) {
-			expansion = factory.monicSingletonMap(factory.one(type()), this);
+			expansion = isZero() ? factory.emptyMonicMap()
+					: factory.monicSingletonMap(factory.one(type()), this);
+			if (isCanonic())
+				expansion = factory.objectFactory().canonic(expansion);
 		}
 		return expansion;
 	}
@@ -93,7 +97,7 @@ public class NTConstant extends IdealExpression implements Constant {
 
 	@Override
 	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
-		return factory.monicSingletonMap(factory.one(type()), this);
+		return expand(factory);
 	}
 
 	@Override
@@ -104,6 +108,13 @@ public class NTConstant extends IdealExpression implements Constant {
 	@Override
 	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
 		return false;
+	}
+
+	@Override
+	public void canonizeChildren(ObjectFactory of) {
+		super.canonizeChildren(of);
+		if (expansion != null && !expansion.isCanonic())
+			expansion = of.canonic(expansion);
 	}
 
 }

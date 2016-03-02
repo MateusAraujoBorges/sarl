@@ -28,6 +28,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * A non-trivial primitive power represents a Primitive expression raised to
@@ -39,7 +40,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 public class NTPrimitivePower extends IdealExpression
 		implements PrimitivePower {
 
-	public final static boolean debug = true;
+	public final static boolean debug = false;
 
 	public final static PrintStream out = System.out;
 
@@ -47,6 +48,10 @@ public class NTPrimitivePower extends IdealExpression
 	 * Cached result of {@link #expand(Ideal2Factory)}.
 	 */
 	private SymbolicMap<Monic, Monomial> expansion = null;
+
+	private SymbolicMap<Primitive, PrimitivePower> monicFactors = null;
+
+	private SymbolicMap<Monic, Monomial> termMap = null;
 
 	protected NTPrimitivePower(Primitive primitive, IntObject exponent) {
 		super(SymbolicOperator.POWER, primitive.type(), primitive, exponent);
@@ -58,15 +63,20 @@ public class NTPrimitivePower extends IdealExpression
 	 * 
 	 * @return - a primitive such as 'x' or 'y'
 	 */
-	public NumericPrimitive primitive() {
-		return (NumericPrimitive) argument(0);
+	public Primitive primitive() {
+		return (Primitive) argument(0);
 	}
 
 	@Override
 	public SymbolicMap<Primitive, PrimitivePower> monicFactors(
 			Ideal2Factory factory) {
-		return factory.primitiveSingletonMap(primitive(),
-				(PrimitivePower) this);
+		if (monicFactors == null) {
+			monicFactors = factory.primitiveSingletonMap(primitive(),
+					(PrimitivePower) this);
+			if (isCanonic())
+				monicFactors = factory.objectFactory().canonic(monicFactors);
+		}
+		return monicFactors;
 	}
 
 	@Override
@@ -106,8 +116,8 @@ public class NTPrimitivePower extends IdealExpression
 	}
 
 	@Override
-	public NumericPrimitive primitive(Ideal2Factory factory) {
-		return (NumericPrimitive) argument(0);
+	public Primitive primitive(Ideal2Factory factory) {
+		return (Primitive) argument(0);
 	}
 
 	@Override
@@ -118,32 +128,36 @@ public class NTPrimitivePower extends IdealExpression
 	@Override
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		if (expansion == null) {
-			IntObject exponent = exponent();
-			int totalDegree;
+			if (!hasNontrivialExpansion(factory)) {
+				expansion = termMap(factory);
+			} else {
+				IntObject exponent = exponent();
+				int totalDegree;
 
-			if (debug) {
-				totalDegree = totalDegree();
-				out.println(
-						"Starting: expanding primitive power of total degree "
-								+ totalDegree + " with exponent " + exponent);
-				out.flush();
-			}
+				if (debug) {
+					totalDegree = totalDegree();
+					out.println(
+							"Starting: expanding primitive power of total degree "
+									+ totalDegree + " with exponent "
+									+ exponent);
+					out.flush();
+				}
 
-			NumericPrimitive primitive = primitive();
-			SymbolicMap<Monic, Monomial> expandedPrimitive = primitive
-					.expand(factory);
+				Primitive primitive = primitive();
+				SymbolicMap<Monic, Monomial> expandedPrimitive = primitive
+						.expand(factory);
 
-			if (primitive.equals(expandedPrimitive))
-				expansion = factory.monicSingletonMap(this, this);
-			else
 				expansion = factory.powerTermMap(type(), expandedPrimitive,
 						exponent);
-			if (debug) {
-				out.println(
-						"Finished: expanding primitive power of total degree "
-								+ totalDegree + " with exponent " + exponent
-								+ ": result has size " + expansion.size());
-				out.flush();
+				if (debug) {
+					out.println(
+							"Finished: expanding primitive power of total degree "
+									+ totalDegree + " with exponent " + exponent
+									+ ": result has size " + expansion.size());
+					out.flush();
+				}
+				if (isCanonic())
+					expansion = factory.objectFactory().canonic(expansion);
 			}
 		}
 		return expansion;
@@ -161,7 +175,12 @@ public class NTPrimitivePower extends IdealExpression
 
 	@Override
 	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
-		return factory.monicSingletonMap(this, this);
+		if (termMap == null) {
+			termMap = factory.monicSingletonMap(this, this);
+			if (isCanonic())
+				termMap = factory.objectFactory().canonic(termMap);
+		}
+		return termMap;
 	}
 
 	@Override
@@ -174,6 +193,17 @@ public class NTPrimitivePower extends IdealExpression
 		Primitive p = primitive();
 
 		return p instanceof NTPolynomial || p.hasNontrivialExpansion(factory);
+	}
+
+	@Override
+	public void canonizeChildren(ObjectFactory of) {
+		super.canonizeChildren(of);
+		if (termMap != null && !termMap.isCanonic())
+			termMap = of.canonic(termMap);
+		if (expansion != null && !expansion.isCanonic())
+			expansion = of.canonic(expansion);
+		if (monicFactors != null && !monicFactors.isCanonic())
+			monicFactors = of.canonic(monicFactors);
 	}
 
 }

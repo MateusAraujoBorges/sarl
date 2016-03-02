@@ -27,7 +27,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSet;
 import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * A representation of a boolean expression using Conjunctive Normal Form.
@@ -39,8 +39,8 @@ import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
  * @author siegel
  *
  */
-public class CnfExpression extends CommonSymbolicExpression implements
-		BooleanExpression {
+public class CnfExpression extends CommonSymbolicExpression
+		implements BooleanExpression {
 
 	/**
 	 * The negation of this boolean expression. Cached here for performance.
@@ -153,7 +153,7 @@ public class CnfExpression extends CommonSymbolicExpression implements
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 		super.canonizeChildren(factory);
 
 		if (negation != null)

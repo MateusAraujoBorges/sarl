@@ -170,8 +170,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 		} else {
 			reasoner = factory.getReasoner(renamedContext);
 		}
-		return new Pair<ContextMinimizingReasoner, SymbolicExpression>(
-				reasoner, renamedExpression);
+		return new Pair<ContextMinimizingReasoner, SymbolicExpression>(reasoner,
+				renamedExpression);
 	}
 
 	/**
@@ -210,7 +210,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            instance of {@link ModelResult}.
 	 * @return a non-<code>null</code> validity result
 	 */
-	private ValidityResult valid1(BooleanExpression predicate, boolean getModel) {
+	private ValidityResult valid1(BooleanExpression predicate,
+			boolean getModel) {
 		if (predicate.isTrue())
 			return Prove.RESULT_YES;
 		if (predicate.isFalse())
@@ -228,7 +229,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 			// note: for now, getModel won't work with renamed predicates; you
 			// need a way to get the map between the old and new names in the
 			// predicate
-			Pair<ContextMinimizingReasoner, SymbolicExpression> pair = reduceAndRename(predicate);
+			Pair<ContextMinimizingReasoner, SymbolicExpression> pair = reduceAndRename(
+					predicate);
 
 			reducedReasoner = pair.left;
 			transformedPredicate = (BooleanExpression) pair.right;
@@ -238,8 +240,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 		}
 
 		if (debug) {
-			debugOut.println("Reduced context       : "
-					+ reducedReasoner.context);
+			debugOut.println(
+					"Reduced context       : " + reducedReasoner.context);
 			debugOut.println("Transformed predicate : " + transformedPredicate);
 		}
 
@@ -286,6 +288,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 		return result;
 	}
 
+	public static int dbgcnt1 = 0;
+
 	/**
 	 * <p>
 	 * Attempts to determine the validity of <code>predicate</code>, without
@@ -310,6 +314,11 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 */
 	private ValidityResult validNoCacheNoReduce(BooleanExpression predicate,
 			boolean getModel) {
+		if (debug) {
+			dbgcnt1++;
+			debugOut.println("dbgcnt1 = " + dbgcnt1);
+		}
+
 		BooleanExpression newContext = getSimplifier().getReducedContext();
 		BooleanExpression newPredicate = (BooleanExpression) simplifier
 				.apply(predicate);
@@ -393,7 +402,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            the (non-<code>null</code>) result of the validity check on
 	 *            <code>predicate</code>
 	 */
-	private void updateCache(BooleanExpression predicate, ValidityResult result) {
+	private void updateCache(BooleanExpression predicate,
+			ValidityResult result) {
 		BooleanExpression fullContext = getFullContext();
 
 		if (fullContext.isTrue()) {
@@ -453,9 +463,10 @@ public class ContextMinimizingReasoner implements Reasoner {
 			debugOut.println("Simplification context : " + context);
 		}
 
-		ContextMinimizingReasoner reducedReasoner = getReducedReasonerFor(expression);
-		SymbolicExpression result = reducedReasoner.getSimplifier().apply(
+		ContextMinimizingReasoner reducedReasoner = getReducedReasonerFor(
 				expression);
+		SymbolicExpression result = reducedReasoner.getSimplifier()
+				.apply(expression);
 
 		if (debug) {
 			debugOut.println("Simplification result  : " + result + " ("
@@ -536,7 +547,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 	@Override
 	public Number extractNumber(NumericExpression expression) {
-		return getReducedReasonerFor(expression).extractNumberNoReduce(
-				expression);
+		return getReducedReasonerFor(expression)
+				.extractNumberNoReduce(expression);
 	}
 }

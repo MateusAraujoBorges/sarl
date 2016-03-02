@@ -20,15 +20,15 @@ package edu.udel.cis.vsl.sarl.type.common;
 
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * @author jthakkar
  * 
  *         an implementation of {@link SymbolicArrayType}
  */
-public class CommonSymbolicArrayType extends CommonSymbolicType implements
-		SymbolicArrayType {
+public class CommonSymbolicArrayType extends CommonSymbolicType
+		implements SymbolicArrayType {
 
 	/**
 	 * a constant to store the hashCode of this object, so that it will be
@@ -67,9 +67,8 @@ public class CommonSymbolicArrayType extends CommonSymbolicType implements
 			return false;
 		if (isComplete()) {
 			if (((CommonSymbolicArrayType) that).isComplete()) {
-				return ((CommonSymbolicCompleteArrayType) this).extent()
-						.equals(((CommonSymbolicCompleteArrayType) that)
-								.extent());
+				return ((CommonSymbolicCompleteArrayType) this).extent().equals(
+						((CommonSymbolicCompleteArrayType) that).extent());
 			}
 			return false;
 		} else {
@@ -119,7 +118,7 @@ public class CommonSymbolicArrayType extends CommonSymbolicType implements
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 		if (!elementType.isCanonic())
 			elementType = factory.canonic(elementType);
 		if (pureType != null && !pureType.isCanonic())

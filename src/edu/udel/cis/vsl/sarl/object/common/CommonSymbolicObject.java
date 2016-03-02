@@ -20,6 +20,7 @@ package edu.udel.cis.vsl.sarl.object.common;
 
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * A partial implementation of {@link SymbolicObject}.
@@ -169,7 +170,7 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 	 *            the object factory that is responsible for this symbolic
 	 *            object
 	 */
-	public abstract void canonizeChildren(CommonObjectFactory factory);
+	public abstract void canonizeChildren(ObjectFactory factory);
 
 	/**
 	 * Places parentheses around the string buffer.

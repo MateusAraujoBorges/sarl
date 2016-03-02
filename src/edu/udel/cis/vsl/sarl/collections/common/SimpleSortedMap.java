@@ -5,14 +5,16 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.SortedMap;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
+import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.collections.IF.SimpleEntry;
 import edu.udel.cis.vsl.sarl.collections.IF.SortedSymbolicMap;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.util.BinaryOperator;
 
 /**
@@ -69,11 +71,11 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 			Entry<K, V>[] entries) {
 		super();
 		this.comparator = comparator;
-		
+
 		// TODO: remove when done debugging:
-		for (int i=0; i<entries.length; i++)
+		for (int i = 0; i < entries.length; i++)
 			assert entries[i] != null;
-		
+
 		this.entries = entries;
 	}
 
@@ -170,10 +172,10 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 		int i1 = 0, i2 = 0, count = 0;
 		Entry<K, V> entry1 = entries1[0], entry2 = entries2[0];
 		K key1 = entry1.getKey(), key2 = entry2.getKey();
-	
+
 		while (true) {
 			int c = comparator.compare(key1, key2);
-	
+
 			if (c < 0) { // key1 comes first
 				newEntries[count] = entry1;
 				count++;
@@ -193,12 +195,12 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 			} else {
 				V newValue = operator.apply(entry1.getValue(),
 						entry2.getValue());
-	
+
 				if (newValue != null) {
 					@SuppressWarnings("unchecked")
 					Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(key1,
 							newValue);
-	
+
 					newEntries[count] = newEntry;
 					count++;
 				}
@@ -212,14 +214,14 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 				key2 = entry2.getKey();
 			}
 		}
-	
+
 		int delta1 = n1 - i1, delta2 = n2 - i2,
 				newLength = count + delta1 + delta2;
-	
+
 		if (newLength < n1 + n2) {
 			@SuppressWarnings("unchecked")
 			Entry<K, V>[] tmp = (Entry<K, V>[]) new SimpleEntry[newLength];
-	
+
 			System.arraycopy(newEntries, 0, tmp, 0, count);
 			newEntries = tmp;
 		}
@@ -255,38 +257,38 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 		int n1 = entries1.length, n2 = entries2.length;
 		@SuppressWarnings("unchecked")
 		Entry<K, V>[] newEntries = (Entry<K, V>[]) new SimpleEntry[n1 + n2];
-	
+
 		if (n1 < n2) {
 			Entry<K, V>[] tmp = entries1;
-	
+
 			entries1 = entries2;
 			entries2 = tmp;
-	
+
 			int tmp2 = n1;
-	
+
 			n1 = n2;
 			n2 = tmp2;
 		}
 		assert (n1 >= n2);
-	
+
 		// merge entries2 into entries1...
-	
+
 		int i1 = 0, count = 0;
-	
+
 		// invariant: entries[i]<entry2 forall i<i1.
 		for (Entry<K, V> entry2 : entries2) {
 			K key2 = entry2.getKey();
 			boolean eq = false;
 			int lo = i1, hi = n1 - 1;
-	
+
 			// Goals:
 			// 1. lo is greatest in [i1,n1] s.t. entries1[i]<entry2 forall i<lo
 			// 2. eq iff (lo<n1 && entries1[lo]=entry2)
-	
+
 			while (lo <= hi) {
 				int mid = (lo + hi) / 2;
 				int compare = comparator.compare(entries1[mid].getKey(), key2);
-	
+
 				if (compare == 0) {
 					eq = true;
 					lo = mid;
@@ -305,12 +307,12 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 			if (eq) { // combine entries1[lo] and entry2
 				V newValue = operator.apply(entries1[lo].getValue(),
 						entry2.getValue());
-	
+
 				if (newValue != null) {
 					@SuppressWarnings("unchecked")
 					Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(
 							entry2.getKey(), newValue);
-	
+
 					newEntries[count] = newEntry;
 					count++;
 				}
@@ -327,7 +329,7 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 		if (count < n1 + n2) {
 			@SuppressWarnings("unchecked")
 			Entry<K, V>[] tmp = (Entry<K, V>[]) new SimpleEntry[count];
-	
+
 			System.arraycopy(newEntries, 0, tmp, 0, count);
 			newEntries = tmp;
 		}
@@ -535,7 +537,7 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 		for (Entry<K, V> entry : entries) {
 			V oldValue = entry.getValue();
 			V newValue = factory.canonic(oldValue);
@@ -549,7 +551,12 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 	protected boolean collectionEquals(SymbolicCollection<V> o) {
 		if (o instanceof SimpleSortedMap<?, ?>) {
 			@SuppressWarnings("unchecked")
-			Entry<K, V>[] thoseEntries = ((SimpleSortedMap<K, V>) o).entries;
+			SimpleSortedMap<K, V> that = (SimpleSortedMap<K, V>) o;
+
+			if (comparator != that.comparator)
+				return false;
+
+			Entry<K, V>[] thoseEntries = that.entries;
 			int n = entries.length;
 			// recall: they must have the same size
 
@@ -558,8 +565,19 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 					return false;
 			}
 			return true;
+		} else {
+			throw new SARLInternalException("Unknown sorted map kind: " + o);
 		}
-		return super.collectionEquals(o);
+	}
+
+	@Override
+	protected int computeHashCode() {
+		int result = comparator.hashCode() ^ collectionKind().hashCode();
+
+		for (Entry<K, V> entry : entries) {
+			result ^= entry.getValue().hashCode();
+		}
+		return result;
 	}
 
 	@Override

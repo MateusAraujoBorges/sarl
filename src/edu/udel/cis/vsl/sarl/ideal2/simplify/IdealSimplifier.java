@@ -47,89 +47,45 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifier;
 
 /**
- * An implementation of {@link Simplifier} for the "Ideal" (mathematical)
- * Universe. Provides methods to take a symbolic expression from an ideal
- * universe and return a "simplified" version of the expression which is
- * equivalent to the original in the mathematical "ideal" semantics. Similar
- * method is provided for types.
- * 
+ * <p>
+ * An implementation of {@link Simplifier} for the "ideal" numeric factory
+ * {@link Ideal2Factory}.
+ * </p>
+ *
+ * <p>
  * TODO: also would like to map symbolic constants that can be solved for in
- * terms of earlier ones to expressions...
- * 
- * NOTE: in this Ideal2 module, the canonical form ensures that relational
- * operators only occur in the following forms:
- * 
- * 0=Primitive, 0<Monic, 0<=Monic, Monic<0, Monic<=0, 0!=Primitive.
- * 
- * Furthermore, in the Monics, the highest exponent is 1.
- * 
- * Simplification strategies:
- * 
- * Only Monics (and Polynomials, which are a kind of Monic) do not follow
- * default protocols.
- * 
- * To simplify a Monic: look up in constant map. If found, great. Otherwise, if
- * the Monic is a Polynomial, apply simplifyPolynomial below. Otherwise,
- * default.
- * 
- * simplifyPolynomial: first, there must be no known factorization, else it
- * would not be a Polynomial. Try expanding the terms and if any of them change,
- * adding the resulting term maps and refactoring to form a Monomial. (There may
- * be cancellations that only appear at this time.) However, only expand if the
- * term map's size is below a threshold. Example: (X+Y)^2 + X^2 -->
- * 2X^2+2XY+Y^2. But is this better? (Determine metric for "better"?)
- * 
- * To simplify relational expressions:
- * 
- * Methods on Monomials: getBound()
- * 
- * getBound(Monomial m): getBoundMonic(m.monic), scale by constant
- * 
- * getBoundMonic(Monic m): if m is a Polynomial, do getBoundPoly(m). Otherwise:
- * look up m in boundMap. If that doesn't give a definitive answer, take product
- * of two intervals, take power of interval. Wikipedia article on interval
- * arithmetic has all the formulas.
- * https://en.wikipedia.org/wiki/Interval_arithmetic
- * 
- * getBoundPoly: rewrite in pseudo form, look up m in boundMap. If that doesn't
- * give a definitive answer, getBound on each Monomial term and add them up.
- * 
- * To simplify:
- * 
- * 0<Monic: First see if you can get a bound on the monic. If that doesn't
- * resolve, iterate over the primitive factors X and see if you can get a bound
- * on X. If you can show that X must be negative, or X=0, or X must be positive,
- * then you can eliminate X. This simplifies the formula.
- * 
- * 0>Monic: Similar
- * 
- * 0=Primitive: First see if you can get a bound on the primitive. If that
- * doesn't resolve, if Primitive is a Poly, put in pseudo form, look for bound
- * on the pseudo.
- * 
- * 0!=Primitive.
- * 
- * Need complementary bounds. Just for a!=0. Do we look for pseudo != something?
- * 
+ * terms of earlier ones to expressions.
+ * </p>
  */
 public class IdealSimplifier extends CommonSimplifier {
 
 	// Static fields...
 
 	/**
-	 * Print debugging information?
+	 * Print debugging information when any non-trivial simplification is
+	 * performed?
+	 */
+	public final static boolean debugSimps = false;
+
+	/**
+	 * Print general debugging information?
 	 */
 	public final static boolean debug = false;
 
+	/**
+	 * Where to print debugging information.
+	 */
 	public final static PrintStream out = System.out;
 
 	// Instance fields...
@@ -357,17 +313,29 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	/**
-	 * Converts the bound to a boolean expression in canonical form. Returns
-	 * null if both upper and lower bound are infinite (equivalent to "true").
-	 * Note that the variable in the bound is simplified.
+	 * Produces an expression equivalent to the claim that <code>monic</code>
+	 * lies in <code>interval</code>, using simplifications supported by the
+	 * current {@link #assumption}. Returns <code>null</code> if
+	 * <code>interval</code> is (-&infin;,&infin;). Note that the "variable" (
+	 * <code>monic</code>) is simplified using method
+	 * {@link #apply(SymbolicExpression)}.
+	 * 
+	 * @param monic
+	 *            a non-<code>null</code> {@link Monic}
+	 * @param interval
+	 *            a non-<code>null</code> {@link Interval} of same type as
+	 *            <code>monic</code>
+	 * @return <code>null</code> if <code>interval</code> is (-&infin;,&infin;),
+	 *         else a {@link BooleanExpression} equivalent to the statement that
+	 *         <code>monic</code> lies in <code>interval</code>
 	 */
-	private BooleanExpression boundToIdeal(Monic monic, Interval bound) {
-		Number lower = bound.lower(), upper = bound.upper();
+	private BooleanExpression boundToIdeal(Monic monic, Interval interval) {
+		Number lower = interval.lower(), upper = interval.upper();
 		BooleanExpression result = null;
 		Monomial ideal = (Monomial) apply(monic);
 
 		if (lower != null) {
-			if (bound.strictLower())
+			if (interval.strictLower())
 				result = info.idealFactory
 						.lessThan(info.idealFactory.constant(lower), ideal);
 			else
@@ -377,7 +345,7 @@ public class IdealSimplifier extends CommonSimplifier {
 		if (upper != null) {
 			BooleanExpression upperResult;
 
-			if (bound.strictUpper())
+			if (interval.strictUpper())
 				upperResult = info.idealFactory.lessThan(ideal,
 						info.idealFactory.constant(upper));
 			else
@@ -394,7 +362,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	/**
 	 * Attempts to determine bounds (upper and lower) on primitive expressions
 	 * by examining the assumption. Returns false if assumption is determined to
-	 * be unsatisfiable.
+	 * be unsatisfiable. Updates {@link #boundMap}, {@link #booleanMap}.
 	 */
 	private boolean extractBounds() {
 		if (assumption.operator() == SymbolicOperator.AND) {
@@ -406,6 +374,11 @@ public class IdealSimplifier extends CommonSimplifier {
 		return updateConstantMap();
 	}
 
+	/**
+	 * 
+	 * @param poly
+	 * @param value
+	 */
 	private void processHerbrandCast(Monomial poly, Number value) {
 		if (poly.operator() == SymbolicOperator.CAST) {
 			SymbolicType type = poly.type();
@@ -892,16 +865,21 @@ public class IdealSimplifier extends CommonSimplifier {
 	// ****************************************************************
 
 	/**
-	 * Simplifies a {@link Monic}.
+	 * Simplifies a {@link Monic} that is not a {@link Polynomial}.
 	 * 
-	 * Look up in constant map. If found, great. Otherwise, if the Monic is a
-	 * {@link Polynomial}, try expanding.
-	 * 
+	 * Strategy: look up in {@link #constantMap}. If found, great. Otherwise try
+	 * generic simplification.
 	 * 
 	 * @param monic
-	 * @return
+	 *            a non-<code>null</code> {@link Monic} which is not an instance
+	 *            of {@link Polynomial}.
+	 * 
+	 * @return a simplified version of <code>monic</code> which is equivalent to
+	 *         <code>monic</code> under the current assumptions
 	 */
 	private Monomial simplifyMonic(Monic monic) {
+		assert !(monic instanceof Polynomial);
+
 		Number constant = constantMap.get(monic);
 
 		if (constant != null)
@@ -909,22 +887,83 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		Monomial result = (Monomial) super.simplifyGenericExpression(monic);
 
-		if (result != monic)
-			return result;
-
-		if (monic instanceof Polynomial
-				&& monic.hasNontrivialExpansion(info.idealFactory)) {
-			Polynomial poly = (Polynomial) monic;
-			SymbolicMap<Monic, Monomial> expansion = poly
-					.expand(info.idealFactory);
-
-			if (expansion.isEmpty())
-				return info.idealFactory.zero(monic.type());
-			result = info.idealFactory.factorTermMap(expansion);
-			if (result != monic)
-				result = (Monomial) simplifyExpression(result);
-		}
 		return result;
+	}
+
+	/**
+	 * Simplifies a {@link Polynomial}. Note that method
+	 * {@link #simplifyGenericExpression(SymbolicExpression)} cannot be used,
+	 * since that method will invoke
+	 * {@link PreUniverse#make(SymbolicOperator, SymbolicType, edu.udel.cis.vsl.sarl.IF.object.SymbolicObject[])}
+	 * , which will apply binary addition repeatedly on the terms of a
+	 * {@link Polynomial}, which will not result in the correct form.
+	 * 
+	 * The following strategies are used:
+	 * <ul>
+	 * <li>look up the polynomial in the {@link #constantMap}</li>
+	 * <li>convert to an {@link AffineExpression} and look for a constant value
+	 * of the pseudo</li>
+	 * <li>simplify the individual terms and sum the results</li>
+	 * <li>full expand the polynomial</li>
+	 * </ul>
+	 * The process is repeated until it stabilizes or a constant value is
+	 * determined.
+	 * 
+	 * @param poly
+	 *            a {@link Polynomial} with at least 2 terms
+	 * @return a simplified version of <code>poly</code> equivalent to
+	 *         <code>poly</code> under the existing assumptions
+	 */
+	private Monomial simplifyPolynomial(Polynomial poly) {
+		NumberFactory nf = info.numberFactory;
+		Ideal2Factory id = info.idealFactory;
+
+		while (true) { // repeat until stabilization
+			Number constant = constantMap.get(poly);
+
+			if (constant != null)
+				return id.constant(constant);
+
+			AffineExpression affine = info.affineFactory.affine(poly);
+
+			constant = constantMap.get(affine.pseudo());
+			if (constant != null)
+				return id.constant(
+						nf.add(nf.multiply(affine.coefficient(), constant),
+								affine.offset()));
+
+			SymbolicMap<Monic, Monomial> termMap = poly.termMap(id);
+			int size = termMap.size();
+			Monomial[] terms = new Monomial[size];
+			boolean simplified = false;
+			Iterator<Monomial> termIter = termMap.iterator();
+
+			for (int i = 0; i < size; i++) {
+				Monomial term = termIter.next();
+				Monomial simplifiedTerm = (Monomial) apply(term);
+
+				simplified = simplified || term != simplifiedTerm;
+				terms[i] = simplifiedTerm;
+			}
+
+			Monomial result = simplified ? id.addMonomials(terms) : poly;
+
+			if (result.hasNontrivialExpansion(id)) {
+				SymbolicMap<Monic, Monomial> t = result.expand(id);
+
+				result = t.isEmpty() ? id.zero(result.type())
+						: id.factorTermMap(t);
+			}
+			if (result == poly)
+				return result;
+			if (!(result instanceof Polynomial))
+				return (Monomial) apply(result);
+			if (debug) {
+				out.println("simplifyPoly: poly   = " + poly);
+				out.println("simplifyPoly: result = " + result);
+			}
+			poly = (Polynomial) id.objectFactory().canonic(result);
+		}
 	}
 
 	/**
@@ -989,7 +1028,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	 */
 	private BooleanExpression simplifyRelational(BooleanExpression expression) {
 		BooleanExpression result1 = (BooleanExpression) simplifyGenericExpression(
-				expression);
+				expression); // to substitute constants, etc.
 
 		if (result1 == expression)
 			return simplifyRelationalWork(expression);
@@ -1034,44 +1073,35 @@ public class IdealSimplifier extends CommonSimplifier {
 			} else
 				throw new SARLInternalException(
 						"unreachable: impossible expression " + expression);
-			return result == null ? expression : result;
+			if (result == null) {
+				return expression;
+			} else {
+				if (debugSimps) {
+					out.println("Simplify ineq input:  " + expression);
+					out.println("Simplify ineq result: " + result);
+					out.flush();
+				}
+				return result;
+			}
 		}
 		case EQUALS: {
 			assert arg0.isZero();
 			// arg1 has already been simplified.
 			result = simplifyEQ0((Primitive) arg1);
-			// if (result != null && (result.isTrue() || result.isFalse()))
-			// return result;
-			//
-			// if (debug) {
-			// out.println("Starting: =0 expanding primitive of total degree "
-			// + arg1.totalDegree());
-			// out.flush();
-			// }
-
-			// SymbolicMap<Monic, Monomial> termMap = arg1
-			// .expand(info.idealFactory);
-			//
-			// if (debug) {
-			// out.println("Finsished: =0 expanding primitive of total degree "
-			// + arg1.totalDegree() + ": result has size "
-			// + termMap.size());
-			// out.flush();
-			// }
-			//
-			// if (termMap.isEmpty())
-			// return info.trueExpr;
-
-			// Monomial newArg = info.idealFactory.factorTermMap(termMap);
-
 			// TODO: to check if a poly==0, don't blindly expand.
 			// instead:
 			// (a/b+c/d)=0 <==> (a(d/g))+(c(b/g))=0, where g=gcd(b,d)
 
-			// if (arg0.equals(newArg))
-			return result == null ? expression : result;
-			// return (BooleanExpression) apply(
-			// info.idealFactory.equals(arg0, newArg));
+			if (result == null) {
+				return expression;
+			} else {
+				if (debugSimps) {
+					out.println("Simplify EQ0 input : " + expression);
+					out.println("Simplify EQ0 result: " + result);
+					out.flush();
+				}
+				return result;
+			}
 		}
 		case NEQ: {
 			assert arg0.isZero();
@@ -1087,6 +1117,13 @@ public class IdealSimplifier extends CommonSimplifier {
 		}
 	}
 
+	/**
+	 * Computes a simplified version of the expression <code>monic</code>=0.
+	 * 
+	 * @param monic
+	 *            a non-<code>null</code> {@link Monic}
+	 * @return simplified expression equivalent to <code>monic</code>=0
+	 */
 	private BooleanExpression simplifiedEQ0Monic(Monic monic) {
 		NumericExpression zero = info.idealFactory.zero(monic.type());
 		BooleanExpression expr = info.idealFactory.equals(zero, monic);
@@ -1095,7 +1132,13 @@ public class IdealSimplifier extends CommonSimplifier {
 		return result;
 	}
 
-	// returns null if no simplification possible beyond obvious...
+	/**
+	 * Computes a simplified version of the expression <code>monic</code>&ne;0.
+	 * 
+	 * @param monic
+	 *            a non-<code>null</code> {@link Monic}
+	 * @return simplified expression equivalent to <code>monic</code>&ne;0
+	 */
 	private BooleanExpression simplifiedNEQ0Monic(Monic monic) {
 		NumericExpression zero = info.idealFactory.zero(monic.type());
 		BooleanExpression expr = info.idealFactory.neq(zero, monic);
@@ -1105,11 +1148,10 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	/**
-	 * A categorization of intervals. Every interval falls into exactly one of
-	 * these categories.
+	 * A categorization of intervals based on their relationship to 0. Every
+	 * interval falls into exactly one of these categories.
 	 * 
 	 * @author siegel
-	 *
 	 */
 	private enum BoundType {
 		/**
@@ -1140,11 +1182,19 @@ public class IdealSimplifier extends CommonSimplifier {
 		ALL
 	};
 
-	private BoundType boundType(Interval bound) {
-		if (bound.isEmpty())
+	/**
+	 * Computes the bound type of the given {@link Interval}.
+	 * 
+	 * @param interval
+	 *            a non-<code>null</code> {@link Interval}
+	 * @return the unique category (instance of {@link BoundType}) into which
+	 *         <code>interval</code> falls
+	 */
+	private BoundType boundType(Interval interval) {
+		if (interval.isEmpty())
 			return BoundType.EMPTY;
 
-		Number l = bound.lower(), r = bound.upper();
+		Number l = interval.lower(), r = interval.upper();
 		int lsign = l == null ? -1 : l.signum();
 		int rsign = r == null ? 1 : r.signum();
 
@@ -1155,7 +1205,7 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		if (lsign < 0) {
 			if (rsign == 0) {
-				return bound.strictUpper() ? BoundType.LT0 : BoundType.LE0;
+				return interval.strictUpper() ? BoundType.LT0 : BoundType.LE0;
 			} else { // rsign > 0
 				return BoundType.ALL;
 			}
@@ -1163,19 +1213,29 @@ public class IdealSimplifier extends CommonSimplifier {
 			if (rsign == 0) {
 				return BoundType.EQ0;
 			} else { // rsign > 0
-				return bound.strictLower() ? BoundType.GT0 : BoundType.EQ0;
+				return interval.strictLower() ? BoundType.GT0 : BoundType.EQ0;
 			}
 		}
 	}
 
 	/**
 	 * Does every x in the bound interval satisfy x OP 0, where OP is one of
-	 * <, <=, >, >=. Answer can be
+	 * <, <=, >, >=.
 	 * 
 	 * @param bound
+	 *            an interval (non-<code>null</code>)
 	 * @param gt
+	 *            if <code>true</code> the condition to check is either x&gt;0
+	 *            or &ge;0 for all x in <code>bound</code>; if
+	 *            <code>false</code>, the condition is either x&lt;0 or x&le;0
 	 * @param strict
-	 * @return
+	 *            if <code>true</code>, the condition to check is a strict
+	 *            inequality, i.e., either <code>x&gt;0</code> or
+	 *            <code>x&lt;0</code>
+	 * @return <code>null</code> if no expression of the constraint beyond the
+	 *         obvious one is possible; otherwise, a simplified expression which
+	 *         is equivalent to the constraint under the assumption that the
+	 *         context holds
 	 */
 	private BooleanExpression ineqFromBound(Monic monic, Interval bound,
 			boolean gt, boolean strict) {
@@ -1229,16 +1289,18 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	/**
-	 * Simplifies an inequality of one of the forms: x>0, x>=0, x<0, x<=0, where
-	 * x is a {@link Monic} in which the maximum degree of any {@link Primitive}
-	 * is 1. Assumes <code>monic</code> is already simplified.
+	 * Simplifies an inequality of one of the forms: x&gt;0, x&ge;0, x&lt;0,
+	 * x&le;0, where x is a {@link Monic} in which the maximum degree of any
+	 * {@link Primitive} is 1. Assumes <code>monic</code> is already simplified.
 	 * 
 	 * @param monic
+	 *            a non-<code>null</code>, simplified, {@link Monic}
 	 * @param gt
-	 *            is the form one of x>0, x>=0
+	 *            is the condition one of x&gt;0 or x&ge;0 (i.e., not x&lt;0 or
+	 *            x&le;0)
 	 * @param strict
-	 *            is the form one of x>0 or x<0 (strict inequality)
-	 * @return simplified version of the inequality of <code>null</code> if no
+	 *            is the form one of x&gt;0 or x&lt;0 (strict inequality)
+	 * @return simplified version of the inequality or <code>null</code> if no
 	 *         simplification was possible
 	 */
 	private BooleanExpression simplifyIneq0(Monic monic, boolean gt,
@@ -1352,21 +1414,31 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	/**
+	 * <p>
 	 * Simplifies expression poly OP 0, where poly is a {@link Polynomial} and
 	 * OP is one of LT, LE, GT, or GE.
+	 * </p>
 	 * 
 	 * Preconditions:
 	 * <ul>
 	 * <li>there is no entry in the {@link #constantMap} for <code>poly</code>
 	 * </li>
-	 * <li><code>poly</code> is fully expanded</li> <lil><code>poly</code> has
-	 * at least 2 terms</li>
+	 * <li><code>poly</code> is fully expanded</li>
+	 * <li><code>poly</code> has at least 2 terms</li>
 	 * </ul>
 	 * 
 	 * @param poly
+	 *            a {@link Polynomial} with at least 2 terms
 	 * @param gt
+	 *            is the condition one of <code>poly</code>&gt;0 or
+	 *            <code>poly</code>&ge;0 ?
 	 * @param strict
-	 * @return
+	 *            is the inequality strict, i.e., is the condition one of
+	 *            <code>poly</code>&gt;0 or <code>poly</code>&lt;0 ?
+	 * @return <code>null</code> if there is no way to express the constraint
+	 *         beyond the obvious, else an expression equivalent to
+	 *         <code>poly</code> OP 0, where the OP is the inequality operator
+	 *         specified by <code>gt</code> and <code>strict</code>
 	 */
 	private BooleanExpression simplifyIneq0Poly(Polynomial poly, boolean gt,
 			boolean strict) {
@@ -1379,14 +1451,16 @@ public class IdealSimplifier extends CommonSimplifier {
 			// substitute known constant value for pseudo...
 			Number val = af.affineValue(affine, pseudoValue);
 			int sgn = val.signum();
+			BooleanExpression result;
 
 			if (gt) {
-				return (strict ? sgn > 0 : sgn >= 0) ? info.trueExpr
+				result = (strict ? sgn > 0 : sgn >= 0) ? info.trueExpr
 						: info.falseExpr;
 			} else {
-				return (strict ? sgn < 0 : sgn < 0) ? info.trueExpr
+				result = (strict ? sgn < 0 : sgn <= 0) ? info.trueExpr
 						: info.falseExpr;
 			}
+			return result;
 		}
 
 		Interval pseudoBound = boundMap.get(pseudo);
@@ -1402,14 +1476,15 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	/**
-	 * Attempts to simplify the expression poly=0. Returns <code>null</code> if
-	 * no simplification is possible, else returns a {@link BooleanExpression}
-	 * equivalent to poly=0.
+	 * Tries to computes a simplified version of the expression
+	 * <code>primitive</code>=0. Returns <code>null</code> if no simplification
+	 * is possible, else returns a {@link BooleanExpression} equivalent to
+	 * <code>primitive</code>=0.
 	 * 
-	 * @param poly
-	 *            a non-<code>null</code>, non-constant {@link Polynomial}
+	 * @param primitive
+	 *            a non-<code>null</code>, non-constant {@link Primitive}
 	 * @return <code>null</code> or a {@link BooleanExpression} equivalent to
-	 *         poly=0
+	 *         <code>primitive</code>=0
 	 */
 	private BooleanExpression simplifyEQ0(Primitive primitive) {
 		if (primitive instanceof Polynomial)
@@ -1423,6 +1498,17 @@ public class IdealSimplifier extends CommonSimplifier {
 		return null;
 	}
 
+	/**
+	 * Tries to computes a simplified version of the expression
+	 * <code>poly</code>=0. Returns <code>null</code> if no simplification is
+	 * possible, else returns a {@link BooleanExpression} equivalent to
+	 * <code>poly</code>=0.
+	 * 
+	 * @param primitive
+	 *            a non-<code>null</code>, non-constant {@link Polynomial}
+	 * @return <code>null</code> or a {@link BooleanExpression} equivalent to
+	 *         <code>poly</code>=0
+	 */
 	private BooleanExpression simplifyEQ0Poly(Polynomial poly) {
 		SymbolicType type = poly.type();
 		AffineExpression affine = info.affineFactory.affine(poly);
@@ -1433,25 +1519,21 @@ public class IdealSimplifier extends CommonSimplifier {
 			// substitute known constant value for pseudo...
 			return info.affineFactory.affineValue(affine, pseudoValue).isZero()
 					? info.trueExpr : info.falseExpr;
-
-		Number offset = affine.offset();
-		Number coefficient = affine.coefficient();
-
 		// aX+b=0 => -b/a=X is an integer
 		if (type.isInteger()
 				&& !info.numberFactory
-						.mod((IntegerNumber) offset,
-								(IntegerNumber) info.numberFactory
-										.abs((IntegerNumber) coefficient))
+						.mod((IntegerNumber) affine.offset(),
+								(IntegerNumber) info.numberFactory.abs(
+										(IntegerNumber) affine.coefficient()))
 						.isZero())
 			return info.falseExpr;
-		pseudoValue = info.numberFactory
-				.negate(info.numberFactory.divide(offset, coefficient));
 
 		Interval oldBounds = boundMap.get(pseudo);
 
 		if (oldBounds == null)
 			return null;
+		pseudoValue = info.numberFactory.negate(info.numberFactory
+				.divide(affine.offset(), affine.coefficient()));
 
 		// Know: lower <? pseudoValue <? upper
 		// (Here "<?" means "<" or "<=".). So
@@ -1459,31 +1541,21 @@ public class IdealSimplifier extends CommonSimplifier {
 		// upper - pseudoValue >? 0
 		// if either of these is not true, you have a contradiction,
 		// simplify to "false".
-
 		// leftSign = sign of (lower-pseudoValue)
 		// rightSign = sign of (upper-pseudoValue)
-		int leftSign, rightSign;
 
-		{
-			Number lower = oldBounds.lower();
+		Number lower = oldBounds.lower();
+		int leftSign = lower == null ? -1
+				: info.numberFactory.subtract(lower, pseudoValue).signum();
 
-			if (lower == null)
-				leftSign = -1; // -infinity
-			else
-				leftSign = info.numberFactory.subtract(lower, pseudoValue)
-						.signum();
-
-			Number upper = oldBounds.upper();
-
-			if (upper == null) // +infinity
-				rightSign = 1;
-			else
-				rightSign = info.numberFactory.subtract(upper, pseudoValue)
-						.signum();
-		}
 		// if 0 is not in that interval, return FALSE
 		if (leftSign > 0 || (leftSign == 0 && oldBounds.strictLower()))
 			return info.falseExpr;
+
+		Number upper = oldBounds.upper();
+		int rightSign = upper == null ? 1
+				: info.numberFactory.subtract(upper, pseudoValue).signum();
+
 		if (rightSign < 0 || (rightSign == 0 && oldBounds.strictUpper()))
 			return info.falseExpr;
 		return null;
@@ -1514,6 +1586,8 @@ public class IdealSimplifier extends CommonSimplifier {
 			SymbolicExpression expression) {
 		if (expression instanceof Constant) // optimization
 			return expression;
+		if (expression instanceof Polynomial)
+			return simplifyPolynomial((Polynomial) expression);
 		if (expression instanceof Monic)
 			return simplifyMonic((Monic) expression);
 
@@ -1527,16 +1601,28 @@ public class IdealSimplifier extends CommonSimplifier {
 				Boolean booleanResult = booleanMap.get(expression);
 
 				if (booleanResult != null) {
-					return booleanResult ? universe.trueExpression()
+					SymbolicExpression result = booleanResult
+							? universe.trueExpression()
 							: universe.falseExpression();
+
+					if (debugSimps) {
+						out.println("Simplifier boolean :" + expression);
+						out.println("Simplifier result  :" + result);
+					}
+					return result;
 				}
 				if (isNumericRelational(expression))
 					return simplifyRelational((BooleanExpression) expression);
 			} else if (!type.isNumeric()) {
 				SymbolicExpression constant = otherConstantMap.get(expression);
 
-				if (constant != null)
+				if (constant != null) {
+					if (debugSimps) {
+						out.println("Simplify constant expr   : " + expression);
+						out.println("Simplifiy constant result: " + constant);
+					}
 					return constant;
+				}
 			}
 		}
 		return simplifyGenericExpression(expression);
@@ -1644,5 +1730,10 @@ public class IdealSimplifier extends CommonSimplifier {
 			}
 		}
 		return fullContext;
+	}
+
+	// TODO: mainly here for debugging....
+	public Ideal2Factory getIdealFactory() {
+		return info.idealFactory;
 	}
 }

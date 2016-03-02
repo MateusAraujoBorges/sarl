@@ -28,6 +28,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * Empty monic: equivalent to 1.
@@ -79,6 +80,8 @@ public class One extends IdealExpression implements Constant, Monic {
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		if (expansion == null) {
 			expansion = factory.monicSingletonMap(this, this);
+			if (isCanonic())
+				expansion = factory.objectFactory().canonic(expansion);
 		}
 		return expansion;
 	}
@@ -121,6 +124,13 @@ public class One extends IdealExpression implements Constant, Monic {
 	@Override
 	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
 		return false;
+	}
+
+	@Override
+	public void canonizeChildren(ObjectFactory of) {
+		super.canonizeChildren(of);
+		if (expansion != null && !expansion.isCanonic())
+			expansion = of.canonic(expansion);
 	}
 
 }

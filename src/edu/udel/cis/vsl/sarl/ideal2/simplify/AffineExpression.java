@@ -65,7 +65,7 @@ public class AffineExpression {
 		String result = "";
 
 		if (pseudo != null) {
-			result = coefficient + "*" + pseudo;
+			result = coefficient + "*" + pseudo.atomString();
 		}
 		if (offset.signum() != 0) {
 			if (pseudo != null)

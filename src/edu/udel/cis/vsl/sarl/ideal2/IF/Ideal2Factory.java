@@ -207,11 +207,14 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * <ul>
  * <li><code>0&lt;m</code></li>
  * <li><code>0&le;m</code></li>
- * <li><code>0=m</code></li>
- * <li><code>0&ne;m</code></li>
+ * <li><code>m&lt;0</code></li>
+ * <li><code>m&le;0</code></li>
+ * <li><code>0=p</code></li>
+ * <li><code>0&ne;p</code></li>
  * </ul>
  * 
- * where <code>p</code> is a {@link Monomial}.
+ * where <code>m</code> is a {@link Monic} and <code>p</code> is a
+ * {@link Primitive}.
  * </p>
  * 
  * <p>
@@ -229,9 +232,7 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * size. Similarly, <i>xy</i>&ne;0 iff (<i>x</i>&ne;0 &and; <i>y</i>&ne;0).
  * </p>
  * 
- * 
  * @author siegel
- * 
  */
 public interface Ideal2Factory extends NumericExpressionFactory {
 
@@ -409,6 +410,8 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	Monomial multiplyMonomials(Monomial m1, Monomial m2);
 
 	Monomial addMonomials(Monomial m1, Monomial m2);
+
+	Monomial addMonomials(Monomial[] monomials);
 
 	Monomial multiplyConstantMonomial(Constant constant, Monomial monomial);
 

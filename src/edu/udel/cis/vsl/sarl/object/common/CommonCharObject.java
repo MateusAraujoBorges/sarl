@@ -20,9 +20,10 @@ package edu.udel.cis.vsl.sarl.object.common;
 
 import edu.udel.cis.vsl.sarl.IF.object.CharObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
-public class CommonCharObject extends CommonSymbolicObject implements
-		CharObject {
+public class CommonCharObject extends CommonSymbolicObject
+		implements CharObject {
 
 	private char value;
 
@@ -37,8 +38,9 @@ public class CommonCharObject extends CommonSymbolicObject implements
 	}
 
 	/**
-	 * Compares the boolean values of two boolean objects
-	 * Know that o has kind BOOLEAN and is not == to this.
+	 * Compares the boolean values of two boolean objects Know that o has kind
+	 * BOOLEAN and is not == to this.
+	 * 
 	 * @return Boolean
 	 */
 	@Override
@@ -61,7 +63,7 @@ public class CommonCharObject extends CommonSymbolicObject implements
 	 * Does nothing; Basic objects have no children, so there is nothing to do.
 	 */
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 	}
 
 	@Override

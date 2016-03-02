@@ -647,20 +647,20 @@ public class CommonIdealFactory implements Ideal2Factory {
 	}
 
 	/**
-	 * Extracts the common factors from two monics. Given monics f1 and f2, this
+	 * Extracts the common factors from two monics. Given monics m1 and m2, this
 	 * computes the monic p such that: f1=p*g1, f2=p*g2, and g1 and g2 have no
 	 * primitives in common.
 	 * 
-	 * @param fact1
+	 * @param m1
 	 *            a non-<code>null</code> monic
-	 * @param fact2
-	 *            a monic of same type as <code>fact1</code>
+	 * @param m2
+	 *            a monic of same type as <code>m1</code>
 	 * @return array of length 3 consisting of p, g1, and g2, in that order
 	 */
-	private Monic[] extractCommonality(Monic fact1, Monic fact2) {
-		SymbolicType type = fact1.type();
-		SymbolicMap<Primitive, PrimitivePower> map1 = fact1.monicFactors(this);
-		SymbolicMap<Primitive, PrimitivePower> map2 = fact2.monicFactors(this);
+	private Monic[] extractCommonality(Monic m1, Monic m2) {
+		SymbolicType type = m1.type();
+		SymbolicMap<Primitive, PrimitivePower> map1 = m1.monicFactors(this);
+		SymbolicMap<Primitive, PrimitivePower> map2 = m2.monicFactors(this);
 		SymbolicMap<Primitive, PrimitivePower> commonMap = collectionFactory
 				.emptySortedMap();
 		SymbolicMap<Primitive, PrimitivePower> newMap1 = map1, newMap2 = map2;
@@ -695,6 +695,70 @@ public class CommonIdealFactory implements Ideal2Factory {
 				monic(type, newMap2) };
 	}
 
+	/**
+	 * Extracts a common divisor from a nonempty sequence of {@link Monic}s and
+	 * modifies the array of monics by replacing each entry with the quotient of
+	 * the original entry with the common divisor.
+	 * 
+	 * @param monics
+	 *            non-empty array of {@link Monic}s which all have the same type
+	 * @return the common divisor
+	 * 
+	 * @see {@link #extractCommonality(Monic, Monic)}
+	 */
+	// TODO: use this to re-write factorTermMap? It might be better.
+	// still need the appropriate constant factor.
+	private Monic extractCommonality(Monic[] monics) {
+		int length = monics.length;
+		SymbolicType type = monics[0].type();
+		@SuppressWarnings("unchecked")
+		SymbolicMap<Primitive, PrimitivePower>[] maps = (SymbolicMap<Primitive, PrimitivePower>[]) new SymbolicMap<?, ?>[length];
+		SymbolicMap<Primitive, PrimitivePower> commonMap = collectionFactory
+				.emptySortedMap(primitiveComparator);
+
+		for (int i = 0; i < length; i++)
+			maps[i] = monics[i].monicFactors(this);
+		for (Entry<Primitive, PrimitivePower> entry : maps[0].entries()) {
+			Primitive primitive = entry.getKey();
+			PrimitivePower pp0 = entry.getValue();
+			int min = pp0.primitivePowerExponent(this).getInt();
+
+			assert min >= 1;
+			for (int i = 1; i < length; i++) {
+				PrimitivePower pp1 = maps[i].get(primitive);
+
+				if (pp1 == null) { // same as exponent 0
+					min = 0;
+					break;
+				}
+
+				int exponent = pp1.primitivePowerExponent(this).getInt();
+
+				if (exponent < min)
+					min = exponent;
+			}
+			if (min == 0)
+				continue;
+			commonMap = commonMap.put(primitive,
+					primitivePower(primitive, objectFactory.intObject(min)));
+			for (int i = 0; i < length; i++) {
+				SymbolicMap<Primitive, PrimitivePower> map = maps[i];
+				PrimitivePower pp1 = map.get(primitive);
+				int exponent = pp1.primitivePowerExponent(this).getInt();
+				int newExponent = exponent - min;
+
+				if (newExponent == 0)
+					maps[i] = map.remove(primitive);
+				else
+					maps[i] = map.put(primitive, primitivePower(primitive,
+							objectFactory.intObject(newExponent)));
+			}
+			for (int i = 0; i < length; i++)
+				monics[i] = monic(type, maps[i]);
+		}
+		return monic(type, commonMap);
+	}
+
 	// Monomials...
 
 	/**
@@ -727,25 +791,84 @@ public class CommonIdealFactory implements Ideal2Factory {
 	}
 
 	/**
-	 * Given two factorizations f1 and f2, this returns an array of length 3
-	 * containing 3 factorizations a, g1, g2 (in that order), satisfying
-	 * f1=a*g1, f2=a*g2, g1 and g2 have no factors in common, a is a monic
-	 * factorization (its constant is 1).
+	 * Given two {@link Monomial}s <code>m1</code> and <code>m2</code>, this
+	 * returns an array of length 3 containing 3 {@link Monomial}s a, g1, g2 (in
+	 * that order), satisfying m1=a*g1, m2=a*g2, g1 and g2 have no factors in
+	 * common, and a is a {@link Monic}.
 	 * 
-	 * @param fact1
-	 *            a factorization
-	 * @param fact2
-	 *            a factorization of the same type
+	 * @param m1
+	 *            a non-<code>null</code> {@link Monomial}
+	 * @param m2
+	 *            a non-<code>null</code> {@link Monomial} of the same type as
+	 *            <code>m1</code>
 	 * @return the array {a,g1,g2}
 	 */
-	private Monomial[] extractCommonality(Monomial fact1, Monomial fact2) {
-		Monic[] monicTriple = extractCommonality(fact1.monic(this),
-				fact2.monic(this));
+	private Monomial[] extractCommonality(Monomial m1, Monomial m2) {
+		Monic[] monicTriple = extractCommonality(m1.monic(this),
+				m2.monic(this));
 
 		return new Monomial[] { monicTriple[0],
-				monomial(fact1.monomialConstant(this), monicTriple[1]),
-				monomial(fact2.monomialConstant(this), monicTriple[2]) };
+				monomial(m1.monomialConstant(this), monicTriple[1]),
+				monomial(m2.monomialConstant(this), monicTriple[2]) };
 	}
+
+	/**
+	 * Extracts a common divisor from a set of monomials represented as a map
+	 * from monics to monomials. This computes a monic m which is a common
+	 * divisor to all the monics in the map, and returns a pair consisting of m
+	 * and the map that results from dividing every key and value in the
+	 * original map by m.
+	 * 
+	 * @param map
+	 *            a non-empty map from {@link Monic} to {@link Monomial} with
+	 *            the property that a monic m maps to the product of a constant
+	 *            and m
+	 * @return a pair consisting of a {@link Monic} which is a common divisor of
+	 *         all monics in the original map, and the result of dividing all
+	 *         entries in the original map by the common divisor
+	 */
+	// private Pair<Monic, SymbolicMap<Monic, Monomial>> extractCommonality(
+	// SymbolicMap<Monic, Monomial> map) {
+	// Entry<Monic, Monomial>[] oldEntries = map.entryArray();
+	// int size = oldEntries.length;
+	// Monic[] monics = new Monic[size];
+	//
+	// for (int i = 0; i < size; i++)
+	// monics[i] = oldEntries[i].getKey();
+	//
+	// Monic monicResult = extractCommonality(monics); // modifies monics
+	// @SuppressWarnings("unchecked")
+	// Entry<Monic, Monomial>[] newEntries = (Entry<Monic, Monomial>[]) new
+	// Entry<?, ?>[size];
+	//
+	// for (int i = 0; i < size; i++) {
+	// Constant constant = oldEntries[i].getValue().monomialConstant(this);
+	// Monic newMonic = monics[i];
+	//
+	// newEntries[i] = collectionFactory.entry(newMonic,
+	// monomial(constant, newMonic));
+	// }
+	//
+	// SymbolicMap<Monic, Monomial> mapResult = collectionFactory
+	// .sortedMap(monicComparator, newEntries);
+	//
+	// return new Pair<>(monicResult, mapResult);
+	// }
+
+	// private Monic extractCommonality(Monomial[] monomials) {
+	// int size = monomials.length;
+	// Monic[] monics = new Monic[size];
+	//
+	// for (int i = 0; i < size; i++)
+	// monics[i] = monomials[i].monic(this);
+	//
+	// Monic result = extractCommonality(monics); // modifies monics
+	//
+	// for (int i = 0; i < size; i++)
+	// monomials[i] = monomial(monomials[i].monomialConstant(this),
+	// monics[i]);
+	// return result;
+	// }
 
 	// following is how to do integer division and modulus operations
 	// on monomials. no need to factor now that we are dealing
@@ -1945,6 +2068,31 @@ public class CommonIdealFactory implements Ideal2Factory {
 					(RationalExpression) arg1);
 	}
 
+	// TODO: make this part of the interface
+	// who will call this?
+	// maybe I shouldn't use make at all?
+	// or don't use genericSimplification if the operator is ADD, MULTIPLY,...
+	// simplifyExpression should check to see if operator is ADD or MULTIPLY
+	// if so, it needs to handle itself.
+	// apply simplify to
+
+	// never call simplifyGeneric on an ADD. Look for where this happens
+	// and instead use your own add.
+
+	// need simplifyPolynomial: this is the only place where ADD should ever
+	// arise. Just simplify each term, put them in an array of Monomial and if
+	// any changed,
+	// simplify. Therefore, need method to add Array of Monomial
+
+	// ADD will always take as argument a Map<Monic,Monomial>
+	// MULTIPLY will always take as argument a Map<Primitive,PrimitivePower>
+
+	// this may not be necessary
+	// public NumericExpression add(Iterable<? extends NumericExpression> args)
+	// {
+	// NumericExpression[] argArray;
+	// }
+
 	@Override
 	public NumericExpression subtract(NumericExpression arg0,
 			NumericExpression arg1) {
@@ -2275,6 +2423,19 @@ public class CommonIdealFactory implements Ideal2Factory {
 		return multiplyMonomials(triple[0], addNoCommon(triple[1], triple[2]));
 	}
 
+	// adds arbitrary monomials all of the same type.
+	// e.g.: {x,x,2x,x+xy,xy,xz} -> x*(2y+z+5) = 2*x*(y+(1/2)z+(5/2))
+	@Override
+	public Monomial addMonomials(Monomial[] monomials) {
+		int size = monomials.length;
+		SymbolicMap<Monic, Monomial> termMap = monomials[0].termMap(this);
+
+		for (int i = 1; i < size; i++)
+			termMap = addTermMaps(termMap, monomials[i].termMap(this));
+		return termMap.isEmpty() ? zero(monomials[0].type())
+				: factorTermMap(termMap);
+	}
+
 	@Override
 	public <V extends SymbolicExpression> SymbolicMap<Monic, V> monicSingletonMap(
 			Monic key, V value) {
@@ -2413,7 +2574,6 @@ public class CommonIdealFactory implements Ideal2Factory {
 
 		if (debug) {
 			int n1 = termMap1.size(), n2 = termMap2.size();
-			
 
 			System.out.println(
 					"Debug: multiplying maps of size: " + n1 + ", " + n2);

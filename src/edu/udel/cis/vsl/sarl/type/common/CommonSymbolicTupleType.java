@@ -21,7 +21,7 @@ package edu.udel.cis.vsl.sarl.type.common;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * an implementation of {@link SymbolicTupleType}
@@ -29,8 +29,8 @@ import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
  * @author mohammedalali
  * 
  */
-public class CommonSymbolicTupleType extends CommonSymbolicType implements
-		SymbolicTupleType {
+public class CommonSymbolicTupleType extends CommonSymbolicType
+		implements SymbolicTupleType {
 
 	private final static int classCode = CommonSymbolicTupleType.class
 			.hashCode();
@@ -88,7 +88,7 @@ public class CommonSymbolicTupleType extends CommonSymbolicType implements
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 		if (!sequence.isCanonic())
 			sequence = (SymbolicTypeSequence) factory.canonic(sequence);
 		if (!name.isCanonic())

@@ -24,6 +24,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * A non-trivial monomial is the product of a constant and a monic. The constant
@@ -80,13 +81,14 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		if (expansion == null) {
 			Monic monic = this.monic();
-			SymbolicMap<Monic, Monomial> expandedMonic = monic.expand(factory);
 
-			if (monic == expandedMonic)
-				expansion = factory.monicSingletonMap(monic, this);
-			else
+			if (monic.hasNontrivialExpansion(factory))
 				expansion = factory.multiplyConstantTermMap(monomialConstant(),
-						expandedMonic);
+						monic.expand(factory));
+			else
+				expansion = factory.monicSingletonMap(monic, this);
+			if (isCanonic())
+				expansion = factory.objectFactory().canonic(expansion);
 		}
 		return expansion;
 	}
@@ -115,6 +117,13 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	@Override
 	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
 		return monic().hasNontrivialExpansion(factory);
+	}
+
+	@Override
+	public void canonizeChildren(ObjectFactory of) {
+		super.canonizeChildren(of);
+		if (expansion != null && !expansion.isCanonic())
+			expansion = of.canonic(expansion);
 	}
 
 }

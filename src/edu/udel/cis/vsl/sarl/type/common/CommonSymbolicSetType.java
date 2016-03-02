@@ -20,10 +20,10 @@ package edu.udel.cis.vsl.sarl.type.common;
 
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicSetType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
-public class CommonSymbolicSetType extends CommonSymbolicType implements
-		SymbolicSetType {
+public class CommonSymbolicSetType extends CommonSymbolicType
+		implements SymbolicSetType {
 
 	private final static int classCode = CommonSymbolicSetType.class.hashCode();
 
@@ -81,7 +81,7 @@ public class CommonSymbolicSetType extends CommonSymbolicType implements
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 		if (!elementType.isCanonic())
 			elementType = factory.canonic(elementType);
 		if (pureType != null && !pureType.isCanonic())

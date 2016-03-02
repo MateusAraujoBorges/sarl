@@ -120,7 +120,8 @@ public class IdealSimplifierSimpExprTest {
 
 		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
 
-		assertEquals(onePxPxSqdP3x4th, idealSimp.simplifyExpression(symExpr));
+		assertEquals(idealSimp.simplifyExpression(onePxPxSqdP3x4th),
+				idealSimp.simplifyExpression(symExpr));
 	}
 
 	@Test
@@ -223,6 +224,10 @@ public class IdealSimplifierSimpExprTest {
 	 */
 	@Test
 	public void simplifyExpressionPoly() {
+		// [ (4*x^3y^2 + 2x^2y)+3xy ] / [xy] =
+		// (4*x^2y + 2x) + 3 =
+		// 4*x*(xy + (1/2)x) + 3 =
+		// 4[x(xy + (1/2)x) + 3/4]
 		NumericExpression num = preUniv.add(
 				preUniv.add(
 						preUniv.multiply(rat4,
@@ -247,8 +252,9 @@ public class IdealSimplifierSimpExprTest {
 				.add(preUniv.multiply(preUniv.multiply(rat4, x), y), rat2)),
 				rat3);
 
-		expected = numExpect;
+		expected = idealSimp.simplifyExpression(numExpect);
 
+		// simplifying symExpr=numExpr
 		NumericExpression simplified = (NumericExpression) idealSimp
 				.simplifyExpression(symExpr);
 

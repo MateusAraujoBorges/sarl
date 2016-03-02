@@ -10,10 +10,10 @@ import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.collections.IF.SortedSymbolicSet;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSet;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
-public class SimpleSortedSet<T extends SymbolicExpression> extends
-		CommonSortedSet<T> {
+public class SimpleSortedSet<T extends SymbolicExpression>
+		extends CommonSortedSet<T> {
 
 	private T[] elements;
 
@@ -67,7 +67,8 @@ public class SimpleSortedSet<T extends SymbolicExpression> extends
 		list.toArray(this.elements);
 	}
 
-	SimpleSortedSet(Comparator<? super T> comparator, Set<? extends T> javaSet) {
+	SimpleSortedSet(Comparator<? super T> comparator,
+			Set<? extends T> javaSet) {
 		super();
 
 		int size = javaSet.size();
@@ -182,8 +183,8 @@ public class SimpleSortedSet<T extends SymbolicExpression> extends
 
 		System.arraycopy(elements, 0, newElements, 0, lo);
 		newElements[lo] = element;
-		System.arraycopy(elements, lo, newElements, lo + 1, elements.length
-				- lo);
+		System.arraycopy(elements, lo, newElements, lo + 1,
+				elements.length - lo);
 		return new SimpleSortedSet<T>(elementComparator, newElements);
 	}
 
@@ -199,7 +200,8 @@ public class SimpleSortedSet<T extends SymbolicExpression> extends
 	@Override
 	public SortedSymbolicSet<T> addAll(SymbolicSet<? extends T> set) {
 		if (set instanceof SortedSymbolicSet<?>) {
-			List<T> merged = addAll_helper((SortedSymbolicSet<? extends T>) set);
+			List<T> merged = addAll_helper(
+					(SortedSymbolicSet<? extends T>) set);
 
 			return new SimpleSortedSet<T>(elementComparator, merged);
 		} else {
@@ -240,7 +242,8 @@ public class SimpleSortedSet<T extends SymbolicExpression> extends
 		if (set.size() == 0)
 			return this;
 		if (set instanceof SortedSymbolicSet<?>) {
-			List<T> merged = removeAll_helper((SortedSymbolicSet<? extends T>) set);
+			List<T> merged = removeAll_helper(
+					(SortedSymbolicSet<? extends T>) set);
 
 			return new SimpleSortedSet<T>(elementComparator, merged);
 		} else {
@@ -257,7 +260,8 @@ public class SimpleSortedSet<T extends SymbolicExpression> extends
 			return new SimpleSortedSet<T>(elementComparator);
 		}
 		if (set instanceof SortedSymbolicSet<?>) {
-			List<T> merged = keepOnly_helper((SortedSymbolicSet<? extends T>) set);
+			List<T> merged = keepOnly_helper(
+					(SortedSymbolicSet<? extends T>) set);
 
 			return new SimpleSortedSet<T>(elementComparator, merged);
 		} else {
@@ -267,7 +271,7 @@ public class SimpleSortedSet<T extends SymbolicExpression> extends
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 		int n = elements.length;
 
 		for (int i = 0; i < n; i++) {

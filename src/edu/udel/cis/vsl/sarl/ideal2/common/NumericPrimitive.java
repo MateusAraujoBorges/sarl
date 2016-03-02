@@ -30,6 +30,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * A numeric primitive expression. Other classes may want to extend this.
@@ -45,6 +46,9 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	 */
 	private SymbolicMap<Primitive, PrimitivePower> monicFactors = null;
 
+	/**
+	 * Cached expansion.
+	 */
 	private SymbolicMap<Monic, Monomial> expansion = null;
 
 	public NumericPrimitive(SymbolicOperator operator, SymbolicType type,
@@ -125,6 +129,8 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		if (expansion == null) {
 			expansion = factory.monicSingletonMap(this, this);
+			if (isCanonic())
+				expansion = factory.objectFactory().canonic(expansion);
 		}
 		return expansion;
 	}
@@ -141,8 +147,16 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 
 	@Override
 	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
-		// need to override this in NTPolynomial
 		return false;
+	}
+
+	@Override
+	public void canonizeChildren(ObjectFactory of) {
+		super.canonizeChildren(of);
+		if (expansion != null && !expansion.isCanonic())
+			expansion = of.canonic(expansion);
+		if (monicFactors != null && !monicFactors.isCanonic())
+			monicFactors = of.canonic(monicFactors);
 	}
 
 }

@@ -25,7 +25,7 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
-import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * an implementation of {@link SymbolicUnionType}
@@ -33,8 +33,8 @@ import edu.udel.cis.vsl.sarl.object.common.CommonObjectFactory;
  * @author mohammedalali
  * 
  */
-public class CommonSymbolicUnionType extends CommonSymbolicType implements
-		SymbolicUnionType {
+public class CommonSymbolicUnionType extends CommonSymbolicType
+		implements SymbolicUnionType {
 
 	private final static int classCode = CommonSymbolicUnionType.class
 			.hashCode();
@@ -116,7 +116,7 @@ public class CommonSymbolicUnionType extends CommonSymbolicType implements
 	}
 
 	@Override
-	public void canonizeChildren(CommonObjectFactory factory) {
+	public void canonizeChildren(ObjectFactory factory) {
 		if (!sequence.isCanonic())
 			sequence = (CommonSymbolicTypeSequence) factory.canonic(sequence);
 		if (!name.isCanonic())

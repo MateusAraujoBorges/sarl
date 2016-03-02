@@ -18,6 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
+import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
@@ -25,6 +26,9 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
+import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * A non-trivial polynomial is the sum of at least 2 monomials with different
@@ -36,7 +40,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
  * @author siegel
  * 
  */
-public class NTPolynomial extends NumericPrimitive implements Polynomial {
+public class NTPolynomial extends IdealExpression implements Polynomial {
 
 	/**
 	 * The total degree of the polynomial, or -1 if the degree has not yet been
@@ -44,7 +48,15 @@ public class NTPolynomial extends NumericPrimitive implements Polynomial {
 	 */
 	private int totalDegree = -1;
 
+	/**
+	 * Cached expansion.
+	 */
 	private SymbolicMap<Monic, Monomial> expansion = null;
+
+	/**
+	 * Singleton map from this to this.
+	 */
+	private SymbolicMap<Primitive, PrimitivePower> monicFactors = null;
 
 	/**
 	 * Cached result for method {@link #hasNontrivialExpansion(Ideal2Factory)}.
@@ -87,23 +99,14 @@ public class NTPolynomial extends NumericPrimitive implements Polynomial {
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		if (expansion == null) {
 			SymbolicMap<Monic, Monomial> termMap = termMap();
-			int numTerms = termMap.size();
-			@SuppressWarnings("unchecked")
-			SymbolicMap<Monic, Monomial>[] newTerms = (SymbolicMap<Monic, Monomial>[]) new SymbolicMap<?, ?>[numTerms];
-			int count = 0;
-			boolean change = false;
 
-			for (Monomial oldTerm : termMap.values()) {
-				SymbolicMap<Monic, Monomial> newTerm = oldTerm.expand(factory);
-
-				newTerms[count] = newTerm;
-				count++;
-				change = change || newTerm.size() != 1;
-			}
-			if (change) {
+			if (hasNontrivialExpansion(factory)) {
 				expansion = factory.emptyMonicMap();
-				for (SymbolicMap<Monic, Monomial> newTerm : newTerms)
-					expansion = factory.addTermMaps(expansion, newTerm);
+				for (Monomial oldTerm : termMap.values())
+					expansion = factory.addTermMaps(expansion,
+							oldTerm.expand(factory));
+				if (isCanonic())
+					expansion = factory.objectFactory().canonic(expansion);
 			} else {
 				expansion = termMap;
 			}
@@ -147,6 +150,67 @@ public class NTPolynomial extends NumericPrimitive implements Polynomial {
 			}
 		}
 		return totalDegree;
+	}
+
+	@Override
+	public Primitive primitive(Ideal2Factory factory) {
+		return this;
+	}
+
+	@Override
+	public IntObject primitivePowerExponent(Ideal2Factory factory) {
+		return factory.oneIntObject();
+	}
+
+	@Override
+	public SymbolicMap<Primitive, PrimitivePower> monicFactors(
+			Ideal2Factory factory) {
+		if (monicFactors == null) {
+			monicFactors = factory.primitiveSingletonMap(this,
+					(PrimitivePower) this);
+			if (isCanonic())
+				monicFactors = factory.objectFactory().canonic(monicFactors);
+		}
+		return monicFactors;
+	}
+
+	@Override
+	public boolean isTrivialMonic() {
+		return false;
+	}
+
+	@Override
+	public Constant monomialConstant(Ideal2Factory factory) {
+		return factory.one(type());
+	}
+
+	@Override
+	public Monic monic(Ideal2Factory factory) {
+		return this;
+	}
+
+	@Override
+	public int monomialDegree() {
+		return 1;
+	}
+
+	@Override
+	public Monomial numerator(Ideal2Factory factory) {
+		return this;
+	}
+
+	@Override
+	public Monomial denominator(Ideal2Factory factory) {
+		return factory.one(type());
+	}
+
+	@Override
+	public void canonizeChildren(ObjectFactory of) {
+		super.canonizeChildren(of);
+		if (expansion != null && !expansion.isCanonic())
+			expansion = of.canonic(expansion);
+		if (monicFactors != null && !monicFactors.isCanonic())
+			monicFactors = of.canonic(monicFactors);
 	}
 
 }
