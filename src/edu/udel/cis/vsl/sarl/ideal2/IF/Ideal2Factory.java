@@ -24,6 +24,8 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
@@ -294,7 +296,8 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	IntObject oneIntObject();
 
 	/**
-	 * Returns an integer {@link Constant}.
+	 * Returns an integer {@link Constant} wrapping a Java <code>int</code>
+	 * value.
 	 * 
 	 * @param value
 	 *            any Java <code>int</code>
@@ -306,61 +309,70 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 
 	@Override
 	/**
-	 * Creates a zero integer constant
+	 * Returns the integer constant zero (0).
 	 * 
-	 * @return a zero integer of type Constant
+	 * @return the integer 0 represented as a {@link Constant}
 	 */
 	Constant zeroInt();
 
 	@Override
 	/**
-	 * Creates a real zero constant
+	 * Returns the real constant zero (0.0).
 	 * 
-	 * @return a real zero of type Constant
+	 * @return the real number 0 represented as a {@link Constant}
 	 */
 	Constant zeroReal();
 
 	/**
-	 * Creates a value zero for the type that is passed as an argument
+	 * Returns either the integer constant 0 or the real constant 0, according
+	 * to the given <code>type</code>.
 	 * 
 	 * @param type
-	 *            - different data types of SymbolicType - real, Integer etc.
-	 * 
-	 * @param type
-	 *            SymbolicType
+	 *            either a {@link SymbolicIntegerType} or a
+	 *            {@link SymbolicRealType}
 	 * 
 	 * @return a value zero of the specified type
+	 * @see #zeroInt()
+	 * @see #zeroReal()
 	 */
 	Constant zero(SymbolicType type);
 
 	/**
-	 * Returns a constant
+	 * Returns a {@link Constant} wrapping the given concrete {@link Number}.
 	 * 
 	 * @param number
-	 *            - another form/representation of real number
+	 *            any non-<code>null</code> {@link Number}
 	 * 
-	 * @param type
-	 *            Number
-	 * 
-	 * @return a constant of type Constant
+	 * @return a {@link Constant} wrapping <code>number</code>
 	 */
 	Constant constant(Number number);
 
 	/**
-	 * a Monic ONE
+	 * Returns either the integer number one (1) or the real number 1 (1.0). The
+	 * choice is made according to the given <code>type</code>.
 	 * 
 	 * @param type
-	 *            - different data types of SymbolicType - real, Integer etc.
+	 *            either a {@link SymbolicIntegerType} or a
+	 *            {@link SymbolicRealType}
 	 * 
-	 * @param type
-	 *            SymbolicType
-	 * 
-	 * @return a value of 1 of type Monic
+	 * @return the number 1 as a symbolic expression
 	 */
 	One one(SymbolicType type);
 
 	// Primitive Powers...
 
+	/**
+	 * Returns an instance of {@link PrimitivePower} representing raising the
+	 * given <code>primitive</code> the given <code>exponent</code>.
+	 * 
+	 * @param primitive
+	 *            the base, a non-<code>null</code> numeric primitive of integer
+	 *            or real type
+	 * @param exponent
+	 *            the exponent, which must be a non-negative integer
+	 * @return a {@link PrimitivePower} expression representing raising
+	 *         <code>primitive</code> to the power <code>exponent</code>
+	 */
 	PrimitivePower primitivePower(Primitive primitive, IntObject exponent);
 
 	// Monics...
@@ -388,47 +400,170 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	// Monomials...
 
 	/**
-	 * Creates a Monomial which is a Monic multiplied by a constant, integer or
-	 * a real number.
+	 * Returns a {@link Monomial} which is the product of the given
+	 * <code>constant</code> and the given <code>monic</code>. The two arguments
+	 * must have the same type. If <code>constant</code> is 1, the
+	 * {@link Monomial} returned may be an instance of {@link Monic}; if
+	 * <code>constant</code> is 0, the {@link Monomial} returned may be an
+	 * instance of {@link Constant} (representing 0). This method relieves the
+	 * use of having to figure out exactly which kind of object to create to
+	 * represent the product of a {@link Constant} and a {@link Monic}.
 	 * 
 	 * @param constant
-	 *            - a concrete number. Wraps a NumberObject, which wraps a
-	 *            Number
+	 *            any non-<code>null</code> {@link Constant}
 	 * @param monic
-	 *            - product of powers of primitive expressions
-	 *            x_1^{i_1}*...*x_n^{i_n}, where the x_i are primitives and the
-	 *            i_j are positive concrete integers.
+	 *            a {@link Monic} of the same type as the <code>constant</code>
 	 * 
-	 * @param type
-	 *            Constant and Monic
-	 * 
-	 * @return a monomial by concatenating a constant of type Constant and a
-	 *         monic of type Monic
+	 * @return the product of <code>constant</code> and <code>monic</code>
 	 */
 	Monomial monomial(Constant constant, Monic monic);
 
+	/**
+	 * Computes the product of any two {@link Monomial}s of the same type.
+	 * 
+	 * @param m1
+	 *            a non-<code>null</code> {@link Monomial}
+	 * @param m2
+	 *            a non-<code>null</code> {@link Monomial} of the same type as
+	 *            <code>m1</code>
+	 * @return the product of <code>m1</code> and <code>m2</code>
+	 */
 	Monomial multiplyMonomials(Monomial m1, Monomial m2);
 
+	/**
+	 * Computes the sum of any two {@link Monomial}s of the same type.
+	 * 
+	 * @param m1
+	 *            a non-<code>null</code> {@link Monomial}
+	 * @param m2
+	 *            a non-<code>null</code> {@link Monomial} of the same type as
+	 *            <code>m1</code>
+	 * @return the sum of <code>m1</code> and <code>m2</code>
+	 */
 	Monomial addMonomials(Monomial m1, Monomial m2);
 
+	/**
+	 * Computes the sum of a non-empty set of {@link Monomial}s of the same
+	 * type. The result produced by this method may differ from that produced by
+	 * repeated applications of the binary method
+	 * {@link {@link #addMonomials(Monomial, Monomial)}. Example:
+	 * 
+	 * <pre>
+	 *  (xy + x) + z = x(y+1) + z  // two binary additions
+	 *   xy + x + z  = xy + x + z  // one invocation of this method
+	 * </pre>
+	 * 
+	 * @param monomials
+	 *            an array of positive length consisting of {@link Monomial}s
+	 *            which all have the same type
+	 * @return an expression representing the sum of the monomials
+	 */
 	Monomial addMonomials(Monomial[] monomials);
 
+	/**
+	 * Returns the product of a {@link Constant} and a {@link Monomial} of the
+	 * same type.
+	 * 
+	 * @param constant
+	 *            a non-<code>null</code> {@link Constant}
+	 * @param monomial
+	 *            a non-<code>null</code> {@link Monomial} of the same type as
+	 *            <code>constant</code>
+	 * @return a {@link Monomial} representing the product
+	 */
 	Monomial multiplyConstantMonomial(Constant constant, Monomial monomial);
 
 	// Term maps...
 
+	/**
+	 * <p>
+	 * Returns a {@link SymbolicMap} with a single entry mapping the monic
+	 * {@link One} to itself. The type of {@link One} will be the given
+	 * <code>type</code>.
+	 * </p>
+	 * 
+	 * <p>
+	 * A term map represents a set of {@link Monomial}s, which are considered to
+	 * be the terms in a sum. The {@link Monomial}s are indexed by their
+	 * corresponding {@link Monic}s for efficient look-up. An entry in a term
+	 * map is an ordered pair of the form (<i>m,c*m</i>), where <i>m</i> is a
+	 * {@link Monic} and <i>c</i> is a non-0 {@link Constant}.
+	 * </p>
+	 * 
+	 * @param type
+	 *            either a {@link SymbolicIntegerType} or a
+	 *            {@link SymbolicRealType}
+	 * @return the term map consisting of a single term, one
+	 */
 	SymbolicMap<Monic, Monomial> oneTermMap(SymbolicType type);
 
+	/**
+	 * Computes the sum of two term maps as a term map. The sum is defined in
+	 * the obvious way: the coefficient associated to a monic is the sum of the
+	 * coefficients associated to that monic in the given maps, where the
+	 * absence of a monic in a map is understood to be 0 (sparse
+	 * representation). If the sum is 0, the entry is removed from the result,
+	 * to maintain the sparse representation.
+	 * 
+	 * @see #oneTermMap(SymbolicType)
+	 * @param map1
+	 *            a non-<code>null</code> term map
+	 * @param map2
+	 *            a non-<code>null</code term map of the same type as <code>
+	 *            map1</code>
+	 * @return a term map which represents the sum of the two given maps
+	 */
 	SymbolicMap<Monic, Monomial> addTermMaps(SymbolicMap<Monic, Monomial> map1,
 			SymbolicMap<Monic, Monomial> map2);
 
+	/**
+	 * Returns the products of the two term maps as a term map. The product is
+	 * roughly an O(n^2) operation, where n is the length of each term map. It
+	 * is defined in the usual way: each term in the first map is multiplied
+	 * with every term in the second map, and the results are summed.
+	 * 
+	 * @see #oneTermMap(SymbolicType)
+	 * @param map1
+	 *            a non-<code>null</code> term map
+	 * @param map2
+	 *            a non-<code>null</code term map of the same type as <code>
+	 *            map1</code>
+	 * @return a term map which represents the sum of the two given maps
+	 */
 	SymbolicMap<Monic, Monomial> multiplyTermMaps(
 			SymbolicMap<Monic, Monomial> map1,
 			SymbolicMap<Monic, Monomial> map2);
 
+	/**
+	 * Computes the term map obtained by multiplying the given {@link Constant}
+	 * with every term in a given term map.
+	 * 
+	 * @param constant
+	 *            a non-<code>null</code> {@link Constant}
+	 * @param map
+	 *            a term map of the same type as <code>constant</code>
+	 * @return the term map obtained by multiplying <code>constant</code> with
+	 *         every term in <code>map</code>
+	 */
 	SymbolicMap<Monic, Monomial> multiplyConstantTermMap(Constant constant,
 			SymbolicMap<Monic, Monomial> map);
 
+	/**
+	 * Raises a term map to the given power, returning the result as a term map.
+	 * This is the same as multiplying the term map with itself
+	 * <code>exponent</code> times. The <code>exponent</code> is a non-negative
+	 * integer. The type must be provided in case <code>map</code> is empty.
+	 * Otherwise, the <code>map</code> must have the type <code>type</code>.
+	 * 
+	 * @param type
+	 *            the type of the given <code>map</code> and result
+	 * @param map
+	 *            a non-<code>null</code> term map
+	 * @param exponent
+	 *            a non-negative integer
+	 * @return the result of multiplying <code>map</code> with itself
+	 *         <code>exponent</code> times
+	 */
 	SymbolicMap<Monic, Monomial> powerTermMap(SymbolicType type,
 			SymbolicMap<Monic, Monomial> map, IntObject exponent);
 
@@ -455,7 +590,17 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 
 	// Polynomials...
 
+	/**
+	 * Produces the result of summing the {@link Monomial}s of a term map as a
+	 * {@link Polynomial}.
+	 * 
+	 * @param type
+	 *            the type of <code>termMap</code> (needed in case
+	 *            <code>termMap</code> is empty)
+	 * @param termMap
+	 *            a non-<code>null</code> term map
+	 * @return the result of summing the terms in the term map
+	 */
 	Polynomial polynomial(SymbolicType type,
 			SymbolicMap<Monic, Monomial> termMap);
-
 }

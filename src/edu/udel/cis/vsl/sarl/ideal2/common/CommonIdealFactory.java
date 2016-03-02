@@ -2068,31 +2068,6 @@ public class CommonIdealFactory implements Ideal2Factory {
 					(RationalExpression) arg1);
 	}
 
-	// TODO: make this part of the interface
-	// who will call this?
-	// maybe I shouldn't use make at all?
-	// or don't use genericSimplification if the operator is ADD, MULTIPLY,...
-	// simplifyExpression should check to see if operator is ADD or MULTIPLY
-	// if so, it needs to handle itself.
-	// apply simplify to
-
-	// never call simplifyGeneric on an ADD. Look for where this happens
-	// and instead use your own add.
-
-	// need simplifyPolynomial: this is the only place where ADD should ever
-	// arise. Just simplify each term, put them in an array of Monomial and if
-	// any changed,
-	// simplify. Therefore, need method to add Array of Monomial
-
-	// ADD will always take as argument a Map<Monic,Monomial>
-	// MULTIPLY will always take as argument a Map<Primitive,PrimitivePower>
-
-	// this may not be necessary
-	// public NumericExpression add(Iterable<? extends NumericExpression> args)
-	// {
-	// NumericExpression[] argArray;
-	// }
-
 	@Override
 	public NumericExpression subtract(NumericExpression arg0,
 			NumericExpression arg1) {

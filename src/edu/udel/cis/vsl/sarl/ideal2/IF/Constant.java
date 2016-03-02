@@ -3,18 +3,18 @@
  * 
  * This file is part of SARL.
  * 
- * SARL is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your
- * option) any later version.
+ * SARL is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
  * 
- * SARL is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
- * License for more details.
+ * SARL is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with SARL. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.IF;
 
@@ -22,8 +22,9 @@ import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 
 /**
- * A constant, i.e., a concrete number. Wraps a NumberObject, which wraps a
- * Number.
+ * A constant, i.e., a concrete number. Wraps a {@link NumberObject}, which
+ * wraps a {@link Number}. It is how a concrete number if represented as a
+ * {@link SymbolicExpression}.
  * 
  * @author siegel
  * 
@@ -31,16 +32,17 @@ import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 public interface Constant extends Monomial {
 
 	/**
-	 * The NumberObject wrapped by this Constant.
+	 * Returns the {@link NumberObject} wrapped by this {@link Constant}.
 	 * 
-	 * @return the underlying NumberObject
+	 * @return the underlying {@link NumberObject}
 	 */
 	NumberObject value();
 
 	/**
-	 * Convenience method, equivalent to value().getNumber().
+	 * Returns the underlying {@link Number} wrapped by this {@link Constant}.
+	 * Convenience method, equivalent to <code>value().getNumber()</code>.
 	 * 
-	 * @return value().getNumber()
+	 * @return <code>value().getNumber()</code>
 	 */
 	Number number();
 

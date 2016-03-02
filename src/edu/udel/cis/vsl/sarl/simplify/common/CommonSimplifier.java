@@ -247,7 +247,7 @@ public abstract class CommonSimplifier implements Simplifier {
 	 * no difference what kind of collection it uses.
 	 * 
 	 * @param collection
-	 * @return
+	 * @return collection with all members simplified
 	 */
 	private SymbolicCollection<?> simplifyGenericCollection(
 			SymbolicCollection<?> collection) {
