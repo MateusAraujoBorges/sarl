@@ -26,7 +26,6 @@ import java.math.BigInteger;
  * implementations of this interface may make different choices regarding
  * numerical precision, rounding policies, and other factors.
  * 
- * TODO: add methods for producing and manipulating intervals here.
  */
 public interface NumberFactory {
 
@@ -356,7 +355,15 @@ public interface NumberFactory {
 	 * for the lower bound represents negative infinity; for the upper bound it
 	 * represents positive infinity.
 	 * 
-	 * Preconditions: the parameters must specify an interval in "normal form",
+	 * Precondition:
+	 * <ul>
+	 * <li>if the type is integral, then the upper and lower bounds must be
+	 * instances of {@link IntegerNumber}, else they must be instances of
+	 * {@link RationalNumber} (If the bound is non-<code>null</code.>)</li>
+	 * </ul>
+	 * 
+	 * 
+	 * Postconditions: the parameters must specify an interval in "normal form",
 	 * i.e., the following must all hold:
 	 * 
 	 * <ul>
@@ -369,7 +376,8 @@ public interface NumberFactory {
 	 * <code>strictUpper</code> must be <code>true</code></li>
 	 * 
 	 * <li>if both bounds are non-<code>null</code>, the lower bound must be
-	 * less than or equal to the upper bound</li>
+	 * less than or equal to the upper bound (Otherwise, it will be an empty
+	 * interval.)</li>
 	 * 
 	 * <li>if the bounds are non-<code>null</code> and equal: either (1) both
 	 * <code>strictLower</code> and <code>strictUpper</code> will be
@@ -387,11 +395,13 @@ public interface NumberFactory {
 	 * @param isIntegral
 	 *            does the interval have integer type (as opposed to real type)?
 	 * @param lower
-	 *            the lower bound of the interval
+	 *            the lower bound of the interval with the type defined by
+	 *            isIntegral
 	 * @param strictLower
 	 *            is the lower bound strict, i.e., "(", as opposed to "["?
 	 * @param upper
-	 *            the upper bound of the interval
+	 *            the upper bound of the interval with the type defined by
+	 *            isIntegral
 	 * @param strictUpper
 	 *            is the upper bound strict, i.e., ")", as opposed to "]"?
 	 * @return a new interval object as specified
@@ -561,10 +571,11 @@ public interface NumberFactory {
 	 * <code>status=0</code> and <code>union</code> is the union of the two
 	 * intervals.</li>
 	 * <li>i1 is strictly less than i2 and the union is not an interval. In this
-	 * case, <code>status<0</code> and <code>union</code> is <code>null</code>.</li>
+	 * case, <code>status&lt;0</code> and <code>union</code> is
+	 * <code>null</code>.</li>
 	 * <li>i1 is strictly greater than i2 and the union is not an interval. In
-	 * this case, <code>status>0</code> and <code>union</code> is
-	 * <code>null</code>.
+	 * this case, <code>status&gt;0</code> and <code>union</code> is
+	 * <code>null</code>.</li>
 	 * </ol>
 	 * 
 	 * @author siegel
