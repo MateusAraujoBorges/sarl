@@ -1075,7 +1075,7 @@ public class RealNumberFactory implements NumberFactory {
 			boolean sl2 = i2.strictLower();
 			boolean su1 = i1.strictUpper();
 			boolean su2 = i2.strictUpper();
-			Number lo = NEG_INFINITY, hi = POS_INFINITY;
+			Number lo = NEG_INFINITY, up = POS_INFINITY;
 			boolean sl = false, su = false;
 
 			int compareUp1Lo2 = 0;
@@ -1092,7 +1092,7 @@ public class RealNumberFactory implements NumberFactory {
 				if (!su1 || !sl2) {
 					// Combined into one interval
 					lo = lo1;
-					hi = up2;
+					up = up2;
 					sl = sl1;
 					su = su2;
 					result.status = 0;
@@ -1139,20 +1139,20 @@ public class RealNumberFactory implements NumberFactory {
 						compareHi = up1.numericalCompareTo(up2);
 					}
 					if (compareHi < 0) {
-						hi = up2;
+						up = up2;
 						su = su2;
 					} else if (compareHi == 0) {
-						hi = up1;
+						up = up1;
 						su = su1 && su2;
 					} else {
-						hi = up1;
+						up = up1;
 						su = su1;
 					}
 					result.status = 0;
 				} else if (compare2 == 0) { // lo1=up2
 					if (!sl1 || !su2) {
 						lo = lo2;
-						hi = up1;
+						up = up1;
 						sl = sl2;
 						su = su1;
 						result.status = 0;
@@ -1167,7 +1167,7 @@ public class RealNumberFactory implements NumberFactory {
 			if (result.status != 0) {
 				result.union = null;
 			} else {
-				result.union = new CommonInterval(isIntegral, lo, sl, hi, su);
+				result.union = new CommonInterval(isIntegral, lo, sl, up, su);
 			}
 		}
 	}
