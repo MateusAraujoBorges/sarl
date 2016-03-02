@@ -878,7 +878,7 @@ public class NumberFactoryTest {
 	}
 
 	// TODO: To add comm for Intersection part
-	@Test(expected = NullPointerException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalIntersectionNullInputI1() {
 		IntegerNumber lo2 = factory.integer(-314);
 		IntegerNumber up2 = factory.integer(427);
@@ -892,7 +892,7 @@ public class NumberFactoryTest {
 		factory.intersection(i1, i2);
 	}
 
-	@Test(expected = NullPointerException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalIntersectionNullInputI2() {
 		IntegerNumber lo1 = factory.integer(-314);
 		IntegerNumber up1 = factory.integer(427);
@@ -906,7 +906,7 @@ public class NumberFactoryTest {
 		factory.intersection(i1, i2);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalIntersectionInvalInputI1IntI2Rat() {
 		IntegerNumber lo1 = factory.integer(-1);
 		IntegerNumber up1 = factory.integer(1);
@@ -927,7 +927,7 @@ public class NumberFactoryTest {
 		factory.intersection(i1, i2);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalIntersectionInvalInputI1RatI2Int() {
 		IntegerNumber lo2 = factory.integer(1);
 		IntegerNumber up2 = factory.integer(1);
@@ -1161,7 +1161,7 @@ public class NumberFactoryTest {
 	}
 
 	// TODO: To add comm for Union part
-	@Test(expected = NullPointerException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalUnionNullInputI1() {
 		IntegerNumber lo2 = factory.integer(-314);
 		IntegerNumber up2 = factory.integer(427);
@@ -1177,7 +1177,7 @@ public class NumberFactoryTest {
 		factory.union(i1, i2, iuRes);
 	}
 
-	@Test(expected = NullPointerException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalUnionNullInputI2() {
 		IntegerNumber lo1 = factory.integer(-314);
 		IntegerNumber up1 = factory.integer(427);
@@ -1193,7 +1193,7 @@ public class NumberFactoryTest {
 		factory.union(i1, i2, iuRes);
 	}
 
-	@Test(expected = NullPointerException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalUnionNullInputIU() {
 		IntegerNumber lo1 = factory.integer(-314);
 		IntegerNumber up1 = factory.integer(427);
@@ -1208,7 +1208,7 @@ public class NumberFactoryTest {
 		factory.union(i1, i2, iuRes);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalUnionInvalInputI1IntI2Rat() {
 		IntegerNumber lo1 = factory.integer(-1);
 		IntegerNumber up1 = factory.integer(1);
@@ -1230,7 +1230,7 @@ public class NumberFactoryTest {
 		factory.union(i1, i2, iuRes);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalUnionInvalInputI1RatI2Int() {
 		IntegerNumber lo2 = factory.integer(-1);
 		IntegerNumber up2 = factory.integer(1);
@@ -1476,7 +1476,7 @@ public class NumberFactoryTest {
 	 *            the throwing of the exception when any of those three
 	 *            parameters is null.
 	 */
-	@Test(expected = NullPointerException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalAffineTransformNullInputOfInterval_itv() {
 		IntegerNumber a = factory.integer(1);
 		IntegerNumber b = factory.integer(1);
@@ -1492,7 +1492,7 @@ public class NumberFactoryTest {
 	 *            the throwing of the exception when any of those three
 	 *            parameters is null.
 	 */
-	@Test(expected = NullPointerException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalAffineTransformNullInputOfNumber_a() {
 		IntegerNumber a = null;
 		IntegerNumber b = factory.integer(1);
@@ -1512,7 +1512,7 @@ public class NumberFactoryTest {
 	 *            the throwing of the exception when any of those three
 	 *            parameters is null.
 	 */
-	@Test(expected = NullPointerException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalAffineTransformNullInputOfNumber_b() {
 		RationalNumber a = factory.rational(factory.integer(1));
 		RationalNumber b = null;
@@ -1537,7 +1537,7 @@ public class NumberFactoryTest {
 	 *            ensures that the throwing of the exception does not rely on
 	 *            the order of the incompatible number arguments.
 	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = AssertionError.class)
 	public void numberAffineTransformInvalInputOfIntegerNumber_a() {
 		IntegerNumber a = factory.integer(3);
 		RationalNumber b = factory.rational(factory.integer(3));
@@ -1562,7 +1562,7 @@ public class NumberFactoryTest {
 	 *            ensures that the throwing of the exception does not rely on
 	 *            the order of the incompatible number arguments.
 	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalAffineTransformInvalInputOfRationalNumber_a() {
 		RationalNumber a = factory.rational(factory.integer(3));
 		IntegerNumber b = factory.integer(3);
@@ -1587,7 +1587,7 @@ public class NumberFactoryTest {
 	 *            ensures that the throwing of the exception does not rely on
 	 *            the order of the incompatible number arguments.
 	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalAffineTransformInvalInputOfIntegerNumber_b() {
 		RationalNumber a = factory.rational(factory.integer(3));
 		IntegerNumber b = factory.integer(3);
@@ -1612,7 +1612,7 @@ public class NumberFactoryTest {
 	 *            ensures that the throwing of the exception does not rely on
 	 *            the order of the incompatible number arguments.
 	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = AssertionError.class)
 	public void intervalAffineTransformInvalInputOfRationalNumber_b() {
 		IntegerNumber a = factory.integer(3);
 		RationalNumber b = factory.rational(factory.integer(3));

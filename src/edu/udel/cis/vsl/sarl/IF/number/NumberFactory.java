@@ -404,37 +404,14 @@ public interface NumberFactory {
 	 * intervals. The two given intervals must have the same type.
 	 * 
 	 * @param i1
-	 *            an interval
+	 *            a non-<code>null</code> {@link Interval}
 	 * @param i2
-	 *            an interval with same type (integer or real) as
-	 *            <code>i1</code>
-	 * @return the interval representing the intersection of <code>i1</code> and
-	 *         <code>i2</code>
+	 *            an non-<code>null</code> {@link Interval} with same type
+	 *            (integral or rational) as "i1"
+	 * @return an {@link Interval} representing the intersection of "i1" and
+	 *         "i2"
 	 */
 	Interval intersection(Interval i1, Interval i2);
-
-	/**
-	 * A simple type for recording the result of attempting to take the union of
-	 * two intervals i1 and i2. There are three possibilities:
-	 * <ol>
-	 * <li>the union of the two intervals is an interval. In this case,
-	 * <code>status=0</code> and <code>union</code> is the union of the two
-	 * intervals.</li>
-	 * <li>i1 is strictly less than i2 and the union is not an interval. In this
-	 * case, <code>status<0</code> and <code>union</code> is <code>null</code>.
-	 * </li>
-	 * <li>i1 is strictly greater than i2 and the union is not an interval. In
-	 * this case, <code>status>0</code> and <code>union</code> is
-	 * <code>null</code>.
-	 * </ol>
-	 * 
-	 * @author siegel
-	 *
-	 */
-	public class IntervalUnion {
-		public int status;
-		public Interval union;
-	};
 
 	/**
 	 * Computes the union of two intervals or reports that the union is not an
@@ -448,11 +425,14 @@ public interface NumberFactory {
 	 * element of i1 is less than every element of i2.
 	 *
 	 * @param i1
-	 *            an interval
+	 *            an non-<code>null</code> {@link Interval}
 	 * @param i2
-	 *            an interval of same type as <code>i1</code>
-	 * @return an interval which is the union of <code>i1</code> and
-	 *         <code>i2</code> or <code>null</code>
+	 *            an non-<code>null</code> {@link Interval} of same type
+	 *            (integral or rational) as "i1"
+	 * @param result
+	 *            an non-<code>null</code> {@link IntervalUnion} used for
+	 *            receiving the result union
+	 * @return an {@link IntervalUnion} of "i1" and "i2" or <code>null</code>
 	 */
 	void union(Interval i1, Interval i2, IntervalUnion result);
 
@@ -467,24 +447,24 @@ public interface NumberFactory {
 	 * @return the smallest {@link Interval} containing <code>i1</code> and
 	 *         <code>i2</code>
 	 */
-	// TODO: implement me!
 	Interval join(Interval i1, Interval i2);
 
 	/**
 	 * Computes the affineTransform of the input interval <code>itv</code> with
 	 * two numbers: <code>a</code> and <code>b</code> as parameters.
 	 * 
-	 * @param itv
-	 *            an interval
+	 * @param interval
+	 *            an non-<code>null</code> {@link Interval}
 	 * @param a
-	 *            a number used to multiply with both upper and lower of
-	 *            <code>itv</code>
+	 *            a non-<code>null</code> {@link Number} used to multiply with
+	 *            both <code>upper</code> and <code>lower</code> of "interval"
 	 * @param b
-	 *            a number used to add to both upper and lower of
-	 *            <code>itv</code>, after multiplying <code>a</code>.
-	 * @return an interval which is affineTransform of <code>itv</code>
+	 *            a non-<code>null</code> {@link Number} used to add to both
+	 *            <code>upper</code> and <code>lower</code> of "interval", after
+	 *            multiplying "a".
+	 * @return an {@link Interval} which is an affineTransform of "interval"
 	 */
-	Interval affineTransform(Interval itv, Number a, Number b);
+	Interval affineTransform(Interval interval, Number a, Number b);
 
 	/**
 	 * Computes the relationships of two {@link Interval}s.
@@ -572,4 +552,26 @@ public interface NumberFactory {
 	 *         integer
 	 */
 	RationalNumber power(RationalNumber number, int exp);
+
+	/**
+	 * A simple type for recording the result of attempting to take the union of
+	 * two intervals i1 and i2. There are three possibilities:
+	 * <ol>
+	 * <li>the union of the two intervals is an interval. In this case,
+	 * <code>status=0</code> and <code>union</code> is the union of the two
+	 * intervals.</li>
+	 * <li>i1 is strictly less than i2 and the union is not an interval. In this
+	 * case, <code>status<0</code> and <code>union</code> is <code>null</code>.</li>
+	 * <li>i1 is strictly greater than i2 and the union is not an interval. In
+	 * this case, <code>status>0</code> and <code>union</code> is
+	 * <code>null</code>.
+	 * </ol>
+	 * 
+	 * @author siegel
+	 *
+	 */
+	public class IntervalUnion {
+		public int status;
+		public Interval union;
+	};
 }

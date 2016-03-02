@@ -36,6 +36,10 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  */
 public class RealNumberFactory implements NumberFactory {
 
+	private static Number POS_INFINITY = null;
+
+	private static Number NEG_INFINITY = null;
+
 	private Map<BigInteger, RealInteger> integerMap = new HashMap<BigInteger, RealInteger>();
 
 	private Map<RationalKey, RealRational> rationalMap = new HashMap<RationalKey, RealRational>();
@@ -944,8 +948,8 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	public Interval newInterval(boolean isIntegral, Number lower,
 			boolean strictLower, Number upper, boolean strictUpper) {
-
-		if (isIntegral) {// Adjust the strict and bound for integral intervals
+		if (isIntegral) {
+			// Adjust the strict and bound for integral intervals
 			if (lower != null && strictLower) {
 				lower = add(lower, oneInteger);
 				strictLower = false;
@@ -971,76 +975,65 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	public Interval intersection(Interval i1, Interval i2) {
-		if (i1 == null) {
-			throw new NullPointerException(
-					"The interval parameter i1 cannot be null.");
-		} else if (i2 == null) {
-			throw new NullPointerException(
-					"The interval parameter i2 cannot be null.");
-		} else {
-			if (i1.isIntegral() != i2.isIntegral()) {
-				throw new IllegalArgumentException(
-						"The type of parameters i1 and i2 are mismached.");
-			}
-		}
+		assert i1 != null && i2 != null;
 
 		boolean isIntegral = i1.isIntegral();
 
 		assert isIntegral == i2.isIntegral();
 
-		Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(), hi2 = i2
-				.upper();
-		boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(), su1 = i1
-				.strictUpper(), su2 = i2.strictUpper();
-		Number lo, hi;
+		Number lo1 = i1.lower();
+		Number lo2 = i2.lower();
+		Number up1 = i1.upper();
+		Number up2 = i2.upper();
+		Number lo, up;
+		boolean sl1 = i1.strictLower();
+		boolean sl2 = i2.strictLower();
+		boolean su1 = i1.strictUpper();
+		boolean su2 = i2.strictUpper();
 		boolean sl, su;
 
-		if (lo1 == null) {
+		if (lo1 == NEG_INFINITY) {
 			lo = lo2;
 			sl = sl2;
+		} else if (lo2 == NEG_INFINITY) {
+			lo = lo1;
+			sl = sl1;
 		} else {
-			if (lo2 == null) {
+			int compare = lo1.numericalCompareTo(lo2);
+
+			if (compare < 0) {
+				lo = lo2;
+				sl = sl2;
+			} else if (compare == 0) {
+				lo = lo1;
+				sl = sl1 || sl2;
+			} else {
 				lo = lo1;
 				sl = sl1;
-			} else {
-				int compare = lo1.compareTo(lo2);
-
-				if (compare < 0) {
-					lo = lo2;
-					sl = sl2;
-				} else if (compare == 0) {
-					lo = lo1;
-					sl = sl1 || sl2;
-				} else {
-					lo = lo1;
-					sl = sl1;
-				}
 			}
 		}
-		if (hi1 == null) {
-			hi = hi2;
+		if (up1 == POS_INFINITY) {
+			up = up2;
 			su = su2;
+		} else if (up2 == POS_INFINITY) {
+			up = up1;
+			su = su1;
 		} else {
-			if (hi2 == null) {
-				hi = hi1;
-				su = su1;
-			} else {
-				int compare = hi1.compareTo(hi2);
+			int compare = up1.numericalCompareTo(up2);
 
-				if (compare > 0) {
-					hi = hi2;
-					su = su2;
-				} else if (compare == 0) {
-					hi = hi1;
-					su = su1 || su2;
-				} else {
-					hi = hi1;
-					su = su1;
-				}
+			if (compare > 0) {
+				up = up2;
+				su = su2;
+			} else if (compare == 0) {
+				up = up1;
+				su = su1 || su2;
+			} else {
+				up = up1;
+				su = su1;
 			}
 		}
-		if (lo != null && hi != null) {
-			int compare = hi.compareTo(lo);
+		if (lo != NEG_INFINITY && up != POS_INFINITY) {
+			int compare = up.numericalCompareTo(lo);
 
 			if (compare < 0) {
 				return isIntegral ? emptyIntegerInterval
@@ -1052,73 +1045,68 @@ public class RealNumberFactory implements NumberFactory {
 				}
 			}
 		}
-		return new CommonInterval(i1.isIntegral(), lo, sl, hi, su);
+		return new CommonInterval(isIntegral, lo, sl, up, su);
 	}
 
 	@Override
 	public void union(Interval i1, Interval i2, IntervalUnion result) {
-		if (i1 == null) {
-			throw new NullPointerException(
-					"The interval parameter i1 cannot be null.");
-		} else if (i2 == null) {
-			throw new NullPointerException(
-					"The interval parameter i2 cannot be null.");
-		} else if (result == null) {
-			throw new NullPointerException(
-					"The intervalUnion parameter result cannot be null.");
-		} else {
-			if (i1.isIntegral() != i2.isIntegral()) {
-				throw new IllegalArgumentException(
-						"The type of parameters i1 and i2 are mismached.");
-			}
-		}
+		assert i1 != null && i2 != null && result != null;
+
+		boolean isIntegral = i1.isIntegral();
+
+		assert i1.isIntegral() == i2.isIntegral();
+
 		if (i1.isEmpty()) {
+			// Exactly a single interval
 			result.status = 0;
 			result.union = i2;
 			return;
 		} else if (i2.isEmpty()) {
+			// Exactly a single interval
 			result.status = 0;
 			result.union = i1;
 			return;
 		} else {
-			boolean isIntegral = i1.isIntegral();
-
-			assert isIntegral == i2.isIntegral();
-
-			Number lo1 = i1.lower(), lo2 = i2.lower(), hi1 = i1.upper(), hi2 = i2
-					.upper();
-			boolean sl1 = i1.strictLower(), sl2 = i2.strictLower(), su1 = i1
-					.strictUpper(), su2 = i2.strictUpper();
-			Number lo = null, hi = null; // To set the result set as (-infi,
-											// +infi)
+			Number lo1 = i1.lower();
+			Number lo2 = i2.lower();
+			Number up1 = i1.upper();
+			Number up2 = i2.upper();
+			boolean sl1 = i1.strictLower();
+			boolean sl2 = i2.strictLower();
+			boolean su1 = i1.strictUpper();
+			boolean su2 = i2.strictUpper();
+			Number lo = NEG_INFINITY, hi = POS_INFINITY;
 			boolean sl = false, su = false;
 
-			int compare1 = 0;
+			int compareUp1Lo2 = 0;
 
-			if (hi1 == null || lo2 == null) {
-				compare1 = 1;
+			if (up1 == POS_INFINITY || lo2 == NEG_INFINITY) {
+				compareUp1Lo2 = 1; // up1 > lo2
 			} else {
-				compare1 = hi1.compareTo(lo2);
+				compareUp1Lo2 = up1.numericalCompareTo(lo2);
 			}
-			if (compare1 < 0) { // hi1<lo2
+			if (compareUp1Lo2 < 0) { // up1 < lo2
+				// 1st interval less than 2nd one
 				result.status = -1;
-			} else if (compare1 == 0) { // hi1=lo2
-				if (!su1 || !sl2) { // <...)[...>
+			} else if (compareUp1Lo2 == 0) { // up1 = lo2
+				if (!su1 || !sl2) {
+					// Combined into one interval
 					lo = lo1;
-					hi = hi2;
+					hi = up2;
 					sl = sl1;
 					su = su2;
 					result.status = 0;
-				} else { // <...)(...>
+				} else {
+					// Disjoint
 					result.status = -1;
 				}
 			} else { // hi1>lo2
 				int compare2 = 0;
 
-				if (lo1 == null || hi2 == null) {
+				if (lo1 == null || up2 == null) {
 					compare2 = -1;
 				} else {
-					compare2 = lo1.compareTo(hi2);
+					compare2 = lo1.compareTo(up2);
 				}
 				if (compare2 < 0) { // lo1<hi2
 					int compareLo = 0;
@@ -1143,28 +1131,28 @@ public class RealNumberFactory implements NumberFactory {
 
 					int compareHi = 0;
 
-					if (hi1 == null) {
+					if (up1 == null) {
 						compareHi = 1;
-					} else if (hi2 == null) {
+					} else if (up2 == null) {
 						compareHi = -1;
 					} else {
-						compareHi = hi1.compareTo(hi2);
+						compareHi = up1.compareTo(up2);
 					}
 					if (compareHi < 0) {
-						hi = hi2;
+						hi = up2;
 						su = su2;
 					} else if (compareHi == 0) {
-						hi = hi1;
+						hi = up1;
 						su = su1 && su2;
 					} else {
-						hi = hi1;
+						hi = up1;
 						su = su1;
 					}
 					result.status = 0;
 				} else if (compare2 == 0) { // lo1=hi2
 					if (!sl1 || !su2) {
 						lo = lo2;
-						hi = hi1;
+						hi = up1;
 						sl = sl2;
 						su = su1;
 						result.status = 0;
@@ -1179,51 +1167,29 @@ public class RealNumberFactory implements NumberFactory {
 			if (result.status != 0) {
 				result.union = null;
 			} else {
-				result.union = new CommonInterval(i1.isIntegral(), lo, sl, hi,
-						su);
+				result.union = new CommonInterval(isIntegral, lo, sl, hi, su);
 			}
 		}
 	}
 
 	@Override
 	public Interval affineTransform(Interval itv, Number a, Number b) {
-		if (itv == null)
-			throw new NullPointerException(
-					"The interval parameter itv cannot be null.");
-		if (a == null)
-			throw new NullPointerException(
-					"The number parameter a cannot be null.");
-		if (b == null)
-			throw new NullPointerException(
-					"The number parameter b cannot be null.");
-		if (itv.isIntegral()) {
-			if (!(a instanceof IntegerNumber))
-				throw new IllegalArgumentException(
-						"Mixed numeric types not allowed:\n" + itv.upper()
-								+ "\n" + a);
-			if (!(b instanceof IntegerNumber))
-				throw new IllegalArgumentException(
-						"Mixed numeric types not allowed:\n" + itv.upper()
-								+ "\n" + b);
-		} else {
-			if (!(a instanceof RationalNumber))
-				throw new IllegalArgumentException(
-						"Mixed numeric types not allowed:\n" + itv.upper()
-								+ "\n" + a);
-			if (!(b instanceof RationalNumber))
-				throw new IllegalArgumentException(
-						"Mixed numeric types not allowed:\n" + itv.upper()
-								+ "\n" + b);
+		assert itv != null && a != null && b != null;
+
+		boolean isInt = itv.isIntegral();
+
+		assert isInt == a instanceof IntegerNumber;
+		assert isInt == b instanceof IntegerNumber;
+
+		if (itv.isEmpty()) {
+			return isInt ? emptyIntegerInterval : emptyRationalInterval;
 		}
 
-		Number lo = itv.lower(), up = itv.upper();
-		boolean sl = itv.strictLower(), su = itv.strictUpper();
+		Number lo = itv.lower();
+		Number up = itv.upper();
+		boolean sl = itv.strictLower();
+		boolean su = itv.strictUpper();
 
-		if (lo != null && up != null) {
-			if (itv.isEmpty()) {
-				return newInterval(itv.isIntegral(), up, su, up, su);
-			}
-		}
 		// New upper and lower of result.union.
 		lo = lo == null ? null : add(multiply(lo, a), b);
 		up = up == null ? null : add(multiply(up, a), b);
@@ -1240,8 +1206,8 @@ public class RealNumberFactory implements NumberFactory {
 			up = b;
 			sl = false;
 			su = false;
-		} // if - else
-		return new CommonInterval(itv.isIntegral(), lo, sl, up, su);
+		}
+		return new CommonInterval(isInt, lo, sl, up, su);
 	}
 
 	@Override
