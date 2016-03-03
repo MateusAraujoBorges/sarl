@@ -69,7 +69,9 @@ public interface Monomial extends RationalExpression {
 	int totalDegree();
 
 	/**
-	 * Returns the "fully expanded term map" of this monomial.
+	 * Returns the expansion of this monomial.
+	 * 
+	 * @see Ideal2Factory
 	 * 
 	 * @param factory
 	 *            the ideal factory responsible for this monomial
@@ -77,11 +79,21 @@ public interface Monomial extends RationalExpression {
 	 *         {@link Polynomial}s.
 	 */
 	SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory);
-	
+
+	/**
+	 * Determines whether or not this monomial has a non-trivial expansion. A
+	 * trivial expansion is one consisting of exactly one term.
+	 * 
+	 * @param factory
+	 *            the ideal factory responsible for this monomial
+	 * @return <code>true</code> iff this monomial has a non-trivial expansion
+	 */
 	boolean hasNontrivialExpansion(Ideal2Factory factory);
 
 	/**
-	 * Returns the "basic term map" of this monomial.
+	 * Returns the term map of this monomial.
+	 * 
+	 * @see Ideal2Factory
 	 * 
 	 * @param factory
 	 *            the ideal factory responsible for this monomial

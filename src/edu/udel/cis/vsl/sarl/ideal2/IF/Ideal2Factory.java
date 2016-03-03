@@ -52,10 +52,10 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * be treated as an atomic expression, such as a variable, from the point of
  * view of ideal mathematical arithmetic. Examples: symbolic constants, array
  * read expressions of integer or real type, tuple read expressions of integer
- * or real types, function applications for functions returning integer or real
- * are all primitive expressions. In addition, in this factory a
+ * or real types, and function applications for functions returning integer or
+ * real are all primitive expressions. In addition, in this factory a
  * {@link Polynomial} is a {@link Primitive} so that it can be treated as a
- * "variable" in a factorization.
+ * "variable" in an expression.
  * </p>
  * 
  * <p>
@@ -113,35 +113,31 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * </p>
  * 
  * <p>
- * Given any {@link Monomial} <i>m</i>, the <i>basic term map</i> of <i>m</i> is
+ * Given any {@link Monomial} <i>m</i>, the <i>term map</i> of <i>m</i> is
  * defined as follows:
  * <ol>
- * <li>if <i>m</i> is a {@link Polynomial}, the basic term map is the term map
- * of that polynomial</li>
+ * <li>if <i>m</i> is a {@link Polynomial}, the term map is the term map of that
+ * polynomial</li>
  * <li>if <i>m</i> is the product of a {@link Constant} and a {@link Polynomial}
- * , the basic term map is the product of the constant and the basic term map of
- * the polynomial</li>
- * <li>otherwise, the basic term map is the map with one entry with value
- * <i>m</i>.</li>
+ * , the term map is the product of the constant and the term map of the
+ * polynomial</li>
+ * <li>otherwise, the term map is the map with one entry with value <i>m</i>.
+ * </li>
  * </ol>
  * </p>
  * 
  * <p>
- * The <i>fully expanded term map</i> of a {@link Monomial} <i>m</i> is the term
- * map defined recursively as follows:
+ * The <i>expansion</i> of a {@link Monomial} <i>m</i> is the term map defined
+ * recursively as follows:
  * <ul>
  * <li>If <i>m</i> is a {@link Primitive} which is not a {@link Polynomial}, the
- * fully expanded term map of <i>m</i> is the singleton map with value <i>m</i>.
- * </li>
- * <li>If <i>m</i> is a {@link Polynomial}, the fully expanded term map of
- * <i>m</i> is the sum of the fully expanded term maps of the terms of <i>m</i>.
- * </li>
- * <li>The fully expanded term map of the product of a {@link Constant} and a
- * {@link Monic} is the product of the constant with the fully expanded term map
- * of the {@link Monic}.</li>
- * <li>The fully expanded term map of a {@link PrimitivePower} <i>p</i>
- * <sup><i>n</i></sup> is the fully expanded term map of <i>p</i> raised to the
- * <i>n<sup>th</sup></i> power.</li>
+ * expansion of <i>m</i> is the singleton map with value <i>m</i>.</li>
+ * <li>If <i>m</i> is a {@link Polynomial}, the expansion of <i>m</i> is the sum
+ * of the expansions of the terms of <i>m</i>.</li>
+ * <li>The expansion of the product of a {@link Constant} and a {@link Monic} is
+ * the product of the constant with the expansion of the {@link Monic}.</li>
+ * <li>The expansion of a {@link PrimitivePower} <i>p</i> <sup><i>n</i></sup> is
+ * the expansion of <i>p</i> raised to the <i>n<sup>th</sup></i> power.</li>
  * </ul>
  * </p>
  * 
@@ -151,19 +147,17 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * </p>
  * 
  * <ul>
- * <li>the fully expanded term map of the {@link Monomial} <i>X</i> is {<i>X</i>
- * }</li>
- * <li>the fully expanded term map of the {@link Polynomial} <i>X</i>+<i>Y</i>
- * is {<i>X</i>, <i>Y</i>}</li>
- * <li>the fully expanded term map of the {@link Monomial} 2*(<i>X</i>+<i>Y</i>)
- * is {2*<i>X</i>, 2*<i>Y</i>}</li>
- * <li>the fully expanded term map of the {@link Polynomial} 2*(<i>X</i>+
- * <i>Y</i>) + <i>X</i> is {3*<i>X</i>, <i>Y</i>}</li>
- * <li>the fully expanded term map of the {@link Monomial} <i>X</i><sup>2</sup>
- * is {<i>X</i><sup>2</sup>}</li>
- * <li>the fully expanded term map of the {@link Monomial} (<i>X</i>+<i>Y</i>)
- * <sup>2</sup> is {<i>X</i><sup>2</sup>, 2*<i>XY</i>, <i>Y</i> <sup>2</sup>
- * </li>
+ * <li>the expansion of the {@link Monomial} <i>X</i> is {<i>X</i> }</li>
+ * <li>the expansion of the {@link Polynomial} <i>X</i>+<i>Y</i> is {<i>X</i>,
+ * <i>Y</i>}</li>
+ * <li>the expansion of the {@link Monomial} 2*(<i>X</i>+<i>Y</i>) is {2*
+ * <i>X</i>, 2*<i>Y</i>}</li>
+ * <li>the expansion of the {@link Polynomial} 2*(<i>X</i>+ <i>Y</i>) + <i>X</i>
+ * is {3*<i>X</i>, <i>Y</i>}</li>
+ * <li>the expansion of the {@link Monomial} <i>X</i><sup>2</sup> is {<i>X</i>
+ * <sup>2</sup>}</li>
+ * <li>the expansion of the {@link Monomial} (<i>X</i>+<i>Y</i>) <sup>2</sup> is
+ * {<i>X</i><sup>2</sup>, 2*<i>XY</i>, <i>Y</i> <sup>2</sup></li>
  * </ul>
  * 
  * <p>
@@ -175,7 +169,7 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  * Suppose <i>m</i><sub>1</sub> and <i>m</i><sub>2</sub> are two
  * {@link Monomial}s with no primitive factor in common. The sum <i>m</i>
  * <sub>1</sub> + <i>m</i><sub>2</sub> is defined as follows. First, there is
- * the option of using the basic or fully expanded term maps of the two
+ * the option of using the ordinary term map or the expansion of the two
  * monomials. The choice of whether or not to expand can be made using some
  * heuristic. In any case, the two term maps are added. The resulting term map
  * is factored (if possible) to produce a {@link Monomial}; the result may be a
@@ -349,7 +343,9 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 
 	/**
 	 * Returns either the integer number one (1) or the real number 1 (1.0). The
-	 * choice is made according to the given <code>type</code>.
+	 * choice is made according to the given <code>type</code>. In either case,
+	 * the object returned is an instance of both {@link Constant} and
+	 * {@link Monic}, because one is the empty {@link Monic}.
 	 * 
 	 * @param type
 	 *            either a {@link SymbolicIntegerType} or a
@@ -357,7 +353,7 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 * 
 	 * @return the number 1 as a symbolic expression
 	 */
-	One one(SymbolicType type);
+	Constant one(SymbolicType type);
 
 	// Primitive Powers...
 

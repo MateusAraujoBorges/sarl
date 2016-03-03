@@ -7,44 +7,26 @@
  * </p>
  * 
  * <p>
- * Expressions of real type are represented as rational functions, i.e.,
- * quotients of two multivariate polynomials. The "variables" in the polynomials
- * are referred to as "primitives". They may be symbolic constants, array-read
- * expressions, tuple-read expressions, or generally any expression of real type
- * not produced by a numeric operation.
- * </p>
- * 
- * <p>
- * Expressions of integer type are represented as polynomials in integer
- * primitives.
- * </p>
- * 
- * <p>
- * This module is big and complex.
- * </p>
- * 
- * <p>
- * The entry point is {@link edu.udel.cis.vsl.sarl.ideal.IF.Ideal Ideal}. That
- * class provides static methods to get a new
- * {@link edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory IdealFactory}, an
+ * The entry point is {@link edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2 Ideal2}.
+ * That class provides static methods to get a new
+ * {@link edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory Ideal2Factory}, an
  * implementation of
  * {@link edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory}. It also
  * provides a method to get a simplifier factory.
  * </p>
  * 
  * <p>
- * This package provides the internal interface for the ideal module. All code
- * outside of this module should use only elements provided in this package (in
- * addition to the entry point).
+ * This package provides the interface for the ideal module. All code outside of
+ * this module should use only elements provided in this package.
  * </p>
  * 
  * <p>
  * The implementation classes for ideal symbolic expressions and their
- * arithmetic are in package {@link edu.udel.cis.vsl.sarl.ideal.common}.
+ * arithmetic are in package {@link edu.udel.cis.vsl.sarl.ideal2.common}.
  * </p>
  * 
  * <p>
- * Package {edu.udel.cis.vsl.sarl.ideal.simplify} contains the classes
+ * Package {edu.udel.cis.vsl.sarl.ideal2.simplify} contains the classes
  * implementing a simplifier for ideal expressions.
  * </p>
  * 
@@ -52,28 +34,28 @@
  * The interfaces in this package define a simple hierarchy of numeric
  * expressions:
  * <ul>
- * <li>{@link edu.udel.cis.vsl.sarl.ideal.IF.Constant Constant}. As you would
+ * <li>{@link edu.udel.cis.vsl.sarl.ideal2.IF.Constant Constant}. As you would
  * expect, a constant is a concrete number, like "5" or "3.1415".</li>
- * <li>{@link edu.udel.cis.vsl.sarl.ideal.IF.Primitive Primitive}. A primitive
+ * <li>{@link edu.udel.cis.vsl.sarl.ideal2.IF.Primitive Primitive}. A primitive
  * is a numeric symbolic constant or any other expression which will not be
  * decomposed and therefore plays the role of a single "variable" in a
  * polynomial</li>
- * <li>{@link edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower PrimitivePower}. A
+ * <li>{@link edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower PrimitivePower}. A
  * power of a primitive. Note that a primitive p is a primitive power, since it
  * can be expressed as p^1.</li>
- * <li>{@link edu.udel.cis.vsl.sarl.ideal.IF.Monic Monic}. A monic is a product
+ * <li>{@link edu.udel.cis.vsl.sarl.ideal2.IF.Monic Monic}. A monic is a product
  * of primitive powers. Note that a primitive power is a monic. The number "1"
  * is also a monic: it is the empty monic (empty product).</li>
- * <li>{@link edu.udel.cis.vsl.sarl.ideal.IF.Monomial Monomial}. A monomial is a
- * product of a constant and a monic. A monic is a monomial (with constant 1). A
- * constant is a monomial (with empty monic).</li>
- * <li>{@link edu.udel.cis.vsl.sarl.ideal.IF.Polynomial Polynomial}. A
- * polynomial is the sum of monomials. A monomial is a polynomial.</li>
+ * <li>{@link edu.udel.cis.vsl.sarl.ideal2.IF.Monomial Monomial}. A monomial is
+ * a product of a constant and a monic. A monic is a monomial (with constant 1).
+ * A constant is a monomial (with empty monic).</li>
+ * <li>{@link edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial Polynomial}. A
+ * polynomial is the sum of monomials. It is also a primitive.</li>
  * <li>{@link edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression
- * RationalExpression}. A rational expression is the quotient of two
- * polynomials. A polynomial is a rational expressions (with denominator 1). A
- * rational expression must have real type. All expressions of integer type are
- * polynomials.</li>
+ * RationalExpression}. A rational expression is the quotient of two monomials.
+ * A monomial is a rational expressions (with denominator 1). A rational
+ * expression must have real type. All expressions of integer type are
+ * monomials.</li>
  * </ul>
  * </p>
  */

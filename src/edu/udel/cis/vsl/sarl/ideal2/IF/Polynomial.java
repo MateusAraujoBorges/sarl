@@ -21,15 +21,13 @@ package edu.udel.cis.vsl.sarl.ideal2.IF;
 /**
  * A polynomial: an expression which is the sum of monomials. Use method
  * {@link #termMap(Ideal2Factory)} to get the term map for this
- * {@link Polynomial}. There must be at least one (non-0) {@link Monomial} in
+ * {@link Polynomial}. There must be at least two (non-0) {@link Monomial}s in
  * the term map.
  * 
  * A {@link Polynomial} is also a {@link Primitive}, so can be used as a factor
  * in a {@link Monic}.
  * 
- * 
  * @author siegel
- * 
  */
 public interface Polynomial extends Primitive {
 
@@ -52,5 +50,4 @@ public interface Polynomial extends Primitive {
 	 *         terms
 	 */
 	int polynomialDegree();
-
 }

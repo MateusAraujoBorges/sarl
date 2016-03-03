@@ -20,7 +20,12 @@ package edu.udel.cis.vsl.sarl.ideal2.IF;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 
-
+/**
+ * A {@link RationalExpression} is the quotient of two {@link Monomial}s of real
+ * type. It also has real type.
+ * 
+ * @author siegel
+ */
 public interface RationalExpression extends NumericExpression {
 
 	/**
@@ -42,5 +47,4 @@ public interface RationalExpression extends NumericExpression {
 	 * @return the denominator of this rational expression
 	 */
 	Monomial denominator(Ideal2Factory factory);
-
 }

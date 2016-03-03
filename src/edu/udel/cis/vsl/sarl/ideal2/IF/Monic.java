@@ -21,20 +21,22 @@ package edu.udel.cis.vsl.sarl.ideal2.IF;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 
 /**
- * A Monic is a product of powers of primitive expressions
- * x_1^{i_1}*...*x_n^{i_n}, where the x_i are primitives and the i_j are
- * positive concrete ints.
+ * A Monic is a product of powers of primitive expressions x<sub>1</sub><sup>i
+ * <sub>1</sub></sup>*...*x<sub>n</sub><sup>i<sub>n</sub></sup>, where the x
+ * <sub>i</sub> are primitives and the i<sub>j</sub> are positive concrete ints.
  * 
  * @author siegel
- * 
  */
 public interface Monic extends Monomial {
 
 	/**
 	 * Returns the factors of this monic as a map from {@link Primitive} to
 	 * {@link PrimitivePower}. A key in the map is a primitive x and the value
-	 * associated to x will be a primitive power x^i (x raised to the i-th
-	 * power) for some positive integer i.
+	 * associated to x will be a primitive power x<sup>i</sup> (x raised to the
+	 * i<sup>th</sup> power) for some positive integer i.
+	 * 
+	 * @param factory
+	 *            the factory used to produce this monic
 	 * 
 	 * @return the factors of this monic as a map
 	 */
@@ -44,8 +46,7 @@ public interface Monic extends Monomial {
 	 * Is this the trivial monic, i.e., the monic consisting of 0 factors (and
 	 * therefore equivalent to 1)?
 	 * 
-	 * @return true iff this monic is trivial
+	 * @return <code>true</code> iff this monic is trivial
 	 */
 	boolean isTrivialMonic();
-
 }

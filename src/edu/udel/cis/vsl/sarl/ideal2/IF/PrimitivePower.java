@@ -21,31 +21,32 @@ package edu.udel.cis.vsl.sarl.ideal2.IF;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 
 /**
- * A power of a Primitive expression, x^i, where x is a Primitive and i is a
- * concrete positive int.
+ * A power of a {@link Primitive} expression, x<sup>i</sup>, where x is a
+ * {@link Primitive} and i is a concrete positive int.
  * 
  * @author siegel
- * 
  */
 public interface PrimitivePower extends Monic {
 
 	/**
-	 * Creates a numeric primitive expression using an idealFactory
+	 * Returns the {@link Primitive} which is the base in this primitive power
+	 * expression.
 	 * 
 	 * @param factory
-	 *            - the ideal factory owning this polynomial
+	 *            the ideal factory owning this expression
 	 * 
-	 * @return a numeric primitive expression
+	 * @return the base in this primitive power expansion
 	 */
 	Primitive primitive(Ideal2Factory factory);
 
 	/**
-	 * The exponent part of a primitive power which is an integer is returned.
+	 * Returns the exponent in this primitive power expression, which is a
+	 * positive integer represented as an {@link IntObject}.
 	 * 
 	 * @param factory
-	 *            - the ideal factory owning this polynomial
+	 *            the ideal factory owning this expression
 	 * 
-	 * @return the integer exponent part of a PrimitivePower
+	 * @return the exponent of this expression
 	 */
 	IntObject primitivePowerExponent(Ideal2Factory factory);
 
