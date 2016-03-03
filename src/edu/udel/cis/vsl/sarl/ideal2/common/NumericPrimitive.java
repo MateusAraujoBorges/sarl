@@ -43,12 +43,13 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 public class NumericPrimitive extends IdealExpression implements Primitive {
 
 	/**
+	 * Cache of value returned by {@link #monicFactors(Ideal2Factory)}.
 	 * Singleton map from this to this, cached.
 	 */
 	private SymbolicMap<Primitive, PrimitivePower> monicFactors = null;
 
 	/**
-	 * Cached expansion.
+	 * Cache of value returned by {@link #expand(Ideal2Factory)}.
 	 */
 	private SymbolicMap<Monic, Monomial> expansion = null;
 
@@ -80,9 +81,12 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	@Override
 	public SymbolicMap<Primitive, PrimitivePower> monicFactors(
 			Ideal2Factory factory) {
-		if (monicFactors == null)
+		if (monicFactors == null) {
 			monicFactors = factory.primitiveSingletonMap(this,
 					(PrimitivePower) this);
+			if (isCanonic())
+				monicFactors = factory.objectFactory().canonic(monicFactors);
+		}
 		return monicFactors;
 	}
 

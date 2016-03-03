@@ -32,15 +32,30 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * Empty monic: equivalent to 1. The number 1 is the only thing which is both a
- * {@link Monic} and a {@link Constant}.
+ * {@link Monic} and a {@link Constant}. Can have either integer of real type.
  * 
  * @author siegel
- * 
  */
 public class One extends IdealExpression implements Constant, Monic {
 
+	/**
+	 * Cache of value returned by {@link #expand(Ideal2Factory)}.
+	 */
 	private SymbolicMap<Monic, Monomial> expansion = null;
 
+	/**
+	 * Constructs new instance of {@link One} of given type. The number object
+	 * <code>oneObj</code> must be either the real or integer number 1. The
+	 * <code>type</code> must be consistent with the type of <code>oneObj</code>
+	 * .
+	 * 
+	 * @param type
+	 *            either a {@link SymbolicIntegerType} or
+	 *            {@link SymbolicRealType};
+	 * 
+	 * @param oneObj
+	 *            either the integer 1 or the real number 1
+	 */
 	protected One(SymbolicType type, NumberObject oneObj) {
 		super(SymbolicOperator.CONCRETE, type, oneObj);
 		assert oneObj.isOne();

@@ -19,6 +19,8 @@
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
@@ -31,14 +33,22 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
- * A non-trivial polynomial is the sum of at least 2 monomials with different
- * underlying monics, e.g., 1+x^2, x+y, or x+xy.
+ * <p>
+ * An {@link NTPolynomial} ("non-trivial polynomial") is the sum of at least 2
+ * {@link Monomial}s with different underlying monics, e.g., 1+<i>x</i>
+ * <sup>2</sup>, <i>x</i>+<i>y</i>, or <i>x</i>+<i>xy</i>.
+ * </p>
  * 
- * The set of monomials is represented as a map. A key in this map is a Monic.
- * The value associated to the Monic is a Monomial.
+ * <p>
+ * The set of {@link Monomial} terms is represented as a {@link SymbolicMap}. A
+ * key in this map is a {@link Monic} <i>m</i>. The value associated to <i>m</i>
+ * is a {@link Monomial} of the form <i>c*m</i> for some non-zero
+ * {@link Constant} <i>c</i>. This kind of map is called a <i>term map</i>. The
+ * reason for using a map is to provide efficient look-up of terms using the
+ * {@link Monic}.
+ * </p>
  * 
  * @author siegel
- * 
  */
 public class NTPolynomial extends IdealExpression implements Polynomial {
 
@@ -49,12 +59,13 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 	private int totalDegree = -1;
 
 	/**
-	 * Cached expansion.
+	 * Cached value returned by {@link #expand(Ideal2Factory)}.
 	 */
 	private SymbolicMap<Monic, Monomial> expansion = null;
 
 	/**
-	 * Singleton map from this to this.
+	 * Cached value returned by {@link #monicFactors(Ideal2Factory)}: a
+	 * singleton map from this to this.
 	 */
 	private SymbolicMap<Primitive, PrimitivePower> monicFactors = null;
 
@@ -64,6 +75,27 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 	 */
 	byte hasNTE = -1;
 
+	/**
+	 * <p>
+	 * Constructs new {@link NTPolynomial} wrapping the given term map. The
+	 * <code>type</code> must equal the type of <code>termMap</code>. The caller
+	 * provides is just for reasons of efficiency.
+	 * </p>
+	 * 
+	 * Preconditions (not necessarily checked):
+	 * <ul>
+	 * <li><code>termMap</code> has at least 2 entries</li>
+	 * <li>every key and value in <code>termMap</code> has type
+	 * <code>type</code></li>
+	 * <li>the {@link Monomial} value associated to a {@link Monic} key <i>m</i>
+	 * has {@link Monic} equal to <i>m</i></li>
+	 * </ul>
+	 * 
+	 * @param type
+	 *            either {@link SymbolicRealType} or {@link SymbolicIntegerType}
+	 * @param termMap
+	 *            a term map with at least 2 entries
+	 */
 	protected NTPolynomial(SymbolicType type,
 			SymbolicMap<Monic, Monomial> termMap) {
 		super(SymbolicOperator.ADD, type, termMap);

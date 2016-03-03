@@ -32,6 +32,25 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.RationalExpression;
 public class NTRationalExpression extends IdealExpression
 		implements RationalExpression {
 
+	/**
+	 * Constructs new {@link NRationalExpression} from given numerator and
+	 * denominator.
+	 * 
+	 * <p>
+	 * Preconditions (not necessarily checked):
+	 * <ul>
+	 * <li>denominator is not 1 or 0</li>
+	 * <li>numerator is not 0</li>
+	 * <li>numerator and denominator have same type</li>
+	 * <li>numerator is not equal to denominator</li>
+	 * </ul>
+	 * </p>
+	 * 
+	 * @param numerator
+	 *            the numerator in the new rational expression
+	 * @param denominator
+	 *            the denominator in the new rational expression
+	 */
 	protected NTRationalExpression(Monomial numerator, Monomial denominator) {
 		super(SymbolicOperator.DIVIDE, numerator.type(), numerator,
 				denominator);
@@ -45,6 +64,11 @@ public class NTRationalExpression extends IdealExpression
 		return (Monomial) argument(0);
 	}
 
+	/**
+	 * Returns the numerator of this rational expression.
+	 * 
+	 * @return the numerator
+	 */
 	public Monomial numerator() {
 		return (Monomial) argument(0);
 	}
@@ -53,8 +77,12 @@ public class NTRationalExpression extends IdealExpression
 		return (Monomial) argument(1);
 	}
 
+	/**
+	 * Returns the denominator of this ratioal expression.
+	 * 
+	 * @return the denominator
+	 */
 	public Monomial denominator() {
 		return (Monomial) argument(1);
 	}
-
 }

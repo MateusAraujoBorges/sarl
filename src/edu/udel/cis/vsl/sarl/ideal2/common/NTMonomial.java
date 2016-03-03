@@ -35,8 +35,29 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  */
 public class NTMonomial extends IdealExpression implements Monomial {
 
+	/**
+	 * Cached value returned by {@link #expand(Ideal2Factory)}.
+	 */
 	private SymbolicMap<Monic, Monomial> expansion = null;
 
+	/**
+	 * Cache value returned by {@link #termMap(Ideal2Factory)}.
+	 */
+	private SymbolicMap<Monic, Monomial> termMap = null;
+
+	/**
+	 * Constructs new {@link NTMonomial} using given <code>constant</code> and
+	 * <code>monic</code>. Preconditions (checked by assertions only):
+	 * <ul>
+	 * <li><code>constant</code> is not 0 or 1</li>
+	 * <li><code>monic</code> is not empty (i.e., monic is not 1)</li>
+	 * </ul>
+	 * 
+	 * @param constant
+	 *            the constant in the new monomial
+	 * @param monic
+	 *            the monic in the new monomial
+	 */
 	protected NTMonomial(Constant constant, Monic monic) {
 		super(SymbolicOperator.MULTIPLY, constant.type(), constant, monic);
 		assert !constant.isZero();
@@ -105,13 +126,18 @@ public class NTMonomial extends IdealExpression implements Monomial {
 
 	@Override
 	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
-		Monic monic = monic();
+		if (termMap == null) {
+			Monic monic = monic();
 
-		if (monic instanceof Polynomial) {
-			return factory.multiplyConstantTermMap((Constant) argument(0),
-					monic.termMap(factory));
+			if (monic instanceof Polynomial) {
+				termMap = factory.multiplyConstantTermMap(
+						(Constant) argument(0), monic.termMap(factory));
+			}
+			termMap = factory.monicSingletonMap(monic, this);
+			if (isCanonic())
+				termMap = factory.objectFactory().canonic(termMap);
 		}
-		return factory.monicSingletonMap(monic, this);
+		return termMap;
 	}
 
 	@Override
@@ -129,6 +155,8 @@ public class NTMonomial extends IdealExpression implements Monomial {
 		super.canonizeChildren(of);
 		if (expansion != null && !expansion.isCanonic())
 			expansion = of.canonic(expansion);
+		if (termMap != null && !termMap.isCanonic())
+			termMap = of.canonic(termMap);
 	}
 
 }

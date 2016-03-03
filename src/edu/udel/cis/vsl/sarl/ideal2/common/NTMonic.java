@@ -20,7 +20,6 @@ package edu.udel.cis.vsl.sarl.ideal2.common;
 
 import java.io.PrintStream;
 
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
@@ -39,8 +38,9 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * </p>
  * 
  * <p>
- * A key in the map is a {@link Primitive}. The value associated to that key is
- * a {@link PrimitivePower}.
+ * A key in the map is a {@link Primitive} <i>p</i>. The value associated to
+ * <i>p</i> is a {@link PrimitivePower} <i>p<sup>n</sup></i> for some <i>n</i>
+ * &ge;1.
  * </p>
  * 
  * @author siegel
@@ -48,15 +48,26 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  */
 public class NTMonic extends IdealExpression implements Monic {
 
+	/**
+	 * Print debugging output?
+	 */
 	public final static boolean debug = false;
 
+	/**
+	 * The stream to which debugging output should be sent.
+	 */
 	public final static PrintStream out = System.out;
 
 	/**
-	 * Cached value returned by method {@link #degree()}.
+	 * Cached value returned by method {@link #degree()}. Initial value is -1,
+	 * indicating the method has not yet been called.
 	 */
 	private int monomialDegree = -1;
 
+	/**
+	 * Cached value returned by method {@link #totalDegree()}. Initial value is
+	 * -1, indicating the method has not yet been called.
+	 */
 	private int totalDegree = -1;
 
 	/**
@@ -151,13 +162,13 @@ public class NTMonic extends IdealExpression implements Monic {
 		return expansion;
 	}
 
-	public StringBuffer toStringBuffer() {
-		StringBuffer buffer = new StringBuffer();
-
-		for (SymbolicExpression expr : monicFactors())
-			buffer.append(expr.atomString());
-		return buffer;
-	}
+	// public StringBuffer toStringBuffer() {
+	// StringBuffer buffer = new StringBuffer();
+	//
+	// for (SymbolicExpression expr : monicFactors())
+	// buffer.append(expr.atomString());
+	// return buffer;
+	// }
 
 	@Override
 	public int monomialDegree() {
@@ -212,5 +223,4 @@ public class NTMonic extends IdealExpression implements Monic {
 		if (termMap != null && !termMap.isCanonic())
 			termMap = of.canonic(termMap);
 	}
-
 }

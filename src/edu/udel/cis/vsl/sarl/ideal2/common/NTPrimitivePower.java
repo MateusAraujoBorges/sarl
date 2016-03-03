@@ -39,8 +39,14 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 public class NTPrimitivePower extends IdealExpression
 		implements PrimitivePower {
 
+	/**
+	 * Print debugging information?
+	 */
 	public final static boolean debug = false;
 
+	/**
+	 * Where to send the debugging output.
+	 */
 	public final static PrintStream out = System.out;
 
 	/**
@@ -48,10 +54,26 @@ public class NTPrimitivePower extends IdealExpression
 	 */
 	private SymbolicMap<Monic, Monomial> expansion = null;
 
+	/**
+	 * Cached result of {@link #monicFactors(Ideal2Factory)}.
+	 */
 	private SymbolicMap<Primitive, PrimitivePower> monicFactors = null;
 
+	/**
+	 * Cached result of {@link #termMap(Ideal2Factory)}.
+	 */
 	private SymbolicMap<Monic, Monomial> termMap = null;
 
+	/**
+	 * Constructs new {@link NTPrimitivePower} with given primitive and
+	 * exponent.
+	 * 
+	 * @param primitive
+	 *            a non-<code>null</code> instance of {@link Primitive}
+	 * @param exponent
+	 *            an integer greater than or equal to 2 represented as an
+	 *            {@link IntObject}
+	 */
 	protected NTPrimitivePower(Primitive primitive, IntObject exponent) {
 		super(SymbolicOperator.POWER, primitive.type(), primitive, exponent);
 		assert exponent.getInt() >= 2;
@@ -180,6 +202,14 @@ public class NTPrimitivePower extends IdealExpression
 		return termMap;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * <p>
+	 * The total degree of a primitive power is the product of the total degree
+	 * of the primitive and the exponent.
+	 * </p>
+	 */
 	@Override
 	public int totalDegree() {
 		return exponent().getInt() * primitive().totalDegree();
@@ -202,5 +232,4 @@ public class NTPrimitivePower extends IdealExpression
 		if (monicFactors != null && !monicFactors.isCanonic())
 			monicFactors = of.canonic(monicFactors);
 	}
-
 }
