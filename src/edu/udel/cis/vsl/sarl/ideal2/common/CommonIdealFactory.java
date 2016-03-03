@@ -50,8 +50,6 @@ import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
-import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
-import edu.udel.cis.vsl.sarl.ideal.common.ReducedPolynomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
@@ -67,99 +65,10 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
 
 /**
  * <p>
- * Implementation of a {@link NumericExpressionFactory} based on the theories of
- * mathematical real and integer arithmetic, with factored polynomials forming
- * the core canonical form.
- * </p>
- *
- * <p>
- * The numeric symbolic expressions consumed and produced by this factory must
- * be instances of {@link IdealExpression}, the root of the ideal expression
- * type hierarchy. This factory guarantees the following invariants on ideal
- * expressions:
- * </p>
- * 
- * <p>
- * A concrete value that is 1 (integer or real) is represented as an instance of
- * {@link One}.
- * </p>
- * 
- * <p>
- * All concrete values are instances of {@link Constant}. A concrete value that
- * is not 1 is furthermore an instance of {@link NTConstant} (short for
- * <i>non-trivial constant</i>.
- * </p>
- * 
- * <p>
- * A {@link Primitive} numeric expression is an expression of integer or real
- * type which is not concrete and cannot be expressed as a sum or product or
- * quotient of other expressions. Examples include: symbolic constants, array
- * read expressions of integer or real type, tuple read expressions of integer
- * or real type, function applications for functions returning integer or real.
- * Every {@link Primitive} numeric expression will be an instance of
- * {@link NumericPrimitive}.
- * </p>
- * 
- * <p>
- * Any value which is the result of raising a primitive expression to a concrete
- * positive integer exponent is an instance of {@link PrimitivePower}. If the
- * exponent is 2 or greater, it is an instance of {@link NTPrimitivePower}.
- * </p>
- * 
- * <p>
- * Any product of {@link PrimitivePower}s is a {@link Monic}. If there are at
- * least two different {@link Primitive}s involved in the product, it is
- * furthermore an instance of {@link NTMonic}.
- * </p>
- * 
- * <p>
- * Any product of a {@link Constant} and a {@link Monic} is a {@link Monomial}.
- * If the {@link Constant} is neither 0 nor 1, and the {@link Monic} is not 1,
- * it is also an instance of {@link NTMonomial}.
- * </p>
- * 
- * <p>
- * Any sum of {@link Monomial}s is a {@link Polynomial}. If that sum involves at
- * least two terms with different monics, it is furthermore an instance of
- * {@link NTPolynomial}.
- * </p>
- * 
- * <p>
- * Every polynomial has an associated <strong>factorization</strong>. The
- * factors are not necessarily irreducible. The factorization is represented as
- * an instance of {@link Monomial}. The primitives occurring in the monic
- * component of the monomial are special: they may be instances of
- * {@link ReducedPolynomial}. A {@link ReducedPolynomial} "wraps" a polynomial
- * into a numeric primitive. The polynomial so wrapped must satisfy: (1) if the
- * type is real then the leading coefficient of the polynomial is 1, (2) if the
- * type is integer then the leading coefficient is positive and the GCD of the
- * absolute values of the coefficients is 1, and (3) there is no known
- * nontrivial factorization of the polynomial. The method
- * {@link Monomial#expand(Ideal2Factory)} returns an equivalent polynomial that
- * contains no instances of {@link ReducedPolynomial}.
- * </p>
- * 
- * <p>
- * A {@link RationalExpression} is the quotient of two polynomials. The
- * factorizations of the numerator and denominator will have no common factors.
- * Any {@link RationalExpression} of integer type is a {@link Polynomial}. (The
- * result of integer division of two integer polynomials may be a
- * {@link NumericPrimitive} with operator {@link SymbolicOperator#INT_DIVIDE}.)
- * An {@link NTRationalExpression} always has real type and the degree of the
- * denominator is at least 1.
- * </p>
- *
- * <p>
- * A relational numeric expression will always be in one of the following forms:
- * 
- * <ul>
- * <li><code>0&lt;p</code></li>
- * <li><code>0&le;p</code></li>
- * <li><code>0=p</code></li>
- * <li><code>0&ne;p</code></li>
- * </ul>
- * 
- * where <code>p</code> is a {@link Polynomial}.
+ * An implementation of {@link Ideal2Factory}. Several of the classes used to
+ * represent expressions start with the letters "NT", which stands for
+ * "non-trivial". For example {@link NTConstant} implements {@link Constant} and
+ * represents any non-trivial constant, i.e., a constant which is not 1.
  * </p>
  * 
  * @author Stephen F. Siegel

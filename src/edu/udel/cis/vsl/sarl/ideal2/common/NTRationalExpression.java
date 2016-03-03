@@ -23,11 +23,11 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.RationalExpression;
 
 /**
- * A nontrivial rational expression. It consists of a numerator and denominator,
- * both factored polynomials.
+ * A nontrivial {@link RationalExpression}. It consists of a numerator and
+ * denominator, both {@link Monomial}s. The denominator is not 1 or 0, the
+ * numerator is not 0, and the numerator does not equal the denominator.
  * 
  * @author siegel
- * 
  */
 public class NTRationalExpression extends IdealExpression
 		implements RationalExpression {

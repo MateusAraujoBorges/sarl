@@ -4,6 +4,13 @@ import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 
+/**
+ * A {@link Comparator} on {@link Primitive}s, using the same order as that of
+ * {@link IdealComparator}.
+ * 
+ * @author siegel
+ *
+ */
 public class PrimitiveComparator implements Comparator<Primitive> {
 
 	private IdealComparator ic;

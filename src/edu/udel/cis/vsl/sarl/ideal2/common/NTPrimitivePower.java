@@ -31,11 +31,10 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
- * A non-trivial primitive power represents a Primitive expression raised to
- * some concrete integer exponent; the exponent is at least 2.
+ * A non-trivial primitive power represents a {@link Primitive} expression
+ * raised to some concrete integer exponent; the exponent is at least 2.
  * 
  * @author siegel
- * 
  */
 public class NTPrimitivePower extends IdealExpression
 		implements PrimitivePower {
@@ -59,9 +58,9 @@ public class NTPrimitivePower extends IdealExpression
 	}
 
 	/**
-	 * Creates a primitive which is any symbol or number raised to the 1st power
+	 * Returns the primitive base of this expression.
 	 * 
-	 * @return - a primitive such as 'x' or 'y'
+	 * @return the primitive base of this expression
 	 */
 	public Primitive primitive() {
 		return (Primitive) argument(0);
@@ -95,11 +94,9 @@ public class NTPrimitivePower extends IdealExpression
 	}
 
 	/**
-	 * The number that is raised as a power to any particular expression or any
-	 * constants This exponent number is of type intObject.
+	 * Returns the exponent in this power expression.
 	 * 
-	 * @return - the value by multiplying the expression or any constant, number
-	 *         of times equal to the integer that is raised to the power.
+	 * @return the exponent
 	 */
 	public IntObject exponent() {
 		return (IntObject) argument(1);

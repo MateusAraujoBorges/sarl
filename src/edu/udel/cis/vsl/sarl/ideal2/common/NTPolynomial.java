@@ -90,7 +90,7 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 	@Override
 	public Constant constantTerm(Ideal2Factory factory) {
 		SymbolicType type = type();
-		Constant constant = (Constant) termMap().get(factory.one(type));
+		Constant constant = (Constant) termMap().get((Monic) factory.one(type));
 
 		return constant == null ? factory.zero(type) : constant;
 	}

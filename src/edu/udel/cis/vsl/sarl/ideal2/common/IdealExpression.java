@@ -26,14 +26,17 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
 
 /**
- * This class creates the ideal expressions by taking as the input of an
- * operator, arguments and their type.
+ * <p>
+ * The base class for all ideal expressions.
+ * </p>
  * 
- * This class extends CommonSymbolicExpression which is the root of the symbolic
- * expression hierarchy. This helps us in creating the required expression using
- * the methods present in this class.
+ * <p>
+ * This class extends {@link CommonSymbolicExpression}, which is the root of the
+ * symbolic expression hierarchy.
+ * </p>
  * 
- *
+ * TODO: currently this class does not provide any services beyond those already
+ * provided by {@link CommonSymbolicExpression}. Consider getting rid of it.
  */
 public abstract class IdealExpression extends CommonSymbolicExpression
 		implements NumericExpression {

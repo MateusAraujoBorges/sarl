@@ -31,7 +31,8 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
- * Empty monic: equivalent to 1.
+ * Empty monic: equivalent to 1. The number 1 is the only thing which is both a
+ * {@link Monic} and a {@link Constant}.
  * 
  * @author siegel
  * 

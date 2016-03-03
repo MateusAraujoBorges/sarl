@@ -33,16 +33,17 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
- * A numeric primitive expression. Other classes may want to extend this.
- * Examples: symbolic constant, array read, tuple read, function application,
- * when those have numeric type.
+ * A numeric primitive expression---one which is to be considered as an atomic
+ * "variable" when used in other numeric expressions. Other classes may want to
+ * extend this. Examples: symbolic constant, array read, tuple read, function
+ * application, when those have numeric type.
  * 
  * @author siegel
  */
 public class NumericPrimitive extends IdealExpression implements Primitive {
 
 	/**
-	 * Singleton map from this to this.
+	 * Singleton map from this to this, cached.
 	 */
 	private SymbolicMap<Primitive, PrimitivePower> monicFactors = null;
 

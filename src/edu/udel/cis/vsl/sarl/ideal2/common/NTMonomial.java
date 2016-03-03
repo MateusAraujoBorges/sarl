@@ -27,11 +27,11 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
- * A non-trivial monomial is the product of a constant and a monic. The constant
- * must not be 0 or 1 and the monic must not be empty.
+ * A non-trivial {@link Monomial} is the product of a {@link Constant} and a
+ * {@link Monic}. The constant must not be 0 or 1 and the monic must not be
+ * empty.
  * 
  * @author siegel
- * 
  */
 public class NTMonomial extends IdealExpression implements Monomial {
 
@@ -50,9 +50,9 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	}
 
 	/**
-	 * Creates a Monic expression
+	 * Returns the {@link Monic} component of this {@link Monomial}.
 	 * 
-	 * @return a Monic
+	 * @return the {@link Monic} component of this
 	 */
 	public Monic monic() {
 		return (Monic) argument(1);
@@ -63,6 +63,11 @@ public class NTMonomial extends IdealExpression implements Monomial {
 		return (Constant) argument(0);
 	}
 
+	/**
+	 * Returns the {@link Constant} component of this {@link Monomial}.
+	 * 
+	 * @return the constant component of this
+	 */
 	public Constant monomialConstant() {
 		return (Constant) argument(0);
 	}

@@ -66,7 +66,7 @@ public class NTConstant extends IdealExpression implements Constant {
 
 	@Override
 	public Monic monic(Ideal2Factory factory) {
-		return factory.one(type());
+		return (Monic) factory.one(type());
 	}
 
 	@Override
@@ -83,7 +83,8 @@ public class NTConstant extends IdealExpression implements Constant {
 	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
 		if (expansion == null) {
 			expansion = isZero() ? factory.emptyMonicMap()
-					: factory.monicSingletonMap(factory.one(type()), this);
+					: factory.monicSingletonMap((Monic) factory.one(type()),
+							this);
 			if (isCanonic())
 				expansion = factory.objectFactory().canonic(expansion);
 		}

@@ -19,20 +19,18 @@
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 
 /**
- * This class creates an ideal symbolic constant and also has methods that gives
- * us the name of this newly created symbolic constant along with its string
- * representation.
- * 
- * This ideal symbolic constant can either be an integer or a real type.
- * 
- *
+ * A {@link SymbolicConstant} which is also a {@link Primitive}. All symbolic
+ * constant of integer or real type that will appear in the ideal factory should
+ * belong to this type.
  */
-public class IdealSymbolicConstant extends NumericPrimitive implements
-		NumericSymbolicConstant {
+public class IdealSymbolicConstant extends NumericPrimitive
+		implements NumericSymbolicConstant {
 
 	IdealSymbolicConstant(StringObject name, SymbolicType type) {
 		super(SymbolicOperator.SYMBOLIC_CONSTANT, type, name);
