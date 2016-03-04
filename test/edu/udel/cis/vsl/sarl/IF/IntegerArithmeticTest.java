@@ -1,6 +1,8 @@
 package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertEquals;
+
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,23 +16,19 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class IntegerArithmeticTest {
+	public final static PrintStream out = System.out;
+	public final static boolean debug = false;
 	private SymbolicUniverse universe;
-	private NumericExpression negOneInt;  //integer -1
-	private NumericExpression twoInt;     //integer  2
-	private NumericExpression threeInt;   //integer  3
-	private NumericExpression negThreeInt;//integer -3
-	private NumericExpression negFourInt; //integer -4
-	private NumericExpression fourInt;    //integer  4
-	private NumericExpression x;
-	private NumericExpression y;
-	private NumericExpression z;
-	//private NumericExpression _x;   // -x
-	private StringObject x_obj;		// "x"
-	//private StringObject negX_obj;	// "-x"
-	private StringObject y_obj;		// "y"
-	private StringObject z_obj;		// "z"
+	private NumericExpression negOneInt; // integer -1
+	private NumericExpression twoInt; // integer 2
+	private NumericExpression threeInt; // integer 3
+	private NumericExpression negThreeInt;// integer -3
+	private NumericExpression negFourInt; // integer -4
+	private NumericExpression fourInt; // integer 4
+	private NumericExpression x, y, z;
+	private StringObject x_obj, y_obj, z_obj; // "x", "y", "z"
 	private SymbolicType intType;
-	
+
 	@Before
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
@@ -41,14 +39,12 @@ public class IntegerArithmeticTest {
 		fourInt = universe.integer(4);
 		negFourInt = universe.integer(-4);
 		x_obj = universe.stringObject("x");
-		//negX_obj = universe.stringObject("-x");
 		y_obj = universe.stringObject("y");
 		z_obj = universe.stringObject("z");
 		intType = universe.integerType();
 		x = (NumericExpression) universe.symbolicConstant(x_obj, intType);
 		y = (NumericExpression) universe.symbolicConstant(y_obj, intType);
 		z = (NumericExpression) universe.symbolicConstant(z_obj, intType);
-		//_x = (NumericExpression) universe.symbolicConstant(negX_obj, intType);
 	}
 
 	@After
@@ -56,7 +52,8 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the add method for two concrete IntegerNumbers;test: 1 + (-4) = -3
+	 * Testing the add method for two concrete IntegerNumbers;test: 1 + (-4) =
+	 * -3
 	 */
 	@Test
 	public void addTwoConcreteIntTest() {
@@ -74,7 +71,7 @@ public class IntegerArithmeticTest {
 		NumericExpression result = universe.add(x, universe.zeroInt());
 		NumericExpression result1 = universe.add(x, y);
 		NumericExpression result2 = universe.add(y, x);
-		
+
 		assertEquals(x, result);
 		assertEquals(result1, result2);
 	}
@@ -101,8 +98,8 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the subtract method for two concrete IntegerNumbers;test: 3 - (-1) =
-	 * 4;
+	 * Testing the subtract method for two concrete IntegerNumbers;test: 3 -
+	 * (-1) = 4;
 	 */
 	@Test
 	public void substractConcreteIntTest() {
@@ -123,8 +120,8 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the multiply method for two concrete IntegerNumbers;test: (-1) * 3 =
-	 * -3;
+	 * Testing the multiply method for two concrete IntegerNumbers;test: (-1) *
+	 * 3 = -3;
 	 */
 	@Test
 	public void multiplyTwoConcreteIntTest() {
@@ -148,7 +145,7 @@ public class IntegerArithmeticTest {
 		assertEquals(result1, result2);
 		assertEquals(x, result3);
 	}
-	
+
 	/**
 	 * Testing the multiply method for symbolic IntegerNumbers;test:
 	 * (x*y)*z=x*(y*z);
@@ -196,12 +193,10 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the divide method for two concrete IntegerNumbers;
-	 * In C, a%b=a-(a/b)*b. test examples:
-	 * a=4, b=3: a/b=1, a%b=4-3=1
-	 * a=4, b=-3: a/b=-1, a%b=4-(-1)(-3)=1
-	 * a=-4, b=3: a/b=-1, a%b=-4-(-1)3=-1
-	 * a=-4, b=-3: a/b=1, a%b=-4-1(-3)=-1
+	 * Testing the divide method for two concrete IntegerNumbers; In C,
+	 * a%b=a-(a/b)*b. test examples: a=4, b=3: a/b=1, a%b=4-3=1 a=4, b=-3:
+	 * a/b=-1, a%b=4-(-1)(-3)=1 a=-4, b=3: a/b=-1, a%b=-4-(-1)3=-1 a=-4, b=-3:
+	 * a/b=1, a%b=-4-1(-3)=-1
 	 */
 	@Test
 	public void divideConcreteIntTest() {
@@ -228,12 +223,9 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the modulo method for IntegerNumbers;
-	 * In C, a%b=a-(a/b)*b. test examples:
-	 * a=4, b=3: a/b=1, a%b=4-3=1
-	 * a=4, b=-3: a/b=-1, a%b=4-(-1)(-3)=1
-	 * a=-4, b=3: a/b=-1, a%b=-4-(-1)3=-1
-	 * a=-4, b=-3: a/b=1, a%b=-4-1(-3)=-1
+	 * Testing the modulo method for IntegerNumbers; In C, a%b=a-(a/b)*b. test
+	 * examples: a=4, b=3: a/b=1, a%b=4-3=1 a=4, b=-3: a/b=-1, a%b=4-(-1)(-3)=1
+	 * a=-4, b=3: a/b=-1, a%b=-4-(-1)3=-1 a=-4, b=-3: a/b=1, a%b=-4-1(-3)=-1
 	 */
 	@Test
 	public void moduloIntTest() { // positive divisor
@@ -252,7 +244,7 @@ public class IntegerArithmeticTest {
 		assertEquals(universe.oneInt(), result1);
 		assertEquals(negOneInt, result3);
 	}
-	
+
 	/**
 	 * Testing the minus method for concrete IntegerNumbers;
 	 */
@@ -289,6 +281,27 @@ public class IntegerArithmeticTest {
 		assertEquals(threeInt, result);
 		assertEquals(universe.oneInt(), result1);
 		assertEquals(universe.oneInt(), result2);
+	}
+
+	/**
+	 * Negative exponent power test.
+	 */
+	@Test
+	public void negativeExponentPowerTest() {
+		NumericExpression e = universe.power(x, negOneInt);
+
+		assertEquals(universe.divide(universe.oneInt(), x), e);
+	}
+
+	/**
+	 * Zero base power test.
+	 */
+	@Test
+	public void zeroBasePowerTest() {
+		NumericExpression e = universe.power(universe.zeroInt(), negOneInt);
+		if (debug) {
+			out.println(e);
+		}
 	}
 
 	/**
