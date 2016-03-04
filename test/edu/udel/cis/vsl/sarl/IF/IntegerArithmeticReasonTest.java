@@ -311,4 +311,17 @@ public class IntegerArithmeticReasonTest {
 
 		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
 	}
+
+	/**
+	 * Symbolic Integer modulus. true : (x^y)*(x^z)=x^(y+z)
+	 */
+	@Test
+	public void addExponentTest() {
+		NumericExpression e1 = universe.multiply(universe.power(x, y),
+				universe.power(x, z));
+		NumericExpression e2 = universe.power(x, universe.add(y, z));
+		reasoner = universe.reasoner(trueExpr);
+
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
 }
