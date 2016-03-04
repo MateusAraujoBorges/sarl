@@ -20,12 +20,14 @@ package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.PrintStream;
+
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
+import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
@@ -34,13 +36,13 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class IntegerArithmeticReasonTest {
+	public final static PrintStream out = System.out;
+	public final static boolean debug = false;
 	private SymbolicUniverse universe;
-	private StringObject uobj; // "u"
+	private StringObject u_obj, x_obj, y_obj, z_obj; // "u", "x", "y", "z"
 	private SymbolicType integerType;
-	private NumericSymbolicConstant u; // integer symbolic constant "u"
-	private NumericExpression negOneInt;
-	private NumericExpression threeInt;
-	private NumericExpression fiveInt;
+	private NumericSymbolicConstant u, x, y, z; // integer symbolic constant
+	private NumericExpression negOneInt, threeInt, fiveInt;
 	private BooleanExpression trueExpr, falseExpr;
 	private BooleanExpression assumption;
 	private Reasoner reasoner;
@@ -48,9 +50,18 @@ public class IntegerArithmeticReasonTest {
 	@Before
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
-		uobj = universe.stringObject("u");
+		u_obj = universe.stringObject("u");
+		x_obj = universe.stringObject("x");
+		y_obj = universe.stringObject("y");
+		z_obj = universe.stringObject("z");
 		integerType = universe.integerType();
-		u = (NumericSymbolicConstant) universe.symbolicConstant(uobj,
+		u = (NumericSymbolicConstant) universe.symbolicConstant(u_obj,
+				integerType);
+		x = (NumericSymbolicConstant) universe.symbolicConstant(x_obj,
+				integerType);
+		y = (NumericSymbolicConstant) universe.symbolicConstant(y_obj,
+				integerType);
+		z = (NumericSymbolicConstant) universe.symbolicConstant(z_obj,
 				integerType);
 		negOneInt = universe.integer(-1);
 		threeInt = universe.integer(3);
@@ -152,18 +163,35 @@ public class IntegerArithmeticReasonTest {
 	/**
 	 * Integer modulus. true : 0 <= u/3 <=1 -> u <= 5
 	 */
-	@Ignore
 	@Test
 	public void simplifyIntDivTest() {
-		BooleanExpression p0 = universe.and(
+		BooleanExpression assumption = universe.and(
 				universe.lessThanEquals(universe.zeroInt(),
 						universe.divide(u, threeInt)),
 				universe.lessThanEquals(universe.divide(u, threeInt),
 						universe.oneInt()));
-		BooleanExpression p1 = universe.lessThanEquals(u, fiveInt);
-		reasoner = universe.reasoner(p0);
-		
-		assertEquals(p1, reasoner.getReducedContext());
+		reasoner = universe.reasoner(assumption);
+		BooleanExpression e1 = universe.lessThanEquals(u, fiveInt);
+		ValidityResult result1 = reasoner.valid(e1);
+
+		assertEquals(ResultType.YES, result1.getResultType());
+	}
+
+	/**
+	 * Integer modulus. false: 0 <= u/3 <=1 -> u >=0; like negative integer -1
+	 */
+	@Test
+	public void simplifyIntDivTest2() {
+		BooleanExpression assumption = universe.and(
+				universe.lessThanEquals(universe.zeroInt(),
+						universe.divide(u, threeInt)),
+				universe.lessThanEquals(universe.divide(u, threeInt),
+						universe.oneInt()));
+		reasoner = universe.reasoner(assumption);
+		BooleanExpression e2 = universe.lessThanEquals(universe.zeroInt(), u);
+		ValidityResult result2 = reasoner.valid(e2);
+
+		assertEquals(ResultType.NO, result2.getResultType());
 	}
 
 	/**
@@ -177,15 +205,6 @@ public class IntegerArithmeticReasonTest {
 
 		assertEquals(universe.zeroInt(), reasoner.simplify(e));
 	}
-
-	// TODO: Possible approaches:
-	// When evaluating x%constant: if x is a Monomial c*m,
-	// (c*m)%d = ((c%d)*m)%d, and (c1*m1 + c2*m2)%d =...
-	// (x^n)%d = ((x%d)^n)%d. In short, apply %d to all
-	// constants...
-	// (a*b)%d = ((a%d)*b)%d
-	// (a+b)%d = ((a%d)+b)%d
-	// sign?
 
 	/**
 	 * Integer modulus. true : (2u + 1) % 2 -> 1 only if u >= 0.
@@ -215,4 +234,81 @@ public class IntegerArithmeticReasonTest {
 		assertEquals(negOneInt, reasoner.simplify(e));
 	}
 
+	// When evaluating x%constant: if x is a Monomial c*m,
+	// (c*m)%d = ((c%d)*m)%d, and (c1*m1 + c2*m2)%d =...
+	// (x^n)%d = ((x%d)^n)%d. In short, apply %d to all
+	// constants...
+	// (a*b)%d = ((a%d)*b)%d
+	// (a+b)%d = ((a%d)+b)%d
+	/**
+	 * Symbolic Integer modulus. true : ((x%z)*y)%z -> (x*y)%z
+	 */
+	@Test
+	public void simplifySymbolicMod() {
+		SymbolicExpression e1 = universe
+				.modulo(universe.multiply(universe.modulo(x, z), y), z);
+		SymbolicExpression e2 = universe.modulo(universe.multiply(x, y), z);
+		reasoner = universe.reasoner(trueExpr);
+
+		assertEquals(e2, reasoner.simplify(e1));
+	}
+
+	/**
+	 * Symbolic Integer modulus. true : ((x%z)+y)%z -> (x+y)%z
+	 */
+	@Test
+	public void simplifySymbolicMod2() {
+		SymbolicExpression e1 = universe
+				.modulo(universe.add(universe.modulo(x, z), y), z);
+		SymbolicExpression e2 = universe.modulo(universe.add(x, y), z);
+		reasoner = universe.reasoner(trueExpr);
+		if (debug) {
+			out.println(e1);
+			out.println(e2);
+		}
+
+		assertEquals(e2, reasoner.simplify(e1));
+	}
+
+	/**
+	 * Symbolic Integer modulus. true : ((x%z)^y)%z -> (x^y)%z
+	 */
+	@Test
+	public void simplifySymbolicMod3() {
+		SymbolicExpression e1 = universe
+				.modulo(universe.power(universe.modulo(x, z), y), z);
+		SymbolicExpression e2 = universe.modulo(universe.power(x, y), z);
+		reasoner = universe.reasoner(trueExpr);
+		if (debug) {
+			out.println(e1);
+			out.println(e2);
+		}
+
+		assertEquals(e2, reasoner.simplify(e1));
+	}
+
+	/**
+	 * Symbolic Integer modulus. negative exponent power test
+	 */
+	@Test
+	public void negativeExponentPowerTest() {
+		NumericExpression e = universe.multiply(x,
+				universe.power(y, negOneInt));
+		if (debug) {
+			out.println(e);
+		}
+	}
+
+	/**
+	 * Symbolic Integer modulus. true : x/y = x*(y^-1)
+	 */
+	@Test
+	public void divideToPowerTest() {
+		NumericExpression e1 = universe.divide(x, y);
+		NumericExpression e2 = universe.multiply(x,
+				universe.power(y, negOneInt));
+		reasoner = universe.reasoner(trueExpr);
+
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
 }
