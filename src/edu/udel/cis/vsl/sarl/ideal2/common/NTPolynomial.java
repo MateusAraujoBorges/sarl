@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
+import java.io.PrintStream;
+
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
@@ -51,6 +53,16 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * @author siegel
  */
 public class NTPolynomial extends IdealExpression implements Polynomial {
+
+	/**
+	 * Print debugging info?
+	 */
+	public final static boolean debug = false;
+
+	/**
+	 * Where to send debugging info.
+	 */
+	public final static PrintStream out = System.out;
 
 	/**
 	 * The total degree of the polynomial, or -1 if the degree has not yet been
@@ -133,12 +145,20 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 			SymbolicMap<Monic, Monomial> termMap = termMap();
 
 			if (hasNontrivialExpansion(factory)) {
+				if (debug) {
+					out.println("Starting expansion of " + shortString());
+					out.flush();
+				}
 				expansion = factory.emptyMonicMap();
 				for (Monomial oldTerm : termMap.values())
 					expansion = factory.addTermMaps(expansion,
 							oldTerm.expand(factory));
 				if (isCanonic())
 					expansion = factory.objectFactory().canonic(expansion);
+				if (debug) {
+					out.println("Finished expansion of " + shortString());
+					out.flush();
+				}
 			} else {
 				expansion = termMap;
 			}
@@ -243,6 +263,11 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 			expansion = of.canonic(expansion);
 		if (monicFactors != null && !monicFactors.isCanonic())
 			monicFactors = of.canonic(monicFactors);
+	}
+
+	public String shortString() {
+		return "Poly[id=" + id() + ",numTerms=" + termMap().size()
+				+ ",totalDegree=" + totalDegree() + "]";
 	}
 
 }

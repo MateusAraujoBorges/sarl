@@ -42,8 +42,6 @@ public class AffineFactory {
 
 	private RationalNumber ZERO_REAL, ONE_REAL;
 
-	// private AffineExpression zeroIntAffine, zeroRealAffine;
-
 	private SymbolicType integerType, realType;
 
 	public AffineFactory(Ideal2Factory idealFactory) {
@@ -56,8 +54,6 @@ public class AffineFactory {
 		ONE_REAL = numberFactory.oneRational();
 		integerType = typeFactory.integerType();
 		realType = typeFactory.realType();
-		// zeroIntAffine = affine(null, ZERO_INT, ZERO_INT);
-		// zeroRealAffine = affine(null, ZERO_REAL, ZERO_REAL);
 	}
 
 	public AffineExpression affine(Monic pseudo, Number coefficient,
@@ -65,43 +61,48 @@ public class AffineFactory {
 		SymbolicType type = coefficient instanceof IntegerNumber ? integerType
 				: realType;
 
-		// assert pseudo == null || type.equals(pseudo.type());
 		assert type.isInteger() && offset instanceof IntegerNumber
 				|| type.isReal() && offset instanceof RationalNumber;
 		return new AffineExpression(pseudo, coefficient, offset);
 	}
 
-	public AffineExpression affine(Polynomial fp) {
-		SymbolicType type = fp.type();
-		int degree = fp.polynomialDegree();
+	/**
+	 * Computes a representation of the given {@link Polynomial} as an
+	 * {@link AffineExpression} aX+b, where X is in pseudo form.
+	 * 
+	 * Also guarantees that if a=1 and b=0, the pseudo X will ==
+	 * <code>poly</code> (not just .equals). This provides an easy way to
+	 * determine whether the affine expression is "trivial".
+	 */
+	public AffineExpression affine(Polynomial poly) {
+		SymbolicType type = poly.type();
+		int degree = poly.polynomialDegree();
 
 		// any instance of Polynomial has nonnegative degree.
 		// The termmap must be non-empty.
-		// if (degree < 0) { // fp=0
-		// return type.isInteger() ? zeroIntAffine : zeroRealAffine;
 		if (degree == 0) { // fp is constant
 			return affine(null, type.isInteger() ? ZERO_INT : ZERO_REAL,
-					((Constant) fp).number());
+					((Constant) poly).number());
 		} else {
 			// first, subtract off constant term (if it is non-0).
 			// then factor out best you can:
 			// if real: factor out leading coefficient (unless it is 1)
 			// if int: take gcd of coefficients and factor that out (unless it
 			// is 1)
-			Number constantTerm = fp.constantTerm(idealFactory).number();
+			Number constantTerm = poly.constantTerm(idealFactory).number();
 			Number coefficient;
 			Monic pseudo;
 
 			if (constantTerm.isZero()) {
 				// the polynomial is already normal, so nothing to do
 				coefficient = type.isInteger() ? ONE_INT : ONE_REAL;
-				pseudo = fp;
+				pseudo = poly;
 			} else {
 				// better: one must be last, so remove last element
 				// note: after removing one, resulting map might
 				// have one entry
 				Monomial difference = idealFactory
-						.factorTermMap(fp.termMap(idealFactory)
+						.factorTermMap(poly.termMap(idealFactory)
 								.remove((Monic) idealFactory.one(type)));
 
 				pseudo = difference.monic(idealFactory);
@@ -201,6 +202,17 @@ public class AffineFactory {
 		return result;
 	}
 
+	/**
+	 * Given a value for the "pseudo" X, returns the value of the affine
+	 * expressions aX+b.
+	 * 
+	 * @param affine
+	 *            the affine expression aX+b
+	 * @param pseudoValue
+	 *            a concrete value for X
+	 * @return the concrete value obtained by substituting
+	 *         <code>pseudoValue</code> for X in aX+b
+	 */
 	public Number affineValue(AffineExpression affine, Number pseudoValue) {
 		if (affine.pseudo() == null)
 			return affine.offset();

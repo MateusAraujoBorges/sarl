@@ -20,6 +20,7 @@ package edu.udel.cis.vsl.sarl.ideal2.IF;
 
 import java.util.Comparator;
 
+import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
@@ -392,6 +393,8 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 *         the corresponding bit in <code>mask</code> is <code>true</code>
 	 */
 	Monic monicMask(Monic monic, boolean[] mask);
+	
+	BooleanExpression isZero(Monomial monomial);
 
 	// Monomials...
 

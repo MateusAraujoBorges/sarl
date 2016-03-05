@@ -47,7 +47,7 @@ public class CommonCollectionFactory implements CollectionFactory {
 
 	private SymbolicSet<?> emptyHashSet, emptySortedSet;
 
-	private SymbolicMap<?, ?> emptyHashMap, emptySortedMap;
+	// private SymbolicMap<?, ?> emptyHashMap, emptySortedMap;
 
 	private SymbolicSequence<?> emptySequence;
 
@@ -71,15 +71,15 @@ public class CommonCollectionFactory implements CollectionFactory {
 	@Override
 	public void init() {
 		assert elementComparator != null;
-		emptySortedMap = objectFactory.canonic(
-				new SimpleSortedMap<SymbolicExpression, SymbolicExpression>(
-						elementComparator));
+		// emptySortedMap = objectFactory.canonic(
+		// new SimpleSortedMap<SymbolicExpression, SymbolicExpression>(
+		// elementComparator));
 		emptySequence = objectFactory
 				.canonic(new SimpleSequence<SymbolicExpression>());
 		emptySortedSet = objectFactory.canonic(
 				new SimpleSortedSet<SymbolicExpression>(elementComparator));
 		emptyHashSet = emptySortedSet;
-		emptyHashMap = emptySortedMap;
+		//emptyHashMap = emptySortedMap;
 	}
 
 	@Override
@@ -145,33 +145,37 @@ public class CommonCollectionFactory implements CollectionFactory {
 		return (SymbolicSequence<T>) emptySequence;
 	}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> emptySortedMap() {
-		return (SortedSymbolicMap<K, V>) emptySortedMap;
-	}
+	// @SuppressWarnings("unchecked")
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> emptySortedMap() {
+	// return (SortedSymbolicMap<K, V>) emptySortedMap;
+	// }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> emptyHashMap() {
-		return (SymbolicMap<K, V>) emptyHashMap;
-	}
+	// @SuppressWarnings("unchecked")
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SymbolicMap<K, V> emptyHashMap() {
+	// return (SymbolicMap<K, V>) emptyHashMap;
+	// }
 
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> singletonSortedMap(
-			K key, V value) {
-		SortedSymbolicMap<K, V> empty = emptySortedMap();
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> singletonSortedMap(
+	// K key, V value) {
+	// SortedSymbolicMap<K, V> empty = emptySortedMap();
+	//
+	// return empty.put(key, value);
+	// }
 
-		return empty.put(key, value);
-	}
-
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> singletonHashMap(
-			K key, V value) {
-		SymbolicMap<K, V> empty = emptyHashMap();
-
-		return empty.put(key, value);
-	}
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SymbolicMap<K, V> singletonHashMap(
+	// K key, V value) {
+	// SymbolicMap<K, V> empty = emptyHashMap();
+	//
+	// return empty.put(key, value);
+	// }
 
 	@Override
 	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
@@ -179,11 +183,12 @@ public class CommonCollectionFactory implements CollectionFactory {
 		return new SimpleSortedMap<K, V>(javaMap, elementComparator);
 	}
 
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> hashMap(
-			Map<K, V> javaMap) {
-		return new SimpleSortedMap<K, V>(javaMap, elementComparator);
-	}
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SymbolicMap<K, V> hashMap(
+	// Map<K, V> javaMap) {
+	// return new SimpleSortedMap<K, V>(javaMap, elementComparator);
+	// }
 
 	@Override
 	public <T extends SymbolicExpression> SortedSymbolicSet<T> emptySortedSet(

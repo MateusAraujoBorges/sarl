@@ -10,6 +10,15 @@ import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 
+/**
+ * A {@link BoundMap} keeps track of bounds on all {@link Monic} expressions
+ * occurring within a given simplification context. It has state: as more
+ * information is learned about those expressions, methods are called in this
+ * class which refines the bounds. There is one instance of {@link BoundMap}
+ * associated to each {@link IdealSimplifier}.
+ * 
+ * @author siegel
+ */
 public class BoundMap {
 
 	private Map<Monic, Interval> map;
@@ -129,5 +138,9 @@ public class BoundMap {
 				.clone();
 
 		return new BoundMap(info, newMap);
+	}
+
+	public void clear() {
+		map.clear();
 	}
 }

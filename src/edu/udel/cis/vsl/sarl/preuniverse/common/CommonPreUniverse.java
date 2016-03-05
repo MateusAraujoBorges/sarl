@@ -99,6 +99,8 @@ public class CommonPreUniverse implements PreUniverse {
 	 * Factory for producing general symbolic expressions.
 	 */
 	private ExpressionFactory expressionFactory;
+	
+	//private Comparator<>
 
 	/**
 	 * Factory for producing and manipulating boolean expressions.
@@ -202,6 +204,7 @@ public class CommonPreUniverse implements PreUniverse {
 		numericFactory = expressionFactory.numericFactory();
 		numberFactory = numericFactory.numberFactory();
 		objectComparator = objectFactory.comparator();
+		//expressionFactory.
 		booleanType = typeFactory.booleanType();
 		integerType = typeFactory.integerType();
 		realType = typeFactory.realType();
@@ -296,10 +299,10 @@ public class CommonPreUniverse implements PreUniverse {
 			throw ierr("Expected type int or real, not " + type);
 	}
 
-	protected SymbolicSet<SymbolicExpression> hashSet(SymbolicExpression x,
-			SymbolicExpression y) {
-		return collectionFactory.singletonHashSet(x).add(y);
-	}
+	// protected SymbolicSet<SymbolicExpression> hashSet(SymbolicExpression x,
+	// SymbolicExpression y) {
+	// return collectionFactory.singletonHashSet(x).add(y);
+	// }
 
 	private SymbolicConstant boundVar(int index, SymbolicType type) {
 		return symbolicConstant(stringObject("x" + index), type);
@@ -2615,12 +2618,12 @@ public class CommonPreUniverse implements PreUniverse {
 				collectionFactory.emptyHashSet());
 	}
 
-	@Override
-	public SymbolicExpression singletonSet(SymbolicSetType setType,
-			SymbolicExpression value) {
-		return expression(SymbolicOperator.CONCRETE, setType,
-				collectionFactory.singletonHashSet(value));
-	}
+	// @Override
+	// public SymbolicExpression singletonSet(SymbolicSetType setType,
+	// SymbolicExpression value) {
+	// return expression(SymbolicOperator.CONCRETE, setType,
+	// collectionFactory.singletonHashSet(value));
+	// }
 
 	/**
 	 * Under construction.

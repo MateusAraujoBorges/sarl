@@ -67,7 +67,8 @@ public class CommonCollectionFactoryTest {
 	@Test
 	public void testBasicCollection() {
 		Collection<SymbolicExpression> testCollection = new LinkedList<SymbolicExpression>();
-		assertTrue(collectionFactory.basicCollection(testCollection) instanceof BasicCollection<?>);
+		assertTrue(collectionFactory
+				.basicCollection(testCollection) instanceof BasicCollection<?>);
 	}
 
 	/**
@@ -83,7 +84,8 @@ public class CommonCollectionFactoryTest {
 	 */
 	@Test
 	public void testSingletonHashSet() {
-		assertEquals(collectionFactory.singletonHashSet(five).toString(), "{5}");
+		assertEquals(collectionFactory.singletonHashSet(five).toString(),
+				"{5}");
 	}
 
 	/**
@@ -92,8 +94,9 @@ public class CommonCollectionFactoryTest {
 	@Test
 	public void testIterableSequence() {
 		Iterable<SymbolicExpression> iterableList = new LinkedList<SymbolicExpression>();
-		assertEquals(collectionFactory.sequence(iterableList).add(three)
-				.toString(), "<3>");
+		assertEquals(
+				collectionFactory.sequence(iterableList).add(three).toString(),
+				"<3>");
 	}
 
 	/**
@@ -113,17 +116,6 @@ public class CommonCollectionFactoryTest {
 	public void testSingletonSequence() {
 		assertEquals(collectionFactory.singletonSequence(three).toString(),
 				"<3>");
-	}
-
-	/**
-	 * Test method for singletonHashMap()
-	 */
-	@Test
-	public void testSingletonHashMap() {
-
-		assertEquals(
-				collectionFactory.singletonHashMap(five, three).toString(),
-				"{5->3}");
 	}
 
 	/**
@@ -147,16 +139,6 @@ public class CommonCollectionFactoryTest {
 	}
 
 	/**
-	 * Test method for hashMap()
-	 */
-	@Test
-	public void testHashMap() {
-		HashMap<SymbolicExpression, SymbolicExpression> testMap = new HashMap<SymbolicExpression, SymbolicExpression>();
-		assertEquals(collectionFactory.hashMap(testMap).put(five, three)
-				.toString(), "{5->3}");
-	}
-
-	/**
 	 * Test method for emptySortedSetComparator()
 	 */
 	@Test
@@ -173,17 +155,6 @@ public class CommonCollectionFactoryTest {
 		assertEquals(
 				collectionFactory.singletonSortedSet(five, elementComparator),
 				collectionFactory.singletonSortedSet(five, elementComparator));
-	}
-
-	/**
-	 * Test method for singletonSortedMap()
-	 */
-	@Test
-	public void testSingletonSortedMap() {
-		collectionFactory.setElementComparator(elementComparator);
-		collectionFactory.init();
-		assertEquals(collectionFactory.singletonSortedMap(five, three)
-				.toString(), "{5->3}");
 	}
 
 }

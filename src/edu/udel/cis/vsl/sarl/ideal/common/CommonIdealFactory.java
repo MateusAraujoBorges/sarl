@@ -645,7 +645,7 @@ public class CommonIdealFactory implements IdealFactory {
 		SymbolicMap<Primitive, PrimitivePower> map1 = fact1.monicFactors(this);
 		SymbolicMap<Primitive, PrimitivePower> map2 = fact2.monicFactors(this);
 		SymbolicMap<Primitive, PrimitivePower> commonMap = collectionFactory
-				.emptySortedMap();
+				.emptySortedMap(primitiveComparator);
 		SymbolicMap<Primitive, PrimitivePower> newMap1 = map1, newMap2 = map2;
 
 		for (Entry<Primitive, PrimitivePower> entry : map1.entries()) {

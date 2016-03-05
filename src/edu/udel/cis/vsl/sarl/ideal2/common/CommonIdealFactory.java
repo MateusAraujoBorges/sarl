@@ -75,7 +75,7 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  */
 public class CommonIdealFactory implements Ideal2Factory {
 
-	public final static boolean debug = false;
+	public final static boolean debug = true;
 
 	/**
 	 * Threshold after which polynomial term maps are not computed.
@@ -571,7 +571,7 @@ public class CommonIdealFactory implements Ideal2Factory {
 		SymbolicMap<Primitive, PrimitivePower> map1 = m1.monicFactors(this);
 		SymbolicMap<Primitive, PrimitivePower> map2 = m2.monicFactors(this);
 		SymbolicMap<Primitive, PrimitivePower> commonMap = collectionFactory
-				.emptySortedMap();
+				.emptySortedMap(primitiveComparator);
 		SymbolicMap<Primitive, PrimitivePower> newMap1 = map1, newMap2 = map2;
 
 		for (Entry<Primitive, PrimitivePower> entry : map1.entries()) {
@@ -1170,7 +1170,8 @@ public class CommonIdealFactory implements Ideal2Factory {
 		return isLEQ0orGEQ0(monomial, false);
 	}
 
-	private BooleanExpression isZero(Monomial monomial) {
+	@Override
+	public BooleanExpression isZero(Monomial monomial) {
 		// X1^n1...Xn^nr =0 iff X1=0 || ... || Xn=0
 		Number number = extractNumber(monomial);
 

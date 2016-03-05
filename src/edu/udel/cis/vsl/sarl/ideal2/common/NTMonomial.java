@@ -132,8 +132,9 @@ public class NTMonomial extends IdealExpression implements Monomial {
 			if (monic instanceof Polynomial) {
 				termMap = factory.multiplyConstantTermMap(
 						(Constant) argument(0), monic.termMap(factory));
+			} else {
+				termMap = factory.monicSingletonMap(monic, this);
 			}
-			termMap = factory.monicSingletonMap(monic, this);
 			if (isCanonic())
 				termMap = factory.objectFactory().canonic(termMap);
 		}

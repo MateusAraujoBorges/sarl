@@ -52,11 +52,6 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
  */
 public abstract class CommonSimplifier implements Simplifier {
 
-	// Note: also need to simplify numeric relational expressions like
-	// 0<a, 0<=a, 0==a, 0!=a
-	// !(0<=a) <=> a<0 <=> -a>0 <=> 0<-a
-	// also might be able to simplify symbolic constants such as booleans
-
 	// Static fields...
 
 	/**
@@ -65,6 +60,9 @@ public abstract class CommonSimplifier implements Simplifier {
 	 */
 	public static int simplifyCount = 0;
 
+	/**
+	 * Where to send debugging output.
+	 */
 	public final static PrintStream out = System.out;
 
 	/**
@@ -327,9 +325,10 @@ public abstract class CommonSimplifier implements Simplifier {
 	 * 
 	 * <p>
 	 * This method does <strong>not</strong> look in the table of cached
-	 * simplification results for expression. However, the recursive calls to
-	 * the arguments may invoke the method {@link #apply(SymbolicExpression)},
-	 * which will look for cached results on those arguments.
+	 * simplification results for <code>expression</code>. However, the
+	 * recursive calls to the arguments may invoke the method
+	 * {@link #apply(SymbolicExpression)}, which will look for cached results on
+	 * those arguments.
 	 * </p>
 	 * 
 	 * @param expression

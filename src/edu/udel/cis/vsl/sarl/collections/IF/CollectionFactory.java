@@ -18,6 +18,27 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.collections.IF;
 
+// TODO: maybe you need a different Collection Factory for each
+// comparator? One for PrimitiveComparator, one for MonicComparator,...
+// They could be compared and exchanged even if they came from different
+// collection factories because they don't store a comparator, so they
+// would be interchangeable. BUT how would you compare them?
+// You would need a general comparator that would work on any symbolic
+// expressions. It wouldn't have to have anything to do with the
+// specific comparators used in the different factories.
+// But they all have to agree on equality (compareTo==0).
+// the same is true if you put the comparator inside each collection: you
+// STILL need a general comparator which can compare them all!
+
+// so: multiple CollectionFactories, multiple comparators
+
+// ALSO: collectionFactory is used throughout SARL to generate sequences,
+// which don't have any comparator.
+
+// let's just put the comparator inside the collection for now and
+// get rid of empty ones without specifying the comparator.
+// or insist there can only be one comparator?
+
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
@@ -103,7 +124,7 @@ public interface CollectionFactory {
 
 	/**
 	 * Returns the singleton hash set containing the one element.
-	 * 
+	 *
 	 * @param element
 	 *            a symbolic expression
 	 * @return the hash set consisting of that one element
@@ -112,7 +133,7 @@ public interface CollectionFactory {
 
 	/**
 	 * Returns the singleton sorted set containing the one element.
-	 * 
+	 *
 	 * @param element
 	 *            a symbolic expression
 	 * @return the sorted set consisting of the one element
@@ -170,12 +191,13 @@ public interface CollectionFactory {
 	 */
 	<T extends SymbolicExpression> SymbolicSequence<T> emptySequence();
 
-	/**
-	 * Returns an empty sorted symbolic map using default comparator on keys.
-	 * 
-	 * @return an empty sorted symbolic map
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> emptySortedMap();
+	// /**
+	// * Returns an empty sorted symbolic map using default comparator on keys.
+	// *
+	// * @return an empty sorted symbolic map
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> emptySortedMap();
 
 	/**
 	 * Returns an empty sorted symbolic map using given comparator on keys.
@@ -185,24 +207,26 @@ public interface CollectionFactory {
 	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> emptySortedMap(
 			Comparator<? super K> comparator);
 
-	/**
-	 * Returns an empty hash symbolic map.
-	 * 
-	 * @return an empty hash symbolic map
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> emptyHashMap();
+	// /**
+	// * Returns an empty hash symbolic map.
+	// *
+	// * @return an empty hash symbolic map
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SymbolicMap<K, V> emptyHashMap();
 
-	/**
-	 * Returns the sorted map with one entry (key,value).
-	 * 
-	 * @param key
-	 *            the key for the entry
-	 * @param value
-	 *            the value for the entry
-	 * @return the map with the one entry
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> singletonSortedMap(
-			K key, V value);
+	// /**
+	// * Returns the sorted map with one entry (key,value).
+	// *
+	// * @param key
+	// * the key for the entry
+	// * @param value
+	// * the value for the entry
+	// * @return the map with the one entry
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> singletonSortedMap(
+	// K key, V value);
 
 	/**
 	 * Returns the sorted map with one entry (key,value) and using the given
@@ -217,17 +241,18 @@ public interface CollectionFactory {
 	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> singletonSortedMap(
 			Comparator<? super K> comparator, K key, V value);
 
-	/**
-	 * Returns the hash map with one entry (key,value).
-	 * 
-	 * @param key
-	 *            the key for the entry
-	 * @param value
-	 *            the value for the entry
-	 * @return the map with the one entry
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> singletonHashMap(
-			K key, V value);
+	// /**
+	// * Returns the hash map with one entry (key,value).
+	// *
+	// * @param key
+	// * the key for the entry
+	// * @param value
+	// * the value for the entry
+	// * @return the map with the one entry
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SymbolicMap<K, V> singletonHashMap(
+	// K key, V value);
 
 	/**
 	 * Returns a sorted symbolic map based on the given Java Map. The Java map
@@ -249,15 +274,16 @@ public interface CollectionFactory {
 	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
 			Comparator<? super K> comparator, Map<K, V> javaMap);
 
-	/**
-	 * Returns an (unsorted) hash symbolic map based on the given Java Map.
-	 * 
-	 * @param javaMap
-	 *            a Java {@link java.util.Map}
-	 * @return an (unsorted) hash symbolic map based on the javaMap
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> hashMap(
-			Map<K, V> javaMap);
+	// /**
+	// * Returns an (unsorted) hash symbolic map based on the given Java Map.
+	// *
+	// * @param javaMap
+	// * a Java {@link java.util.Map}
+	// * @return an (unsorted) hash symbolic map based on the javaMap
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SymbolicMap<K, V> hashMap(
+	// Map<K, V> javaMap);
 
 	/**
 	 * Returns an {@link Entry} with the specified key and value. This can be

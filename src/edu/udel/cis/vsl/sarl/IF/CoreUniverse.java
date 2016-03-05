@@ -1744,8 +1744,8 @@ public interface CoreUniverse {
 
 	SymbolicExpression emptySet(SymbolicSetType setType);
 
-	SymbolicExpression singletonSet(SymbolicSetType setType,
-			SymbolicExpression value);
+//	SymbolicExpression singletonSet(SymbolicSetType setType,
+//			SymbolicExpression value);
 
 	BooleanExpression isElementOf(SymbolicExpression value,
 			SymbolicExpression set);

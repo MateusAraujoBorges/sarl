@@ -538,12 +538,24 @@ public class SimpleSortedMap<K extends SymbolicExpression, V extends SymbolicExp
 
 	@Override
 	public void canonizeChildren(ObjectFactory factory) {
-		for (Entry<K, V> entry : entries) {
+		int n = entries.length;
+
+		for (int i = 0; i < n; i++) {
+			Entry<K, V> entry = entries[i];
+			K oldKey = entry.getKey();
+			K newKey = factory.canonic(oldKey);
 			V oldValue = entry.getValue();
 			V newValue = factory.canonic(oldValue);
 
-			if (oldValue != newValue)
+			if (newKey != oldKey) {
+				@SuppressWarnings("unchecked")
+				Entry<K, V> newEntry = (Entry<K, V>) new SimpleEntry(newKey,
+						newValue);
+
+				entries[i] = newEntry;
+			} else if (newValue != oldValue) {
 				entry.setValue(newValue);
+			}
 		}
 	}
 
