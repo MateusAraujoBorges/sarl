@@ -19,10 +19,10 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class RealArithmeticReasonTest {
-	private static boolean debug = false;
+	private static boolean debug = true;
 	private static PrintStream out = System.out;
 	private SymbolicUniverse universe;
-	private NumericExpression one, two, five;
+	private NumericExpression negOne, one, two, five;
 	private StringObject a_obj; // "a"
 	private StringObject b_obj; // "b"
 	private StringObject c_obj; // "c"
@@ -39,6 +39,7 @@ public class RealArithmeticReasonTest {
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
 		realType = universe.realType();
+		negOne = universe.rational(-1);
 		one = universe.rational(1);
 		two = universe.rational(2);
 		five = universe.rational(5);
@@ -103,21 +104,23 @@ public class RealArithmeticReasonTest {
 	}
 
 	/**
-	 * TODO test fail
 	 * ab = c^2 - 1 &&
 	 * a = c + 1
 	 * ===>
 	 * b = c - 1
+	 * 
+	 * c != -1
 	 */
 	@Test
 	public void RealArithmeticReason1() {
-		NumericExpression c2 = universe.multiply(c, c); //c2 = c^2
-		NumericExpression c2MinusOne = universe.subtract(c2, one); //c2MinusOne = c^2 - 1
+		NumericExpression c2MinusOne = universe.multiply(universe.add(c, one), universe.subtract(c, one));
 		NumericExpression cPlusOne = universe.add(c, one); // cPlusOne = c+1
 		NumericExpression aTimesB = universe.multiply(a, b); // aTimesB = a*b
 		NumericExpression cSubOne = universe.subtract(c, one); // cSubOne = c-1
+		BooleanExpression assumption = universe.and(universe.neq(c, negOne), 
+				universe.and(universe.equals(aTimesB, c2MinusOne), universe.equals(a, cPlusOne)));
 		// a*b = c^2 -1 && a = c+1
-		Reasoner r = universe.reasoner(universe.and(universe.equals(aTimesB, c2MinusOne), universe.equals(a, cPlusOne)));
+		Reasoner r = universe.reasoner(assumption);
 		BooleanExpression be = universe.equals(cSubOne, b);
 		
 		if(debug){
@@ -125,7 +128,7 @@ public class RealArithmeticReasonTest {
 			out.println(a+"="+cPlusOne);
 			out.println(cSubOne+"=?"+b);
 		}
-
+//		assertEquals(true, r.isValid(be));
 		ValidityResult result = r.valid(be);
 		assertEquals(ResultType.YES, result.getResultType());
 	}
@@ -167,7 +170,9 @@ public class RealArithmeticReasonTest {
 		NumericExpression bTimesC = universe.multiply(b, c);
 		NumericExpression bTimesCPlus2PlusCPlus2b = universe.add(universe.add(bTimesC, two), universe.add(c, universe.multiply(two, b)));
 		NumericExpression aDivideBPlusOne = universe.divide(a, universe.add(b, one));
-		Reasoner r = universe.reasoner(universe.and(universe.equals(a, bTimesCPlus2PlusCPlus2b), universe.equals(d, aDivideBPlusOne)));
+		BooleanExpression assumption = universe.and(universe.neq(b, negOne),
+				universe.and(universe.equals(a, bTimesCPlus2PlusCPlus2b), universe.equals(d, aDivideBPlusOne)));
+		Reasoner r = universe.reasoner(assumption);
 		BooleanExpression eq = universe.equals(d, universe.add(c, two));
 		ValidityResult result = r.valid(eq);
 		
@@ -234,7 +239,6 @@ public class RealArithmeticReasonTest {
 	}
 	
 	/**
-	 * TODO test fail
 	 * This is an integer test (need to be moved)
 	 * <x,y> = 2^x * (2y + 1) -1
 	 * x and y are integers
@@ -242,11 +246,13 @@ public class RealArithmeticReasonTest {
 	 */
 	@Test
 	public void pairFucTest(){
-		NumericExpression int_zero = universe.integer(0);
+//		NumericExpression int_zero = universe.integer(0);
 		NumericExpression int_one = universe.integer(1);
 		NumericExpression int_two = universe.integer(2);
+		
 		NumericExpression int_five = universe.integer(5);
-		NumericExpression int_ten = universe.integer(10);
+		
+//		NumericExpression int_ten = universe.integer(10);
 		SymbolicType integerType = universe.integerType();
 		NumericExpression x = (NumericExpression) universe
 				.symbolicConstant(universe.stringObject("x"), integerType);
@@ -255,16 +261,33 @@ public class RealArithmeticReasonTest {
 		NumericExpression twoPowerX = universe.power(int_two, x);
 		NumericExpression twoYPlusOne = universe.add(universe.multiply(int_two, y), int_one);
 		NumericExpression xyPair = universe.subtract(universe.multiply(twoPowerX, twoYPlusOne), int_one);
+
+		Reasoner r = universe.reasoner(universe.equals(xyPair, int_five));
+		BooleanExpression e1 = universe.and(universe.equals(x, int_one), universe.equals(y, int_one));
+		ValidityResult result1 = r.valid(e1);
+		assertEquals(ResultType.YES, result1.getResultType());
 //		
-//		Reasoner r = universe.reasoner(universe.equals(xyPair, int_five));
-//		BooleanExpression e1 = universe.and(universe.equals(x, int_one), universe.equals(y, int_one));
-//		ValidityResult result1 = r.valid(e1);
-//		assertEquals(ResultType.YES, result1.getResultType());
-//		
-		BooleanExpression pre = universe.and(universe.lessThanEquals(int_zero, x), universe.lessThanEquals(int_zero, y));
-		Reasoner r = universe.reasoner(universe.and(universe.equals(xyPair, int_ten), pre));
-		BooleanExpression e2 = universe.and(universe.equals(x, int_zero), universe.equals(y, int_five));
-		ValidityResult result2 = r.valid(e2);
-		assertEquals(ResultType.YES, result2.getResultType());
+//		BooleanExpression pre = universe.and(universe.lessThanEquals(int_zero, x), universe.lessThanEquals(int_zero, y));
+//		Reasoner r = universe.reasoner(universe.and(universe.equals(xyPair, int_ten), pre));
+//		BooleanExpression e2 = universe.and(universe.equals(x, int_zero), universe.equals(y, int_five));
+//		ValidityResult result2 = r.valid(e2);
+//		assertEquals(ResultType.YES, result2.getResultType());
 	}
+	
+	@Test
+	public void powerTest(){
+		SymbolicType integerType = universe.integerType();
+		NumericExpression int_two = universe.integer(2);
+		NumericExpression int_three = universe.integer(3);
+		NumericExpression int_eight = universe.integer(8);
+		NumericExpression x = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("x"), integerType);
+		NumericExpression twoPowerX = universe.power(int_two, x); // 2^x
+		BooleanExpression assumption = universe.equals(twoPowerX, int_eight);// 2^x = 8
+		Reasoner r = universe.reasoner(assumption);
+		BooleanExpression deduction = universe.equals(x, int_three); // x == 3?
+		ValidityResult result = r.valid(deduction);
+		assertEquals(ResultType.YES, result.getResultType());
+	}
+	
 }
