@@ -64,6 +64,11 @@ public class NTMonic extends IdealExpression implements Monic {
 	 */
 	private int monomialDegree = -1;
 
+	// /**
+	// * Cached value returned by method {@link #monomialOrder()}.
+	// */
+	// private int monomialOrder = -1;
+
 	/**
 	 * Cached value returned by method {@link #totalDegree()}. Initial value is
 	 * -1, indicating the method has not yet been called.
@@ -85,6 +90,11 @@ public class NTMonic extends IdealExpression implements Monic {
 	 * Cached result of {@link #termMap(Ideal2Factory)}.
 	 */
 	private SymbolicMap<Monic, Monomial> termMap = null;
+
+	// /**
+	// * Cached result of {@link #lowering(Ideal2Factory)}.
+	// */
+	// private SymbolicMap<Monic, Monomial> lowering = null;
 
 	protected NTMonic(SymbolicType type,
 			SymbolicMap<Primitive, PrimitivePower> factorMap) {
@@ -146,7 +156,7 @@ public class NTMonic extends IdealExpression implements Monic {
 					out.flush();
 				}
 				expansion = factory.oneTermMap(type());
-				for (PrimitivePower ppower : monicFactors())
+				for (PrimitivePower ppower : factors)
 					expansion = factory.multiplyTermMaps(expansion,
 							ppower.expand(factory));
 				if (debug) {
@@ -161,14 +171,6 @@ public class NTMonic extends IdealExpression implements Monic {
 		}
 		return expansion;
 	}
-
-	// public StringBuffer toStringBuffer() {
-	// StringBuffer buffer = new StringBuffer();
-	//
-	// for (SymbolicExpression expr : monicFactors())
-	// buffer.append(expr.atomString());
-	// return buffer;
-	// }
 
 	@Override
 	public int monomialDegree() {
@@ -222,5 +224,44 @@ public class NTMonic extends IdealExpression implements Monic {
 			expansion = of.canonic(expansion);
 		if (termMap != null && !termMap.isCanonic())
 			termMap = of.canonic(termMap);
+		// if (lowering != null && !lowering.isCanonic())
+		// lowering = of.canonic(lowering);
+	}
+
+	@Override
+	public int monomialOrder(Ideal2Factory factory) {
+		// if (monomialOrder < 0) {
+		int monomialOrder = 0;
+		for (Primitive p : monicFactors().keys()) {
+			int po = p.monomialOrder(factory);
+
+			if (po > monomialOrder)
+				monomialOrder = po;
+		}
+		// }
+		return monomialOrder;
+	}
+
+	@Override
+	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+		// if (lowering == null) {
+		SymbolicMap<Monic, Monomial> lowering = null;
+		int order = monomialOrder(factory);
+
+		if (order == 0) {
+			lowering = termMap(factory);
+		} else {
+			SymbolicMap<Primitive, PrimitivePower> factors = monicFactors();
+
+			lowering = factory.oneTermMap(type());
+			for (PrimitivePower ppower : factors)
+				lowering = factory.multiplyTermMaps(lowering,
+						ppower instanceof Primitive ? ppower.termMap(factory)
+								: ppower.lower(factory));
+			if (isCanonic())
+				lowering = factory.objectFactory().canonic(lowering);
+		}
+		// }
+		return lowering;
 	}
 }

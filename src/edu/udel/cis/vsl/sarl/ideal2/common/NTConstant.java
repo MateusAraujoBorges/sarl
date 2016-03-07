@@ -80,7 +80,7 @@ public class NTConstant extends IdealExpression implements Constant {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
+	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
 		if (expansion == null) {
 			expansion = isZero() ? factory.emptyMonicMap()
 					: factory.monicSingletonMap((Monic) factory.one(type()),
@@ -97,8 +97,8 @@ public class NTConstant extends IdealExpression implements Constant {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
-		return expand(factory);
+	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
+		return termMap(factory);
 	}
 
 	@Override
@@ -118,4 +118,13 @@ public class NTConstant extends IdealExpression implements Constant {
 			expansion = of.canonic(expansion);
 	}
 
+	@Override
+	public int monomialOrder(Ideal2Factory factory) {
+		return 0;
+	}
+
+	@Override
+	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+		return termMap(factory);
+	}
 }

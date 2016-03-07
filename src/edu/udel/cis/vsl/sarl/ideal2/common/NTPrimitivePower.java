@@ -26,6 +26,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
@@ -63,6 +64,11 @@ public class NTPrimitivePower extends IdealExpression
 	 * Cached result of {@link #termMap(Ideal2Factory)}.
 	 */
 	private SymbolicMap<Monic, Monomial> termMap = null;
+
+	// /**
+	// * Cached result of {@link #lower(Ideal2Factory)}.
+	// */
+	// private SymbolicMap<Monic, Monomial> lowering = null;
 
 	/**
 	 * Constructs new {@link NTPrimitivePower} with given primitive and
@@ -231,5 +237,30 @@ public class NTPrimitivePower extends IdealExpression
 			expansion = of.canonic(expansion);
 		if (monicFactors != null && !monicFactors.isCanonic())
 			monicFactors = of.canonic(monicFactors);
+		// if (lowering != null && !lowering.isCanonic())
+		// lowering = of.canonic(lowering);
+	}
+
+	@Override
+	public int monomialOrder(Ideal2Factory factory) {
+		return ((Primitive) argument(0)).monomialOrder(factory);
+	}
+
+	@Override
+	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+		// if (lowering == null) {
+		SymbolicMap<Monic, Monomial> lowering;
+		Primitive primitive = ((Primitive) argument(0));
+
+		if (!(primitive instanceof Polynomial))
+			lowering = termMap(factory);
+		else {
+			lowering = factory.powerTermMap(type(), primitive.termMap(factory),
+					exponent());
+			if (isCanonic())
+				lowering = factory.objectFactory().canonic(lowering);
+		}
+		// }
+		return lowering;
 	}
 }

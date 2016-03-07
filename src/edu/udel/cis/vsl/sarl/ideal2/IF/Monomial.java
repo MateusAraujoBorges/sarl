@@ -101,4 +101,58 @@ public interface Monomial extends RationalExpression {
 	 */
 	SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory);
 
+	/**
+	 * Computes the "monomial order" of this {@link Monomial}. This is defined
+	 * as follows:
+	 * <ul>
+	 * <li>the monomial order of a {@link Constant} is 0</li>
+	 * <li>the monomial order of a {@link Primitive} which is not a
+	 * {@link Polynomial} (a "true primitive") is also 0</li>
+	 * <li>the monomial order of a {@link PrimitivePower} s the monomial order
+	 * of its {@link Primitive}</li>
+	 * <li>the monomial order of a {@link Monic} is the maximum of the monomial
+	 * orders of its {@link PrimitivePower} factors</li>
+	 * <li>the monomial order of a {@link Monomial} is the monomial order of its
+	 * {@link Monic}</li>
+	 * <li>the monomial order of a {@link Polynomial} which is not a
+	 * {@link Monomial} is one more than the monomial orders of its
+	 * {@link Monomial} terms.</li>
+	 * </ul>
+	 * 
+	 * <p>
+	 * Another interpretation: consider this symbolic expressions as a rooted
+	 * tree. Along any path from the root to a leaf, count the number of "+"
+	 * (addition) operators to occur. (Note that each {@link Polynomial}
+	 * introduces a single addition operator whose argument is a set of terms.)
+	 * The maximum plus-count (over all paths) is the monomial order.
+	 * </p>
+	 * 
+	 * @param factory
+	 *            the {@link Ideal2Factory} responsible for this
+	 *            {@link Monomial}
+	 * @return the monomial order of this {@link Monomial}
+	 */
+	int monomialOrder(Ideal2Factory factory);
+
+	/**
+	 * <p>
+	 * Computes a term map from performing a single outer-level expansion. This
+	 * is in contrast with {@link #expand(Ideal2Factory)}, which performs a full
+	 * expansion.
+	 * </p>
+	 * 
+	 * <p>
+	 * Suppose the monomial order of this {@link Monomial} is d. Then the
+	 * {@link Monomial}s occurring in the returned map will have monomial order
+	 * at most d-1. Furthermore, if this is a {@link Polynomial}, the
+	 * {@link Monomials} occurring in the returned map will have monomial order
+	 * at most d-2 (assuming d>=2).
+	 * </p>
+	 * 
+	 * @param factory
+	 *            the {@link Ideal2Factory} responsible for this
+	 *            {@link Monomial}
+	 * @return a term map with lower monomial order.
+	 */
+	SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory);
 }

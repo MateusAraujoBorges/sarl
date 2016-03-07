@@ -49,9 +49,9 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	private SymbolicMap<Primitive, PrimitivePower> monicFactors = null;
 
 	/**
-	 * Cache of value returned by {@link #expand(Ideal2Factory)}.
+	 * Cache of value returned by {@link #termMap(Ideal2Factory)}.
 	 */
-	private SymbolicMap<Monic, Monomial> expansion = null;
+	private SymbolicMap<Monic, Monomial> termMap = null;
 
 	public NumericPrimitive(SymbolicOperator operator, SymbolicType type,
 			SymbolicObject[] arguments) {
@@ -131,18 +131,18 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
-		if (expansion == null) {
-			expansion = factory.monicSingletonMap(this, this);
+	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
+		if (termMap == null) {
+			termMap = factory.monicSingletonMap(this, this);
 			if (isCanonic())
-				expansion = factory.objectFactory().canonic(expansion);
+				termMap = factory.objectFactory().canonic(termMap);
 		}
-		return expansion;
+		return termMap;
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
-		return factory.monicSingletonMap(this, this);
+	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
+		return termMap(factory);
 	}
 
 	@Override
@@ -158,10 +158,19 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	@Override
 	public void canonizeChildren(ObjectFactory of) {
 		super.canonizeChildren(of);
-		if (expansion != null && !expansion.isCanonic())
-			expansion = of.canonic(expansion);
+		if (termMap != null && !termMap.isCanonic())
+			termMap = of.canonic(termMap);
 		if (monicFactors != null && !monicFactors.isCanonic())
 			monicFactors = of.canonic(monicFactors);
 	}
 
+	@Override
+	public int monomialOrder(Ideal2Factory factory) {
+		return 0;
+	}
+
+	@Override
+	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+		return termMap(factory);
+	}
 }

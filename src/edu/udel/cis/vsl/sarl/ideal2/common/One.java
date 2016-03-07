@@ -39,9 +39,9 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 public class One extends IdealExpression implements Constant, Monic {
 
 	/**
-	 * Cache of value returned by {@link #expand(Ideal2Factory)}.
+	 * Cache of value returned by {@link #termMap(Ideal2Factory)}.
 	 */
-	private SymbolicMap<Monic, Monomial> expansion = null;
+	private SymbolicMap<Monic, Monomial> termMap = null;
 
 	/**
 	 * Constructs new instance of {@link One} of given type. The number object
@@ -93,13 +93,13 @@ public class One extends IdealExpression implements Constant, Monic {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
-		if (expansion == null) {
-			expansion = factory.monicSingletonMap(this, this);
+	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
+		if (termMap == null) {
+			termMap = factory.monicSingletonMap(this, this);
 			if (isCanonic())
-				expansion = factory.objectFactory().canonic(expansion);
+				termMap = factory.objectFactory().canonic(termMap);
 		}
-		return expansion;
+		return termMap;
 	}
 
 	@Override
@@ -128,8 +128,8 @@ public class One extends IdealExpression implements Constant, Monic {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
-		return factory.monicSingletonMap(this, this);
+	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
+		return termMap(factory);
 	}
 
 	@Override
@@ -145,8 +145,18 @@ public class One extends IdealExpression implements Constant, Monic {
 	@Override
 	public void canonizeChildren(ObjectFactory of) {
 		super.canonizeChildren(of);
-		if (expansion != null && !expansion.isCanonic())
-			expansion = of.canonic(expansion);
+		if (termMap != null && !termMap.isCanonic())
+			termMap = of.canonic(termMap);
+	}
+
+	@Override
+	public int monomialOrder(Ideal2Factory factory) {
+		return 0;
+	}
+
+	@Override
+	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+		return termMap(factory);
 	}
 
 }

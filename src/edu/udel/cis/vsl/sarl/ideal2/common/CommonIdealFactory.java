@@ -2456,15 +2456,18 @@ public class CommonIdealFactory implements Ideal2Factory {
 			SymbolicMap<Monic, Monomial> termMap1,
 			SymbolicMap<Monic, Monomial> termMap2) {
 		SymbolicMap<Monic, Monomial> result;
+		int n1 = termMap1.size(), n2 = termMap2.size();
 
 		if (debug) {
-			int n1 = termMap1.size(), n2 = termMap2.size();
 
 			System.out.println(
 					"Debug: multiplying maps of size: " + n1 + ", " + n2);
 			System.out.flush();
 		}
-		result = multiplyTermMaps2(termMap1, termMap2);
+		if (n1 <= n2)
+			result = multiplyTermMaps2(termMap1, termMap2);
+		else
+			result = multiplyTermMaps2(termMap2, termMap1);
 		if (debug) {
 			System.out.println(
 					"Debug: completed multiplication with result size: "

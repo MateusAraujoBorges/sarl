@@ -82,7 +82,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	/**
 	 * Print general debugging information?
 	 */
-	public final static boolean debug = false;
+	public final static boolean debug = true;
 
 	/**
 	 * Where to print debugging information.
@@ -922,6 +922,66 @@ public class IdealSimplifier extends CommonSimplifier {
 		return result;
 	}
 
+	private Monomial simplifyPolynomial2(Polynomial poly) {
+		Ideal2Factory id = info.idealFactory;
+
+		Number constant = constantMap.get(poly);
+
+		if (constant != null)
+			return id.constant(constant);
+
+		// try rewriting poly as aX+b for some pseudo monomial X...
+		AffineExpression affine = info.affineFactory.affine(poly);
+
+		if (!affine.coefficient().isOne() || !affine.offset().isZero()) {
+			constant = constantMap.get(affine.pseudo());
+			if (constant != null)
+				return id.constant(
+						info.affineFactory.affineValue(affine, constant));
+		}
+
+		SymbolicMap<Monic, Monomial> termMap = poly.termMap(id);
+		int size = termMap.size();
+		Monomial[] terms = new Monomial[size];
+		boolean simplified = false;
+		Iterator<Monomial> termIter = termMap.iterator();
+
+		for (int i = 0; i < size; i++) {
+			Monomial term = termIter.next();
+
+			if (debug) {
+				out.println("Simplifying term " + i + " of poly " + poly.id());
+				out.flush();
+			}
+
+			Monomial simplifiedTerm = (Monomial) apply(term);
+
+			if (debug) {
+				out.println("Simplification of term " + i + " of poly "
+						+ poly.id() + " complete");
+				out.flush();
+			}
+
+			simplified = simplified || term != simplifiedTerm;
+			terms[i] = simplifiedTerm;
+		}
+
+		if (debug) {
+			out.println("Adding simplified monomials of poly " + poly.id());
+			out.flush();
+		}
+
+		Monomial result = simplified ? id.addMonomials(terms) : poly;
+
+		if (debug) {
+			out.println("Completed addition of simplified monomials of poly "
+					+ poly.id());
+			out.flush();
+		}
+
+		return result;
+	}
+
 	/**
 	 * <p>
 	 * Simplifies a {@link Polynomial}. Note that method
@@ -970,8 +1030,8 @@ public class IdealSimplifier extends CommonSimplifier {
 			}
 
 			if (debug) {
-				out.println("simplifyPoly: starting term simplification of "
-						+ poly);
+				// out.println("simplifyPoly: starting term simplification of "
+				//	+ poly.id());
 				// TODO: need toString method which will check how long the
 				// description is and cut it off and use a different description
 				// instead.
@@ -1009,8 +1069,8 @@ public class IdealSimplifier extends CommonSimplifier {
 			if (!(result instanceof Polynomial))
 				return (Monomial) apply(result);
 			if (debug) {
-				out.println("simplifyPoly: poly   = " + poly);
-				out.println("simplifyPoly: result = " + result);
+//				out.println("simplifyPoly: poly   = " + poly);
+//				out.println("simplifyPoly: result = " + result);
 			}
 			poly = (Polynomial) id.objectFactory().canonic(result);
 		}
@@ -1592,6 +1652,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *         <code>poly</code>=0
 	 */
 	private BooleanExpression simplifyEQ0Poly(Polynomial poly) {
+		Ideal2Factory id = info.idealFactory;
 		SymbolicType type = poly.type();
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Monic pseudo = affine.pseudo(); // non-null since zep non-constant
@@ -1639,16 +1700,38 @@ public class IdealSimplifier extends CommonSimplifier {
 			if (rightSign < 0 || (rightSign == 0 && interval.strictUpper()))
 				return info.falseExpr;
 		}
-		if (poly.hasNontrivialExpansion(info.idealFactory)) {
-			SymbolicMap<Monic, Monomial> termMap = poly
-					.expand(info.idealFactory);
+
+		// if (poly.monomialOrder(id) >= 2) {
+		//
+		// if (debug) {
+		// out.println("Lowering polynomial of order "
+		// + poly.monomialOrder(id));
+		// out.flush();
+		// }
+		//
+		// SymbolicMap<Monic, Monomial> termMap = poly.lower(id);
+		//
+		// if (debug) {
+		// out.println("Lowering complete");
+		// out.flush();
+		// }
+		//
+		// if (termMap.isEmpty())
+		// return info.trueExpr;
+		//
+		// BooleanExpression result = (BooleanExpression) apply(
+		// id.isZero(id.factorTermMap(termMap)));
+		//
+		// return result;
+		// }
+		if (poly.hasNontrivialExpansion(id)) {
+			SymbolicMap<Monic, Monomial> termMap = poly.expand(id);
 
 			if (termMap.isEmpty())
 				return info.trueExpr;
 
-			Monomial newMonomial = info.idealFactory.factorTermMap(termMap);
-			BooleanExpression newExpression = info.idealFactory
-					.isZero(newMonomial);
+			Monomial newMonomial = id.factorTermMap(termMap);
+			BooleanExpression newExpression = id.isZero(newMonomial);
 			BooleanExpression result = (BooleanExpression) apply(newExpression);
 
 			if (result != poly)

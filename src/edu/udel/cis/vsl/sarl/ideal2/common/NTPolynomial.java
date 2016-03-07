@@ -75,6 +75,11 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 	 */
 	private SymbolicMap<Monic, Monomial> expansion = null;
 
+	// /**
+	// * Cached value returned by {@link #lower(Ideal2Factory)}.
+	// */
+	// private SymbolicMap<Monic, Monomial> lowering = null;
+
 	/**
 	 * Cached value returned by {@link #monicFactors(Ideal2Factory)}: a
 	 * singleton map from this to this.
@@ -86,6 +91,11 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 	 * -1 means this has not yet been computed. 0 means false. 1 means true.
 	 */
 	byte hasNTE = -1;
+
+	// /**
+	// * Cached result of {@link #monomialOrder(Ideal2Factory)}.
+	// */
+	// private int monomialOrder = -1;
 
 	/**
 	 * <p>
@@ -263,6 +273,8 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 			expansion = of.canonic(expansion);
 		if (monicFactors != null && !monicFactors.isCanonic())
 			monicFactors = of.canonic(monicFactors);
+		// if (lowering != null && !lowering.isCanonic())
+		// lowering = of.canonic(lowering);
 	}
 
 	public String shortString() {
@@ -270,4 +282,40 @@ public class NTPolynomial extends IdealExpression implements Polynomial {
 				+ ",totalDegree=" + totalDegree() + "]";
 	}
 
+	@Override
+	public int monomialOrder(Ideal2Factory factory) {
+		// if (monomialOrder < 0) {
+		int monomialOrder = 0;
+		for (Monic monic : termMap().keys()) {
+			int mo = monic.monomialOrder(factory);
+
+			if (mo > monomialOrder)
+				monomialOrder = mo;
+		}
+		monomialOrder++;
+		// }
+		return monomialOrder;
+	}
+
+	@Override
+	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+		// if (lowering == null) {
+		SymbolicMap<Monic, Monomial> lowering = null;
+		int order = monomialOrder(factory);
+		SymbolicMap<Monic, Monomial> termMap = termMap();
+
+		if (order > 1) {
+			lowering = factory.emptyMonicMap();
+			for (Monomial oldTerm : termMap.values())
+				lowering = factory.addTermMaps(lowering,
+						oldTerm instanceof Primitive ? oldTerm.termMap(factory)
+								: oldTerm.lower(factory));
+			if (isCanonic())
+				lowering = factory.objectFactory().canonic(lowering);
+		} else {
+			lowering = termMap;
+		}
+		// }
+		return lowering;
+	}
 }

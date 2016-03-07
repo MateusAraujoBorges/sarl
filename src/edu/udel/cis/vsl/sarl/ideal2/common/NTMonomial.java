@@ -24,6 +24,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Polynomial;
+import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
@@ -44,6 +45,11 @@ public class NTMonomial extends IdealExpression implements Monomial {
 	 * Cache value returned by {@link #termMap(Ideal2Factory)}.
 	 */
 	private SymbolicMap<Monic, Monomial> termMap = null;
+
+	// /**
+	// * Cache value returned by {@link #lower(Ideal2Factory)}.
+	// */
+	// private SymbolicMap<Monic, Monomial> lowering = null;
 
 	/**
 	 * Constructs new {@link NTMonomial} using given <code>constant</code> and
@@ -158,6 +164,32 @@ public class NTMonomial extends IdealExpression implements Monomial {
 			expansion = of.canonic(expansion);
 		if (termMap != null && !termMap.isCanonic())
 			termMap = of.canonic(termMap);
+		// if (lowering != null && !lowering.isCanonic())
+		// lowering = of.canonic(lowering);
 	}
 
+	@Override
+	public int monomialOrder(Ideal2Factory factory) {
+		return ((Monic) argument(1)).monomialOrder(factory);
+	}
+
+	@Override
+	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+		// if (lowering == null) {
+		SymbolicMap<Monic, Monomial> lowering;
+		int order = monomialOrder(factory);
+		Monic monic = this.monic();
+
+		if (order == 0) {
+			lowering = factory.monicSingletonMap(monic, this);
+		} else {
+			lowering = factory.multiplyConstantTermMap(monomialConstant(),
+					monic instanceof Primitive ? monic.termMap(factory)
+							: monic.lower(factory));
+		}
+		if (isCanonic())
+			lowering = factory.objectFactory().canonic(lowering);
+		// }
+		return lowering;
+	}
 }
