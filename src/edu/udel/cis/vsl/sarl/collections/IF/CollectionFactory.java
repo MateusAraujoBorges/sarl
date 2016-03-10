@@ -97,12 +97,12 @@ public interface CollectionFactory {
 	<T extends SymbolicExpression> SymbolicCollection<T> basicCollection(
 			Collection<T> javaCollection);
 
-	/**
-	 * Returns the empty hash set.
-	 * 
-	 * @return the empty hash set set
-	 */
-	<T extends SymbolicExpression> SymbolicSet<T> emptyHashSet();
+	// /**
+	// * Returns the empty hash set.
+	// *
+	// * @return the empty hash set set
+	// */
+	// <T extends SymbolicExpression> SymbolicSet<T> emptyHashSet();
 
 	/**
 	 * Returns the empty sorted set using default comparator.
@@ -122,14 +122,15 @@ public interface CollectionFactory {
 	<T extends SymbolicExpression> SortedSymbolicSet<T> emptySortedSet(
 			Comparator<? super T> comparator);
 
-	/**
-	 * Returns the singleton hash set containing the one element.
-	 *
-	 * @param element
-	 *            a symbolic expression
-	 * @return the hash set consisting of that one element
-	 */
-	<T extends SymbolicExpression> SymbolicSet<T> singletonHashSet(T element);
+	// /**
+	// * Returns the singleton hash set containing the one element.
+	// *
+	// * @param element
+	// * a symbolic expression
+	// * @return the hash set consisting of that one element
+	// */
+	// <T extends SymbolicExpression> SymbolicSet<T> singletonHashSet(T
+	// element);
 
 	/**
 	 * Returns the singleton sorted set containing the one element.

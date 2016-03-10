@@ -24,6 +24,7 @@ import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
+import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
@@ -40,7 +41,8 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * 
  * @author siegel
  */
-public class NumericPrimitive extends IdealExpression implements Primitive {
+public class NumericPrimitive extends CommonSymbolicExpression
+		implements Primitive {
 
 	/**
 	 * Cache of value returned by {@link #monicFactors(Ideal2Factory)}.
@@ -101,7 +103,7 @@ public class NumericPrimitive extends IdealExpression implements Primitive {
 	}
 
 	@Override
-	public NumericPrimitive primitive(Ideal2Factory factory) {
+	public Primitive primitive(Ideal2Factory factory) {
 		return this;
 	}
 

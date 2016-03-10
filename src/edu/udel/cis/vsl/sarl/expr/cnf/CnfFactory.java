@@ -81,7 +81,7 @@ public class CnfFactory implements BooleanExpressionFactory {
 	 */
 	private SymbolicSet<SymbolicExpression> hashSet(SymbolicExpression x,
 			SymbolicExpression y) {
-		return collectionFactory.singletonHashSet(x).add(y);
+		return collectionFactory.singletonSortedSet(x).add(y);
 	}
 
 	@Override
@@ -154,7 +154,8 @@ public class CnfFactory implements BooleanExpressionFactory {
 	}
 
 	@Override
-	public BooleanExpression and(BooleanExpression arg0, BooleanExpression arg1) {
+	public BooleanExpression and(BooleanExpression arg0,
+			BooleanExpression arg1) {
 		if (arg0 == trueExpr)
 			return arg1;
 		if (arg1 == trueExpr)
@@ -172,20 +173,21 @@ public class CnfFactory implements BooleanExpressionFactory {
 			boolean isAnd1 = c1.operator() == SymbolicOperator.AND;
 
 			if (isAnd0 && isAnd1)
-				return booleanExpression(SymbolicOperator.AND, c0
-						.booleanSetArg(0).addAll(c1.booleanSetArg(0)));
+				return booleanExpression(SymbolicOperator.AND,
+						c0.booleanSetArg(0).addAll(c1.booleanSetArg(0)));
 			if (isAnd0 && !isAnd1)
-				return booleanExpression(SymbolicOperator.AND, c0
-						.booleanSetArg(0).add(c1));
+				return booleanExpression(SymbolicOperator.AND,
+						c0.booleanSetArg(0).add(c1));
 			if (!isAnd0 && isAnd1)
-				return booleanExpression(SymbolicOperator.AND, c1
-						.booleanSetArg(0).add(c0));
+				return booleanExpression(SymbolicOperator.AND,
+						c1.booleanSetArg(0).add(c0));
 			return booleanExpression(SymbolicOperator.AND, hashSet(c0, c1));
 		}
 	}
 
 	@Override
-	public BooleanExpression or(BooleanExpression arg0, BooleanExpression arg1) {
+	public BooleanExpression or(BooleanExpression arg0,
+			BooleanExpression arg1) {
 		if (arg0 == trueExpr || arg1 == trueExpr)
 			return trueExpr;
 		if (arg0 == falseExpr)
@@ -269,7 +271,7 @@ public class CnfFactory implements BooleanExpressionFactory {
 	@Override
 	public BooleanExpression or(Iterable<? extends BooleanExpression> args) {
 		BooleanExpression result = falseExpr;
-		
+
 		for (BooleanExpression arg : args)
 			result = or(result, arg);
 		return result;

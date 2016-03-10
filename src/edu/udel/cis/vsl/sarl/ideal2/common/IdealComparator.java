@@ -25,6 +25,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
+import edu.udel.cis.vsl.sarl.ideal.common.IdealExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
@@ -162,10 +163,8 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *         <code>o2</code>; otherwise a positive integer
 	 */
 	private int compareWork(NumericExpression o1, NumericExpression o2) {
-		IdealExpression e1 = (IdealExpression) o1;
-		IdealExpression e2 = (IdealExpression) o2;
-		SymbolicType t1 = e1.type();
-		SymbolicType t2 = e2.type();
+		SymbolicType t1 = o1.type();
+		SymbolicType t2 = o2.type();
 		int result = typeComparator.compare(t1, t2);
 
 		if (result != 0) {
@@ -175,10 +174,10 @@ public class IdealComparator implements Comparator<NumericExpression> {
 			if (o1 instanceof Monic && o2 instanceof Monic)
 				return compareMonics((Monic) o1, (Monic) o2);
 			else
-				return compareMonomials((Monomial) e1, (Monomial) e2);
+				return compareMonomials((Monomial) o1, (Monomial) o2);
 		} else {
-			return compareRationals((RationalExpression) e1,
-					(RationalExpression) e2);
+			return compareRationals((RationalExpression) o1,
+					(RationalExpression) o2);
 		}
 	}
 

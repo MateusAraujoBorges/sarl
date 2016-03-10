@@ -2615,7 +2615,7 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public SymbolicExpression emptySet(SymbolicSetType setType) {
 		return expression(SymbolicOperator.CONCRETE, setType,
-				collectionFactory.emptyHashSet());
+				collectionFactory.emptySortedSet());
 	}
 
 	// @Override

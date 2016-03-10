@@ -20,8 +20,11 @@ package edu.udel.cis.vsl.sarl.ideal2.common;
 
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
+import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
@@ -36,7 +39,7 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * 
  * @author siegel
  */
-public class One extends IdealExpression implements Constant, Monic {
+public class One extends CommonSymbolicExpression implements Constant, Monic {
 
 	/**
 	 * Cache of value returned by {@link #termMap(Ideal2Factory)}.

@@ -18,6 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
+import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.RationalExpression;
@@ -29,7 +30,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.RationalExpression;
  * 
  * @author siegel
  */
-public class NTRationalExpression extends IdealExpression
+public class NTRationalExpression extends CommonSymbolicExpression
 		implements RationalExpression {
 
 	/**

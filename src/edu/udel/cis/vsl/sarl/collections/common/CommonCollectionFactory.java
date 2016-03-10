@@ -45,7 +45,7 @@ public class CommonCollectionFactory implements CollectionFactory {
 
 	private ObjectFactory objectFactory;
 
-	private SymbolicSet<?> emptyHashSet, emptySortedSet;
+	private SymbolicSet<?> /* emptyHashSet, */ emptySortedSet;
 
 	// private SymbolicMap<?, ?> emptyHashMap, emptySortedMap;
 
@@ -78,8 +78,8 @@ public class CommonCollectionFactory implements CollectionFactory {
 				.canonic(new SimpleSequence<SymbolicExpression>());
 		emptySortedSet = objectFactory.canonic(
 				new SimpleSortedSet<SymbolicExpression>(elementComparator));
-		emptyHashSet = emptySortedSet;
-		//emptyHashMap = emptySortedMap;
+		// emptyHashSet = emptySortedSet;
+		// emptyHashMap = emptySortedMap;
 	}
 
 	@Override
@@ -93,11 +93,11 @@ public class CommonCollectionFactory implements CollectionFactory {
 		return new BasicCollection<T>(javaCollection);
 	}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T extends SymbolicExpression> SymbolicSet<T> emptyHashSet() {
-		return (SymbolicSet<T>) emptyHashSet;
-	}
+	// @SuppressWarnings("unchecked")
+	// @Override
+	// public <T extends SymbolicExpression> SymbolicSet<T> emptyHashSet() {
+	// return (SymbolicSet<T>) emptyHashSet;
+	// }
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -105,13 +105,13 @@ public class CommonCollectionFactory implements CollectionFactory {
 		return (SortedSymbolicSet<T>) emptySortedSet;
 	}
 
-	@Override
-	public <T extends SymbolicExpression> SymbolicSet<T> singletonHashSet(
-			T element) {
-		SymbolicSet<T> empty = emptyHashSet();
-
-		return empty.add(element);
-	}
+	// @Override
+	// public <T extends SymbolicExpression> SymbolicSet<T> singletonHashSet(
+	// T element) {
+	// SymbolicSet<T> empty = emptyHashSet();
+	//
+	// return empty.add(element);
+	// }
 
 	@Override
 	public <T extends SymbolicExpression> SortedSymbolicSet<T> singletonSortedSet(

@@ -23,7 +23,7 @@ import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 
 /**
  * A constant, i.e., a concrete number. Wraps a {@link NumberObject}, which
- * wraps a {@link Number}. It is how a concrete number if represented as a
+ * wraps a {@link Number}. It is how a concrete number is represented as a
  * {@link SymbolicExpression}.
  * 
  * @author siegel

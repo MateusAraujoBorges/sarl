@@ -25,6 +25,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
+import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
@@ -52,7 +53,8 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * 
  * @author siegel
  */
-public class NTPolynomial extends IdealExpression implements Polynomial {
+public class NTPolynomial extends CommonSymbolicExpression
+		implements Polynomial {
 
 	/**
 	 * Print debugging info?

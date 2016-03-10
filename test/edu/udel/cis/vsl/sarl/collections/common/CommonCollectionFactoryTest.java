@@ -72,23 +72,6 @@ public class CommonCollectionFactoryTest {
 	}
 
 	/**
-	 * Test method for emptyHashSet()
-	 */
-	@Test
-	public void testEmptyHashSet() {
-		assertEquals(collectionFactory.emptyHashSet().size(), 0);
-	}
-
-	/**
-	 * Test method for singletoHashSet()
-	 */
-	@Test
-	public void testSingletonHashSet() {
-		assertEquals(collectionFactory.singletonHashSet(five).toString(),
-				"{5}");
-	}
-
-	/**
 	 * Test method for iterableSequence()
 	 */
 	@Test
