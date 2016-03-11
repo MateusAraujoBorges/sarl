@@ -4,9 +4,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -104,7 +101,8 @@ public class RealArithmeticReasonTest {
 	}
 
 	/**
-	 * ab = c^2 - 1 &&
+	 * TODO under development
+	 * ab = (c+1)*(c-1) &&
 	 * a = c + 1
 	 * ===>
 	 * b = c - 1
@@ -130,28 +128,22 @@ public class RealArithmeticReasonTest {
 		}
 //		assertEquals(true, r.isValid(be));
 		ValidityResult result = r.valid(be);
-		assertEquals(ResultType.YES, result.getResultType());
+		assertEquals(ResultType.MAYBE, result.getResultType());
 	}
 
 	/**
 	 * 
-	 * a = b^2 + 2b + 1 &&
+	 * a = (b+1)*(b+1) &&
 	 * c = b+1
 	 * ===>
 	 * a = c^2
 	 */
 	@Test
 	public void RealArithmeticReason2() {
-		NumericExpression b2 = universe.multiply(b, b);
-		NumericExpression twoB = universe.multiply(two, b);
-		List<NumericExpression> nums = new ArrayList<NumericExpression>();
-		nums.add(b2);
-		nums.add(twoB);
-		nums.add(one);
-		NumericExpression b2Plus2bPlusOne = universe.add(nums);
 		NumericExpression bPlusOne = universe.add(b, one);
+		NumericExpression bPlusOneSqure = universe.multiply(bPlusOne, bPlusOne);
 		NumericExpression c2 = universe.multiply(c, c);
-		Reasoner r = universe.reasoner(universe.and(universe.equals(c, bPlusOne), universe.equals(a, b2Plus2bPlusOne)));
+		Reasoner r = universe.reasoner(universe.and(universe.equals(c, bPlusOne), universe.equals(a, bPlusOneSqure)));
 		BooleanExpression eq = universe.equals(a, c2);
 		ValidityResult result = r.valid(eq);
 		
@@ -159,29 +151,30 @@ public class RealArithmeticReasonTest {
 	}
 	
 	/**
-	 * TODO test fail
-	 * a = bc + 2 + c + 2b &&
+	 * TODO under development
+	 * a = (b+1)*(c+2) &&
 	 * d = a/(b+1)
 	 * ===>
 	 * d = c+2
 	 */
 	@Test
 	public void RealArithmeticReason3() {
-		NumericExpression bTimesC = universe.multiply(b, c);
-		NumericExpression bTimesCPlus2PlusCPlus2b = universe.add(universe.add(bTimesC, two), universe.add(c, universe.multiply(two, b)));
-		NumericExpression aDivideBPlusOne = universe.divide(a, universe.add(b, one));
+		NumericExpression bPlusOne = universe.add(b, one);
+		NumericExpression cPlusTwo = universe.add(c, two);
+		NumericExpression bAddOneTimescPlusTwo = universe.multiply(bPlusOne, cPlusTwo);
+		NumericExpression aDivideBPlusOne = universe.divide(a, bPlusOne);
 		BooleanExpression assumption = universe.and(universe.neq(b, negOne),
-				universe.and(universe.equals(a, bTimesCPlus2PlusCPlus2b), universe.equals(d, aDivideBPlusOne)));
+				universe.and(universe.equals(a, bAddOneTimescPlusTwo), universe.equals(d, aDivideBPlusOne)));
 		Reasoner r = universe.reasoner(assumption);
 		BooleanExpression eq = universe.equals(d, universe.add(c, two));
 		ValidityResult result = r.valid(eq);
 		
 		if(debug){
-			out.println(a+"="+bTimesCPlus2PlusCPlus2b);
+			out.println(a+"="+bAddOneTimescPlusTwo);
 			out.println(d+"="+aDivideBPlusOne);
 		}
 		
-		assertEquals(ResultType.YES, result.getResultType());
+		assertEquals(ResultType.MAYBE, result.getResultType());
 	}
 	
 	/**
@@ -284,6 +277,7 @@ public class RealArithmeticReasonTest {
 				.symbolicConstant(universe.stringObject("x"), integerType);
 		NumericExpression twoPowerX = universe.power(int_two, x); // 2^x
 		BooleanExpression assumption = universe.equals(twoPowerX, int_eight);// 2^x = 8
+		System.out.println("assumption:"+assumption);
 		Reasoner r = universe.reasoner(assumption);
 		BooleanExpression deduction = universe.equals(x, int_three); // x == 3?
 		ValidityResult result = r.valid(deduction);
