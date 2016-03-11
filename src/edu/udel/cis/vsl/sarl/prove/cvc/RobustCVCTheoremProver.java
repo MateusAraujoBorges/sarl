@@ -196,7 +196,6 @@ public class RobustCVCTheoremProver implements TheoremProver {
 					.getDeclarations();
 			FastList<String> assumptionText = assumptionTranslator
 					.getTranslation();
-
 			assumptionDecls.print(stdin);
 			stdin.print("ASSERT ");
 			assumptionText.print(stdin);
@@ -208,7 +207,6 @@ public class RobustCVCTheoremProver implements TheoremProver {
 					predicate);
 			FastList<String> predicateDecls = translator.getDeclarations();
 			FastList<String> predicateText = translator.getTranslation();
-
 			predicateDecls.print(stdin);
 			stdin.print("QUERY ");
 			predicateText.print(stdin);
