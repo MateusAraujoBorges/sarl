@@ -103,8 +103,9 @@ public class SimplifyTest {
 		SymbolicExpression arrayLambda = universe.arrayLambda(arrayType,
 				universe.lambda(index, index));
 
-		out.println(arrayLambda);
-
+//		out.println(arrayLambda);
+		out.println(universe);
+		
 		BooleanExpression context = universe.equals(x, three);
 		Reasoner reasoner = universe.reasoner(context);
 		SymbolicExpression simplifiedArrayLambda = reasoner
