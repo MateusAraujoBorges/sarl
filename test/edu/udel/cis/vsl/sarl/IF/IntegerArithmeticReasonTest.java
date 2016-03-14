@@ -240,77 +240,79 @@ public class IntegerArithmeticReasonTest {
 	// constants...
 	// (a*b)%d = ((a%d)*b)%d
 	// (a+b)%d = ((a%d)+b)%d
-	/**
-	 * Symbolic Integer modulus. true : ((x%z)*y)%z -> (x*y)%z
-	 */
-	@Test
-	public void simplifySymbolicMod() {
-		SymbolicExpression e1 = universe
-				.modulo(universe.multiply(universe.modulo(x, z), y), z);
-		SymbolicExpression e2 = universe.modulo(universe.multiply(x, y), z);
-		reasoner = universe.reasoner(trueExpr);
 
-		assertEquals(e2, reasoner.simplify(e1));
-	}
+	// /**
+	// * Symbolic Integer modulus. true : ((x%z)*y)%z -> (x*y)%z
+	// */
+	// @Test
+	// public void simplifySymbolicMod() {
+	// SymbolicExpression e1 = universe
+	// .modulo(universe.multiply(universe.modulo(x, z), y), z);
+	// SymbolicExpression e2 = universe.modulo(universe.multiply(x, y), z);
+	// reasoner = universe.reasoner(trueExpr);
+	//
+	// assertEquals(e2, reasoner.simplify(e1));
+	// }
 
-	/**
-	 * Symbolic Integer modulus. true : ((x%z)+y)%z -> (x+y)%z
-	 */
-	@Test
-	public void simplifySymbolicMod2() {
-		SymbolicExpression e1 = universe
-				.modulo(universe.add(universe.modulo(x, z), y), z);
-		SymbolicExpression e2 = universe.modulo(universe.add(x, y), z);
-		reasoner = universe.reasoner(trueExpr);
-		if (debug) {
-			out.println(e1);
-			out.println(e2);
-		}
+	// /**
+	// * Symbolic Integer modulus. true : ((x%z)+y)%z -> (x+y)%z
+	// */
+	// @Test
+	// public void simplifySymbolicMod2() {
+	// SymbolicExpression e1 = universe
+	// .modulo(universe.add(universe.modulo(x, z), y), z);
+	// SymbolicExpression e2 = universe.modulo(universe.add(x, y), z);
+	// reasoner = universe.reasoner(trueExpr);
+	// if (debug) {
+	// out.println(e1);
+	// out.println(e2);
+	// }
+	//
+	// assertEquals(e2, reasoner.simplify(e1));
+	// }
 
-		assertEquals(e2, reasoner.simplify(e1));
-	}
+	// /**
+	// * Symbolic Integer modulus. true : ((x%z)^y)%z -> (x^y)%z
+	// */
+	// @Test
+	// public void simplifySymbolicMod3() {
+	// SymbolicExpression e1 = universe
+	// .modulo(universe.power(universe.modulo(x, z), y), z);
+	// SymbolicExpression e2 = universe.modulo(universe.power(x, y), z);
+	// reasoner = universe.reasoner(trueExpr);
+	// if (debug) {
+	// out.println(e1);
+	// out.println(e2);
+	// }
+	//
+	// assertEquals(e2, reasoner.simplify(e1));
+	// }
 
-	/**
-	 * Symbolic Integer modulus. true : ((x%z)^y)%z -> (x^y)%z
-	 */
-	@Test
-	public void simplifySymbolicMod3() {
-		SymbolicExpression e1 = universe
-				.modulo(universe.power(universe.modulo(x, z), y), z);
-		SymbolicExpression e2 = universe.modulo(universe.power(x, y), z);
-		reasoner = universe.reasoner(trueExpr);
-		if (debug) {
-			out.println(e1);
-			out.println(e2);
-		}
+	// y has to have real type:
+	// /**
+	// * Symbolic Integer modulus. negative exponent power test
+	// */
+	// @Test
+	// public void negativeExponentPowerTest() {
+	// NumericExpression e = universe.multiply(x,
+	// universe.power(y, negOneInt));
+	// if (debug) {
+	// out.println(e);
+	// }
+	// }
 
-		assertEquals(e2, reasoner.simplify(e1));
-	}
-
-	/**
-	 * Symbolic Integer modulus. negative exponent power test
-	 */
-	@Test
-	public void negativeExponentPowerTest() {
-		NumericExpression e = universe.multiply(x,
-				universe.power(y, negOneInt));
-		if (debug) {
-			out.println(e);
-		}
-	}
-
-	/**
-	 * Symbolic Integer modulus. true : x/y = x*(y^-1)
-	 */
-	@Test
-	public void divideToPowerTest() {
-		NumericExpression e1 = universe.divide(x, y);
-		NumericExpression e2 = universe.multiply(x,
-				universe.power(y, negOneInt));
-		reasoner = universe.reasoner(trueExpr);
-
-		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
-	}
+	// /**
+	// * Symbolic Integer modulus. true : x/y = x*(y^-1)
+	// */
+	// @Test
+	// public void divideToPowerTest() {
+	// NumericExpression e1 = universe.divide(x, y);
+	// NumericExpression e2 = universe.multiply(x,
+	// universe.power(y, negOneInt));
+	// reasoner = universe.reasoner(trueExpr);
+	//
+	// assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	// }
 
 	/**
 	 * Symbolic Integer modulus. true : (x^y)*(x^z)=x^(y+z)
