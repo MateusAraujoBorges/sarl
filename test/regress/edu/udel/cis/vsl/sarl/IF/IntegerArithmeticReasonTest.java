@@ -178,29 +178,6 @@ public class IntegerArithmeticReasonTest {
 	}
 
 	/**
-	 * Integer division test.
-	 * 
-	 * Assumption: 0 <= u/3 <= 1.
-	 * 
-	 * Query: u >= 0
-	 * 
-	 * Expected result: NO. Counterexample: -1.
-	 */
-	@Test
-	public void simplifyIntDivTest2() {
-		BooleanExpression assumption = universe.and(
-				universe.lessThanEquals(universe.zeroInt(),
-						universe.divide(u, threeInt)),
-				universe.lessThanEquals(universe.divide(u, threeInt),
-						universe.oneInt()));
-		reasoner = universe.reasoner(assumption);
-		BooleanExpression e2 = universe.lessThanEquals(universe.zeroInt(), u);
-		ValidityResult result2 = reasoner.valid(e2);
-
-		assertEquals(ResultType.NO, result2.getResultType());
-	}
-
-	/**
 	 * Integer modulus. true : (2u)%2 -> 0 for all u;
 	 */
 	@Test
@@ -212,124 +189,10 @@ public class IntegerArithmeticReasonTest {
 		assertEquals(universe.zeroInt(), reasoner.simplify(e));
 	}
 
-	/**
-	 * Integer modulus. u >= 0 ==> (2u + 1) % 2 simplifies to 1
-	 */
-	@Test
-	public void simplifyIntMod2() {
-		assumption = universe.lessThanEquals(universe.zeroInt(), u);
-		reasoner = universe.reasoner(assumption);
-		SymbolicExpression e = universe
-				.modulo(universe.add(universe.multiply(universe.integer(2), u),
-						universe.oneInt()), universe.integer(2));
-
-		assertEquals(universe.oneInt(), reasoner.simplify(e));
-	}
-
-	/**
-	 * Integer modulus. u<0 ==> (2u + 1) % 2 simplifies to -1.
-	 */
-	@Test
-	public void simplifyNegMod() {
-		assumption = universe.lessThan(u, universe.zeroInt());
-		reasoner = universe.reasoner(assumption);
-		SymbolicExpression e = universe
-				.modulo(universe.add(universe.multiply(universe.integer(2), u),
-						universe.oneInt()), universe.integer(2));
-
-		assertEquals(negOneInt, reasoner.simplify(e));
-	}
-
 	// When evaluating x%constant: if x is a Monomial c*m,
 	// (c*m)%d = ((c%d)*m)%d, and (c1*m1 + c2*m2)%d =...
 	// (x^n)%d = ((x%d)^n)%d. In short, apply %d to all
 	// constants...
 	// (a*b)%d = ((a%d)*b)%d
 	// (a+b)%d = ((a%d)+b)%d
-
-	// /**
-	// * Symbolic Integer modulus. true : ((x%z)*y)%z -> (x*y)%z
-	// */
-	// @Test
-	// public void simplifySymbolicMod() {
-	// SymbolicExpression e1 = universe
-	// .modulo(universe.multiply(universe.modulo(x, z), y), z);
-	// SymbolicExpression e2 = universe.modulo(universe.multiply(x, y), z);
-	// reasoner = universe.reasoner(trueExpr);
-	//
-	// assertEquals(e2, reasoner.simplify(e1));
-	// }
-
-	// /**
-	// * Symbolic Integer modulus. true : ((x%z)+y)%z -> (x+y)%z
-	// */
-	// @Test
-	// public void simplifySymbolicMod2() {
-	// SymbolicExpression e1 = universe
-	// .modulo(universe.add(universe.modulo(x, z), y), z);
-	// SymbolicExpression e2 = universe.modulo(universe.add(x, y), z);
-	// reasoner = universe.reasoner(trueExpr);
-	// if (debug) {
-	// out.println(e1);
-	// out.println(e2);
-	// }
-	//
-	// assertEquals(e2, reasoner.simplify(e1));
-	// }
-
-	// /**
-	// * Symbolic Integer modulus. true : ((x%z)^y)%z -> (x^y)%z
-	// */
-	// @Test
-	// public void simplifySymbolicMod3() {
-	// SymbolicExpression e1 = universe
-	// .modulo(universe.power(universe.modulo(x, z), y), z);
-	// SymbolicExpression e2 = universe.modulo(universe.power(x, y), z);
-	// reasoner = universe.reasoner(trueExpr);
-	// if (debug) {
-	// out.println(e1);
-	// out.println(e2);
-	// }
-	//
-	// assertEquals(e2, reasoner.simplify(e1));
-	// }
-
-	// y has to have real type:
-	// /**
-	// * Symbolic Integer modulus. negative exponent power test
-	// */
-	// @Test
-	// public void negativeExponentPowerTest() {
-	// NumericExpression e = universe.multiply(x,
-	// universe.power(y, negOneInt));
-	// if (debug) {
-	// out.println(e);
-	// }
-	// }
-
-	// /**
-	// * Symbolic Integer modulus. true : x/y = x*(y^-1)
-	// */
-	// @Test
-	// public void divideToPowerTest() {
-	// NumericExpression e1 = universe.divide(x, y);
-	// NumericExpression e2 = universe.multiply(x,
-	// universe.power(y, negOneInt));
-	// reasoner = universe.reasoner(trueExpr);
-	//
-	// assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
-	// }
-
-	/**
-	 * Symbolic Integer modulus. true : (x^y)*(x^z)=x^(y+z)
-	 */
-	@Test
-	public void addExponentTest() {
-		NumericExpression e1 = universe.multiply(universe.power(x, y),
-				universe.power(x, z));
-		NumericExpression e2 = universe.power(x, universe.add(y, z));
-		reasoner = universe.reasoner(trueExpr);
-
-		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
-	}
 }
