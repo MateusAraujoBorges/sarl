@@ -317,15 +317,21 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	/**
-	 * Modulates arguuument one by argument two and returns the modulated
-	 * integer Protected against negative modulus
+	 * Modulates argument one by argument two and returns the modulated integer
 	 */
 	public IntegerNumber mod(IntegerNumber arg0, IntegerNumber arg1) {
 		RealInteger x = (RealInteger) arg0;
 		RealInteger y = (RealInteger) arg1;
 
-		if (y.signum() <= 0)
-			throw new IllegalArgumentException("Modulus not positive: " + y);
+		if (y.signum() == 0)
+			throw new IllegalArgumentException("Modulus divisor is zero");
+		if (y.signum() < 0)
+			if (x.signum() < 0)
+				return negate(integer(x.value().abs().mod(y.value().abs())));
+			else
+				return integer(x.value().mod(y.value().abs()));
+		else if (x.signum() < 0)
+			return negate(integer(x.value().abs().mod(y.value())));
 		return integer(x.value().mod(y.value()));
 	}
 
