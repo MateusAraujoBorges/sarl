@@ -250,13 +250,14 @@ public class IntegerArithmeticTest {
 		assertEquals(universe.oneInt(), result1);
 		assertEquals(negOneInt, result3);
 	}
-	
-	@Test(expected=IllegalArgumentException.class)
+
+	@Test(expected = IllegalArgumentException.class)
 	public void moduloIntTest3() { // divisor is zero
 		@SuppressWarnings("unused")
-		NumericExpression result1 = universe.modulo(fourInt, universe.zeroInt());
+		NumericExpression result1 = universe.modulo(fourInt,
+				universe.zeroInt());
 	}
-	
+
 	/**
 	 * Testing the minus method for concrete IntegerNumbers;
 	 */
@@ -296,21 +297,12 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Negative exponent power test.
-	 */
-	@Test
-	public void negativeExponentPowerTest() {
-		NumericExpression e = universe.power(x, negOneInt);
-
-		assertEquals(universe.divide(universe.oneInt(), x), e);
-	}
-
-	/**
 	 * Zero base power test.
 	 */
-	@Test(expected=SARLException.class)
+	@Test(expected = SARLException.class)
 	public void zeroBasePowerTest() {
-		NumericExpression e = universe.power(universe.zeroInt(), universe.zeroInt());
+		NumericExpression e = universe.power(universe.zeroInt(),
+				universe.zeroInt());
 
 		if (debug) {
 			out.println(e);
