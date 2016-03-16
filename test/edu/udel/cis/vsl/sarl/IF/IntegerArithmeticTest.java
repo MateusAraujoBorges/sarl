@@ -308,9 +308,9 @@ public class IntegerArithmeticTest {
 	/**
 	 * Zero base power test.
 	 */
-	@Test
+	@Test(expected=SARLException.class)
 	public void zeroBasePowerTest() {
-		NumericExpression e = universe.power(universe.zeroInt(), negOneInt);
+		NumericExpression e = universe.power(universe.zeroInt(), universe.zeroInt());
 
 		if (debug) {
 			out.println(e);
