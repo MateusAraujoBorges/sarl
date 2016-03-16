@@ -7,6 +7,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.PrintStream;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -31,7 +33,8 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Range;
  */
 public class IntervalUnionSetTest {
 	// Declaration:
-	private static boolean showLog = true;
+	private static PrintStream OUT = System.out;
+	private static boolean DEBUG = false;
 	private static int ARR_SIZE = 15;
 	private static PreUniverse universe;
 	private static NumberFactory numberFactory = Numbers.REAL_FACTORY;
@@ -98,28 +101,31 @@ public class IntervalUnionSetTest {
 	private Range expected1;
 	private Range expected2;
 
-	private void p(String s) {
-		if (showLog) {
-			System.out.println(s);
+	private void p(boolean isDebug, String s) {
+		if (isDebug) {
+			OUT.println(s);
 		}
 	}
 
-	private void p(Interval... intervals) {
-		if (showLog) {
+	private void p(boolean isDebug, Interval... intervals) {
+		if (isDebug) {
 			if (intervals != null) {
-				System.out.print("{");
+				StringBuilder sb = new StringBuilder();
+				
+				sb.append("{");
 				for (int i = 0; i < intervals.length; i++) {
 					if (intervals[i] != null) {
-						System.out.print(intervals[i].toString());
+						sb.append(intervals[i].toString());
 					} else {
-						System.out.print("null");
+						sb.append("null");
 					}
 					if (i == intervals.length - 1) {
-						System.out.print("}\n");
+						sb.append("}\n");
 					} else {
-						System.out.print(", ");
+						sb.append(", ");
 					}
 				}
+				OUT.print(sb.toString());
 			}
 		}
 	}
@@ -153,13 +159,13 @@ public class IntervalUnionSetTest {
 	@After
 	public void tearDown() throws Exception {
 		if (actual != null) {
-			assert ((IntervalUnionSet)actual).checkInvariants();
+			assert ((IntervalUnionSet) actual).checkInvariants();
 		}
 		if (actual1 != null) {
-			assert ((IntervalUnionSet)actual1).checkInvariants();
+			assert ((IntervalUnionSet) actual1).checkInvariants();
 		}
 		if (actual2 != null) {
-			assert ((IntervalUnionSet)actual2).checkInvariants();
+			assert ((IntervalUnionSet) actual2).checkInvariants();
 		}
 	}
 
@@ -171,7 +177,7 @@ public class IntervalUnionSetTest {
 
 		assertTrue(actual.isEmpty());
 		assertTrue(actual.isIntegral());
-		p(actual.toString());
+		p(DEBUG, actual.toString());
 	}
 
 	@Test
@@ -180,7 +186,7 @@ public class IntervalUnionSetTest {
 
 		assertTrue(actual.isEmpty());
 		assertTrue(!actual.isIntegral());
-		p(actual.toString());
+		p(DEBUG, actual.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -201,7 +207,7 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertTrue(actual.isIntegral());
-		p(actual.toString());
+		p(DEBUG, actual.toString());
 	}
 
 	@Test
@@ -210,7 +216,7 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertTrue(!actual.isIntegral());
-		p(actual.toString());
+		p(DEBUG, actual.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -250,7 +256,7 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertTrue(!actual.isIntegral());
-		p(actual.toString());
+		p(DEBUG, actual.toString());
 	}
 
 	@Test
@@ -261,7 +267,7 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertTrue(actual.isIntegral());
-		p(actual.toString());
+		p(DEBUG, actual.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -379,10 +385,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -406,10 +412,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -437,10 +443,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -463,10 +469,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -492,10 +498,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -521,10 +527,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -550,10 +556,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -577,10 +583,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -610,10 +616,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -672,10 +678,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -706,10 +712,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -740,10 +746,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -781,10 +787,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -816,10 +822,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -847,10 +853,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -877,10 +883,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual.isEmpty());
 		assertEquals(expected.toString(), actual.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -901,9 +907,9 @@ public class IntervalUnionSetTest {
 		assertTrue(!actual2.isEmpty());
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("expected: " + expected.toString());
-		p(" actual1: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actual1: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -930,9 +936,9 @@ public class IntervalUnionSetTest {
 		assertTrue(!actual2.isEmpty());
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("expected: " + expected.toString());
-		p(" actual1: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actual1: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -963,10 +969,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual1.isEmpty());
 		assertEquals(expected.toString(), actual1.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p(" actual1: " + actual1.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actual1: " + actual1.toString());
 	}
 
 	@Test
@@ -997,10 +1003,10 @@ public class IntervalUnionSetTest {
 
 		assertTrue(!actual1.isEmpty());
 		assertEquals(expected.toString(), actual1.toString());
-		p("The list is :");
-		p(list);
-		p("expected: " + expected.toString());
-		p(" actual1: " + actual1.toString());
+		p(DEBUG, "The list is :");
+		p(DEBUG, list);
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actual1: " + actual1.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -1012,13 +1018,13 @@ public class IntervalUnionSetTest {
 	@Test
 	public void constructIntervalUnionSet_IntervalUnionSet_Empty() {
 		expected = new IntervalUnionSet(false);
-		actual = new IntervalUnionSet((IntervalUnionSet)expected);
+		actual = new IntervalUnionSet((IntervalUnionSet) expected);
 
 		assertTrue(actual.isEmpty());
 		assertTrue(!actual.isIntegral());
 		assertEquals(expected.toString(), actual.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1026,13 +1032,13 @@ public class IntervalUnionSetTest {
 		Interval intInterval = numberFactory.newInterval(true, INT_N_TEN,
 				false, INT_TEN, false);
 		expected = new IntervalUnionSet(intInterval);
-		actual = new IntervalUnionSet((IntervalUnionSet)expected);
+		actual = new IntervalUnionSet((IntervalUnionSet) expected);
 
 		assertTrue(!actual.isEmpty());
 		assertTrue(actual.isIntegral());
 		assertEquals(expected.toString(), actual.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1046,11 +1052,11 @@ public class IntervalUnionSetTest {
 					int_j, false);
 		}
 		expected = new IntervalUnionSet(expectedList);
-		actual = new IntervalUnionSet((IntervalUnionSet)expected);
+		actual = new IntervalUnionSet((IntervalUnionSet) expected);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -1079,9 +1085,9 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("expected: " + expected.toString());
-		p(" actual1: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actual1: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -1096,9 +1102,9 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("expected: " + expected.toString());
-		p(" actual1: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actual1: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -1110,8 +1116,8 @@ public class IntervalUnionSetTest {
 		actual = original.union(original);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1147,10 +1153,10 @@ public class IntervalUnionSetTest {
 		actual = set1.union(set2);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1184,10 +1190,10 @@ public class IntervalUnionSetTest {
 		actual = set1.union(set2);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1221,10 +1227,10 @@ public class IntervalUnionSetTest {
 		actual = set1.union(set2);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1260,10 +1266,10 @@ public class IntervalUnionSetTest {
 		actual = set1.union(set2);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1299,10 +1305,10 @@ public class IntervalUnionSetTest {
 		actual = set1.union(set2);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1336,10 +1342,10 @@ public class IntervalUnionSetTest {
 		actual = set1.union(set2);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1365,10 +1371,10 @@ public class IntervalUnionSetTest {
 		actual = set1.union(set2);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1394,10 +1400,10 @@ public class IntervalUnionSetTest {
 		actual = set1.union(set2);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -1432,10 +1438,10 @@ public class IntervalUnionSetTest {
 		assert emptyIntSet.isIntegral();
 		assert emptyIntSet.isEmpty();
 		assertFalse(actual);
-		p("   Set: " + emptyIntSet.toString());
-		p("Number: " + INT_ONE.toString());
-		p("expected: " + "false");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + emptyIntSet.toString());
+		p(DEBUG, "Number: " + INT_ONE.toString());
+		p(DEBUG, "expected: " + "false");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1446,10 +1452,10 @@ public class IntervalUnionSetTest {
 		assert !emptyRatSet.isIntegral();
 		assert emptyRatSet.isEmpty();
 		assertFalse(actual);
-		p("   Set: " + emptyRatSet.toString());
-		p("Number: " + RAT_ONE.toString());
-		p("expected: " + "false");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + emptyRatSet.toString());
+		p(DEBUG, "Number: " + RAT_ONE.toString());
+		p(DEBUG, "expected: " + "false");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1460,10 +1466,10 @@ public class IntervalUnionSetTest {
 		assert univIntSet.isIntegral();
 		assert !univIntSet.isEmpty();
 		assertTrue(actual);
-		p("   Set: " + univIntSet.toString());
-		p("Number: " + INT_ONE.toString());
-		p("expected: " + "true");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + univIntSet.toString());
+		p(DEBUG, "Number: " + INT_ONE.toString());
+		p(DEBUG, "expected: " + "true");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1474,10 +1480,10 @@ public class IntervalUnionSetTest {
 		assert !univRatSet.isIntegral();
 		assert !univRatSet.isEmpty();
 		assertTrue(actual);
-		p("   Set: " + univRatSet.toString());
-		p("Number: " + RAT_ONE.toString());
-		p("expected: " + "true");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + univRatSet.toString());
+		p(DEBUG, "Number: " + RAT_ONE.toString());
+		p(DEBUG, "expected: " + "true");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1493,10 +1499,10 @@ public class IntervalUnionSetTest {
 		boolean actual = intervalSet.containsNumber(INT_N_TEN);
 
 		assertFalse(actual);
-		p("   Set: " + intervalSet.toString());
-		p("Number: " + INT_N_TEN.toString());
-		p("expected: " + "false");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + intervalSet.toString());
+		p(DEBUG, "Number: " + INT_N_TEN.toString());
+		p(DEBUG, "expected: " + "false");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1512,10 +1518,10 @@ public class IntervalUnionSetTest {
 		boolean actual = intervalSet.containsNumber(RAT_TEN);
 
 		assertFalse(actual);
-		p("   Set: " + intervalSet.toString());
-		p("Number: " + RAT_TEN.toString());
-		p("expected: " + "false");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + intervalSet.toString());
+		p(DEBUG, "Number: " + RAT_TEN.toString());
+		p(DEBUG, "expected: " + "false");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1531,10 +1537,10 @@ public class IntervalUnionSetTest {
 		boolean actual = intervalSet.containsNumber(INT_ONE);
 
 		assertFalse(actual);
-		p("   Set: " + intervalSet.toString());
-		p("Number: " + INT_ONE.toString());
-		p("expected: " + "false");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + intervalSet.toString());
+		p(DEBUG, "Number: " + INT_ONE.toString());
+		p(DEBUG, "expected: " + "false");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1550,10 +1556,10 @@ public class IntervalUnionSetTest {
 		boolean actual = intervalSet.containsNumber(RAT_N_FIVE);
 
 		assertFalse(actual);
-		p("   Set: " + intervalSet.toString());
-		p("Number: " + RAT_N_FIVE.toString());
-		p("expected: " + "false");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + intervalSet.toString());
+		p(DEBUG, "Number: " + RAT_N_FIVE.toString());
+		p(DEBUG, "expected: " + "false");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1569,10 +1575,10 @@ public class IntervalUnionSetTest {
 		boolean actual = intervalSet.containsNumber(RAT_FIVE);
 
 		assertFalse(actual);
-		p("   Set: " + intervalSet.toString());
-		p("Number: " + RAT_FIVE.toString());
-		p("expected: " + "false");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + intervalSet.toString());
+		p(DEBUG, "Number: " + RAT_FIVE.toString());
+		p(DEBUG, "expected: " + "false");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1589,10 +1595,10 @@ public class IntervalUnionSetTest {
 		boolean actual = intervalSet.containsNumber(ratNum);
 
 		assertFalse(actual);
-		p("   Set: " + intervalSet.toString());
-		p("Number: " + ratNum.toString());
-		p("expected: " + "false");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + intervalSet.toString());
+		p(DEBUG, "Number: " + ratNum.toString());
+		p(DEBUG, "expected: " + "false");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1612,10 +1618,10 @@ public class IntervalUnionSetTest {
 		boolean actual = intervalSet.containsNumber(INT_N_TEN);
 
 		assertTrue(actual);
-		p("   Set: " + intervalSet.toString());
-		p("Number: " + INT_N_TEN.toString());
-		p("expected: " + "true");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + intervalSet.toString());
+		p(DEBUG, "Number: " + INT_N_TEN.toString());
+		p(DEBUG, "expected: " + "true");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1635,10 +1641,10 @@ public class IntervalUnionSetTest {
 		boolean actual = intervalSet.containsNumber(INT_ZERO);
 
 		assertTrue(actual);
-		p("   Set: " + intervalSet.toString());
-		p("Number: " + INT_ZERO.toString());
-		p("expected: " + "true");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + intervalSet.toString());
+		p(DEBUG, "Number: " + INT_ZERO.toString());
+		p(DEBUG, "expected: " + "true");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1658,10 +1664,10 @@ public class IntervalUnionSetTest {
 		boolean actual = intervalSet.containsNumber(RAT_N_SEVEN);
 
 		assertTrue(actual);
-		p("   Set: " + intervalSet.toString());
-		p("Number: " + RAT_N_SEVEN.toString());
-		p("expected: " + "true");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + intervalSet.toString());
+		p(DEBUG, "Number: " + RAT_N_SEVEN.toString());
+		p(DEBUG, "expected: " + "true");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test
@@ -1682,10 +1688,10 @@ public class IntervalUnionSetTest {
 		boolean actual = intervalSet.containsNumber(ratNum);
 
 		assertTrue(actual);
-		p("   Set: " + intervalSet.toString());
-		p("Number: " + ratNum.toString());
-		p("expected: " + "true");
-		p("  actual: " + actual);
+		p(DEBUG, "   Set: " + intervalSet.toString());
+		p(DEBUG, "Number: " + ratNum.toString());
+		p(DEBUG, "expected: " + "true");
+		p(DEBUG, "  actual: " + actual);
 	}
 
 	@Test(expected = AssertionError.class)
@@ -1719,10 +1725,10 @@ public class IntervalUnionSetTest {
 		expected = new IntervalUnionSet(INT_ONE);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + emptyIntSet.toString());
-		p("addNumber: " + INT_ONE.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + emptyIntSet.toString());
+		p(DEBUG, "addNumber: " + INT_ONE.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1733,10 +1739,10 @@ public class IntervalUnionSetTest {
 
 		assert !actual.isIntegral();
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + emptyRatSet.toString());
-		p("addNumber: " + RAT_ONE.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + emptyRatSet.toString());
+		p(DEBUG, "addNumber: " + RAT_ONE.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1746,10 +1752,10 @@ public class IntervalUnionSetTest {
 		expected = univIntSet;
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + univIntSet.toString());
-		p("addNumber: " + INT_ONE.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + univIntSet.toString());
+		p(DEBUG, "addNumber: " + INT_ONE.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1759,10 +1765,10 @@ public class IntervalUnionSetTest {
 		expected = univRatSet;
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + univRatSet.toString());
-		p("addNumber: " + RAT_ONE.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + univRatSet.toString());
+		p(DEBUG, "addNumber: " + RAT_ONE.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1781,10 +1787,10 @@ public class IntervalUnionSetTest {
 		actual = intervalSet.addNumber(INT_N_TEN);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + intervalSet.toString());
-		p("addNumber: " + INT_N_TEN.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + intervalSet.toString());
+		p(DEBUG, "addNumber: " + INT_N_TEN.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1803,10 +1809,10 @@ public class IntervalUnionSetTest {
 		actual = intervalSet.addNumber(INT_N_SIX);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + intervalSet.toString());
-		p("addNumber: " + INT_N_SIX.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + intervalSet.toString());
+		p(DEBUG, "addNumber: " + INT_N_SIX.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1825,10 +1831,10 @@ public class IntervalUnionSetTest {
 		actual = intervalSet.addNumber(INT_N_ONE);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + intervalSet.toString());
-		p("addNumber: " + INT_N_ONE.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + intervalSet.toString());
+		p(DEBUG, "addNumber: " + INT_N_ONE.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1847,10 +1853,10 @@ public class IntervalUnionSetTest {
 		actual = intervalSet.addNumber(INT_SIX);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + intervalSet.toString());
-		p("addNumber: " + INT_SIX.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + intervalSet.toString());
+		p(DEBUG, "addNumber: " + INT_SIX.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1869,10 +1875,10 @@ public class IntervalUnionSetTest {
 		actual = intervalSet.addNumber(INT_TWO);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + intervalSet.toString());
-		p("addNumber: " + INT_TWO.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + intervalSet.toString());
+		p(DEBUG, "addNumber: " + INT_TWO.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1891,10 +1897,10 @@ public class IntervalUnionSetTest {
 		actual = intervalSet.addNumber(RAT_TEN);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + intervalSet.toString());
-		p("addNumber: " + RAT_TEN.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + intervalSet.toString());
+		p(DEBUG, "addNumber: " + RAT_TEN.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1913,10 +1919,10 @@ public class IntervalUnionSetTest {
 		actual = intervalSet.addNumber(RAT_N_FIVE);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + intervalSet.toString());
-		p("addNumber: " + RAT_N_FIVE.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + intervalSet.toString());
+		p(DEBUG, "addNumber: " + RAT_N_FIVE.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1935,18 +1941,18 @@ public class IntervalUnionSetTest {
 		expected2 = new IntervalUnionSet(numberFactory.newInterval(false,
 				RAT_N_FIVE, true, RAT_FIVE, true));
 		actual1 = intervalSet.addNumber(RAT_N_TWO);
-		actual2 = ((IntervalUnionSet)actual1).addNumber(RAT_TWO);
+		actual2 = ((IntervalUnionSet) actual1).addNumber(RAT_TWO);
 
 		assertEquals(expected1.toString(), actual1.toString());
-		p("      Set: " + intervalSet.toString());
-		p("addNumber: " + RAT_N_TWO.toString());
-		p("expected: " + expected1.toString());
-		p("  actual: " + actual1.toString());
+		p(DEBUG, "      Set: " + intervalSet.toString());
+		p(DEBUG, "addNumber: " + RAT_N_TWO.toString());
+		p(DEBUG, "expected: " + expected1.toString());
+		p(DEBUG, "  actual: " + actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
-		p("      Set: " + actual1.toString());
-		p("addNumber: " + RAT_TWO.toString());
-		p("expected: " + expected2.toString());
-		p("  actual: " + actual2.toString());
+		p(DEBUG, "      Set: " + actual1.toString());
+		p(DEBUG, "addNumber: " + RAT_TWO.toString());
+		p(DEBUG, "expected: " + expected2.toString());
+		p(DEBUG, "  actual: " + actual2.toString());
 	}
 
 	@Test
@@ -1965,10 +1971,10 @@ public class IntervalUnionSetTest {
 		actual = intervalSet.addNumber(RAT_FIVE);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + intervalSet.toString());
-		p("addNumber: " + RAT_FIVE.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + intervalSet.toString());
+		p(DEBUG, "addNumber: " + RAT_FIVE.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -1987,10 +1993,10 @@ public class IntervalUnionSetTest {
 		actual = intervalSet.addNumber(RAT_ONE);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("      Set: " + intervalSet.toString());
-		p("addNumber: " + RAT_ONE.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "      Set: " + intervalSet.toString());
+		p(DEBUG, "addNumber: " + RAT_ONE.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -2294,8 +2300,8 @@ public class IntervalUnionSetTest {
 		boolean actual = set1.contains(set2);
 
 		assertFalse(actual);
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
 	}
 
 	@Test
@@ -2327,8 +2333,8 @@ public class IntervalUnionSetTest {
 		boolean actual = set1.contains(set2);
 
 		assertFalse(actual);
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
 	}
 
 	@Test
@@ -2358,8 +2364,8 @@ public class IntervalUnionSetTest {
 		boolean actual = set1.contains(set2);
 
 		assertFalse(actual);
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
 	}
 
 	@Test
@@ -2388,8 +2394,8 @@ public class IntervalUnionSetTest {
 		boolean actual = set1.contains(set2);
 
 		assertFalse(actual);
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
 	}
 
 	@Test
@@ -2418,8 +2424,8 @@ public class IntervalUnionSetTest {
 		boolean actual = set1.contains(set2);
 
 		assertFalse(actual);
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
 	}
 
 	@Test
@@ -2450,8 +2456,8 @@ public class IntervalUnionSetTest {
 		boolean actual = set1.contains(set2);
 
 		assertTrue(actual);
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
 	}
 
 	@Test
@@ -2475,8 +2481,8 @@ public class IntervalUnionSetTest {
 		boolean actual = set1.contains(set2);
 
 		assertTrue(actual);
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
 	}
 
 	@Test
@@ -2503,8 +2509,8 @@ public class IntervalUnionSetTest {
 		boolean actual = set1.contains(set2);
 
 		assertTrue(actual);
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
 	}
 
 	@Test
@@ -2533,8 +2539,8 @@ public class IntervalUnionSetTest {
 		boolean actual = set1.contains(set2);
 
 		assertFalse(actual);
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -2816,9 +2822,9 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("expected: " + expected.toString());
-		p(" actual1: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actual1: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -2833,9 +2839,9 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("expected: " + expected.toString());
-		p(" actual1: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actual1: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -2847,8 +2853,8 @@ public class IntervalUnionSetTest {
 		actual = original.intersect(original);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -2883,11 +2889,11 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p(" actua1l: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -2922,11 +2928,11 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p(" actua1l: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -2962,11 +2968,11 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p(" actua1l: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3018,11 +3024,11 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p(" actua1l: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3061,11 +3067,11 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p(" actua1l: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3104,11 +3110,11 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected.toString());
-		p(" actua1l: " + actual1.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -3138,10 +3144,10 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
-		p("expected: " + expected1.toString());
-		p(" actual1: " + actual1.toString());
-		p("expected: " + expected2.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "expected: " + expected1.toString());
+		p(DEBUG, " actual1: " + actual1.toString());
+		p(DEBUG, "expected: " + expected2.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3159,10 +3165,10 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
-		p("expected: " + expected1.toString());
-		p(" actual1: " + actual1.toString());
-		p("expected: " + expected2.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "expected: " + expected1.toString());
+		p(DEBUG, " actual1: " + actual1.toString());
+		p(DEBUG, "expected: " + expected2.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3174,8 +3180,8 @@ public class IntervalUnionSetTest {
 		actual = original.minus(original);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -3211,12 +3217,12 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected1.toString());
-		p(" actua1l: " + actual1.toString());
-		p("expected: " + expected2.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected1.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, "expected: " + expected2.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3252,12 +3258,12 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected1.toString());
-		p(" actua1l: " + actual1.toString());
-		p("expected: " + expected2.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected1.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, "expected: " + expected2.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3293,12 +3299,12 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected1.toString());
-		p(" actua1l: " + actual1.toString());
-		p("expected: " + expected2.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected1.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, "expected: " + expected2.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3361,12 +3367,12 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected1.toString());
-		p(" actua1l: " + actual1.toString());
-		p("expected: " + expected2.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected1.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, "expected: " + expected2.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3418,12 +3424,12 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected1.toString());
-		p(" actua1l: " + actual1.toString());
-		p("expected: " + expected2.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected1.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, "expected: " + expected2.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3475,12 +3481,12 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected1.toString());
-		p(" actua1l: " + actual1.toString());
-		p("expected: " + expected2.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected1.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, "expected: " + expected2.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3515,12 +3521,12 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
-		p("    set1: " + set1.toString());
-		p("    set2: " + set2.toString());
-		p("expected: " + expected1.toString());
-		p(" actua1l: " + actual1.toString());
-		p("expected: " + expected2.toString());
-		p(" actual2: " + actual2.toString());
+		p(DEBUG, "    set1: " + set1.toString());
+		p(DEBUG, "    set2: " + set2.toString());
+		p(DEBUG, "expected: " + expected1.toString());
+		p(DEBUG, " actua1l: " + actual1.toString());
+		p(DEBUG, "expected: " + expected2.toString());
+		p(DEBUG, " actual2: " + actual2.toString());
 	}
 
 	@Test
@@ -3537,10 +3543,10 @@ public class IntervalUnionSetTest {
 
 		assertEquals(expected1.toString(), actual.toString());
 		assertEquals(expected2.toString(), actual.toString());
-		p("expected: " + expected1.toString());
-		p("  actual: " + actual.toString());
-		p("expected: " + expected2.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "expected: " + expected1.toString());
+		p(DEBUG, "  actual: " + actual.toString());
+		p(DEBUG, "expected: " + expected2.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -3584,10 +3590,10 @@ public class IntervalUnionSetTest {
 		actual = original.affineTransform(a, b);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("original: " + original.toString());
-		p("argments: " + "a: " + a.toString() + ", b: " + b.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "original: " + original.toString());
+		p(DEBUG, "argments: " + "a: " + a.toString() + ", b: " + b.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -3599,10 +3605,10 @@ public class IntervalUnionSetTest {
 		actual = original.affineTransform(a, b);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("original: " + original.toString());
-		p("argments: " + "a: " + a.toString() + ", b: " + b.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "original: " + original.toString());
+		p(DEBUG, "argments: " + "a: " + a.toString() + ", b: " + b.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -3616,10 +3622,10 @@ public class IntervalUnionSetTest {
 		actual = original.affineTransform(a, b);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("original: " + original.toString());
-		p("argments: " + "a: " + a.toString() + ", b: " + b.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "original: " + original.toString());
+		p(DEBUG, "argments: " + "a: " + a.toString() + ", b: " + b.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -3634,10 +3640,10 @@ public class IntervalUnionSetTest {
 		actual = original.affineTransform(a, b);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("original: " + original.toString());
-		p("argments: " + "a: " + a.toString() + ", b: " + b.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "original: " + original.toString());
+		p(DEBUG, "argments: " + "a: " + a.toString() + ", b: " + b.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -3652,10 +3658,10 @@ public class IntervalUnionSetTest {
 		actual = original.affineTransform(a, b);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("original: " + original.toString());
-		p("argments: " + "a: " + a.toString() + ", b: " + b.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "original: " + original.toString());
+		p(DEBUG, "argments: " + "a: " + a.toString() + ", b: " + b.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test
@@ -3670,10 +3676,10 @@ public class IntervalUnionSetTest {
 		actual = original.affineTransform(a, b);
 
 		assertEquals(expected.toString(), actual.toString());
-		p("original: " + original.toString());
-		p("argments: " + "a: " + a.toString() + ", b: " + b.toString());
-		p("expected: " + expected.toString());
-		p("  actual: " + actual.toString());
+		p(DEBUG, "original: " + original.toString());
+		p(DEBUG, "argments: " + "a: " + a.toString() + ", b: " + b.toString());
+		p(DEBUG, "expected: " + expected.toString());
+		p(DEBUG, "  actual: " + actual.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -3682,8 +3688,8 @@ public class IntervalUnionSetTest {
 		SymbolicExpression expected = universe.falseExpression();
 		SymbolicExpression actual = set.symbolicRepresentation(RAT_X, null);
 
-		p(expected.toString());
-		p(actual.toString());
+		p(DEBUG, expected.toString());
+		p(DEBUG, actual.toString());
 		assertEquals(expected, actual);
 	}
 
@@ -3693,8 +3699,8 @@ public class IntervalUnionSetTest {
 		SymbolicExpression expected = universe.falseExpression();
 		SymbolicExpression actual = set.symbolicRepresentation(null, universe);
 
-		p(expected.toString());
-		p(actual.toString());
+		p(DEBUG, expected.toString());
+		p(DEBUG, actual.toString());
 		assertEquals(expected, actual);
 	}
 
@@ -3704,8 +3710,8 @@ public class IntervalUnionSetTest {
 		SymbolicExpression expected = universe.falseExpression();
 		SymbolicExpression actual = set.symbolicRepresentation(RAT_X, universe);
 
-		p(expected.toString());
-		p(actual.toString());
+		p(DEBUG, expected.toString());
+		p(DEBUG, actual.toString());
 		assertEquals(expected, actual);
 	}
 
@@ -3715,8 +3721,8 @@ public class IntervalUnionSetTest {
 		SymbolicExpression expected = universe.trueExpression();
 		SymbolicExpression actual = set.symbolicRepresentation(INT_X, universe);
 
-		p(expected.toString());
-		p(actual.toString());
+		p(DEBUG, expected.toString());
+		p(DEBUG, actual.toString());
 		assertEquals(expected, actual);
 	}
 
@@ -3729,8 +3735,8 @@ public class IntervalUnionSetTest {
 				universe.lessThan(RAT_X, universe.rational(10.00)));
 		SymbolicExpression actual = set.symbolicRepresentation(RAT_X, universe);
 
-		p(expected.toString());
-		p(actual.toString());
+		p(DEBUG, expected.toString());
+		p(DEBUG, actual.toString());
 		assertEquals(expected, actual);
 	}
 
@@ -3750,8 +3756,8 @@ public class IntervalUnionSetTest {
 				.lessThan(universe.rational(10), RAT_X));
 		SymbolicExpression actual = set.symbolicRepresentation(RAT_X, universe);
 
-		p(expected.toString());
-		p(actual.toString());
+		p(DEBUG, expected.toString());
+		p(DEBUG, actual.toString());
 		assertEquals(expected, actual);
 	}
 
@@ -3770,8 +3776,8 @@ public class IntervalUnionSetTest {
 				.lessThanEquals(INT_X, universe.integer(-10)));
 		SymbolicExpression actual = set.symbolicRepresentation(INT_X, universe);
 
-		p(expected.toString());
-		p(actual.toString());
+		p(DEBUG, expected.toString());
+		p(DEBUG, actual.toString());
 		assertEquals(expected, actual);
 	}
 }
