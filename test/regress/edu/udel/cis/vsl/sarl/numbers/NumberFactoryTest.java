@@ -337,15 +337,15 @@ public class NumberFactoryTest {
 	}
 
 	/**
-	 * @Exception IllegalArgumentException is thrown if taking the modulus of
-	 *            two IntegerNumber inputs where there is a negative
-	 *            IntegerNumber as an argument.
+	 * Testing that the modulus method works with a negative divisor
 	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void intNumModNegArg() {
 		IntegerNumber a = factory.integer(bigTen);
 		IntegerNumber b = factory.integer(bigNegativeOne);
-		factory.mod(a, b);
+		IntegerNumber actual = factory.mod(a, b);
+		
+		assertEquals(bigZero, actual);
 	}
 
 	/**
