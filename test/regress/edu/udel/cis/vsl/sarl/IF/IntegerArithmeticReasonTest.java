@@ -39,31 +39,20 @@ public class IntegerArithmeticReasonTest {
 	public final static PrintStream out = System.out;
 	public final static boolean debug = false;
 	private SymbolicUniverse universe;
-	private StringObject u_obj, x_obj, y_obj, z_obj; // "u", "x", "y", "z"
+	private StringObject u_obj; // "u"
 	private SymbolicType integerType;
-	private NumericSymbolicConstant u, x, y, z; // integer symbolic constant
-	private NumericExpression negOneInt, threeInt, fiveInt;
+	private NumericSymbolicConstant u; // integer symbolic constant
+	private NumericExpression threeInt, fiveInt;
 	private BooleanExpression trueExpr, falseExpr;
-	private BooleanExpression assumption;
 	private Reasoner reasoner;
 
 	@Before
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
 		u_obj = universe.stringObject("u");
-		x_obj = universe.stringObject("x");
-		y_obj = universe.stringObject("y");
-		z_obj = universe.stringObject("z");
 		integerType = universe.integerType();
 		u = (NumericSymbolicConstant) universe.symbolicConstant(u_obj,
 				integerType);
-		x = (NumericSymbolicConstant) universe.symbolicConstant(x_obj,
-				integerType);
-		y = (NumericSymbolicConstant) universe.symbolicConstant(y_obj,
-				integerType);
-		z = (NumericSymbolicConstant) universe.symbolicConstant(z_obj,
-				integerType);
-		negOneInt = universe.integer(-1);
 		threeInt = universe.integer(3);
 		fiveInt = universe.integer(5);
 		trueExpr = universe.bool(true);
