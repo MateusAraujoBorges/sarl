@@ -345,7 +345,7 @@ public class NumberFactoryTest {
 		IntegerNumber b = factory.integer(bigNegativeOne);
 		IntegerNumber actual = factory.mod(a, b);
 		
-		assertEquals(bigZero, actual);
+		assertEquals(factory.integer(bigZero), actual);
 	}
 
 	/**
