@@ -178,7 +178,13 @@ public class IntegerArithmeticReasonTest {
 	}
 
 	/**
-	 * Integer modulus. false: 0 <= u/3 <=1 -> u >=0; like negative integer -1
+	 * Integer division test.
+	 * 
+	 * Assumption: 0 <= u/3 <= 1.
+	 * 
+	 * Query: u >= 0
+	 * 
+	 * Expected result: NO. Counterexample: -1.
 	 */
 	@Test
 	public void simplifyIntDivTest2() {
@@ -207,7 +213,7 @@ public class IntegerArithmeticReasonTest {
 	}
 
 	/**
-	 * Integer modulus. true : (2u + 1) % 2 -> 1 only if u >= 0.
+	 * Integer modulus. u >= 0 ==> (2u + 1) % 2 simplifies to 1
 	 */
 	@Test
 	public void simplifyIntMod2() {
@@ -221,10 +227,10 @@ public class IntegerArithmeticReasonTest {
 	}
 
 	/**
-	 * Integer modulus. true : (2u + 1) % 2 -> -1 only if u < 0.
+	 * Integer modulus. u<0 ==> (2u + 1) % 2 simplifies to -1.
 	 */
 	@Test
-	public void simplifyIntMod3() {
+	public void simplifyNegMod() {
 		assumption = universe.lessThan(u, universe.zeroInt());
 		reasoner = universe.reasoner(assumption);
 		SymbolicExpression e = universe
