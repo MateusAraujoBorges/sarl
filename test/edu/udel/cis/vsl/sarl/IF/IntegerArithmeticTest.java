@@ -250,7 +250,13 @@ public class IntegerArithmeticTest {
 		assertEquals(universe.oneInt(), result1);
 		assertEquals(negOneInt, result3);
 	}
-
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void moduloIntTest3() { // divisor is zero
+		@SuppressWarnings("unused")
+		NumericExpression result1 = universe.modulo(fourInt, universe.zeroInt());
+	}
+	
 	/**
 	 * Testing the minus method for concrete IntegerNumbers;
 	 */
