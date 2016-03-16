@@ -26,7 +26,7 @@
 
 	<!-- Junit and JaCoCo Coverage  -->
 
-	<property name="test.src.dir" location="${basedir}/test" />
+	<property name="test.src.dir" location="${basedir}/test/regress" />
 	<property name="test.bin.dir" location="${basedir}/bin-test" />
 	<property name="junit.dir" location="${basedir}/junit" />
 	<property name="junit.data.dir" location="${junit.dir}/data" />
