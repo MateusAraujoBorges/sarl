@@ -284,4 +284,22 @@ public class RealArithmeticReasonTest {
 		assertEquals(ResultType.YES, result.getResultType());
 	}
 	
+	/**
+	 * assumption: 8/x = 4
+	 * 
+	 * x == 2?
+	 */
+	@Test
+	public void nonLinearTest(){
+		NumericExpression x = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("x"), realType);
+		NumericExpression real_eight = universe.rational(8);
+		NumericExpression real_four = universe.rational(4);
+		NumericExpression eightDivideX = universe.divide(real_eight, x);
+		BooleanExpression assumption = universe.equals(eightDivideX, real_four);
+		Reasoner r = universe.reasoner(assumption);
+		BooleanExpression deduction = universe.equals(x, two); // x == 2?
+		ValidityResult result = r.valid(deduction);
+		assertEquals(ResultType.YES, result.getResultType());
+	}
 }

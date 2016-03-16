@@ -77,4 +77,12 @@ public class FunctionTest {
 		}
 		assertEquals(universe.multiply(four, universe.multiply(two, two)), r);
 	}
+	
+	/**
+	 * test function type
+	 */
+	@Test
+	public void applyTest2(){
+		
+	}
 }

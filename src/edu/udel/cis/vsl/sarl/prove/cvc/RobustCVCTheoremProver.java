@@ -177,7 +177,6 @@ public class RobustCVCTheoremProver implements TheoremProver {
 			boolean show, PrintStream out) throws TheoremProverException {
 		Process process = null;
 		ValidityResult result = null;
-
 		try {
 			process = processBuilder.start();
 		} catch (IOException e) {
@@ -196,6 +195,9 @@ public class RobustCVCTheoremProver implements TheoremProver {
 					.getDeclarations();
 			FastList<String> assumptionText = assumptionTranslator
 					.getTranslation();
+			
+			System.out.println("assumptionText:"+assumptionText);
+			
 			assumptionDecls.print(stdin);
 			stdin.print("ASSERT ");
 			assumptionText.print(stdin);
