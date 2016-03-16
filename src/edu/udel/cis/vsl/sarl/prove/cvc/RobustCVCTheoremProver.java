@@ -195,9 +195,9 @@ public class RobustCVCTheoremProver implements TheoremProver {
 					.getDeclarations();
 			FastList<String> assumptionText = assumptionTranslator
 					.getTranslation();
-			
-			System.out.println("assumptionText:"+assumptionText);
-			
+
+			// System.out.println("assumptionText:"+assumptionText);
+
 			assumptionDecls.print(stdin);
 			stdin.print("ASSERT ");
 			assumptionText.print(stdin);
