@@ -30,6 +30,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
+import edu.udel.cis.vsl.sarl.expr.common.KeySetFactory;
 import edu.udel.cis.vsl.sarl.ideal2.common.One;
 
 /**
@@ -233,6 +234,22 @@ import edu.udel.cis.vsl.sarl.ideal2.common.One;
  */
 public interface Ideal2Factory extends NumericExpressionFactory {
 
+	Monomial[] emptyTermList = new Monomial[0];
+
+	PrimitivePower[] emptyPPList = new PrimitivePower[0];
+
+	/**
+	 * What is the purpose of the polynomial factory. Is it to create only
+	 * non-trivial polynomials: expressions where operator is + and all
+	 * arguments are instances of Monomial? Or is it to create all instances of
+	 * Polynomial???
+	 * 
+	 * @return
+	 */
+	KeySetFactory<Monic, Monomial> polynomialFactory();
+
+	KeySetFactory<Primitive, PrimitivePower> monicFactory();
+
 	/**
 	 * The {@link Comparator} on {@link Monic}s. This places some well-defined
 	 * total order on the set of all instances of {@link Monic}.
@@ -240,48 +257,6 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 * @return the comparator on {@link Monic}s
 	 */
 	Comparator<Monic> monicComparator();
-
-	/**
-	 * The empty map from {@link Primitive} to <code>V</code>, i.e., the map
-	 * containing no entries.
-	 *
-	 * @return the empty map
-	 */
-	<V extends SymbolicExpression> SymbolicMap<Primitive, V> emptyPrimitiveMap();
-
-	/**
-	 * The empty map from {@link Monic} to <code>V</code>, i.e., the map
-	 * containing no entries.
-	 *
-	 * @return the empty map
-	 */
-	<V extends SymbolicExpression> SymbolicMap<Monic, V> emptyMonicMap();
-
-	/**
-	 * The singleton map from {@link Monic} to <code>V</code> consisting of one
-	 * entry <code>(key,value)</code>.
-	 * 
-	 * @param key
-	 *            a non-<code>null</code> {@link Monic}
-	 * @param value
-	 *            an element of <code>V</code>
-	 * @return symbolic map consisting of one entry <code>(key,value)</code>
-	 */
-	<V extends SymbolicExpression> SymbolicMap<Monic, V> monicSingletonMap(
-			Monic key, V value);
-
-	/**
-	 * The singleton map from {@link Primitive} to <code>V</code> consisting of
-	 * one entry <code>(key,value)</code>.
-	 * 
-	 * @param key
-	 *            a non-<code>null</code> {@link Primitive}
-	 * @param value
-	 *            an element of <code>V</code>
-	 * @return symbolic map consisting of one entry (key,value)
-	 */
-	<V extends SymbolicExpression> SymbolicMap<Primitive, V> primitiveSingletonMap(
-			Primitive key, V value);
 
 	/**
 	 * Returns an {@link IntObject} wrapping the int 1.
@@ -393,7 +368,7 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 *         the corresponding bit in <code>mask</code> is <code>true</code>
 	 */
 	Monic monicMask(Monic monic, boolean[] mask);
-	
+
 	BooleanExpression isZero(Monomial monomial);
 
 	// Monomials...
@@ -474,6 +449,8 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 
 	// Term maps...
 
+	// DO WE NEED A SEPARATE type for term map????
+
 	/**
 	 * <p>
 	 * Returns a {@link SymbolicMap} with a single entry mapping the monic
@@ -494,7 +471,7 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 *            {@link SymbolicRealType}
 	 * @return the term map consisting of a single term, one
 	 */
-	SymbolicMap<Monic, Monomial> oneTermMap(SymbolicType type);
+	Monomial[] oneTermMap(SymbolicType type);
 
 	/**
 	 * Computes the sum of two term maps as a term map. The sum is defined in
@@ -512,8 +489,7 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 *            map1</code>
 	 * @return a term map which represents the sum of the two given maps
 	 */
-	SymbolicMap<Monic, Monomial> addTermMaps(SymbolicMap<Monic, Monomial> map1,
-			SymbolicMap<Monic, Monomial> map2);
+	Monomial[] addTermMaps(Monomial[] map1, Monomial[] map2);
 
 	/**
 	 * Returns the products of the two term maps as a term map. The product is
@@ -529,9 +505,7 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 *            map1</code>
 	 * @return a term map which represents the sum of the two given maps
 	 */
-	SymbolicMap<Monic, Monomial> multiplyTermMaps(
-			SymbolicMap<Monic, Monomial> map1,
-			SymbolicMap<Monic, Monomial> map2);
+	Monomial[] multiplyTermMaps(Monomial[] map1, Monomial[] map2);
 
 	/**
 	 * Computes the term map obtained by multiplying the given {@link Constant}
@@ -544,8 +518,7 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 * @return the term map obtained by multiplying <code>constant</code> with
 	 *         every term in <code>map</code>
 	 */
-	SymbolicMap<Monic, Monomial> multiplyConstantTermMap(Constant constant,
-			SymbolicMap<Monic, Monomial> map);
+	Monomial[] multiplyConstantTermMap(Constant constant, Monomial[] map);
 
 	/**
 	 * Raises a term map to the given power, returning the result as a term map.
@@ -563,8 +536,8 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 * @return the result of multiplying <code>map</code> with itself
 	 *         <code>exponent</code> times
 	 */
-	SymbolicMap<Monic, Monomial> powerTermMap(SymbolicType type,
-			SymbolicMap<Monic, Monomial> map, IntObject exponent);
+	Monomial[] powerTermMap(SymbolicType type, Monomial[] map,
+			IntObject exponent);
 
 	/**
 	 * <p>
@@ -577,7 +550,7 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 * Pre-condition: <code>maps</code> is non-empty.
 	 * </p>
 	 * 
-	 * @param map
+	 * @param terms
 	 *            a term map, i.e., a map from {@link Monic} to {@link Monomial}
 	 *            with the property that a {@link Monic} <i>m</i> maps to a
 	 *            {@link Monomial} of the form <i>c</i>*<i>m</i>, for some non-0
@@ -585,7 +558,7 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 * @return a {@link Monomial} equivalent to the sum of the {@link Monomial}
 	 *         values of <code>map</code>
 	 */
-	Monomial factorTermMap(SymbolicMap<Monic, Monomial> map);
+	Monomial factorTermMap(Monomial[] terms);
 
 	// Polynomials...
 
@@ -596,10 +569,9 @@ public interface Ideal2Factory extends NumericExpressionFactory {
 	 * @param type
 	 *            the type of <code>termMap</code> (needed in case
 	 *            <code>termMap</code> is empty)
-	 * @param termMap
+	 * @param terms
 	 *            a non-<code>null</code> term map
 	 * @return the result of summing the terms in the term map
 	 */
-	Polynomial polynomial(SymbolicType type,
-			SymbolicMap<Monic, Monomial> termMap);
+	Polynomial polynomial(SymbolicType type, Monomial[] terms);
 }

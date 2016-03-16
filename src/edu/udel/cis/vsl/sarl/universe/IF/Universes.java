@@ -27,8 +27,6 @@ import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.collections.IF.Collections;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.Expressions;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal;
-import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
@@ -55,24 +53,6 @@ import edu.udel.cis.vsl.sarl.universe.common.MathUniverse;
  */
 public class Universes {
 
-	// you can specify specific prover or entire config
-
-	public static SymbolicUniverse newIdealUniverse1(SARLConfig config,
-			ProverInfo prover) {
-		FactorySystem system = PreUniverses.newIdealFactorySystem1();
-		CommonSymbolicUniverse universe = new CommonSymbolicUniverse(system);
-		SimplifierFactory simplifierFactory = Ideal.newIdealSimplifierFactory(
-				(IdealFactory) system.numericFactory(), universe);
-		TheoremProverFactory proverFactory = prover == null
-				? Prove.newMultiProverFactory(universe, config)
-				: Prove.newProverFactory(universe, prover);
-		ReasonerFactory reasonerFactory = Reason.newReasonerFactory(universe,
-				simplifierFactory, proverFactory);
-
-		universe.setReasonerFactory(reasonerFactory);
-		return universe;
-	}
-	
 	public static SymbolicUniverse newIdealUniverse2(SARLConfig config,
 			ProverInfo prover) {
 		FactorySystem system = PreUniverses.newIdealFactorySystem2();
@@ -89,20 +69,17 @@ public class Universes {
 		return universe;
 	}
 
-	public static SymbolicUniverse newIdealUniverse1() {
-		return newIdealUniverse1(Configurations.getDefaultConfiguration(), null);
-	}
-	
 	public static SymbolicUniverse newIdealUniverse2() {
-		return newIdealUniverse2(Configurations.getDefaultConfiguration(), null);
+		return newIdealUniverse2(Configurations.getDefaultConfiguration(),
+				null);
 	}
 
 	public static SymbolicUniverse newMathUniverse(SARLConfig config,
 			ProverInfo prover) {
-		FactorySystem system = PreUniverses.newIdealFactorySystem1();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		MathUniverse universe = new MathUniverse(system);
-		SimplifierFactory simplifierFactory = Ideal.newIdealSimplifierFactory(
-				(IdealFactory) system.numericFactory(), universe);
+		SimplifierFactory simplifierFactory = Ideal2.newIdealSimplifierFactory(
+				(Ideal2Factory) system.numericFactory(), universe);
 		TheoremProverFactory proverFactory = prover == null
 				? Prove.newMultiProverFactory(universe, config)
 				: Prove.newProverFactory(universe, prover);
@@ -138,31 +115,6 @@ public class Universes {
 				null);
 	}
 
-	public static SymbolicUniverse newStandardUniverse1(SARLConfig config,
-			ProverInfo prover) {
-		NumberFactory numberFactory = Numbers.REAL_FACTORY;
-		ObjectFactory objectFactory = Objects.newObjectFactory(numberFactory);
-		SymbolicTypeFactory typeFactory = Types.newTypeFactory(objectFactory);
-		CollectionFactory collectionFactory = Collections
-				.newCollectionFactory(objectFactory);
-		ExpressionFactory expressionFactory = Expressions
-				.newStandardExpressionFactory1(numberFactory, objectFactory,
-						typeFactory, collectionFactory);
-		FactorySystem system = PreUniverses.newFactorySystem(objectFactory,
-				typeFactory, expressionFactory, collectionFactory);
-		CommonSymbolicUniverse universe = new CommonSymbolicUniverse(system);
-		SimplifierFactory simplifierFactory = Expressions
-				.standardSimplifierFactory1(expressionFactory, universe);
-		TheoremProverFactory proverFactory = prover == null
-				? Prove.newMultiProverFactory(universe, config)
-				: Prove.newProverFactory(universe, prover);
-		ReasonerFactory reasonerFactory = Reason.newReasonerFactory(universe,
-				simplifierFactory, proverFactory);
-
-		universe.setReasonerFactory(reasonerFactory);
-		return universe;
-	}
-	
 	public static SymbolicUniverse newStandardUniverse2(SARLConfig config,
 			ProverInfo prover) {
 		NumberFactory numberFactory = Numbers.REAL_FACTORY;
@@ -188,16 +140,10 @@ public class Universes {
 		return universe;
 	}
 
-	public static SymbolicUniverse newStandardUniverse1() {
-		return newStandardUniverse1(Configurations.getDefaultConfiguration(),
-				null);
-	}
-	
 	public static SymbolicUniverse newStandardUniverse2() {
 		return newStandardUniverse2(Configurations.getDefaultConfiguration(),
 				null);
 	}
-
 
 	// public static TrigonometricUniverse newTrigonometricUniverse() {
 	// NumberFactory numberFactory = Numbers.REAL_FACTORY;

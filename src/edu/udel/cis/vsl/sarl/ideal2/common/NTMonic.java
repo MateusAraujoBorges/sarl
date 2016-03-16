@@ -20,9 +20,10 @@ package edu.udel.cis.vsl.sarl.ideal2.common;
 
 import java.io.PrintStream;
 
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
-import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
+import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
@@ -47,7 +48,8 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * @author siegel
  * 
  */
-public class NTMonic extends CommonSymbolicExpression implements Monic {
+public class NTMonic extends HomogeneousExpression<PrimitivePower>
+		implements Monic {
 
 	/**
 	 * Print debugging output?
@@ -85,22 +87,21 @@ public class NTMonic extends CommonSymbolicExpression implements Monic {
 	/**
 	 * Cached result of {@link #expand(Ideal2Factory)}.
 	 */
-	private SymbolicMap<Monic, Monomial> expansion = null;
+	private Monomial[] expansion = null;
 
 	/**
 	 * Cached result of {@link #termMap(Ideal2Factory)}.
 	 */
-	private SymbolicMap<Monic, Monomial> termMap = null;
+	private Monomial[] termMap = null;
 
 	// /**
 	// * Cached result of {@link #lowering(Ideal2Factory)}.
 	// */
 	// private SymbolicMap<Monic, Monomial> lowering = null;
 
-	protected NTMonic(SymbolicType type,
-			SymbolicMap<Primitive, PrimitivePower> factorMap) {
+	protected NTMonic(SymbolicType type, PrimitivePower[] factorMap) {
 		super(SymbolicOperator.MULTIPLY, type, factorMap);
-		assert factorMap.size() >= 2;
+		assert factorMap.length >= 2;
 	}
 
 	@Override
@@ -114,14 +115,12 @@ public class NTMonic extends CommonSymbolicExpression implements Monic {
 	}
 
 	@Override
-	public SymbolicMap<Primitive, PrimitivePower> monicFactors(
-			Ideal2Factory factory) {
-		return monicFactors();
+	public PrimitivePower[] monicFactors(Ideal2Factory factory) {
+		return arguments;
 	}
 
-	@SuppressWarnings("unchecked")
-	public SymbolicMap<Primitive, PrimitivePower> monicFactors() {
-		return (SymbolicMap<Primitive, PrimitivePower>) argument(0);
+	public PrimitivePower[] monicFactors() {
+		return arguments;
 	}
 
 	@Override
@@ -140,17 +139,17 @@ public class NTMonic extends CommonSymbolicExpression implements Monic {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
+	public Monomial[] expand(Ideal2Factory factory) {
 		if (expansion == null) {
 			if (!hasNontrivialExpansion(factory)) {
 				expansion = termMap(factory);
 			} else {
-				SymbolicMap<Primitive, PrimitivePower> factors = monicFactors();
+				PrimitivePower[] factors = monicFactors();
 				int totalDegree, numFactors;
 
 				if (debug) {
 					totalDegree = totalDegree();
-					numFactors = factors.size();
+					numFactors = factors.length;
 					out.println("Starting: expanding monic of total degree "
 							+ totalDegree + " with " + numFactors + " factors");
 					// out.println("monic: " + this);
@@ -163,11 +162,11 @@ public class NTMonic extends CommonSymbolicExpression implements Monic {
 				if (debug) {
 					out.println("Finished: expanding monic of total degree "
 							+ totalDegree + " with " + numFactors
-							+ " factors: result has size " + expansion.size());
+							+ " factors: result has size " + expansion.length);
 					out.flush();
 				}
 				if (isCanonic())
-					expansion = factory.objectFactory().canonic(expansion);
+					factory.objectFactory().canonize(expansion);
 			}
 		}
 		return expansion;
@@ -194,11 +193,9 @@ public class NTMonic extends CommonSymbolicExpression implements Monic {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
+	public Monomial[] termMap(Ideal2Factory factory) {
 		if (termMap == null) {
-			termMap = factory.monicSingletonMap(this, (Monomial) this);
-			if (isCanonic())
-				termMap = factory.objectFactory().canonic(termMap);
+			termMap = new Monomial[] { this };
 		}
 		return termMap;
 	}
@@ -207,7 +204,9 @@ public class NTMonic extends CommonSymbolicExpression implements Monic {
 	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
 		if (hasNTE < 0) {
 			hasNTE = 0;
-			for (Primitive p : monicFactors().keys()) {
+			for (PrimitivePower pp : arguments) {
+				Primitive p = pp.primitive(factory);
+
 				if (p instanceof NTPolynomial
 						|| p.hasNontrivialExpansion(factory)) {
 					hasNTE = 1;
@@ -221,10 +220,10 @@ public class NTMonic extends CommonSymbolicExpression implements Monic {
 	@Override
 	public void canonizeChildren(ObjectFactory of) {
 		super.canonizeChildren(of);
-		if (expansion != null && !expansion.isCanonic())
-			expansion = of.canonic(expansion);
-		if (termMap != null && !termMap.isCanonic())
-			termMap = of.canonic(termMap);
+		if (expansion != null)
+			of.canonize(expansion);
+		if (termMap != null)
+			of.canonize(termMap);
 		// if (lowering != null && !lowering.isCanonic())
 		// lowering = of.canonic(lowering);
 	}
@@ -233,7 +232,9 @@ public class NTMonic extends CommonSymbolicExpression implements Monic {
 	public int monomialOrder(Ideal2Factory factory) {
 		// if (monomialOrder < 0) {
 		int monomialOrder = 0;
-		for (Primitive p : monicFactors().keys()) {
+		// for ()
+		for (SymbolicObject arg : arguments) {
+			Primitive p = ((PrimitivePower) arg).primitive(factory);
 			int po = p.monomialOrder(factory);
 
 			if (po > monomialOrder)
@@ -244,15 +245,15 @@ public class NTMonic extends CommonSymbolicExpression implements Monic {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+	public Monomial[] lower(Ideal2Factory factory) {
 		// if (lowering == null) {
-		SymbolicMap<Monic, Monomial> lowering = null;
+		Monomial[] lowering = null;
 		int order = monomialOrder(factory);
 
 		if (order == 0) {
 			lowering = termMap(factory);
 		} else {
-			SymbolicMap<Primitive, PrimitivePower> factors = monicFactors();
+			PrimitivePower[] factors = monicFactors();
 
 			lowering = factory.oneTermMap(type());
 			for (PrimitivePower ppower : factors)
@@ -260,7 +261,7 @@ public class NTMonic extends CommonSymbolicExpression implements Monic {
 						ppower instanceof Primitive ? ppower.termMap(factory)
 								: ppower.lower(factory));
 			if (isCanonic())
-				lowering = factory.objectFactory().canonic(lowering);
+				factory.objectFactory().canonize(lowering);
 		}
 		// }
 		return lowering;

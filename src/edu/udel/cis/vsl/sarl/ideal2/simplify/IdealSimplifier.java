@@ -46,7 +46,6 @@ import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
@@ -82,7 +81,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	/**
 	 * Print general debugging information?
 	 */
-	public final static boolean debug = true;
+	public final static boolean debug = false;
 
 	/**
 	 * Where to print debugging information.
@@ -940,14 +939,13 @@ public class IdealSimplifier extends CommonSimplifier {
 						info.affineFactory.affineValue(affine, constant));
 		}
 
-		SymbolicMap<Monic, Monomial> termMap = poly.termMap(id);
-		int size = termMap.size();
+		Monomial[] termMap = poly.termMap(id);
+		int size = termMap.length;
 		Monomial[] terms = new Monomial[size];
 		boolean simplified = false;
-		Iterator<Monomial> termIter = termMap.iterator();
 
 		for (int i = 0; i < size; i++) {
-			Monomial term = termIter.next();
+			Monomial term = termMap[i];
 
 			if (debug) {
 				out.println("Simplifying term " + i + " of poly " + poly.id());
@@ -1031,21 +1029,20 @@ public class IdealSimplifier extends CommonSimplifier {
 
 			if (debug) {
 				// out.println("simplifyPoly: starting term simplification of "
-				//	+ poly.id());
+				// + poly.id());
 				// TODO: need toString method which will check how long the
 				// description is and cut it off and use a different description
 				// instead.
 				out.flush();
 			}
 
-			SymbolicMap<Monic, Monomial> termMap = poly.termMap(id);
-			int size = termMap.size();
+			Monomial[] termMap = poly.termMap(id);
+			int size = termMap.length;
 			Monomial[] terms = new Monomial[size];
 			boolean simplified = false;
-			Iterator<Monomial> termIter = termMap.iterator();
 
 			for (int i = 0; i < size; i++) {
-				Monomial term = termIter.next();
+				Monomial term = termMap[i];
 				Monomial simplifiedTerm = (Monomial) apply(term);
 
 				simplified = simplified || term != simplifiedTerm;
@@ -1069,8 +1066,8 @@ public class IdealSimplifier extends CommonSimplifier {
 			if (!(result instanceof Polynomial))
 				return (Monomial) apply(result);
 			if (debug) {
-//				out.println("simplifyPoly: poly   = " + poly);
-//				out.println("simplifyPoly: result = " + result);
+				// out.println("simplifyPoly: poly = " + poly);
+				// out.println("simplifyPoly: result = " + result);
 			}
 			poly = (Polynomial) id.objectFactory().canonic(result);
 		}
@@ -1430,15 +1427,15 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		// look for bounds on the primitive factors...
 
-		SymbolicMap<Primitive, PrimitivePower> factorMap = monic
-				.monicFactors(info.idealFactory);
-		int numFactors = factorMap.size();
+		PrimitivePower[] factorMap = monic.monicFactors(info.idealFactory);
+		int numFactors = factorMap.length;
 		boolean[] mask = new boolean[numFactors]; // unconstrained primitives
 		List<Primitive> zeroList = new LinkedList<>();
 		boolean positive = gt;
 		int count = 0, unconstrained = 0;
 
-		for (Primitive p : factorMap.keys()) {
+		for (PrimitivePower pp : factorMap) {
+			Primitive p = pp.primitive(info.idealFactory);
 			Interval pb = boundMap.get(p);
 
 			if (pb == null) {
@@ -1725,9 +1722,9 @@ public class IdealSimplifier extends CommonSimplifier {
 		// return result;
 		// }
 		if (poly.hasNontrivialExpansion(id)) {
-			SymbolicMap<Monic, Monomial> termMap = poly.expand(id);
+			Monomial[] termMap = poly.expand(id);
 
-			if (termMap.isEmpty())
+			if (termMap.length == 0)
 				return info.trueExpr;
 
 			Monomial newMonomial = id.factorTermMap(termMap);

@@ -58,8 +58,7 @@ public class CommonObjectFactory implements ObjectFactory {
 
 	private IntObject zeroIntObj, oneIntObj;
 
-	private NumberObject zeroIntegerObj, zeroRealObj, oneIntegerObj,
-			oneRealObj;
+	private NumberObject zeroIntegerObj, zeroRealObj, oneIntegerObj, oneRealObj;
 
 	private ObjectComparator comparator;
 
@@ -70,7 +69,8 @@ public class CommonObjectFactory implements ObjectFactory {
 		this.falseObj = canonic(new CommonBooleanObject(false));
 		this.zeroIntObj = canonic(intObject(0));
 		this.oneIntObj = canonic(intObject(1));
-		this.zeroIntegerObj = canonic(numberObject(numberFactory.zeroInteger()));
+		this.zeroIntegerObj = canonic(
+				numberObject(numberFactory.zeroInteger()));
 		this.zeroRealObj = canonic(numberObject(numberFactory.zeroRational()));
 		this.oneIntegerObj = canonic(numberObject(numberFactory.oneInteger()));
 		this.oneRealObj = canonic(numberObject(numberFactory.oneRational()));
@@ -229,6 +229,18 @@ public class CommonObjectFactory implements ObjectFactory {
 	@Override
 	public int numObjects() {
 		return objectList.size();
+	}
+
+	@Override
+	public <T extends SymbolicObject> void canonize(T[] objectArray) {
+		int n = objectArray.length;
+
+		for (int i = 0; i < n; i++) {
+			T element = objectArray[i];
+
+			if (!element.isCanonic())
+				objectArray[i] = canonic(element);
+		}
 	}
 
 }

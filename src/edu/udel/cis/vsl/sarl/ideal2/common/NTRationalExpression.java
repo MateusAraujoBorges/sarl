@@ -18,7 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
-import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
+import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal2.IF.RationalExpression;
@@ -30,7 +30,7 @@ import edu.udel.cis.vsl.sarl.ideal2.IF.RationalExpression;
  * 
  * @author siegel
  */
-public class NTRationalExpression extends CommonSymbolicExpression
+public class NTRationalExpression extends HomogeneousExpression<Monomial>
 		implements RationalExpression {
 
 	/**
@@ -53,8 +53,8 @@ public class NTRationalExpression extends CommonSymbolicExpression
 	 *            the denominator in the new rational expression
 	 */
 	protected NTRationalExpression(Monomial numerator, Monomial denominator) {
-		super(SymbolicOperator.DIVIDE, numerator.type(), numerator,
-				denominator);
+		super(SymbolicOperator.DIVIDE, numerator.type(),
+				new Monomial[] { numerator, denominator });
 		assert !denominator.isOne();
 		assert !denominator.isZero();
 		assert !numerator.isZero();
@@ -62,7 +62,7 @@ public class NTRationalExpression extends CommonSymbolicExpression
 	}
 
 	public Monomial numerator(Ideal2Factory factory) {
-		return (Monomial) argument(0);
+		return argument(0);
 	}
 
 	/**
@@ -71,11 +71,11 @@ public class NTRationalExpression extends CommonSymbolicExpression
 	 * @return the numerator
 	 */
 	public Monomial numerator() {
-		return (Monomial) argument(0);
+		return argument(0);
 	}
 
 	public Monomial denominator(Ideal2Factory factory) {
-		return (Monomial) argument(1);
+		return argument(1);
 	}
 
 	/**
@@ -84,6 +84,6 @@ public class NTRationalExpression extends CommonSymbolicExpression
 	 * @return the denominator
 	 */
 	public Monomial denominator() {
-		return (Monomial) argument(1);
+		return argument(1);
 	}
 }

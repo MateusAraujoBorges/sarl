@@ -3,22 +3,21 @@
  * 
  * This file is part of SARL.
  * 
- * SARL is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your
- * option) any later version.
+ * SARL is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
  * 
- * SARL is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
- * License for more details.
+ * SARL is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with SARL. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.expr.common;
 
-import java.util.Collection;
 import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
@@ -50,7 +49,8 @@ import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
  * @author siegel
  * 
  */
-public class CommonNumericExpressionFactory implements NumericExpressionFactory {
+public class CommonNumericExpressionFactory
+		implements NumericExpressionFactory {
 
 	private NumericExpressionFactory idealFactory;
 
@@ -80,8 +80,7 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * 
 	 * @return CommonNumericExpressionFactory
 	 */
-	public CommonNumericExpressionFactory(
-			NumericExpressionFactory idealFactory,
+	public CommonNumericExpressionFactory(NumericExpressionFactory idealFactory,
 			NumericExpressionFactory herbrandFactory) {
 		this.idealFactory = idealFactory;
 		this.herbrandFactory = herbrandFactory;
@@ -94,8 +93,8 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 		this.herbrandIntegerType = typeFactory.herbrandIntegerType();
 		this.idealRealType = typeFactory.realType();
 		this.idealIntegerType = typeFactory.integerType();
-		this.comparator = new CommonNumericComparator(
-				idealFactory.comparator(), herbrandFactory.comparator());
+		this.comparator = new CommonNumericComparator(idealFactory.comparator(),
+				herbrandFactory.comparator());
 	}
 
 	// Helpers...
@@ -119,10 +118,9 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 				if (object instanceof NumberObject)
 					return idealFactory.number((NumberObject) object);
 			}
-			return idealFactory
-					.expression(SymbolicOperator.CAST,
-							oldType.isInteger() ? idealIntegerType
-									: idealRealType, arg);
+			return idealFactory.expression(SymbolicOperator.CAST,
+					oldType.isInteger() ? idealIntegerType : idealRealType,
+					arg);
 		}
 	}
 
@@ -145,8 +143,11 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 				if (object instanceof NumberObject)
 					return herbrandFactory.number((NumberObject) object);
 			}
-			return herbrandFactory.expression(SymbolicOperator.CAST, oldType
-					.isInteger() ? herbrandIntegerType : herbrandRealType, arg);
+			return herbrandFactory
+					.expression(
+							SymbolicOperator.CAST, oldType.isInteger()
+									? herbrandIntegerType : herbrandRealType,
+					arg);
 		}
 	}
 
@@ -270,24 +271,24 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 			return herbrandFactory.symbolicConstant(name, type);
 	}
 
-	/**
-	 * One of several methods that create a NumericExpression.
-	 * 
-	 * @param operator
-	 * @param numericType
-	 * @param arguments
-	 * 	arguments is a Collection<SymbolicObject>
-	 * 
-	 * @return NumericExpression
-	 */
-	@Override
-	public NumericExpression expression(SymbolicOperator operator,
-			SymbolicType numericType, Collection<SymbolicObject> arguments) {
-		if (numericType.isIdeal())
-			return idealFactory.expression(operator, numericType, arguments);
-		else
-			return herbrandFactory.expression(operator, numericType, arguments);
-	}
+	// /**
+	// * One of several methods that create a NumericExpression.
+	// *
+	// * @param operator
+	// * @param numericType
+	// * @param arguments
+	// * arguments is a Collection<SymbolicObject>
+	// *
+	// * @return NumericExpression
+	// */
+	// @Override
+	// public NumericExpression expression(SymbolicOperator operator,
+	// SymbolicType numericType, Collection<SymbolicObject> arguments) {
+	// if (numericType.isIdeal())
+	// return idealFactory.expression(operator, numericType, arguments);
+	// else
+	// return herbrandFactory.expression(operator, numericType, arguments);
+	// }
 
 	/**
 	 * One of several methods that create a NumericExpression.
@@ -295,85 +296,85 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * @param operator
 	 * @param numericType
 	 * @param arguments
-	 * 	arguments is a SymbolicObject array
+	 *            arguments is a SymbolicObject array
 	 * 
 	 * @return NumericExpression
 	 */
 	@Override
 	public NumericExpression expression(SymbolicOperator operator,
-			SymbolicType numericType, SymbolicObject[] arguments) {
+			SymbolicType numericType, SymbolicObject... arguments) {
 		if (numericType.isIdeal())
 			return idealFactory.expression(operator, numericType, arguments);
 		else
 			return herbrandFactory.expression(operator, numericType, arguments);
 	}
 
-	/**
-	 * One of several methods that create a NumericExpression.
-	 * 
-	 * @param operator
-	 * @param numericType
-	 * @param arg0
-	 * 	arg0 is a SymbolicObject
-	 * 
-	 * @return NumericExpression
-	 */
-	@Override
-	public NumericExpression expression(SymbolicOperator operator,
-			SymbolicType numericType, SymbolicObject arg0) {
-		if (numericType.isIdeal())
-			return idealFactory.expression(operator, numericType, arg0);
-		else
-			return herbrandFactory.expression(operator, numericType, arg0);
-	}
-
-	/**
-	 * One of several methods that create a NumericExpression.
-	 * 
-	 * @param operator
-	 * @param numericType
-	 * @param arg0
-	 * 	arg0 is a SymbolicObject
-	 * @param arg1
-	 * 	arg1 is a SymbolicObject
-	 * 
-	 * @return NumericExpression
-	 */
-	@Override
-	public NumericExpression expression(SymbolicOperator operator,
-			SymbolicType numericType, SymbolicObject arg0, SymbolicObject arg1) {
-		if (numericType.isIdeal())
-			return idealFactory.expression(operator, numericType, arg0, arg1);
-		else
-			return herbrandFactory
-					.expression(operator, numericType, arg0, arg1);
-	}
-
-	/**
-	 * One of several methods that create a NumericExpression.
-	 * 
-	 * @param operator
-	 * @param numericType
-	 * @param arg0
-	 * 	arg0 is a SymbolicObject
-	 * @param arg1
-	 * 	arg1 is a SymbolicObject
-	 * @param arg2
-	 * 	arg2 is a SymbolicObject
-	 * 
-	 * @return NumericExpression
-	 */
-	@Override
-	public NumericExpression expression(SymbolicOperator operator,
-			SymbolicType numericType, SymbolicObject arg0, SymbolicObject arg1,
-			SymbolicObject arg2) {
-		if (numericType.isIdeal())
-			return idealFactory.expression(operator, numericType, arg0, arg1,
-					arg2);
-		else
-			return herbrandFactory.expression(operator, numericType, arg0,
-					arg1, arg2);
-	}
+	// /**
+	// * One of several methods that create a NumericExpression.
+	// *
+	// * @param operator
+	// * @param numericType
+	// * @param arg0
+	// * arg0 is a SymbolicObject
+	// *
+	// * @return NumericExpression
+	// */
+	// @Override
+	// public NumericExpression expression(SymbolicOperator operator,
+	// SymbolicType numericType, SymbolicObject arg0) {
+	// if (numericType.isIdeal())
+	// return idealFactory.expression(operator, numericType, arg0);
+	// else
+	// return herbrandFactory.expression(operator, numericType, arg0);
+	// }
+	//
+	// /**
+	// * One of several methods that create a NumericExpression.
+	// *
+	// * @param operator
+	// * @param numericType
+	// * @param arg0
+	// * arg0 is a SymbolicObject
+	// * @param arg1
+	// * arg1 is a SymbolicObject
+	// *
+	// * @return NumericExpression
+	// */
+	// @Override
+	// public NumericExpression expression(SymbolicOperator operator,
+	// SymbolicType numericType, SymbolicObject arg0, SymbolicObject arg1) {
+	// if (numericType.isIdeal())
+	// return idealFactory.expression(operator, numericType, arg0, arg1);
+	// else
+	// return herbrandFactory
+	// .expression(operator, numericType, arg0, arg1);
+	// }
+	//
+	// /**
+	// * One of several methods that create a NumericExpression.
+	// *
+	// * @param operator
+	// * @param numericType
+	// * @param arg0
+	// * arg0 is a SymbolicObject
+	// * @param arg1
+	// * arg1 is a SymbolicObject
+	// * @param arg2
+	// * arg2 is a SymbolicObject
+	// *
+	// * @return NumericExpression
+	// */
+	// @Override
+	// public NumericExpression expression(SymbolicOperator operator,
+	// SymbolicType numericType, SymbolicObject arg0, SymbolicObject arg1,
+	// SymbolicObject arg2) {
+	// if (numericType.isIdeal())
+	// return idealFactory.expression(operator, numericType, arg0, arg1,
+	// arg2);
+	// else
+	// return herbrandFactory.expression(operator, numericType, arg0,
+	// arg1, arg2);
+	// }
 
 	/**
 	 * Method that returns zeroInt NumericExpression.
@@ -419,14 +420,15 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * Method that adds two NumericExpressions.
 	 * 
 	 * @param arg0
-	 * 	arg0 is a NumericExpression
+	 *            arg0 is a NumericExpression
 	 * @param arg1
-	 * 	arg1 is a NumericExpression
+	 *            arg1 is a NumericExpression
 	 * 
 	 * @return NumericExpression
 	 */
 	@Override
-	public NumericExpression add(NumericExpression arg0, NumericExpression arg1) {
+	public NumericExpression add(NumericExpression arg0,
+			NumericExpression arg1) {
 		SymbolicType t0 = arg0.type(), t1 = arg1.type();
 
 		if (t0.isIdeal() && t1.isIdeal())
@@ -440,9 +442,9 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * Method that subtracts a NumericExpression from another NumericExpression.
 	 * 
 	 * @param arg0
-	 * 	arg0 is a NumericExpression
+	 *            arg0 is a NumericExpression
 	 * @param arg1
-	 * 	arg1 is a NumericExpression
+	 *            arg1 is a NumericExpression
 	 * 
 	 * @return NumericExpression
 	 */
@@ -462,9 +464,9 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * Method that multiplies two NumericExpressions.
 	 * 
 	 * @param arg0
-	 * 	arg0 is a NumericExpression
+	 *            arg0 is a NumericExpression
 	 * @param arg1
-	 * 	arg1 is a NumericExpression
+	 *            arg1 is a NumericExpression
 	 * 
 	 * @return NumericExpression
 	 */
@@ -484,9 +486,9 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * Method that divides one numeric expression by another.
 	 * 
 	 * @param arg0
-	 * 	arg0 is a NumericExpression
+	 *            arg0 is a NumericExpression
 	 * @param arg1
-	 * 	arg1 is a NumericExpression
+	 *            arg1 is a NumericExpression
 	 * 
 	 * @return NumericExpression
 	 */
@@ -506,8 +508,9 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * Method that returns modulo arg1 of arg0.
 	 * 
 	 * @param arg0
-	 * 	arg0 is a NumericExpression
-	 * @param arg1 is a NumericExpression
+	 *            arg0 is a NumericExpression
+	 * @param arg1
+	 *            is a NumericExpression
 	 * 
 	 * @return NumericExpression
 	 */
@@ -527,7 +530,7 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * Method that returns a NumericExpression minus arg.
 	 * 
 	 * @param arg
-	 * 	arg is a numeric expression
+	 *            arg is a numeric expression
 	 * 
 	 * @return NumericExpression
 	 */
@@ -546,7 +549,7 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * 
 	 * @param base
 	 * @param exponent
-	 * 	exponent is an IntObject
+	 *            exponent is an IntObject
 	 * 
 	 * @return NumericExpression
 	 */
@@ -565,7 +568,7 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * 
 	 * @param base
 	 * @param exponent
-	 * 	exponent is a NumericExpression
+	 *            exponent is a NumericExpression
 	 * 
 	 * @return NumericExpression
 	 */
@@ -590,7 +593,8 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * @return NumericExpression
 	 */
 	@Override
-	public NumericExpression cast(NumericExpression expr, SymbolicType newType) {
+	public NumericExpression cast(NumericExpression expr,
+			SymbolicType newType) {
 		SymbolicType oldType = expr.type();
 
 		if (oldType.equals(newType))
@@ -603,8 +607,8 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 			Number number = numberObject.getNumber();
 
 			if (oldType.isInteger() && newType.isReal()) {
-				numberObject = objectFactory.numberObject(numberFactory
-						.rational(number));
+				numberObject = objectFactory
+						.numberObject(numberFactory.rational(number));
 			} else if (oldType.isReal() && newType.isInteger()) {
 				if (number.signum() >= 0)
 					number = numberFactory.floor((RationalNumber) number);
@@ -745,14 +749,16 @@ public class CommonNumericExpressionFactory implements NumericExpressionFactory 
 	 * @return BooleanExpression
 	 */
 	@Override
-	public BooleanExpression neq(NumericExpression arg0, NumericExpression arg1) {
+	public BooleanExpression neq(NumericExpression arg0,
+			NumericExpression arg1) {
 		return idealFactory.neq(castToIdeal(arg0), castToIdeal(arg1));
 	}
 }
 
 /**
  * 
- * CommonNumericComparator class implements Comparator<NumericExpression> interface
+ * CommonNumericComparator class implements Comparator
+ * <NumericExpression> interface
  * 
  * @author siegel
  *
@@ -779,9 +785,9 @@ class CommonNumericComparator implements Comparator<NumericExpression> {
 	 * Compare method for NumericExpressions.
 	 * 
 	 * @param o1
-	 * 	o1 is a NumericExpression
+	 *            o1 is a NumericExpression
 	 * @param o2
-	 * 	o2 is a NumericExpression
+	 *            o2 is a NumericExpression
 	 * 
 	 * @return int
 	 */

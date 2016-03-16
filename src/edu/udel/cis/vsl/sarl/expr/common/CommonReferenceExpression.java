@@ -4,15 +4,16 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.ReferenceExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 
 /**
- *Abstract Reference Symbolic Expression.
- *	Methods return false and will be overridden
+ * Abstract Reference Symbolic Expression. Methods return false and will be
+ * overridden
  */
 public abstract class CommonReferenceExpression extends
-		CommonSymbolicExpression implements ReferenceExpression {
+		HomogeneousExpression<SymbolicObject> implements ReferenceExpression {
 
 	/**
 	 * Constructs a null reference or identity reference expression. The
@@ -27,7 +28,8 @@ public abstract class CommonReferenceExpression extends
 	 */
 	public CommonReferenceExpression(SymbolicType referenceType,
 			SymbolicSequence<NumericExpression> codeSingleton) {
-		super(SymbolicOperator.CONCRETE, referenceType, codeSingleton);
+		super(SymbolicOperator.CONCRETE, referenceType,
+				new SymbolicObject[] { codeSingleton });
 	}
 
 	/**
@@ -63,8 +65,8 @@ public abstract class CommonReferenceExpression extends
 	public CommonReferenceExpression(SymbolicType referenceType,
 			SymbolicConstant function,
 			SymbolicSequence<SymbolicExpression> parentIndexSequence) {
-		super(SymbolicOperator.APPLY, referenceType, function,
-				parentIndexSequence);
+		super(SymbolicOperator.APPLY, referenceType,
+				new SymbolicObject[] { function, parentIndexSequence });
 	}
 
 	@Override

@@ -18,13 +18,10 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
-import java.util.Collection;
-
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
-import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
+import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
@@ -41,53 +38,31 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * 
  * @author siegel
  */
-public class NumericPrimitive extends CommonSymbolicExpression
+public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 		implements Primitive {
 
 	/**
 	 * Cache of value returned by {@link #monicFactors(Ideal2Factory)}.
 	 * Singleton map from this to this, cached.
 	 */
-	private SymbolicMap<Primitive, PrimitivePower> monicFactors = null;
+	private PrimitivePower[] monicFactors = null;
 
 	/**
 	 * Cache of value returned by {@link #termMap(Ideal2Factory)}.
 	 */
-	private SymbolicMap<Monic, Monomial> termMap = null;
+	private Monomial[] termMap = null;
 
 	public NumericPrimitive(SymbolicOperator operator, SymbolicType type,
-			SymbolicObject[] arguments) {
+			SymbolicObject... arguments) {
 		super(operator, type, arguments);
-	}
-
-	public NumericPrimitive(SymbolicOperator operator, SymbolicType type,
-			Collection<SymbolicObject> arguments) {
-		super(operator, type, arguments);
-	}
-
-	public NumericPrimitive(SymbolicOperator operator, SymbolicType type,
-			SymbolicObject arg0) {
-		super(operator, type, arg0);
-	}
-
-	public NumericPrimitive(SymbolicOperator operator, SymbolicType type,
-			SymbolicObject arg0, SymbolicObject arg1) {
-		super(operator, type, arg0, arg1);
-	}
-
-	public NumericPrimitive(SymbolicOperator operator, SymbolicType type,
-			SymbolicObject arg0, SymbolicObject arg1, SymbolicObject arg2) {
-		super(operator, type, arg0, arg1, arg2);
 	}
 
 	@Override
-	public SymbolicMap<Primitive, PrimitivePower> monicFactors(
-			Ideal2Factory factory) {
+	public PrimitivePower[] monicFactors(Ideal2Factory factory) {
 		if (monicFactors == null) {
-			monicFactors = factory.primitiveSingletonMap(this,
-					(PrimitivePower) this);
+			monicFactors = new PrimitivePower[] { this };
 			if (isCanonic())
-				monicFactors = factory.objectFactory().canonic(monicFactors);
+				factory.objectFactory().canonize(monicFactors);
 		}
 		return monicFactors;
 	}
@@ -133,17 +108,17 @@ public class NumericPrimitive extends CommonSymbolicExpression
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
+	public Monomial[] termMap(Ideal2Factory factory) {
 		if (termMap == null) {
-			termMap = factory.monicSingletonMap(this, this);
+			termMap = new Monomial[] { this };
 			if (isCanonic())
-				termMap = factory.objectFactory().canonic(termMap);
+				factory.objectFactory().canonize(termMap);
 		}
 		return termMap;
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
+	public Monomial[] expand(Ideal2Factory factory) {
 		return termMap(factory);
 	}
 
@@ -160,10 +135,10 @@ public class NumericPrimitive extends CommonSymbolicExpression
 	@Override
 	public void canonizeChildren(ObjectFactory of) {
 		super.canonizeChildren(of);
-		if (termMap != null && !termMap.isCanonic())
-			termMap = of.canonic(termMap);
-		if (monicFactors != null && !monicFactors.isCanonic())
-			monicFactors = of.canonic(monicFactors);
+		if (termMap != null)
+			of.canonize(termMap);
+		if (monicFactors != null)
+			of.canonize(monicFactors);
 	}
 
 	@Override
@@ -172,7 +147,7 @@ public class NumericPrimitive extends CommonSymbolicExpression
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+	public Monomial[] lower(Ideal2Factory factory) {
 		return termMap(factory);
 	}
 }

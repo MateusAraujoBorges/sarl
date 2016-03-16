@@ -20,14 +20,15 @@ package edu.udel.cis.vsl.sarl.ideal2.common;
 
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
-import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
+import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
-import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * A constant which is not 1.
@@ -35,20 +36,22 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * @author siegel
  * 
  */
-public class NTConstant extends CommonSymbolicExpression implements Constant {
+public class NTConstant extends HomogeneousExpression<SymbolicObject>
+		implements Constant {
 
 	/**
-	 * TODO
-	 */
-	private SymbolicMap<Monic, Monomial> expansion = null;
-
-	/**
-	 * TODO
+	 * Constructs new {@link NTConstant} of given type, wrapping given numeric
+	 * value.
+	 * 
 	 * @param type
+	 *            either a {@link SymbolicRealType} or
+	 *            {@link SymbolicIntegerType}
 	 * @param value
+	 *            the numeric value to be wrapped; its type must be consistent
+	 *            with <code>type</code>
 	 */
 	protected NTConstant(SymbolicType type, NumberObject value) {
-		super(SymbolicOperator.CONCRETE, type, value);
+		super(SymbolicOperator.CONCRETE, type, new SymbolicObject[] { value });
 		assert !value.isOne();
 	}
 
@@ -89,15 +92,8 @@ public class NTConstant extends CommonSymbolicExpression implements Constant {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
-		if (expansion == null) {
-			expansion = isZero() ? factory.emptyMonicMap()
-					: factory.monicSingletonMap((Monic) factory.one(type()),
-							this);
-			if (isCanonic())
-				expansion = factory.objectFactory().canonic(expansion);
-		}
-		return expansion;
+	public Monomial[] termMap(Ideal2Factory factory) {
+		return isZero() ? Ideal2Factory.emptyTermList : new Monomial[] { this };
 	}
 
 	@Override
@@ -106,7 +102,7 @@ public class NTConstant extends CommonSymbolicExpression implements Constant {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
+	public Monomial[] expand(Ideal2Factory factory) {
 		return termMap(factory);
 	}
 
@@ -121,19 +117,12 @@ public class NTConstant extends CommonSymbolicExpression implements Constant {
 	}
 
 	@Override
-	public void canonizeChildren(ObjectFactory of) {
-		super.canonizeChildren(of);
-		if (expansion != null && !expansion.isCanonic())
-			expansion = of.canonic(expansion);
-	}
-
-	@Override
 	public int monomialOrder(Ideal2Factory factory) {
 		return 0;
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+	public Monomial[] lower(Ideal2Factory factory) {
 		return termMap(factory);
 	}
 }

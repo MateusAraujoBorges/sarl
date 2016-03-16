@@ -440,7 +440,7 @@ public interface SymbolicExpression extends SymbolicObject {
 	 * 
 	 * @return arguments array
 	 */
-	SymbolicObject[] arguments();
+	//SymbolicObject[] arguments();
 
 	/**
 	 * A string representation appropriate for nesting in other expressions,

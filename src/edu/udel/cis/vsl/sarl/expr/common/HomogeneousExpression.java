@@ -19,7 +19,6 @@
 package edu.udel.cis.vsl.sarl.expr.common;
 
 import java.util.Arrays;
-import java.util.Collection;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
@@ -33,25 +32,23 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.object.common.CommonSymbolicObject;
 
 /**
- * The root of the symbolic expression hierarchy. Every symbolic expression
- * extends this class.
- * 
- * 
+ * Implementation of {@link SymbolicExpression} in which every argument belongs
+ * to some type <code>T</code> which extends {@link SymbolicObject}.
  */
-public class CommonSymbolicExpression extends CommonSymbolicObject
-		implements SymbolicExpression {
+public class HomogeneousExpression<T extends SymbolicObject>
+		extends CommonSymbolicObject implements SymbolicExpression {
 
 	/** Turn this one to print debugging information */
 	public static final boolean debug = false;
 
 	/** The operator of this expression. */
-	private SymbolicOperator operator;
+	protected SymbolicOperator operator;
 
 	/** The type of this expression */
-	private SymbolicType type;
+	protected SymbolicType type;
 
 	/** The arguments of this expression */
-	private SymbolicObject[] arguments;
+	protected T[] arguments;
 
 	// Constructors...
 
@@ -70,8 +67,8 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 	 *            the arguments for the new expression; must be non-null, but
 	 *            can have length 0
 	 */
-	protected CommonSymbolicExpression(SymbolicOperator operator,
-			SymbolicType type, SymbolicObject[] arguments) {
+	protected HomogeneousExpression(SymbolicOperator operator,
+			SymbolicType type, T[] arguments) {
 		super(SymbolicObjectKind.EXPRESSION);
 		assert operator != null;
 		assert operator == SymbolicOperator.NULL || type != null;
@@ -79,61 +76,6 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 		this.operator = operator;
 		this.type = type;
 		this.arguments = arguments;
-	}
-
-	/**
-	 * Constructor with a single SymbolicObject converted to array of
-	 * SymbolicObjects
-	 * 
-	 * @param kind
-	 * @param type
-	 * @param arg0
-	 */
-	protected CommonSymbolicExpression(SymbolicOperator kind, SymbolicType type,
-			SymbolicObject arg0) {
-		this(kind, type, new SymbolicObject[] { arg0 });
-	}
-
-	/**
-	 * Constructor with two SymbolicObjects converted to array of
-	 * SymbolicObjects
-	 * 
-	 * @param kind
-	 * @param type
-	 * @param arg0
-	 * @param arg1
-	 */
-	protected CommonSymbolicExpression(SymbolicOperator kind, SymbolicType type,
-			SymbolicObject arg0, SymbolicObject arg1) {
-		this(kind, type, new SymbolicObject[] { arg0, arg1 });
-	}
-
-	/**
-	 * Constructor with three SymbolicObjects converted to array of
-	 * SymbolicObjects
-	 * 
-	 * @param kind
-	 * @param type
-	 * @param arg0
-	 * @param arg1
-	 * @param arg2
-	 */
-	protected CommonSymbolicExpression(SymbolicOperator kind, SymbolicType type,
-			SymbolicObject arg0, SymbolicObject arg1, SymbolicObject arg2) {
-		this(kind, type, new SymbolicObject[] { arg0, arg1, arg2 });
-	}
-
-	/**
-	 * Constructor with a Collection of SymbolicObjects which is converted to
-	 * array format.
-	 * 
-	 * @param kind
-	 * @param type
-	 * @param args
-	 */
-	protected CommonSymbolicExpression(SymbolicOperator kind, SymbolicType type,
-			Collection<SymbolicObject> args) {
-		this(kind, type, args.toArray(new SymbolicObject[args.size()]));
 	}
 
 	/**
@@ -146,7 +88,7 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 	/**
 	 * Returns the arguments of this symbolic expression.
 	 */
-	public SymbolicObject[] arguments() {
+	public T[] arguments() {
 		return arguments;
 	}
 
@@ -155,9 +97,9 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 	 */
 	@Override
 	protected boolean intrinsicEquals(SymbolicObject o) {
-		CommonSymbolicExpression that = (CommonSymbolicExpression) o;
+		HomogeneousExpression<?> that = (HomogeneousExpression<?>) o;
 
-		return this.getClass().equals(o.getClass()) && operator == that.operator
+		return operator == that.operator()
 				&& ((type == null && that.type == null)
 						|| type.equals(that.type))
 				&& Arrays.equals(arguments, that.arguments);
@@ -170,7 +112,7 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 	@Override
 	protected int computeHashCode() {
 		int numArgs = this.numArguments();
-		int result = getClass().hashCode() ^ operator.hashCode();
+		int result = operator.hashCode();
 
 		if (type != null)
 			result ^= type.hashCode();
@@ -183,7 +125,7 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 	 * Returns an individual argument within the SymbolicExpression
 	 */
 	@Override
-	public SymbolicObject argument(int index) {
+	public T argument(int index) {
 		return arguments[index];
 	}
 
@@ -272,27 +214,6 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 		}
 	}
 
-	private void accumulateSum(StringBuffer buffer,
-			SymbolicCollection<?> operands) {
-		boolean first = true;
-
-		for (SymbolicExpression arg : operands) {
-			StringBuffer argString = arg.toStringBuffer(false);
-
-			if (first)
-				first = false;
-			else {
-				if ("-".equals(argString.substring(0, 1))) {
-					argString.delete(0, 1);
-					buffer.append(" - ");
-				} else {
-					buffer.append(" + ");
-				}
-			}
-			buffer.append(argString);
-		}
-	}
-
 	/**
 	 * Computes string representation of a binary operator expression
 	 * 
@@ -313,21 +234,6 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 		buffer.append(arg0.toStringBuffer(atomizeArgs));
 		buffer.append(opString);
 		buffer.append(arg1.toStringBuffer(atomizeArgs));
-	}
-
-	private void processBinarySum(StringBuffer buffer, SymbolicObject arg0,
-			SymbolicObject arg1) {
-		buffer.append(arg0.toStringBuffer(false));
-
-		StringBuffer arg1String = arg1.toStringBuffer(false);
-
-		if ("-".equals(arg1String.substring(0, 1))) {
-			arg1String.delete(0, 1);
-			buffer.append(" - ");
-		} else {
-			buffer.append(" + ");
-		}
-		buffer.append(arg1String);
 	}
 
 	/**
@@ -359,13 +265,54 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 	}
 
 	private void processSum(StringBuffer buffer, boolean atomizeResult) {
-		if (arguments.length == 1)
-			accumulateSum(buffer, (SymbolicCollection<?>) arguments[0]);
-		else
-			processBinarySum(buffer, arguments[0], arguments[1]);
-		if (atomizeResult) {
-			buffer.insert(0, '(');
-			buffer.append(')');
+		int n = arguments.length;
+
+		assert n > 0;
+		if (n == 1) {
+			buffer.append(arguments[0].toStringBuffer(atomizeResult));
+		} else {
+			buffer.append(arguments[0].toStringBuffer(false));
+
+			for (int i = 1; i < n; i++) {
+				StringBuffer argString = arguments[i].toStringBuffer(false);
+
+				if ("-".equals(argString.substring(0, 1))) {
+					argString.delete(0, 1);
+					buffer.append(" - ");
+				} else {
+					buffer.append(" + ");
+				}
+				buffer.append(argString);
+			}
+			if (atomizeResult) {
+				buffer.insert(0, '(');
+				buffer.append(')');
+			}
+		}
+	}
+
+	private void processProduct(StringBuffer buffer, boolean atomizeResult) {
+		int n = arguments.length;
+
+		assert n > 0;
+		if (n == 1) {
+			buffer.append(arguments[0].toStringBuffer(atomizeResult));
+		} else {
+			for (int i = 0; i < n; i++) {
+				T arg = arguments[i];
+				boolean atomizeArg = !(arg instanceof SymbolicExpression
+						&& ((SymbolicExpression) arg)
+								.operator() == SymbolicOperator.MULTIPLY);
+				StringBuffer argString = arg.toStringBuffer(atomizeArg);
+
+				if (i > 0)
+					buffer.append("*");
+				buffer.append(argString);
+			}
+			if (atomizeResult) {
+				buffer.insert(0, '(');
+				buffer.append(')');
+			}
 		}
 	}
 
@@ -586,7 +533,7 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 				atomize(result);
 			return result;
 		case MULTIPLY:
-			processFlexibleBinary(result, "*", true, atomize);
+			processProduct(result, atomize);
 			return result;
 		case NEGATIVE:
 			result.append("-");
@@ -685,8 +632,12 @@ public class CommonSymbolicExpression extends CommonSymbolicObject
 		for (int i = 0; i < numArgs; i++) {
 			SymbolicObject arg = arguments[i];
 
-			if (!arg.isCanonic())
-				arguments[i] = factory.canonic(arg);
+			if (!arg.isCanonic()) {
+				@SuppressWarnings("unchecked")
+				T canonicArg = (T) factory.canonic(arg);
+
+				arguments[i] = canonicArg;
+			}
 		}
 	}
 

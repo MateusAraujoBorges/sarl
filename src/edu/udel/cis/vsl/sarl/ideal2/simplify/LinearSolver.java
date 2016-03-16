@@ -124,10 +124,12 @@ public class LinearSolver {
 				numRealConstraints++;
 				monics = realMonicSet;
 			}
-			for (Monic term : key.termMap(idealFactory).keys()) {
+			for (Monomial term : key.termMap(idealFactory)) {
+				Monic monic = term.monic(idealFactory);
+
 				// polynomials should not have constant term:
-				assert !term.isOne();
-				monics.add(term);
+				assert !monic.isOne();
+				monics.add(monic);
 			}
 		}
 		numIntMonics = intMonicSet.size();
@@ -178,11 +180,9 @@ public class LinearSolver {
 			if (key.type().isInteger()) {
 				intMatrix[intConstraintId][numIntMonics] = numberFactory
 						.rational(value);
-				for (Entry<Monic, Monomial> term : key.termMap(idealFactory)
-						.entries()) {
-					Monomial monomial = term.getValue();
-					Monic monic = term.getKey();
-					Number coefficient = monomial.monomialConstant(idealFactory)
+				for (Monomial term : key.termMap(idealFactory)) {
+					Monic monic = term.monic(idealFactory);
+					Number coefficient = term.monomialConstant(idealFactory)
 							.number();
 
 					intMatrix[intConstraintId][intIdMap
@@ -192,11 +192,9 @@ public class LinearSolver {
 			} else {
 				realMatrix[realConstraintId][numRealMonics] = (RationalNumber) value;
 
-				for (Entry<Monic, Monomial> term : key.termMap(idealFactory)
-						.entries()) {
-					Monomial monomial = term.getValue();
-					Monic monic = term.getKey();
-					Number coefficient = monomial.monomialConstant(idealFactory)
+				for (Monomial term : key.termMap(idealFactory)) {
+					Monic monic = term.monic(idealFactory);
+					Number coefficient = term.monomialConstant(idealFactory)
 							.number();
 
 					realMatrix[realConstraintId][realIdMap

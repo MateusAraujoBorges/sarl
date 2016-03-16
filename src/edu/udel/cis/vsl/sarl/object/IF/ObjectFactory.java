@@ -36,43 +36,46 @@ import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.object.common.ObjectComparator;
 
 public interface ObjectFactory {
-	
+
 	/**
 	 * @return the numberFactory of the ObjectFactory
 	 */
-    NumberFactory numberFactory(); 
+	NumberFactory numberFactory();
 
-    /**
-     * Sets the Expression Comparator of the ObjectFactory
-     * @param c
-     */
+	/**
+	 * Sets the Expression Comparator of the ObjectFactory
+	 * 
+	 * @param c
+	 */
 	void setExpressionComparator(Comparator<SymbolicExpression> c);
 
 	/**
 	 * Sets the Collection Comparator of the ObjectFactory
+	 * 
 	 * @param c
 	 */
 	void setCollectionComparator(Comparator<SymbolicCollection<?>> c);
 
 	/**
 	 * Sets the TypeComparator of the ObjectFactory
+	 * 
 	 * @param c
 	 */
 	void setTypeComparator(Comparator<SymbolicType> c);
 
 	/**
 	 * Sets the TypeSequenceComparator of the ObjectFactory
+	 * 
 	 * @param c
 	 */
 	void setTypeSequenceComparator(Comparator<SymbolicTypeSequence> c);
 
 	/**
-	 * Asserts that expressionComparator, collectionComparator, typeComparator, and typeSequenceComparator 
-	 * are set for this object
+	 * Asserts that expressionComparator, collectionComparator, typeComparator,
+	 * and typeSequenceComparator are set for this object
 	 */
 	public void init();
 
-	
 	/**
 	 * 
 	 * @return the object's comparator
@@ -89,6 +92,17 @@ public interface ObjectFactory {
 	 * @return the canonic representative
 	 */
 	<T extends SymbolicObject> T canonic(T object);
+
+	/**
+	 * Canonizes each object in an array.
+	 * 
+	 * @see #canonic(SymbolicObject)
+	 * 
+	 * @param objectArray
+	 *            array of {@link SymbolicObject}s, none of which is
+	 *            <code>null</code>
+	 */
+	<T extends SymbolicObject> void canonize(T[] objectArray);
 
 	/**
 	 * @return Returns a new canonic CommonBooleanObject of value true

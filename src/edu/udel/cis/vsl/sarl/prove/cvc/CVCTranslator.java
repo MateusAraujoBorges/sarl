@@ -240,8 +240,7 @@ public class CVCTranslator {
 	 */
 	private NumericSymbolicConstant newSarlAuxVar() {
 		NumericSymbolicConstant result = (NumericSymbolicConstant) universe
-				.symbolicConstant(
-						universe.stringObject("_i" + sarlAuxVarCount),
+				.symbolicConstant(universe.stringObject("_i" + sarlAuxVarCount),
 						universe.integerType());
 
 		sarlAuxVarCount++;
@@ -321,7 +320,8 @@ public class CVCTranslator {
 		}
 	}
 
-	private FastList<String> pretranslateConcreteArray(SymbolicExpression array) {
+	private FastList<String> pretranslateConcreteArray(
+			SymbolicExpression array) {
 		SymbolicCompleteArrayType arrayType = (SymbolicCompleteArrayType) array
 				.type();
 		SymbolicType elementType = arrayType.elementType();
@@ -589,8 +589,8 @@ public class CVCTranslator {
 	private FastList<String> translateTupleRead(SymbolicExpression expr) {
 		SymbolicExpression tupleExpression = (SymbolicExpression) expr
 				.argument(0);
-		int tupleLength = ((SymbolicTupleType) tupleExpression.type()).sequence()
-				.numTypes();
+		int tupleLength = ((SymbolicTupleType) tupleExpression.type())
+				.sequence().numTypes();
 		int index = ((IntObject) expr.argument(1)).getInt();
 
 		if (tupleLength == 1) {
@@ -942,8 +942,8 @@ public class CVCTranslator {
 		int index = ((IntObject) expr.argument(0)).getInt();
 		SymbolicExpression arg = (SymbolicExpression) expr.argument(1);
 		SymbolicUnionType unionType = (SymbolicUnionType) arg.type();
-		FastList<String> result = new FastList<>("is_"
-				+ constructor(unionType, index));
+		FastList<String> result = new FastList<>(
+				"is_" + constructor(unionType, index));
 
 		result.add("(");
 		result.append(translate(arg));
@@ -961,7 +961,8 @@ public class CVCTranslator {
 				|| (originalType.isInteger() && newType.isReal()))
 			return translate(argument);
 
-		Pair<SymbolicType, SymbolicType> key = new Pair<>(originalType, newType);
+		Pair<SymbolicType, SymbolicType> key = new Pair<>(originalType,
+				newType);
 		String castFunction = castMap.get(key);
 
 		if (castFunction == null) {
@@ -1013,9 +1014,9 @@ public class CVCTranslator {
 	private FastList<String> translateNEQ(SymbolicExpression expression) {
 		FastList<String> result = new FastList<>("NOT(");
 
-		result.append(processEquality(
-				(SymbolicExpression) expression.argument(0),
-				(SymbolicExpression) expression.argument(1)));
+		result.append(
+				processEquality((SymbolicExpression) expression.argument(0),
+						(SymbolicExpression) expression.argument(1)));
 		result.add(")");
 		return result;
 	}
@@ -1057,37 +1058,36 @@ public class CVCTranslator {
 		result.add(") ENDIF");
 		return result;
 	}
-	
+
 	// TODO: problem occurs if arg1 or arg2 involves a quantified variable.
 	// The auxiliary constraints need to go inside the current scope:
 	// need to back up to the beginning of the scope
-	
+
 	// when you translate a FORALL:
 	// translation of body should return a pair, second component of which
 	// is the aux. vars and relations.
 	// take the second part and insert it, then insert the first part.
-	
+
 	// now the decls are going into a global cvcDeclarations, but
 	// we need this to be returned instead --- maybe a triple?
 
-	
-	//While we are at it: the reasoner should translate a query of the
+	// While we are at it: the reasoner should translate a query of the
 	// form forall x.phi by making x a free variable and making the query
 	// phi.
-	
+
 	// now every translation method should return a structure?
 	// 1. list of decls
 	// 2. list of constraints on those decls
 	// 3. translation of expr
-	
+
 	// what do with 1, 2, and 3 depends on whether you are at
-	// the outermost (global) scope.  If you are, then the decls
+	// the outermost (global) scope. If you are, then the decls
 	// all get added to the cvcDeclarations, and the constraints get
 	// inserted there as assertions too, and the translation become
-	// cvcTranslation.  Otherwise the extras (1 and 2) keep
+	// cvcTranslation. Otherwise the extras (1 and 2) keep
 	// bubbling up the call stack until they hit a quantifier,
 	// then they get inserted as follows:
-	
+
 	// forall x:T (
 
 	private Pair<FastList<String>, FastList<String>> getIntDivInfo(
@@ -1200,8 +1200,33 @@ public class CVCTranslator {
 			return translateAssoc(operator, defaultValue,
 					(SymbolicCollection<?>) expression.argument(0));
 		} else {
-			throw new SARLInternalException("Expected 1 or 2 arguments for "
-					+ operator);
+			throw new SARLInternalException(
+					"Expected 1 or 2 arguments for " + operator);
+		}
+	}
+
+	private FastList<String> translateKeySet(String operator,
+			String defaultValue, SymbolicExpression expression) {
+		int size = expression.numArguments();
+
+		if (size == 0) {
+			return new FastList<>(defaultValue);
+		} else if (size == 1) {
+			return translate((SymbolicExpression) expression.argument(0));
+		} else {
+			FastList<String> result = new FastList<>();
+
+			for (int i = 0; i < size; i++) {
+				SymbolicExpression term = (SymbolicExpression) expression
+						.argument(i);
+
+				if (i > 0)
+					result.add(operator);
+				result.add("(");
+				result.append(translate(term));
+				result.add(")");
+			}
+			return result;
 		}
 	}
 
@@ -1219,7 +1244,7 @@ public class CVCTranslator {
 
 		switch (operator) {
 		case ADD:
-			result = translateBinaryOrAssoc(" + ", "0", expression);
+			result = translateKeySet(" + ", "0", expression);
 			break;
 		case AND:
 			result = translateBinaryOrAssoc(" AND ", "TRUE", expression);
@@ -1299,7 +1324,7 @@ public class CVCTranslator {
 						(SymbolicExpression) expression.argument(1));
 			break;
 		case MULTIPLY:
-			result = translateBinaryOrAssoc(" * ", "1", expression);
+			result = translateKeySet(" * ", "1", expression);
 			break;
 		case NEGATIVE:
 			result = translateNegative(expression);
@@ -1347,8 +1372,8 @@ public class CVCTranslator {
 			result = null;
 			break;
 		default:
-			throw new SARLInternalException("unreachable: unknown operator: "
-					+ operator);
+			throw new SARLInternalException(
+					"unreachable: unknown operator: " + operator);
 		}
 		return result;
 	}

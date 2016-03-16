@@ -21,10 +21,6 @@ package edu.udel.cis.vsl.sarl.expr.cnf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,9 +34,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
-import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
-import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
@@ -88,7 +82,7 @@ public class CnfFactoryTest {
 	 */
 	@Before
 	public void setUpBeforeClass() {
-		FactorySystem system = PreUniverses.newIdealFactorySystem1();
+		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 
 		factory = system.booleanFactory();
 		stf = system.typeFactory();
@@ -341,34 +335,6 @@ public class CnfFactoryTest {
 	}
 
 	/**
-	 * Testing for code in CnfFactoryEquiv() Tests equivalence.
-	 */
-	@Test
-	public void equivTest() {
-		CnfFactory test = new CnfFactory(stf, of, cf);
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of, cf);
-		BooleanExpression falseEx = bef.falseExpr();
-		BooleanExpression trueEx = bef.trueExpr();
-		BooleanExpression thisIsTrue = bef.trueExpr();
-		BooleanObject bot = of.booleanObject(true);
-		BooleanObject bof = of.booleanObject(false);
-
-		SymbolicObject[] arg = factory.and(trueEx, trueEx).arguments();
-		Set<SymbolicObject> argSet = new HashSet<SymbolicObject>(
-				Arrays.asList(arg));
-		BooleanExpression b = test.booleanExpression(SymbolicOperator.AND, arg);
-		BooleanExpression b2 = test.booleanExpression(SymbolicOperator.AND,
-				argSet);
-
-		assertEquals(false, b2.isTrue());
-		assertEquals(false, b.isTrue());
-		assertEquals(true, test.symbolic(bot).isTrue());
-		assertEquals(false, test.symbolic(bof).isTrue());
-		assertEquals(false, test.equiv(trueEx, falseEx).isTrue());
-		assertEquals(true, test.equiv(trueEx, thisIsTrue).isTrue());
-	}
-
-	/**
 	 * Testing for code in CnfFactoryNot() makes sure not(false) is true
 	 */
 	@Test
@@ -462,18 +428,17 @@ public class CnfFactoryTest {
 		// X div 2 > (X/2)-1 >= 3/2-1 >= .5 -> X div 2 >= 1
 		// -> X div 2 = 1
 		// X/2<X div 2 + 1 = 2 -> X<4 -> X=3
-		
+
 		// Here is how to do it:
-		
-		// To get a bound on a%b, where b>0 is constant:		
-		// first, get a bound on a.  if a>=0: a%b is in [0,b-1].
-		// if a<=0 a%b in [1-b,0].  In any case: a%b in [1-b,b-1].
-		
+
+		// To get a bound on a%b, where b>0 is constant:
+		// first, get a bound on a. if a>=0: a%b is in [0,b-1].
+		// if a<=0 a%b in [1-b,0]. In any case: a%b in [1-b,b-1].
+
 		// if a bound I1 is created on a div b:
 		// 1. get bound I2 on a%b as above (if not already present)
 		// 2. use fact that a=(a div b)*b+a%b to get bound on a:
-		//   b*I1+I2
-		
+		// b*I1+I2
 
 	}
 }

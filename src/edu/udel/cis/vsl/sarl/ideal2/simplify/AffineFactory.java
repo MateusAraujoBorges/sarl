@@ -102,8 +102,9 @@ public class AffineFactory {
 				// note: after removing one, resulting map might
 				// have one entry
 				Monomial difference = idealFactory
-						.factorTermMap(poly.termMap(idealFactory)
-								.remove((Monic) idealFactory.one(type)));
+						.factorTermMap(idealFactory.polynomialFactory()
+								.removeKey(poly.termMap(idealFactory),
+										(Monic) idealFactory.one(type)));
 
 				pseudo = difference.monic(idealFactory);
 				coefficient = difference.monomialConstant(idealFactory)

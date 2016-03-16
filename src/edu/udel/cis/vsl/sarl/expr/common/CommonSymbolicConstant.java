@@ -20,6 +20,7 @@ package edu.udel.cis.vsl.sarl.expr.common;
 
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 /**
@@ -32,8 +33,8 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
  * are equal and their types are equal. Symbolic constants are symbolic
  * expressions and are therefore immutable.
  */
-public class CommonSymbolicConstant extends CommonSymbolicExpression implements
-		SymbolicConstant {
+public class CommonSymbolicConstant extends
+		HomogeneousExpression<SymbolicObject> implements SymbolicConstant {
 
 	/**
 	 * Constructs new {@link CommonSymbolicConstant} with given
@@ -45,7 +46,8 @@ public class CommonSymbolicConstant extends CommonSymbolicExpression implements
 	 *            a non-<code>null</code> type
 	 */
 	public CommonSymbolicConstant(StringObject name, SymbolicType type) {
-		super(SymbolicOperator.SYMBOLIC_CONSTANT, type, name);
+		super(SymbolicOperator.SYMBOLIC_CONSTANT, type,
+				new SymbolicObject[] { name });
 	}
 
 	@Override

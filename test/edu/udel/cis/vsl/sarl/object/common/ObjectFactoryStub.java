@@ -153,4 +153,8 @@ public class ObjectFactoryStub implements ObjectFactory {
 		return null;
 	}
 
+	@Override
+	public <T extends SymbolicObject> void canonize(T[] objectArray) {
+	}
+
 }

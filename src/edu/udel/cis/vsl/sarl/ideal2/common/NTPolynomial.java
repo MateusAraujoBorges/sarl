@@ -25,7 +25,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
-import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
+import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
@@ -53,8 +53,10 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * 
  * @author siegel
  */
-public class NTPolynomial extends CommonSymbolicExpression
+public class NTPolynomial extends HomogeneousExpression<Monomial>
 		implements Polynomial {
+
+	private final static Monomial[] emptyMonomialList = new Monomial[0];
 
 	/**
 	 * Print debugging info?
@@ -75,7 +77,7 @@ public class NTPolynomial extends CommonSymbolicExpression
 	/**
 	 * Cached value returned by {@link #expand(Ideal2Factory)}.
 	 */
-	private SymbolicMap<Monic, Monomial> expansion = null;
+	private Monomial[] expansion = null;
 
 	// /**
 	// * Cached value returned by {@link #lower(Ideal2Factory)}.
@@ -86,7 +88,7 @@ public class NTPolynomial extends CommonSymbolicExpression
 	 * Cached value returned by {@link #monicFactors(Ideal2Factory)}: a
 	 * singleton map from this to this.
 	 */
-	private SymbolicMap<Primitive, PrimitivePower> monicFactors = null;
+	private PrimitivePower[] monicFactors = null;
 
 	/**
 	 * Cached result for method {@link #hasNontrivialExpansion(Ideal2Factory)}.
@@ -120,53 +122,59 @@ public class NTPolynomial extends CommonSymbolicExpression
 	 * @param termMap
 	 *            a term map with at least 2 entries
 	 */
-	protected NTPolynomial(SymbolicType type,
-			SymbolicMap<Monic, Monomial> termMap) {
+	protected NTPolynomial(SymbolicType type, Monomial[] termMap) {
 		super(SymbolicOperator.ADD, type, termMap);
-		assert termMap.size() >= 2;
+		assert termMap.length >= 2;
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
-		return termMap();
+	public Monomial[] termMap(Ideal2Factory factory) {
+		return arguments;
 	}
 
-	@SuppressWarnings("unchecked")
-	public SymbolicMap<Monic, Monomial> termMap() {
-		return (SymbolicMap<Monic, Monomial>) argument(0);
+	public Monomial[] termMap() {
+		return arguments;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * <p>
+	 * Since the terms are ordered by decreasing degree, the first one should be
+	 * the degree of this polynomial.
+	 * </p>
+	 * 
+	 * @return the degree of this polynomial
+	 */
 	@Override
 	public int polynomialDegree() {
-		// since the monics are ordered by decreasing degree,
-		// the first one should be the degree of this polynomial:
-		return termMap().getFirst().monomialDegree();
+		return arguments[0].monomialDegree();
 	}
 
 	@Override
 	public Constant constantTerm(Ideal2Factory factory) {
-		SymbolicType type = type();
-		Constant constant = (Constant) termMap().get((Monic) factory.one(type));
+		Monomial lastTerm = arguments[arguments.length - 1];
 
-		return constant == null ? factory.zero(type) : constant;
+		return lastTerm instanceof Constant ? (Constant) lastTerm
+				: factory.zero(type);
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
+	public Monomial[] expand(Ideal2Factory factory) {
 		if (expansion == null) {
-			SymbolicMap<Monic, Monomial> termMap = termMap();
+			Monomial[] termMap = termMap();
 
 			if (hasNontrivialExpansion(factory)) {
 				if (debug) {
 					out.println("Starting expansion of " + shortString());
 					out.flush();
 				}
-				expansion = factory.emptyMonicMap();
-				for (Monomial oldTerm : termMap.values())
+				expansion = emptyMonomialList;
+				for (Monomial oldTerm : arguments)
 					expansion = factory.addTermMaps(expansion,
 							oldTerm.expand(factory));
 				if (isCanonic())
-					expansion = factory.objectFactory().canonic(expansion);
+					factory.objectFactory().canonize(expansion);
 				if (debug) {
 					out.println("Finished expansion of " + shortString());
 					out.flush();
@@ -182,7 +190,7 @@ public class NTPolynomial extends CommonSymbolicExpression
 	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
 		if (hasNTE < 0) {
 			hasNTE = 0;
-			for (Monic m : termMap().keys()) {
+			for (Monomial m : arguments) {
 				if (m.hasNontrivialExpansion(factory)) {
 					hasNTE = 1;
 					break;
@@ -206,8 +214,8 @@ public class NTPolynomial extends CommonSymbolicExpression
 	@Override
 	public int totalDegree() {
 		if (totalDegree < 0) {
-			for (Monic monic : termMap().keys()) {
-				int d = monic.totalDegree();
+			for (Monomial monomial : arguments) {
+				int d = monomial.totalDegree();
 
 				if (d > totalDegree)
 					totalDegree = d;
@@ -227,13 +235,11 @@ public class NTPolynomial extends CommonSymbolicExpression
 	}
 
 	@Override
-	public SymbolicMap<Primitive, PrimitivePower> monicFactors(
-			Ideal2Factory factory) {
+	public PrimitivePower[] monicFactors(Ideal2Factory factory) {
 		if (monicFactors == null) {
-			monicFactors = factory.primitiveSingletonMap(this,
-					(PrimitivePower) this);
+			monicFactors = new PrimitivePower[] { this };
 			if (isCanonic())
-				monicFactors = factory.objectFactory().canonic(monicFactors);
+				factory.objectFactory().canonize(monicFactors);
 		}
 		return monicFactors;
 	}
@@ -271,16 +277,14 @@ public class NTPolynomial extends CommonSymbolicExpression
 	@Override
 	public void canonizeChildren(ObjectFactory of) {
 		super.canonizeChildren(of);
-		if (expansion != null && !expansion.isCanonic())
-			expansion = of.canonic(expansion);
-		if (monicFactors != null && !monicFactors.isCanonic())
-			monicFactors = of.canonic(monicFactors);
-		// if (lowering != null && !lowering.isCanonic())
-		// lowering = of.canonic(lowering);
+		if (expansion != null)
+			of.canonize(expansion);
+		if (monicFactors != null)
+			of.canonize(monicFactors);
 	}
 
 	public String shortString() {
-		return "Poly[id=" + id() + ",numTerms=" + termMap().size()
+		return "Poly[id=" + id() + ",numTerms=" + arguments.length
 				+ ",totalDegree=" + totalDegree() + "]";
 	}
 
@@ -288,8 +292,8 @@ public class NTPolynomial extends CommonSymbolicExpression
 	public int monomialOrder(Ideal2Factory factory) {
 		// if (monomialOrder < 0) {
 		int monomialOrder = 0;
-		for (Monic monic : termMap().keys()) {
-			int mo = monic.monomialOrder(factory);
+		for (Monomial monomial : arguments) {
+			int mo = monomial.monomialOrder(factory);
 
 			if (mo > monomialOrder)
 				monomialOrder = mo;
@@ -300,20 +304,20 @@ public class NTPolynomial extends CommonSymbolicExpression
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+	public Monomial[] lower(Ideal2Factory factory) {
 		// if (lowering == null) {
-		SymbolicMap<Monic, Monomial> lowering = null;
+		Monomial[] lowering = null;
 		int order = monomialOrder(factory);
-		SymbolicMap<Monic, Monomial> termMap = termMap();
+		Monomial[] termMap = termMap();
 
 		if (order > 1) {
-			lowering = factory.emptyMonicMap();
-			for (Monomial oldTerm : termMap.values())
+			lowering = emptyMonomialList;
+			for (Monomial oldTerm : arguments)
 				lowering = factory.addTermMaps(lowering,
 						oldTerm instanceof Primitive ? oldTerm.termMap(factory)
 								: oldTerm.lower(factory));
 			if (isCanonic())
-				lowering = factory.objectFactory().canonic(lowering);
+				factory.objectFactory().canonize(lowering);
 		} else {
 			lowering = termMap;
 		}

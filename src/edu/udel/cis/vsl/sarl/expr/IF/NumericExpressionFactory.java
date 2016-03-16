@@ -3,22 +3,21 @@
  * 
  * This file is part of SARL.
  * 
- * SARL is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your
- * option) any later version.
+ * SARL is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
  * 
- * SARL is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
- * License for more details.
+ * SARL is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with SARL. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.expr.IF;
 
-import java.util.Collection;
 import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
@@ -109,114 +108,116 @@ public interface NumericExpressionFactory {
 	NumericSymbolicConstant symbolicConstant(StringObject name,
 			SymbolicType type);
 
-	/**
-	 * Returns an expression, given the operator, type, and collection of arguments
-	 * @param operator
-	 * 		A SymbolicOperator
-	 * @param numericType
-	 * 		A SymbolicType
-	 * @param arguments
-	 * 		Collection of arguments
-	 * @return
-	 * 		Returns a NumericExpression
-	 */
-	
-	NumericExpression expression(SymbolicOperator operator,
-			SymbolicType numericType, Collection<SymbolicObject> arguments);
+	// /**
+	// * Returns an expression, given the operator, type, and collection of
+	// arguments
+	// * @param operator
+	// * A SymbolicOperator
+	// * @param numericType
+	// * A SymbolicType
+	// * @param arguments
+	// * Collection of arguments
+	// * @return
+	// * Returns a NumericExpression
+	// */
+	//
+	// NumericExpression expression(SymbolicOperator operator,
+	// SymbolicType numericType, Collection<SymbolicObject> arguments);
 
 	/**
 	 * Returns an expression, given the operator, type, and array of arguments
+	 * 
 	 * @param operator
-	 * 		A SymbolicOperator
+	 *            A SymbolicOperator
 	 * @param numericType
-	 * 		A SymbolicType
+	 *            A SymbolicType
 	 * @param arguments
-	 * 		array of arguments
-	 * @return
-	 * 		Returns a NumericExpression
+	 *            array of arguments
+	 * @return Returns a NumericExpression
 	 */
 	NumericExpression expression(SymbolicOperator operator,
-			SymbolicType numericType, SymbolicObject[] arguments);
+			SymbolicType numericType, SymbolicObject... arguments);
 
-	/**
-	 * Returns an expression, given the operator, type, and an argument
-	 * @param operator
-	 * 		A SymbolicOperator
-	 * @param numericType
-	 * 		A SymbolicType
-	 * @param arg0
-	 * 		A SymbolicObject
-	 * @return
-	 * 		Returns a NumericExpression
-	 */
-	NumericExpression expression(SymbolicOperator operator,
-			SymbolicType numericType, SymbolicObject arg0);
-
-	/**
-	 * Returns an expression, given the operator, type, and two arguments
-	 * @param operator
-	 * 		A SymbolicOperator
-	 * @param numericType
-	 * 		A SymbolicType
-	 * @param arg0
-	 * 		A SymbolicObject
-	 * @param arg1
-	 * 		A SymbolicObject
-	 * @return
-	 * 		Returns a NumericExpression
-	 */
-	NumericExpression expression(SymbolicOperator operator,
-			SymbolicType numericType, SymbolicObject arg0, SymbolicObject arg1);
-
-	/**
-	 * Returns an expression, given the operator, type, and three arguments
-	 * @param operator
-	 * 		A SymbolicOperator
-	 * @param numericType
-	 * 		A SymbolicType
-	 * @param arg0
-	 * 		A SymbolicObject
-	 * @param arg1
-	 * 		A SymbolicObject
-	 * @param arg2
-	 * 		A SymbolicObject
-	 * @return
-	 * 		Returns a NumericExpression
-	 */
-	NumericExpression expression(SymbolicOperator operator,
-			SymbolicType numericType, SymbolicObject arg0, SymbolicObject arg1,
-			SymbolicObject arg2);
+	// /**
+	// * Returns an expression, given the operator, type, and an argument
+	// * @param operator
+	// * A SymbolicOperator
+	// * @param numericType
+	// * A SymbolicType
+	// * @param arg0
+	// * A SymbolicObject
+	// * @return
+	// * Returns a NumericExpression
+	// */
+	// NumericExpression expression(SymbolicOperator operator,
+	// SymbolicType numericType, SymbolicObject arg0);
+	//
+	// /**
+	// * Returns an expression, given the operator, type, and two arguments
+	// * @param operator
+	// * A SymbolicOperator
+	// * @param numericType
+	// * A SymbolicType
+	// * @param arg0
+	// * A SymbolicObject
+	// * @param arg1
+	// * A SymbolicObject
+	// * @return
+	// * Returns a NumericExpression
+	// */
+	// NumericExpression expression(SymbolicOperator operator,
+	// SymbolicType numericType, SymbolicObject arg0, SymbolicObject arg1);
+	//
+	// /**
+	// * Returns an expression, given the operator, type, and three arguments
+	// * @param operator
+	// * A SymbolicOperator
+	// * @param numericType
+	// * A SymbolicType
+	// * @param arg0
+	// * A SymbolicObject
+	// * @param arg1
+	// * A SymbolicObject
+	// * @param arg2
+	// * A SymbolicObject
+	// * @return
+	// * Returns a NumericExpression
+	// */
+	// NumericExpression expression(SymbolicOperator operator,
+	// SymbolicType numericType, SymbolicObject arg0, SymbolicObject arg1,
+	// SymbolicObject arg2);
 	/**
 	 * Returns a symbolic expression of integer type with the value of 0
+	 * 
 	 * @return
 	 */
-	
 	NumericExpression zeroInt();
-	
+
 	/**
 	 * Returns a symbolic expression of real type with the value of 0
+	 * 
 	 * @return
 	 */
-
 	NumericExpression zeroReal();
 
 	/**
 	 * Returns a symbolic expression of integer type with the value of 1
+	 * 
 	 * @return
 	 */
-	
 	NumericExpression oneInt();
-	
+
 	/**
 	 * Returns a symbolic expression of real type with the value of 1
+	 * 
 	 * @return
 	 */
-
 	NumericExpression oneReal();
+
 	/**
-	 * Returns a symbolic expression which is the result of adding arg1
-	 * from arg0. The two given expressions must have the same (numeric) type:
-	 * either both integers, or both real.
+	 * Returns a symbolic expression which is the result of adding arg1 from
+	 * arg0. The two given expressions must have the same (numeric) type: either
+	 * both integers, or both real.
 	 * 
 	 * @param arg0
 	 *            a symbolic expression of a numeric type
@@ -227,9 +228,9 @@ public interface NumericExpressionFactory {
 	NumericExpression add(NumericExpression arg0, NumericExpression arg1);
 
 	/**
-	 * Returns a symbolic expression which is the result of subtracting arg1
-	 * and arg0. The two given expressions must have the same (numeric) type:
-	 * either both integers, or both real.
+	 * Returns a symbolic expression which is the result of subtracting arg1 and
+	 * arg0. The two given expressions must have the same (numeric) type: either
+	 * both integers, or both real.
 	 * 
 	 * @param arg0
 	 *            a symbolic expression of a numeric type
@@ -313,14 +314,15 @@ public interface NumericExpressionFactory {
 	NumericExpression power(NumericExpression base, NumericExpression exponent);
 
 	/**
-	 * Returns a NumericExpression with the symbolic type passed in the second argument
+	 * Returns a NumericExpression with the symbolic type passed in the second
+	 * argument
 	 * 
 	 * 
 	 * @param numericExpression
-	 * 			The NumericExpression that will receive the new type
+	 *            The NumericExpression that will receive the new type
 	 * 
 	 * @param newType
-	 * 			The new SymbolicType for the numericExpression
+	 *            The new SymbolicType for the numericExpression
 	 * 
 	 * @return NumericExpression
 	 */
@@ -334,34 +336,41 @@ public interface NumericExpressionFactory {
 	Number extractNumber(NumericExpression expression);
 
 	/**
-	 * Returns a BooleanExpression with the result of the lessThan operation on 2 NumericExpressions
+	 * Returns a BooleanExpression with the result of the lessThan operation on
+	 * 2 NumericExpressions
 	 */
 	BooleanExpression lessThan(NumericExpression arg0, NumericExpression arg1);
 
 	/**
-	 * Returns a BooleanExpression with the result of the lessThanEquals operation on 2 NumericExpressions
+	 * Returns a BooleanExpression with the result of the lessThanEquals
+	 * operation on 2 NumericExpressions
 	 */
 	BooleanExpression lessThanEquals(NumericExpression arg0,
 			NumericExpression arg1);
 
 	/**
-	 * Returns a BooleanExpression with the result of the notLessThan operation on 2 NumericExpressions
+	 * Returns a BooleanExpression with the result of the notLessThan operation
+	 * on 2 NumericExpressions
 	 */
-	BooleanExpression notLessThan(NumericExpression arg0, NumericExpression arg1);
+	BooleanExpression notLessThan(NumericExpression arg0,
+			NumericExpression arg1);
 
 	/**
-	 * Returns a BooleanExpression with the result of the notLessThanEquals operation on 2 NumericExpressions
+	 * Returns a BooleanExpression with the result of the notLessThanEquals
+	 * operation on 2 NumericExpressions
 	 */
 	BooleanExpression notLessThanEquals(NumericExpression arg0,
 			NumericExpression arg1);
 
 	/**
-	 * Returns a BooleanExpression with the result of the equals operation on 2 NumericExpressions
+	 * Returns a BooleanExpression with the result of the equals operation on 2
+	 * NumericExpressions
 	 */
 	BooleanExpression equals(NumericExpression arg0, NumericExpression arg1);
 
 	/**
-	 * Returns a BooleanExpression with the result of the notEquals operation on 2 NumericExpressions
+	 * Returns a BooleanExpression with the result of the notEquals operation on
+	 * 2 NumericExpressions
 	 */
 	BooleanExpression neq(NumericExpression arg0, NumericExpression arg1);
 

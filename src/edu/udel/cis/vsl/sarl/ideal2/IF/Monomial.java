@@ -18,8 +18,6 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.IF;
 
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
-
 /**
  * A {@link Monomial} is the product of a constant and a {@link Monic}. The
  * constant is called the "constant factor" of the monomial; the monic is called
@@ -78,7 +76,7 @@ public interface Monomial extends RationalExpression {
 	 * @return term map whose sum is equivalent to this but with no
 	 *         {@link Polynomial}s.
 	 */
-	SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory);
+	Monomial[] expand(Ideal2Factory factory);
 
 	/**
 	 * Determines whether or not this monomial has a non-trivial expansion. A
@@ -99,7 +97,7 @@ public interface Monomial extends RationalExpression {
 	 *            the ideal factory responsible for this monomial
 	 * @return a term map whose sum is equivalent to this monomial
 	 */
-	SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory);
+	Monomial[] termMap(Ideal2Factory factory);
 
 	/**
 	 * Computes the "monomial order" of this {@link Monomial}. This is defined
@@ -154,5 +152,5 @@ public interface Monomial extends RationalExpression {
 	 *            {@link Monomial}
 	 * @return a term map with lower monomial order.
 	 */
-	SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory);
+	Monomial[] lower(Ideal2Factory factory);
 }

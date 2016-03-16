@@ -19,13 +19,11 @@
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
 import java.util.Comparator;
-import java.util.Iterator;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.ideal.common.IdealExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
@@ -199,17 +197,18 @@ public class IdealComparator implements Comparator<NumericExpression> {
 		if (result != 0)
 			return result;
 
-		Iterator<Monomial> monomialIter1 = p1.termMap(idealFactory).values()
-				.iterator();
-		Iterator<Monomial> monomialIter2 = p2.termMap(idealFactory).values()
-				.iterator();
+		Monomial[] terms1 = p1.termMap(idealFactory),
+				terms2 = p2.termMap(idealFactory);
+		int i1 = 0, i2 = 0, n1 = terms1.length, n2 = terms2.length;
 
-		while (monomialIter1.hasNext()) {
-			Monomial monomial1 = monomialIter1.next();
+		while (i1 < n1) {
+			Monomial monomial1 = terms1[i1];
 
-			if (monomialIter2.hasNext()) {
-				Monomial monomial2 = monomialIter2.next();
+			i1++;
+			if (i2 < n2) {
+				Monomial monomial2 = terms2[i2];
 
+				i2++;
 				result = compareMonomials(monomial1, monomial2);
 				if (result != 0)
 					return result;
@@ -217,7 +216,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 				return -1;
 			}
 		}
-		if (monomialIter2.hasNext())
+		if (i2 < n2)
 			return 1;
 		return 0;
 	}
@@ -273,14 +272,12 @@ public class IdealComparator implements Comparator<NumericExpression> {
 		if (result != 0)
 			return result;
 
-		Iterator<PrimitivePower> ppIter1 = m1.monicFactors(idealFactory)
-				.iterator();
-		Iterator<PrimitivePower> ppIter2 = m2.monicFactors(idealFactory)
-				.iterator();
+		PrimitivePower[] factors1 = m1.monicFactors(idealFactory),
+				factors2 = m2.monicFactors(idealFactory);
+		int n = factors1.length;
 
-		while (ppIter1.hasNext()) {
-			PrimitivePower ppower1 = ppIter1.next();
-			PrimitivePower ppower2 = ppIter2.next();
+		for (int i = 0; i < n; i++) {
+			PrimitivePower ppower1 = factors1[i], ppower2 = factors2[i];
 
 			result = comparePrimitives(ppower1.primitive(idealFactory),
 					ppower2.primitive(idealFactory));

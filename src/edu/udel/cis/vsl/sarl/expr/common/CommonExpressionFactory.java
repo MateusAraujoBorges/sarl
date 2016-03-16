@@ -18,7 +18,6 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.expr.common;
 
-import java.util.Collection;
 import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
@@ -205,8 +204,8 @@ public class CommonExpressionFactory implements ExpressionFactory {
 				throw new SARLInternalException("unreachable");
 			}
 		}
-		return new CommonSymbolicExpression(operator, referenceType, arg0,
-				arg1);
+		return new HomogeneousExpression<SymbolicObject>(operator,
+				referenceType, new SymbolicObject[] { arg0, arg1 });
 	}
 
 	/**
@@ -229,9 +228,8 @@ public class CommonExpressionFactory implements ExpressionFactory {
 		else if (operator == SymbolicOperator.APPLY)
 			return nonTrivialReferenceExpression(operator, arguments[0],
 					arguments[1]);
-		return new CommonSymbolicExpression(operator, referenceType, arguments);
-		// throw new SARLInternalException(
-		// "Unexpected operator in reference expression: " + operator);
+		return new HomogeneousExpression<SymbolicObject>(operator,
+				referenceType, arguments);
 	}
 
 	/**
@@ -314,7 +312,7 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	 */
 	@Override
 	public SymbolicExpression expression(SymbolicOperator operator,
-			SymbolicType type, SymbolicObject[] arguments) {
+			SymbolicType type, SymbolicObject... arguments) {
 		if (type != null) {
 			if (type.isNumeric())
 				return numericFactory.expression(operator, type, arguments);
@@ -323,113 +321,114 @@ public class CommonExpressionFactory implements ExpressionFactory {
 			if (type.equals(referenceType))
 				return referenceExpression(operator, arguments);
 		}
-		return new CommonSymbolicExpression(operator, type, arguments);
+		return new HomogeneousExpression<SymbolicObject>(operator, type,
+				arguments);
 	}
 
-	/**
-	 * One of several methods that builds a symbolic expression.
-	 * 
-	 * @param operator
-	 * @param type
-	 * @param arg0
-	 *            arg0 is a SymbolicObject
-	 * 
-	 * @return SymbolicExpression
-	 */
-	@Override
-	public SymbolicExpression expression(SymbolicOperator operator,
-			SymbolicType type, SymbolicObject arg0) {
-		if (type != null) {
-			if (type.isNumeric())
-				return numericFactory.expression(operator, type, arg0);
-			if (type.isBoolean())
-				return booleanFactory.booleanExpression(operator, arg0);
-			if (type.equals(referenceType))
-				return concreteReferenceExpression(operator, arg0);
-		}
-		return new CommonSymbolicExpression(operator, type, arg0);
-	}
+	// /**
+	// * One of several methods that builds a symbolic expression.
+	// *
+	// * @param operator
+	// * @param type
+	// * @param arg0
+	// * arg0 is a SymbolicObject
+	// *
+	// * @return SymbolicExpression
+	// */
+	// @Override
+	// public SymbolicExpression expression(SymbolicOperator operator,
+	// SymbolicType type, SymbolicObject arg0) {
+	// if (type != null) {
+	// if (type.isNumeric())
+	// return numericFactory.expression(operator, type, arg0);
+	// if (type.isBoolean())
+	// return booleanFactory.booleanExpression(operator, arg0);
+	// if (type.equals(referenceType))
+	// return concreteReferenceExpression(operator, arg0);
+	// }
+	// return new CommonSymbolicExpression(operator, type, arg0);
+	// }
+	//
+	// /**
+	// * One of several methods that builds a symbolic expression.
+	// *
+	// * @param operator
+	// * @param type
+	// * @param arg0
+	// * arg0 is a SymbolicObject
+	// * @param arg1
+	// * arg1 is a SymbolicObject
+	// *
+	// * @return SymbolicExpression
+	// */
+	// @Override
+	// public SymbolicExpression expression(SymbolicOperator operator,
+	// SymbolicType type, SymbolicObject arg0, SymbolicObject arg1) {
+	// if (type != null) {
+	// if (type.isNumeric())
+	// return numericFactory.expression(operator, type, arg0, arg1);
+	// if (type.isBoolean())
+	// return booleanFactory.booleanExpression(operator, arg0, arg1);
+	// if (type.equals(referenceType))
+	// return nonTrivialReferenceExpression(operator, arg0, arg1);
+	// }
+	// return new CommonSymbolicExpression(operator, type, arg0, arg1);
+	// }
+	//
+	// /**
+	// * One of several methods that builds a symbolic expression.
+	// *
+	// * @param operator
+	// * @param type
+	// * @param arg0
+	// * arg0 is a SymbolicObject
+	// * @param arg1
+	// * arg1 is a SymbolicObject
+	// * @param arg2
+	// * arg2 is a SymbolicObject
+	// *
+	// * @return SymbolicExpression
+	// */
+	// @Override
+	// public SymbolicExpression expression(SymbolicOperator operator,
+	// SymbolicType type, SymbolicObject arg0, SymbolicObject arg1,
+	// SymbolicObject arg2) {
+	// if (type != null) {
+	// if (type.isNumeric())
+	// return numericFactory.expression(operator, type, arg0, arg1,
+	// arg2);
+	// if (type.isBoolean())
+	// return booleanFactory.booleanExpression(operator, arg0, arg1,
+	// arg2);
+	// }
+	// return new CommonSymbolicExpression(operator, type, arg0, arg1, arg2);
+	// }
 
-	/**
-	 * One of several methods that builds a symbolic expression.
-	 * 
-	 * @param operator
-	 * @param type
-	 * @param arg0
-	 *            arg0 is a SymbolicObject
-	 * @param arg1
-	 *            arg1 is a SymbolicObject
-	 * 
-	 * @return SymbolicExpression
-	 */
-	@Override
-	public SymbolicExpression expression(SymbolicOperator operator,
-			SymbolicType type, SymbolicObject arg0, SymbolicObject arg1) {
-		if (type != null) {
-			if (type.isNumeric())
-				return numericFactory.expression(operator, type, arg0, arg1);
-			if (type.isBoolean())
-				return booleanFactory.booleanExpression(operator, arg0, arg1);
-			if (type.equals(referenceType))
-				return nonTrivialReferenceExpression(operator, arg0, arg1);
-		}
-		return new CommonSymbolicExpression(operator, type, arg0, arg1);
-	}
-
-	/**
-	 * One of several methods that builds a symbolic expression.
-	 * 
-	 * @param operator
-	 * @param type
-	 * @param arg0
-	 *            arg0 is a SymbolicObject
-	 * @param arg1
-	 *            arg1 is a SymbolicObject
-	 * @param arg2
-	 *            arg2 is a SymbolicObject
-	 * 
-	 * @return SymbolicExpression
-	 */
-	@Override
-	public SymbolicExpression expression(SymbolicOperator operator,
-			SymbolicType type, SymbolicObject arg0, SymbolicObject arg1,
-			SymbolicObject arg2) {
-		if (type != null) {
-			if (type.isNumeric())
-				return numericFactory.expression(operator, type, arg0, arg1,
-						arg2);
-			if (type.isBoolean())
-				return booleanFactory.booleanExpression(operator, arg0, arg1,
-						arg2);
-		}
-		return new CommonSymbolicExpression(operator, type, arg0, arg1, arg2);
-	}
-
-	/**
-	 * One of several methods that builds a symbolic expression.
-	 * 
-	 * @param operator
-	 * @param type
-	 * @param args
-	 *            args is a Collection<SymbolicObject>
-	 * 
-	 * @return SymbolicExpression
-	 */
-	@Override
-	public SymbolicExpression expression(SymbolicOperator operator,
-			SymbolicType type, Collection<SymbolicObject> args) {
-		if (type != null) {
-			if (type.isNumeric())
-				return numericFactory.expression(operator, type, args);
-			if (type.isBoolean())
-				return booleanFactory.booleanExpression(operator, args);
-			if (type.equals(referenceType))
-				return referenceExpression(operator,
-						args.toArray(new SymbolicObject[args.size()]));
-		}
-		return new CommonSymbolicExpression(operator, type, args);
-
-	}
+	// /**
+	// * One of several methods that builds a symbolic expression.
+	// *
+	// * @param operator
+	// * @param type
+	// * @param args
+	// * args is a Collection<SymbolicObject>
+	// *
+	// * @return SymbolicExpression
+	// */
+	// @Override
+	// public SymbolicExpression expression(SymbolicOperator operator,
+	// SymbolicType type, Collection<SymbolicObject> args) {
+	// if (type != null) {
+	// if (type.isNumeric())
+	// return numericFactory.expression(operator, type, args);
+	// if (type.isBoolean())
+	// return booleanFactory.booleanExpression(operator, args);
+	// if (type.equals(referenceType))
+	// return referenceExpression(operator,
+	// args.toArray(new SymbolicObject[args.size()]));
+	// }
+	// return new CommonSymbolicExpression(operator, type, args);
+	//
+	// }
 
 	/**
 	 * Method that builds a SymbolicConstant.

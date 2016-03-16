@@ -215,7 +215,8 @@ public class Z3Translator {
 		this.z3Translation = translate(theExpression);
 	}
 
-	Z3Translator(Z3Translator startingContext, SymbolicExpression theExpression) {
+	Z3Translator(Z3Translator startingContext,
+			SymbolicExpression theExpression) {
 		this.universe = startingContext.universe;
 		this.z3AuxVarCount = startingContext.z3AuxVarCount;
 		this.sarlAuxVarCount = startingContext.sarlAuxVarCount;
@@ -231,8 +232,8 @@ public class Z3Translator {
 
 	private void requireBigArray() {
 		if (!bigArrayDefined) {
-			z3Declarations
-					.add("(declare-datatypes (T) ((BigArray (mk-BigArray (bigArray-len Int) (bigArray-val (Array Int T))))))\n");
+			z3Declarations.add(
+					"(declare-datatypes (T) ((BigArray (mk-BigArray (bigArray-len Int) (bigArray-val (Array Int T))))))\n");
 			bigArrayDefined = true;
 		}
 	}
@@ -316,8 +317,7 @@ public class Z3Translator {
 	 */
 	private NumericSymbolicConstant newSarlAuxVar() {
 		NumericSymbolicConstant result = (NumericSymbolicConstant) universe
-				.symbolicConstant(
-						universe.stringObject("_i" + sarlAuxVarCount),
+				.symbolicConstant(universe.stringObject("_i" + sarlAuxVarCount),
 						universe.integerType());
 
 		sarlAuxVarCount++;
@@ -398,7 +398,8 @@ public class Z3Translator {
 		}
 	}
 
-	private FastList<String> pretranslateConcreteArray(SymbolicExpression array) {
+	private FastList<String> pretranslateConcreteArray(
+			SymbolicExpression array) {
 		SymbolicCompleteArrayType arrayType = (SymbolicCompleteArrayType) array
 				.type();
 		SymbolicType elementType = arrayType.elementType();
@@ -548,13 +549,14 @@ public class Z3Translator {
 		case REAL: {
 			RationalNumber number = (RationalNumber) ((NumberObject) object)
 					.getNumber();
-			String numerator = number.numerator().toString(), denominator = number
-					.denominator().toString();
+			String numerator = number.numerator().toString(),
+					denominator = number.denominator().toString();
 
 			if (denominator.equals("1"))
 				result = new FastList<>(numerator);
 			else
-				result = new FastList<>("(/ ", numerator, " ", denominator, ")");
+				result = new FastList<>("(/ ", numerator, " ", denominator,
+						")");
 			break;
 		}
 		case TUPLE: {
@@ -563,8 +565,8 @@ public class Z3Translator {
 
 			// declare the tuple type if you haven't already
 			translateType(type);
-			result = new FastList<String>("("
-					+ tupleConstructor((SymbolicTupleType) type));
+			result = new FastList<String>(
+					"(" + tupleConstructor((SymbolicTupleType) type));
 			for (SymbolicExpression member : sequence) {
 				result.add(" ");
 				result.append(translate(member));
@@ -648,7 +650,8 @@ public class Z3Translator {
 	 *            symbolic expression of kind {@link SymbolicOperator#LAMBDA}
 	 * @return new function macro symbol representing the lambda
 	 */
-	private FastList<String> translateLambda(SymbolicExpression lambdaExpression) {
+	private FastList<String> translateLambda(
+			SymbolicExpression lambdaExpression) {
 		SymbolicFunctionType functionType = (SymbolicFunctionType) lambdaExpression
 				.type();
 		SymbolicConstant inputVar = (SymbolicConstant) lambdaExpression
@@ -659,7 +662,8 @@ public class Z3Translator {
 		FastList<String> z3SymbolicConstant = translateSymbolicConstant(
 				inputVar, true);
 		FastList<String> z3InputType = translateType(inputVar.type());
-		FastList<String> z3OutputType = translateType(functionType.outputType());
+		FastList<String> z3OutputType = translateType(
+				functionType.outputType());
 		FastList<String> z3Body = translate(body);
 
 		z3Declarations.addAll("(define-fun ", name, "((");
@@ -930,9 +934,8 @@ public class Z3Translator {
 			result.append(extent1.clone());
 			result.add(" ");
 			result.append(lengthOfArray(expr2));
-			result.addAll(") (forall ((", indexString,
-					" Int)) (=> (and (<= 0 ", indexString, ") (< ",
-					indexString, " ");
+			result.addAll(") (forall ((", indexString, " Int)) (=> (and (<= 0 ",
+					indexString, ") (< ", indexString, " ");
 			result.append(extent1);
 			result.add(")) ");
 			result.append(processEquality(read1, read2));
@@ -1019,8 +1022,8 @@ public class Z3Translator {
 		int index = ((IntObject) expr.argument(0)).getInt();
 		SymbolicExpression arg = (SymbolicExpression) expr.argument(1);
 		SymbolicUnionType unionType = (SymbolicUnionType) arg.type();
-		FastList<String> result = new FastList<>("(", unionSelector(unionType,
-				index), " ");
+		FastList<String> result = new FastList<>("(",
+				unionSelector(unionType, index), " ");
 
 		result.append(translate(arg));
 		result.add(")");
@@ -1056,8 +1059,8 @@ public class Z3Translator {
 		int index = ((IntObject) expr.argument(0)).getInt();
 		SymbolicExpression arg = (SymbolicExpression) expr.argument(1);
 		SymbolicUnionType unionType = (SymbolicUnionType) expr.type();
-		FastList<String> result = new FastList<>("(", unionConstructor(
-				unionType, index), " ");
+		FastList<String> result = new FastList<>("(",
+				unionConstructor(unionType, index), " ");
 
 		result.append(translate(arg));
 		result.add(")");
@@ -1092,8 +1095,8 @@ public class Z3Translator {
 		int index = ((IntObject) expr.argument(0)).getInt();
 		SymbolicExpression arg = (SymbolicExpression) expr.argument(1);
 		SymbolicUnionType unionType = (SymbolicUnionType) arg.type();
-		FastList<String> result = new FastList<>("(", unionTester(unionType,
-				index), " ");
+		FastList<String> result = new FastList<>("(",
+				unionTester(unionType, index), " ");
 
 		result.append(translate(arg));
 		result.add(")");
@@ -1110,14 +1113,14 @@ public class Z3Translator {
 				|| (originalType.isInteger() && newType.isReal()))
 			return translate(argument);
 
-		Pair<SymbolicType, SymbolicType> key = new Pair<>(originalType, newType);
+		Pair<SymbolicType, SymbolicType> key = new Pair<>(originalType,
+				newType);
 		String castFunction = castMap.get(key);
 
 		if (castFunction == null) {
 			castFunction = "cast" + castMap.size();
-			z3Declarations
-					.append(functionDeclaration(castFunction, universe
-							.functionType(Arrays.asList(originalType), newType)));
+			z3Declarations.append(functionDeclaration(castFunction, universe
+					.functionType(Arrays.asList(originalType), newType)));
 			castMap.put(key, castFunction);
 		}
 
@@ -1155,9 +1158,9 @@ public class Z3Translator {
 	private FastList<String> translateNEQ(SymbolicExpression expression) {
 		FastList<String> result = new FastList<>("(not ");
 
-		result.append(processEquality(
-				(SymbolicExpression) expression.argument(0),
-				(SymbolicExpression) expression.argument(1)));
+		result.append(
+				processEquality((SymbolicExpression) expression.argument(0),
+						(SymbolicExpression) expression.argument(1)));
 		result.add(")");
 		return result;
 	}
@@ -1219,6 +1222,29 @@ public class Z3Translator {
 		}
 	}
 
+	private FastList<String> translateKeySet(String operator,
+			String defaultValue, SymbolicExpression expression) {
+		int size = expression.numArguments();
+
+		if (size == 0) {
+			return new FastList<>(defaultValue);
+		} else if (size == 1) {
+			return translate((SymbolicExpression) expression.argument(0));
+		} else {
+			FastList<String> result = new FastList<>("(", operator);
+
+			for (int i = 0; i < size; i++) {
+				SymbolicExpression term = (SymbolicExpression) expression
+						.argument(i);
+
+				result.add(" ");
+				result.append(translate(term));
+			}
+			result.add(")");
+			return result;
+		}
+	}
+
 	private FastList<String> translateBinary(String operator,
 			SymbolicExpression arg0, SymbolicExpression arg1) {
 		FastList<String> result = new FastList<>("(", operator, " ");
@@ -1242,8 +1268,8 @@ public class Z3Translator {
 			return translateAssoc(operator, defaultValue,
 					(SymbolicCollection<?>) expression.argument(0));
 		} else {
-			throw new SARLInternalException("Expected 1 or 2 arguments for "
-					+ operator);
+			throw new SARLInternalException(
+					"Expected 1 or 2 arguments for " + operator);
 		}
 	}
 
@@ -1261,7 +1287,7 @@ public class Z3Translator {
 
 		switch (operator) {
 		case ADD:
-			result = translateBinaryOrAssoc("+", "0", expression);
+			result = translateKeySet("+", "0", expression);
 			break;
 		case AND:
 			result = translateBinaryOrAssoc("and", "true", expression);
@@ -1270,7 +1296,8 @@ public class Z3Translator {
 			result = translateApply(expression);
 			break;
 		case ARRAY_LAMBDA:
-			throw new TheoremProverException("Z3 does not handle array lambdas");
+			throw new TheoremProverException(
+					"Z3 does not handle array lambdas");
 		case ARRAY_READ:
 			result = translateArrayRead(expression);
 			break;
@@ -1328,7 +1355,7 @@ public class Z3Translator {
 					(SymbolicExpression) expression.argument(1));
 			break;
 		case MULTIPLY:
-			result = translateBinaryOrAssoc("*", "1", expression);
+			result = translateKeySet("*", "1", expression);
 			break;
 		case NEGATIVE:
 			result = translateNegative(expression);
@@ -1376,8 +1403,8 @@ public class Z3Translator {
 			result = null;
 			break;
 		default:
-			throw new SARLInternalException("unreachable: unknown operator: "
-					+ operator);
+			throw new SARLInternalException(
+					"unreachable: unknown operator: " + operator);
 		}
 		return result;
 	}
@@ -1437,7 +1464,8 @@ public class Z3Translator {
 			break;
 		}
 		case FUNCTION: {
-			throw new TheoremProverException("Z3 does not have a function type");
+			throw new TheoremProverException(
+					"Z3 does not have a function type");
 		}
 		case UNION: {
 			/**
@@ -1464,9 +1492,8 @@ public class Z3Translator {
 			for (int i = 0; i < n; i++) {
 				SymbolicType memberType = sequence.getType(i);
 
-				z3Declarations.addAll("\n    (",
-						unionConstructor(unionType, i), " (",
-						unionSelector(unionType, i), " ");
+				z3Declarations.addAll("\n    (", unionConstructor(unionType, i),
+						" (", unionSelector(unionType, i), " ");
 				z3Declarations.append(translateType(memberType));
 				z3Declarations.add("))");
 			}

@@ -18,8 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal2.common;
 
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
-import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
@@ -35,17 +35,18 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * 
  * @author siegel
  */
-public class NTMonomial extends CommonSymbolicExpression implements Monomial {
+public class NTMonomial extends HomogeneousExpression<SymbolicObject>
+		implements Monomial {
 
 	/**
 	 * Cached value returned by {@link #expand(Ideal2Factory)}.
 	 */
-	private SymbolicMap<Monic, Monomial> expansion = null;
+	private Monomial[] expansion = null;
 
 	/**
 	 * Cache value returned by {@link #termMap(Ideal2Factory)}.
 	 */
-	private SymbolicMap<Monic, Monomial> termMap = null;
+	private Monomial[] termMap = null;
 
 	// /**
 	// * Cache value returned by {@link #lower(Ideal2Factory)}.
@@ -66,7 +67,8 @@ public class NTMonomial extends CommonSymbolicExpression implements Monomial {
 	 *            the monic in the new monomial
 	 */
 	protected NTMonomial(Constant constant, Monic monic) {
-		super(SymbolicOperator.MULTIPLY, constant.type(), constant, monic);
+		super(SymbolicOperator.MULTIPLY, constant.type(),
+				new SymbolicObject[] { constant, monic });
 		assert !constant.isZero();
 		assert !constant.isOne();
 		assert !monic.isOne();
@@ -111,7 +113,7 @@ public class NTMonomial extends CommonSymbolicExpression implements Monomial {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
+	public Monomial[] expand(Ideal2Factory factory) {
 		if (expansion == null) {
 			Monic monic = this.monic();
 
@@ -119,9 +121,9 @@ public class NTMonomial extends CommonSymbolicExpression implements Monomial {
 				expansion = factory.multiplyConstantTermMap(monomialConstant(),
 						monic.expand(factory));
 			else
-				expansion = factory.monicSingletonMap(monic, this);
+				expansion = new Monomial[] { this };
 			if (isCanonic())
-				expansion = factory.objectFactory().canonic(expansion);
+				factory.objectFactory().canonize(expansion);
 		}
 		return expansion;
 	}
@@ -132,7 +134,7 @@ public class NTMonomial extends CommonSymbolicExpression implements Monomial {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
+	public Monomial[] termMap(Ideal2Factory factory) {
 		if (termMap == null) {
 			Monic monic = monic();
 
@@ -140,10 +142,10 @@ public class NTMonomial extends CommonSymbolicExpression implements Monomial {
 				termMap = factory.multiplyConstantTermMap(
 						(Constant) argument(0), monic.termMap(factory));
 			} else {
-				termMap = factory.monicSingletonMap(monic, this);
+				termMap = new Monomial[] { this };
 			}
 			if (isCanonic())
-				termMap = factory.objectFactory().canonic(termMap);
+				factory.objectFactory().canonize(termMap);
 		}
 		return termMap;
 	}
@@ -161,12 +163,10 @@ public class NTMonomial extends CommonSymbolicExpression implements Monomial {
 	@Override
 	public void canonizeChildren(ObjectFactory of) {
 		super.canonizeChildren(of);
-		if (expansion != null && !expansion.isCanonic())
-			expansion = of.canonic(expansion);
-		if (termMap != null && !termMap.isCanonic())
-			termMap = of.canonic(termMap);
-		// if (lowering != null && !lowering.isCanonic())
-		// lowering = of.canonic(lowering);
+		if (expansion != null)
+			of.canonize(expansion);
+		if (termMap != null)
+			of.canonize(termMap);
 	}
 
 	@Override
@@ -175,21 +175,21 @@ public class NTMonomial extends CommonSymbolicExpression implements Monomial {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+	public Monomial[] lower(Ideal2Factory factory) {
 		// if (lowering == null) {
-		SymbolicMap<Monic, Monomial> lowering;
+		Monomial[] lowering;
 		int order = monomialOrder(factory);
 		Monic monic = this.monic();
 
 		if (order == 0) {
-			lowering = factory.monicSingletonMap(monic, this);
+			lowering = new Monomial[] { this };
 		} else {
 			lowering = factory.multiplyConstantTermMap(monomialConstant(),
 					monic instanceof Primitive ? monic.termMap(factory)
 							: monic.lower(factory));
 		}
 		if (isCanonic())
-			lowering = factory.objectFactory().canonic(lowering);
+			factory.objectFactory().canonize(lowering);
 		// }
 		return lowering;
 	}

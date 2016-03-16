@@ -66,10 +66,10 @@ public class ExpressionStub implements SymbolicExpression {
 		return null;
 	}
 
-	@Override
-	public SymbolicObject[] arguments() {
-		return null;
-	}
+	// @Override
+	// public SymbolicObject[] arguments() {
+	// return null;
+	// }
 
 	@Override
 	public String atomString() {
@@ -120,11 +120,9 @@ public class ExpressionStub implements SymbolicExpression {
 	public SymbolicType type() {
 		return null;
 	}
-	
-	public String toString()
-	{
+
+	public String toString() {
 		return this.name;
 	}
-	
-	
+
 }

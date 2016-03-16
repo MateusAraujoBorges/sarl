@@ -20,16 +20,15 @@ package edu.udel.cis.vsl.sarl.ideal2.common;
 
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
-import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
+import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal2.IF.Monomial;
-import edu.udel.cis.vsl.sarl.ideal2.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal2.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
@@ -39,12 +38,15 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * 
  * @author siegel
  */
-public class One extends CommonSymbolicExpression implements Constant, Monic {
+public class One extends HomogeneousExpression<SymbolicObject>
+		implements Constant, Monic {
+
+	private final static PrimitivePower[] emptyFactorList = new PrimitivePower[0];
 
 	/**
 	 * Cache of value returned by {@link #termMap(Ideal2Factory)}.
 	 */
-	private SymbolicMap<Monic, Monomial> termMap = null;
+	private Monomial[] termMap = null;
 
 	/**
 	 * Constructs new instance of {@link One} of given type. The number object
@@ -60,7 +62,7 @@ public class One extends CommonSymbolicExpression implements Constant, Monic {
 	 *            either the integer 1 or the real number 1
 	 */
 	protected One(SymbolicType type, NumberObject oneObj) {
-		super(SymbolicOperator.CONCRETE, type, oneObj);
+		super(SymbolicOperator.CONCRETE, type, new SymbolicObject[] { oneObj });
 		assert oneObj.isOne();
 	}
 
@@ -85,9 +87,8 @@ public class One extends CommonSymbolicExpression implements Constant, Monic {
 	}
 
 	@Override
-	public SymbolicMap<Primitive, PrimitivePower> monicFactors(
-			Ideal2Factory factory) {
-		return factory.emptyPrimitiveMap();
+	public PrimitivePower[] monicFactors(Ideal2Factory factory) {
+		return emptyFactorList;
 	}
 
 	@Override
@@ -96,11 +97,11 @@ public class One extends CommonSymbolicExpression implements Constant, Monic {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> termMap(Ideal2Factory factory) {
+	public Monomial[] termMap(Ideal2Factory factory) {
 		if (termMap == null) {
-			termMap = factory.monicSingletonMap(this, this);
+			termMap = new Monomial[] { this };
 			if (isCanonic())
-				termMap = factory.objectFactory().canonic(termMap);
+				factory.objectFactory().canonize(termMap);
 		}
 		return termMap;
 	}
@@ -131,7 +132,7 @@ public class One extends CommonSymbolicExpression implements Constant, Monic {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> expand(Ideal2Factory factory) {
+	public Monomial[] expand(Ideal2Factory factory) {
 		return termMap(factory);
 	}
 
@@ -148,8 +149,8 @@ public class One extends CommonSymbolicExpression implements Constant, Monic {
 	@Override
 	public void canonizeChildren(ObjectFactory of) {
 		super.canonizeChildren(of);
-		if (termMap != null && !termMap.isCanonic())
-			termMap = of.canonic(termMap);
+		if (termMap != null)
+			of.canonize(termMap);
 	}
 
 	@Override
@@ -158,7 +159,7 @@ public class One extends CommonSymbolicExpression implements Constant, Monic {
 	}
 
 	@Override
-	public SymbolicMap<Monic, Monomial> lower(Ideal2Factory factory) {
+	public Monomial[] lower(Ideal2Factory factory) {
 		return termMap(factory);
 	}
 

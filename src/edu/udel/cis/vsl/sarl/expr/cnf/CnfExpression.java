@@ -18,15 +18,13 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.expr.cnf;
 
-import java.util.Collection;
-
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSet;
-import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicExpression;
+import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
@@ -39,7 +37,7 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * @author siegel
  *
  */
-public class CnfExpression extends CommonSymbolicExpression
+public class CnfExpression extends HomogeneousExpression<SymbolicObject>
 		implements BooleanExpression {
 
 	/**
@@ -58,19 +56,19 @@ public class CnfExpression extends CommonSymbolicExpression
 	 */
 	private ResultType validity = null;
 
-	/**
-	 * One of several constructors that build a CnfExpression.
-	 * 
-	 * @param kind
-	 * @param type
-	 * @param args
-	 *            args is a Collection of Symbolic Objects
-	 */
-	protected CnfExpression(SymbolicOperator kind, SymbolicType type,
-			Collection<SymbolicObject> args) {
-		super(kind, type, args);
-		assert type.isBoolean();
-	}
+	// /**
+	// * One of several constructors that build a CnfExpression.
+	// *
+	// * @param kind
+	// * @param type
+	// * @param args
+	// * args is a Collection of Symbolic Objects
+	// */
+	// protected CnfExpression(SymbolicOperator kind, SymbolicType type,
+	// Collection<SymbolicObject> args) {
+	// super(kind, type, args);
+	// assert type.isBoolean();
+	// }
 
 	/**
 	 * One of several constructors that build a CnfExpression.
@@ -81,58 +79,58 @@ public class CnfExpression extends CommonSymbolicExpression
 	 *            args is an array of Symbolic Objects
 	 */
 	protected CnfExpression(SymbolicOperator kind, SymbolicType type,
-			SymbolicObject[] args) {
+			SymbolicObject... args) {
 		super(kind, type, args);
 		assert type.isBoolean();
 	}
 
-	/**
-	 * One of several constructors that build a CnfExpression.
-	 * 
-	 * @param kind
-	 * @param type
-	 * @param arg
-	 *            arg is a Symbolic Object
-	 */
-	protected CnfExpression(SymbolicOperator kind, SymbolicType type,
-			SymbolicObject arg) {
-		super(kind, type, arg);
-		assert type.isBoolean();
-	}
+	// /**
+	// * One of several constructors that build a CnfExpression.
+	// *
+	// * @param kind
+	// * @param type
+	// * @param arg
+	// * arg is a Symbolic Object
+	// */
+	// protected CnfExpression(SymbolicOperator kind, SymbolicType type,
+	// SymbolicObject arg) {
+	// super(kind, type, new SymbolicObject[] {arg});
+	// assert type.isBoolean();
+	// }
 
-	/**
-	 * One of several constructors that build a CnfExpression.
-	 * 
-	 * @param kind
-	 * @param type
-	 * @param arg0
-	 *            arg0 is a Symbolic Objects
-	 * @param arg1
-	 *            arg1 is a Symbolic Objects
-	 */
-	protected CnfExpression(SymbolicOperator kind, SymbolicType type,
-			SymbolicObject arg0, SymbolicObject arg1) {
-		super(kind, type, arg0, arg1);
-		assert type.isBoolean();
-	}
+	// /**
+	// * One of several constructors that build a CnfExpression.
+	// *
+	// * @param kind
+	// * @param type
+	// * @param arg0
+	// * arg0 is a Symbolic Objects
+	// * @param arg1
+	// * arg1 is a Symbolic Objects
+	// */
+	// protected CnfExpression(SymbolicOperator kind, SymbolicType type,
+	// SymbolicObject arg0, SymbolicObject arg1) {
+	// super(kind, type, arg0, arg1);
+	// assert type.isBoolean();
+	// }
 
-	/**
-	 * One of several constructors that build a CnfExpression.
-	 * 
-	 * @param kind
-	 * @param type
-	 * @param arg0
-	 *            arg0 is a Symbolic Objects
-	 * @param arg1
-	 *            arg1 is a Symbolic Objects
-	 * @param arg1
-	 *            arg2 is a Symbolic Objects
-	 */
-	protected CnfExpression(SymbolicOperator kind, SymbolicType type,
-			SymbolicObject arg0, SymbolicObject arg1, SymbolicObject arg2) {
-		super(kind, type, arg0, arg1, arg2);
-		assert type.isBoolean();
-	}
+	// /**
+	// * One of several constructors that build a CnfExpression.
+	// *
+	// * @param kind
+	// * @param type
+	// * @param arg0
+	// * arg0 is a Symbolic Objects
+	// * @param arg1
+	// * arg1 is a Symbolic Objects
+	// * @param arg1
+	// * arg2 is a Symbolic Objects
+	// */
+	// protected CnfExpression(SymbolicOperator kind, SymbolicType type,
+	// SymbolicObject arg0, SymbolicObject arg1, SymbolicObject arg2) {
+	// super(kind, type, arg0, arg1, arg2);
+	// assert type.isBoolean();
+	// }
 
 	protected CnfExpression getNegation() {
 		return negation;

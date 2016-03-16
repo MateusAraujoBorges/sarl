@@ -18,8 +18,6 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.expr.cnf;
 
-import java.util.Collection;
-
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
@@ -60,10 +58,12 @@ public class CnfFactory implements BooleanExpressionFactory {
 			ObjectFactory objectFactory, CollectionFactory collectionFactory) {
 		this.collectionFactory = collectionFactory;
 		_booleanType = typeFactory.booleanType();
-		trueExpr = objectFactory.canonic(booleanExpression(
-				SymbolicOperator.CONCRETE, objectFactory.trueObj()));
-		falseExpr = objectFactory.canonic(booleanExpression(
-				SymbolicOperator.CONCRETE, objectFactory.falseObj()));
+		trueExpr = objectFactory
+				.canonic(booleanExpression(SymbolicOperator.CONCRETE,
+						new SymbolicObject[] { objectFactory.trueObj() }));
+		falseExpr = objectFactory
+				.canonic(booleanExpression(SymbolicOperator.CONCRETE,
+						new SymbolicObject[] { objectFactory.falseObj() }));
 	}
 
 	// Helpers...
@@ -96,37 +96,37 @@ public class CnfFactory implements BooleanExpressionFactory {
 
 	// Public functions specified in BooleanExpressionFactory...
 
+	// @Override
+	// public CnfExpression booleanExpression(SymbolicOperator operator,
+	// Collection<SymbolicObject> args) {
+	// return new CnfExpression(operator, _booleanType, args);
+	// }
+
 	@Override
 	public CnfExpression booleanExpression(SymbolicOperator operator,
-			Collection<SymbolicObject> args) {
+			SymbolicObject... args) {
 		return new CnfExpression(operator, _booleanType, args);
 	}
 
-	@Override
-	public CnfExpression booleanExpression(SymbolicOperator operator,
-			SymbolicObject[] args) {
-		return new CnfExpression(operator, _booleanType, args);
-	}
+	// @Override
+	// public CnfExpression booleanExpression(SymbolicOperator operator,
+	// SymbolicObject arg0) {
+	// return new CnfExpression(operator, _booleanType, arg0);
+	// }
 
-	@Override
-	public CnfExpression booleanExpression(SymbolicOperator operator,
-			SymbolicObject arg0) {
-		return new CnfExpression(operator, _booleanType, arg0);
-	}
-
-	@Override
-	public CnfExpression booleanExpression(SymbolicOperator operator,
-			SymbolicObject arg0, SymbolicObject arg1) {
-		return new CnfExpression(operator, _booleanType, arg0, arg1);
-
-	}
-
-	@Override
-	public CnfExpression booleanExpression(SymbolicOperator operator,
-			SymbolicObject arg0, SymbolicObject arg1, SymbolicObject arg2) {
-		return new CnfExpression(operator, _booleanType, arg0, arg1, arg2);
-
-	}
+	// @Override
+	// public CnfExpression booleanExpression(SymbolicOperator operator,
+	// SymbolicObject arg0, SymbolicObject arg1) {
+	// return new CnfExpression(operator, _booleanType, arg0, arg1);
+	//
+	// }
+	//
+	// @Override
+	// public CnfExpression booleanExpression(SymbolicOperator operator,
+	// SymbolicObject arg0, SymbolicObject arg1, SymbolicObject arg2) {
+	// return new CnfExpression(operator, _booleanType, arg0, arg1, arg2);
+	//
+	// }
 
 	@Override
 	public BooleanSymbolicConstant booleanSymbolicConstant(StringObject name) {
