@@ -1,12 +1,12 @@
 package edu.udel.cis.vsl.sarl.numbers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
@@ -974,7 +974,7 @@ public class NumberFactoryTest {
 
 		Interval iRes = factory.intersection(i1, i2);
 
-		assertTrue(factory.compare(iRes, iR) == 0);
+		assertEquals(iR, iRes);
 	}
 
 	@Test
@@ -1005,7 +1005,7 @@ public class NumberFactoryTest {
 
 		Interval iRes = factory.intersection(i1, i2);
 
-		assertTrue(factory.compare(iRes, iR) == 0);
+		assertEquals(iR, iRes);
 	}
 
 	@Test
@@ -1036,7 +1036,7 @@ public class NumberFactoryTest {
 
 		Interval iRes = factory.intersection(i1, i2);
 
-		assertTrue(factory.compare(iRes, iR) == 0);
+		assertEquals(iR, iRes);
 	}
 
 	@Test
@@ -1067,7 +1067,7 @@ public class NumberFactoryTest {
 
 		Interval iRes = factory.intersection(i1, i2);
 
-		assertTrue(factory.compare(iRes, iR) == 0);
+		assertEquals(iR, iRes);
 	}
 
 	@Test
@@ -1097,7 +1097,7 @@ public class NumberFactoryTest {
 
 		Interval iRes = factory.intersection(i1, i2);
 
-		assertTrue(factory.compare(iRes, iR) == 0);
+		assertEquals(iR, iRes);
 	}
 
 	@Test
@@ -1127,7 +1127,7 @@ public class NumberFactoryTest {
 		assert (lo2 instanceof IntegerNumber) == (up2 instanceof IntegerNumber);
 		assert (loR instanceof IntegerNumber) == (upR instanceof IntegerNumber);
 
-		assertTrue(factory.compare(iRes, iR) == 0);
+		assertEquals(iR, iRes);
 	}
 
 	@Test
@@ -1157,7 +1157,7 @@ public class NumberFactoryTest {
 
 		Interval iRes = factory.intersection(i1, i2);
 
-		assertTrue(factory.compare(iRes, iR) == 0);
+		assertEquals(iR, iRes);
 	}
 
 	// TODO: To add comm for Union part
@@ -1245,11 +1245,9 @@ public class NumberFactoryTest {
 		Interval i1 = factory.newInterval(isIntegral1, lo1, sl1, up1, su1);
 		Interval i2 = factory.newInterval(isIntegral2, lo2, sl2, up2, su2);
 		IntervalUnion iuRes = new IntervalUnion();
-		;
 
 		assert (lo1 instanceof RealRational) == (up1 instanceof RealRational);
 		assert (lo2 instanceof IntegerNumber) == (up2 instanceof IntegerNumber);
-
 		factory.union(i1, i2, iuRes);
 	}
 
@@ -1298,9 +1296,7 @@ public class NumberFactoryTest {
 
 		assert (lo1 instanceof RealRational) == (up1 instanceof RealRational);
 		assert (lo2 instanceof RealRational) == (up2 instanceof RealRational);
-
 		factory.union(i1, i2, iuRes);
-
 		assertTrue(iuRes.status == 1);
 		assertTrue(iuRes.union == null);
 	}
@@ -1331,11 +1327,9 @@ public class NumberFactoryTest {
 		assert (lo1 instanceof IntegerNumber) == (up1 instanceof IntegerNumber);
 		assert (lo2 instanceof IntegerNumber) == (up2 instanceof IntegerNumber);
 		assert (loR instanceof IntegerNumber) == (upR instanceof IntegerNumber);
-
 		factory.union(i1, i2, iuRes);
-
 		assertTrue(iuRes.status == 0);
-		assertTrue(factory.compare(iuRes.union, iR) == 0);
+		assertEquals(iR, iuRes.union);
 	}
 
 	@Test
@@ -1368,7 +1362,7 @@ public class NumberFactoryTest {
 		factory.union(i1, i2, iuRes);
 
 		assertTrue(iuRes.status == 0);
-		assertTrue(factory.compare(iuRes.union, iR) == 0);
+		assertEquals(iR, iuRes.union);
 	}
 
 	@Test
@@ -1401,7 +1395,7 @@ public class NumberFactoryTest {
 		factory.union(i1, i2, iuRes);
 
 		assertTrue(iuRes.status == 0);
-		assertTrue(factory.compare(iuRes.union, iR) == 0);
+		assertEquals(iR, iuRes.union);
 	}
 
 	@Test
@@ -1434,7 +1428,7 @@ public class NumberFactoryTest {
 		factory.union(i1, i2, iuRes);
 
 		assertTrue(iuRes.status == 0);
-		assertTrue(factory.compare(iuRes.union, iR) == 0);
+		assertEquals(iR, iuRes.union);
 	}
 
 	@Test
@@ -1466,7 +1460,7 @@ public class NumberFactoryTest {
 		factory.union(i1, i2, iuRes);
 
 		assertTrue(iuRes.status == 0);
-		assertTrue(factory.compare(iuRes.union, iR) == 0);
+		assertEquals(iR, iuRes.union);
 	}
 
 	/**
@@ -1806,12 +1800,11 @@ public class NumberFactoryTest {
 				false);
 		Interval result = factory.affineTransform(itv, a, b);
 
-		assert (result.equals(expectedRes));
+		assertEquals(expectedRes, result);
 	}
 
 	// TODO:
-	@Ignore
-	// (expected = NullPointerException.class)
+	@Test(expected = AssertionError.class)
 	public void compareIntervalNullInput() {
 		Interval null_interval1 = null;
 		Interval null_interval2 = null;
@@ -1819,8 +1812,7 @@ public class NumberFactoryTest {
 		factory.compare(null_interval1, null_interval2);
 	}
 
-	@Ignore
-	// (expected=ArgumentMismatchException.class)
+	@Test(expected=AssertionError.class)
 	public void compareIntervalMismatchInputType() {
 		Interval rat_interval1 = factory.newInterval(false, RAT_ONE, true,
 				RAT_THREE, true);
@@ -1847,7 +1839,7 @@ public class NumberFactoryTest {
 		Interval rat_interval2 = factory.emptyRealInterval();
 		int result = factory.compare(rat_interval1, rat_interval2);
 
-		assertEquals(-3, result);
+		assertEquals(-1, result);
 	}
 
 	@Test
@@ -1858,7 +1850,7 @@ public class NumberFactoryTest {
 				INT_TWO, false);
 		int result = factory.compare(int_interval1, int_interval2);
 
-		assertEquals(-4, result);
+		assertEquals(-3, result);
 	}
 
 	@Test
@@ -1880,7 +1872,7 @@ public class NumberFactoryTest {
 				RAT_ONE, false);
 		int result = factory.compare(rat_interval1, rat_interval2);
 
-		assertEquals(4, result);
+		assertEquals(3, result);
 	}
 
 	@Test
@@ -1896,8 +1888,8 @@ public class NumberFactoryTest {
 		int result1 = factory.compare(int_interval1, int_interval2);
 		int result2 = factory.compare(rat_interval1, rat_interval2);
 
-		assertEquals(-4, result1);
-		assertEquals(-4, result2);
+		assertEquals(-3, result1);
+		assertEquals(-3, result2);
 	}
 
 	@Test
@@ -1925,12 +1917,12 @@ public class NumberFactoryTest {
 		int result5 = factory.compare(int_interval1, int_interval2b);
 		int result6 = factory.compare(rat_interval1, rat_interval2c);
 
-		assertEquals(3, result1);
-		assertEquals(-3, result2);
-		assertEquals(-3, result3);
-		assertEquals(3, result4);
-		assertEquals(-3, result5);
-		assertEquals(-3, result6);
+		assertEquals(-1, result1);
+		assertEquals(-1, result2);
+		assertEquals(-1, result3);
+		assertEquals(-1, result4);
+		assertEquals(-1, result5);
+		assertEquals(-1, result6);
 	}
 
 	@Test
@@ -1946,8 +1938,8 @@ public class NumberFactoryTest {
 		int result1 = factory.compare(int_interval1, int_interval2);
 		int result2 = factory.compare(rat_interval1, rat_interval2);
 
-		assertEquals(4, result1);
-		assertEquals(4, result2);
+		assertEquals(3, result1);
+		assertEquals(3, result2);
 	}
 
 	@Test
@@ -1963,8 +1955,8 @@ public class NumberFactoryTest {
 		int result1 = factory.compare(int_interval1, int_interval2);
 		int result2 = factory.compare(rat_interval1, rat_interval2);
 
-		assertEquals(-4, result1);
-		assertEquals(-4, result2);
+		assertEquals(-3, result1);
+		assertEquals(-3, result2);
 	}
 
 	@Test
@@ -1992,10 +1984,10 @@ public class NumberFactoryTest {
 		int result5 = factory.compare(int_interval1b, int_interval2);
 		int result6 = factory.compare(rat_interval1c, rat_interval2);
 
-		assertEquals(-1, result1);
+		assertEquals(1, result1);
 		assertEquals(1, result2);
 		assertEquals(1, result3);
-		assertEquals(-1, result4);
+		assertEquals(1, result4);
 		assertEquals(1, result5);
 		assertEquals(1, result6);
 	}
@@ -2013,8 +2005,8 @@ public class NumberFactoryTest {
 		int result1 = factory.compare(int_interval1, int_interval2);
 		int result2 = factory.compare(rat_interval1, rat_interval2);
 
-		assertEquals(4, result1);
-		assertEquals(4, result2);
+		assertEquals(3, result1);
+		assertEquals(3, result2);
 
 	}
 
@@ -2041,10 +2033,10 @@ public class NumberFactoryTest {
 		int result3 = factory.compare(rat_interval1a, rat_interval2a);
 		int result4 = factory.compare(rat_interval1b, rat_interval2b);
 
-		assertEquals(-4, result1);
-		assertEquals(-4, result2);
-		assertEquals(-4, result3);
-		assertEquals(-4, result4);
+		assertEquals(-3, result1);
+		assertEquals(-3, result2);
+		assertEquals(-3, result3);
+		assertEquals(-3, result4);
 	}
 
 	@Test
@@ -2146,16 +2138,16 @@ public class NumberFactoryTest {
 		int result9 = factory.compare(rat_interval1d, rat_interval2b);
 		int result10 = factory.compare(rat_interval1e, rat_interval2c);
 
-		assertEquals(-3, result1);
-		assertEquals(3, result2);
-		assertEquals(-3, result3);
-		assertEquals(3, result4);
-		assertEquals(-3, result5);
-		assertEquals(-3, result6);
-		assertEquals(3, result7);
-		assertEquals(-3, result8);
-		assertEquals(3, result9);
-		assertEquals(-3, result10);
+		assertEquals(-1, result1);
+		assertEquals(-1, result2);
+		assertEquals(-1, result3);
+		assertEquals(-1, result4);
+		assertEquals(-1, result5);
+		assertEquals(-1, result6);
+		assertEquals(-1, result7);
+		assertEquals(-1, result8);
+		assertEquals(-1, result9);
+		assertEquals(-1, result10);
 	}
 
 	@Test
@@ -2245,14 +2237,14 @@ public class NumberFactoryTest {
 		int result10 = factory.compare(rat_interval1c, rat_interval2e);
 
 		assertEquals(1, result1);
-		assertEquals(-1, result2);
+		assertEquals(1, result2);
 		assertEquals(1, result3);
-		assertEquals(-1, result4);
+		assertEquals(1, result4);
 		assertEquals(1, result5);
 		assertEquals(1, result6);
-		assertEquals(-1, result7);
+		assertEquals(1, result7);
 		assertEquals(1, result8);
-		assertEquals(-1, result9);
+		assertEquals(1, result9);
 		assertEquals(1, result10);
 	}
 
@@ -2333,10 +2325,10 @@ public class NumberFactoryTest {
 		int result3 = factory.compare(rat_interval1a, rat_interval2a);
 		int result4 = factory.compare(rat_interval1b, rat_interval2b);
 
-		assertEquals(4, result1);
-		assertEquals(4, result2);
-		assertEquals(4, result3);
-		assertEquals(4, result4);
+		assertEquals(3, result1);
+		assertEquals(3, result2);
+		assertEquals(3, result3);
+		assertEquals(3, result4);
 	}
 	// TODO:
 }
