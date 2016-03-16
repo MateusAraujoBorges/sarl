@@ -28,6 +28,7 @@ public class RealArithmeticReasonDevTest {
 	private NumericExpression c;
 	private NumericExpression d;
 	private SymbolicType realType;
+	private BooleanExpression trueExpr;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -112,5 +113,18 @@ public class RealArithmeticReasonDevTest {
 		
 		assertEquals(ResultType.MAYBE, result.getResultType());
 	}
+	
+	/**
+	 * Symbolic real modulus. true : (a^b)*(a^c)=a^(b+c)
+	 */
+	@Test
+	public void addExponentTest() {
+		NumericExpression e1 = universe.multiply(universe.power(a, b),
+				universe.power(a, c));
+		NumericExpression e2 = universe.power(a, universe.add(b, c));
+		Reasoner reasoner = universe.reasoner(trueExpr);
 
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+	
 }
