@@ -51,31 +51,27 @@ public class CommonInterval implements Interval {
 	// TODO: Java-doc should include pre-cond.
 	public CommonInterval(boolean isIntegral, Number lower,
 			boolean strictLower, Number upper, boolean strictUpper) {
-		if (isIntegral) {
-			assert (lower == NEG_INFINITY || lower instanceof IntegerNumber)
-					&& (upper == POS_INFINITY || upper instanceof IntegerNumber);
-			assert (lower == NEG_INFINITY && strictLower)
-					|| (lower != NEG_INFINITY && !strictLower)
-					|| lower.isZero();
-			assert (upper == POS_INFINITY && strictUpper)
-					|| (upper != POS_INFINITY && !strictUpper)
-					|| upper.isZero();
-		} else {
-			assert (lower == NEG_INFINITY || lower instanceof RationalNumber)
-					&& (upper == POS_INFINITY || upper instanceof RationalNumber);
-			assert lower != NEG_INFINITY || strictLower;
-			assert upper != POS_INFINITY || strictUpper;
-		}
-		if (lower != NEG_INFINITY && upper != POS_INFINITY) {
-			int compare = lower.numericalCompareTo(upper);
+		assert !isIntegral
+				|| ((lower == NEG_INFINITY || lower instanceof IntegerNumber) && (upper == POS_INFINITY || upper instanceof IntegerNumber));
+		assert !isIntegral || (lower == NEG_INFINITY && strictLower)
+				|| (lower != NEG_INFINITY && !strictLower) || lower.isZero();
+		assert !isIntegral || (upper == POS_INFINITY && strictUpper)
+				|| (upper != POS_INFINITY && !strictUpper) || upper.isZero();
+		assert isIntegral
+				|| ((lower == NEG_INFINITY || lower instanceof RationalNumber) && (upper == POS_INFINITY || upper instanceof RationalNumber));
+		assert isIntegral || lower != NEG_INFINITY || strictLower;
+		assert isIntegral || upper != POS_INFINITY || strictUpper;
 
-			// <a,b> with a>b is unacceptable
-			// (0,0) is fine: the unique representation of the empty set
-			// [a,a] is fine, but not (a,a), [a,a), or (a,a]
-			assert compare < 0
-					|| (compare == 0 && ((!strictLower && !strictUpper) || (lower
-							.isZero() && strictLower && strictUpper)));
-		}
+		int compare;
+
+		// <a,b> with a>b is unacceptable
+		// (0,0) is fine: the unique representation of the empty set
+		// [a,a] is fine, but not (a,a), [a,a), or (a,a]
+		assert lower == NEG_INFINITY
+				|| upper == POS_INFINITY
+				|| (compare = lower.numericalCompareTo(upper)) < 0
+				|| (compare == 0 && ((!strictLower && !strictUpper) || (lower
+						.isZero() && strictLower && strictUpper)));
 		this.isIntegral = isIntegral;
 		this.lower = lower;
 		this.strictLower = strictLower;
