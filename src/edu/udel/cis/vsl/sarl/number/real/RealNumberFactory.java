@@ -36,9 +36,24 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  */
 public class RealNumberFactory implements NumberFactory {
 
+	// Fields: TODO: Add java-doc for fields
+	/**
+	 * Static variable for a number representing the positive infinity.
+	 */
 	private static Number POS_INFINITY = null;
 
+	/**
+	 * Static variable for a number representing the negative infinity.
+	 */
 	private static Number NEG_INFINITY = null;
+
+	private static int LEFT_DISJOINTED = -3;
+	private static int RIGHT_DISJOINTED = 3;
+	private static int LEFT_INTERSECTED = -2;
+	private static int RIGHT_INTERSECTED = 2;
+	private static int CONTAINED_IN_INTERVAL1 = -1;
+	private static int CONTAINED_IN_INTERVAL2 = 1;
+	private static int EXACTLY_SAME = 0;
 
 	private Map<BigInteger, RealInteger> integerMap = new HashMap<BigInteger, RealInteger>();
 
@@ -948,6 +963,8 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	public Interval newInterval(boolean isIntegral, Number lower,
 			boolean strictLower, Number upper, boolean strictUpper) {
+		assert lower == null || (isIntegral == lower instanceof IntegerNumber);
+		assert upper == null || (isIntegral == upper instanceof IntegerNumber);
 		if (isIntegral) {
 			// Adjust the strict and bound for integral intervals
 			if (lower != null && strictLower) {
@@ -961,7 +978,7 @@ public class RealNumberFactory implements NumberFactory {
 		}
 		if (lower != null && upper != null) {
 			// Check the illegal interval arguments.
-			int compareUpperLower = upper.compareTo(lower);
+			int compareUpperLower = upper.numericalCompareTo(lower);
 
 			if ((compareUpperLower < 0)
 					|| (compareUpperLower == 0 && (strictLower || strictUpper))) {
@@ -1056,68 +1073,42 @@ public class RealNumberFactory implements NumberFactory {
 
 		assert i1.isIntegral() == i2.isIntegral();
 
-		if (i1.isEmpty()) {
+		if (i1.isEmpty() || i2.isUniversal()) {
 			// Exactly a single interval
 			result.status = 0;
 			result.union = i2;
 			return;
-		} else if (i2.isEmpty()) {
+		} else if (i2.isEmpty() || i1.isUniversal()) {
 			// Exactly a single interval
 			result.status = 0;
 			result.union = i1;
 			return;
 		} else {
-			Number lo1 = i1.lower();
 			Number lo2 = i2.lower();
 			Number up1 = i1.upper();
-			Number up2 = i2.upper();
-			boolean sl1 = i1.strictLower();
 			boolean sl2 = i2.strictLower();
 			boolean su1 = i1.strictUpper();
 			boolean su2 = i2.strictUpper();
-			Number lo = NEG_INFINITY, up = POS_INFINITY;
-			boolean sl = false, su = false;
+			int compareUp1Lo2 = (up1 == POS_INFINITY || lo2 == NEG_INFINITY) ? 1
+					: up1.numericalCompareTo(lo2);
 
-			int compareUp1Lo2 = 0;
+			if (compareUp1Lo2 > 0) {
+				Number lo1 = i1.lower();
+				Number up2 = i2.upper();
+				boolean sl1 = i1.strictLower();
+				int compareLo1Up2 = (lo1 == NEG_INFINITY || up2 == POS_INFINITY) ? -1
+						: lo1.numericalCompareTo(up2);
 
-			if (up1 == POS_INFINITY || lo2 == NEG_INFINITY) {
-				compareUp1Lo2 = 1; // up1 > lo2
-			} else {
-				compareUp1Lo2 = up1.numericalCompareTo(lo2);
-			}
-			if (compareUp1Lo2 < 0) { // up1 < lo2
-				// 1st interval less than 2nd one
-				result.status = -1;
-			} else if (compareUp1Lo2 == 0) { // up1 = lo2
-				if (!su1 || !sl2) {
-					// Combined into one interval
-					lo = lo1;
-					up = up2;
-					sl = sl1;
-					su = su2;
-					result.status = 0;
-				} else {
-					// Disjoint
-					result.status = -1;
-				}
-			} else { // up1 > lo2
-				int compareLo1Up2 = 0;
-
-				if (lo1 == null || up2 == null) {
-					compareLo1Up2 = -1;
-				} else {
-					compareLo1Up2 = lo1.numericalCompareTo(up2);
-				}
-				if (compareLo1Up2 < 0) { // lo1<up2
-					int compareLo1Lo2 = 0;
-
-					if (lo1 == null) {
-						compareLo1Lo2 = -1;
-					} else if (lo2 == null) {
-						compareLo1Lo2 = 1;
-					} else {
-						compareLo1Lo2 = lo1.numericalCompareTo(lo2);
-					}
+				if (compareLo1Up2 < 0) {
+					// Intersected
+					Number lo = NEG_INFINITY, up = POS_INFINITY;
+					boolean sl = false, su = false;
+					int compareLo1Lo2 = lo1 == NEG_INFINITY ? -1
+							: lo2 == NEG_INFINITY ? 1 : lo1
+									.numericalCompareTo(lo2);
+					int compareUp1Up2 = up1 == POS_INFINITY ? 1
+							: up2 == POS_INFINITY ? -1 : up1
+									.numericalCompareTo(up2);
 
 					if (compareLo1Lo2 < 0) { // lo1<lo2
 						lo = lo1;
@@ -1128,16 +1119,6 @@ public class RealNumberFactory implements NumberFactory {
 					} else {
 						lo = lo2;
 						sl = sl2;
-					}
-
-					int compareUp1Up2 = 0;
-
-					if (up1 == null) {
-						compareUp1Up2 = 1;
-					} else if (up2 == null) {
-						compareUp1Up2 = -1;
-					} else {
-						compareUp1Up2 = up1.numericalCompareTo(up2);
 					}
 					if (compareUp1Up2 < 0) {
 						up = up2;
@@ -1150,25 +1131,36 @@ public class RealNumberFactory implements NumberFactory {
 						su = su1;
 					}
 					result.status = 0;
-				} else if (compareLo1Up2 == 0) { // lo1=up2
-					if (!sl1 || !su2) {
-						lo = lo2;
-						up = up1;
-						sl = sl2;
-						su = su1;
-						result.status = 0;
-					} else {
-						result.status = 1;
-					}
-				} else { // lo1>up2
+					result.union = new CommonInterval(isIntegral, lo, sl, up,
+							su);
+					return;
+				} else if (compareLo1Up2 == 0 && (!sl1 || !su2)) {
+					// Connected
+					result.status = 0;
+					result.union = new CommonInterval(isIntegral, lo2, sl2,
+							up1, su1);
+					return;
+				} else {
+					// Disjoint
 					result.status = 1;
+					result.union = null;
+					return;
 				}
-			}
+			} else if (compareUp1Lo2 == 0 && (!su1 || !su2)) {
+				// Connected
+				Number lo1 = i1.lower();
+				Number up2 = i2.upper();
+				boolean sl1 = i1.strictLower();
 
-			if (result.status != 0) {
-				result.union = null;
+				result.status = 0;
+				result.union = new CommonInterval(isIntegral, lo1, sl1, up2,
+						su2);
+				return;
 			} else {
-				result.union = new CommonInterval(isIntegral, lo, sl, up, su);
+				// Disjoint
+				result.status = -1;
+				result.union = null;
+				return;
 			}
 		}
 	}
@@ -1177,14 +1169,13 @@ public class RealNumberFactory implements NumberFactory {
 	public Interval affineTransform(Interval itv, Number a, Number b) {
 		assert itv != null && a != null && b != null;
 
-		boolean isInt = itv.isIntegral();
+		boolean isIntegral = itv.isIntegral();
 
-		assert isInt == a instanceof IntegerNumber;
-		assert isInt == b instanceof IntegerNumber;
+		assert isIntegral == a instanceof IntegerNumber;
+		assert isIntegral == b instanceof IntegerNumber;
 
-		if (itv.isEmpty()) {
-			return isInt ? emptyIntegerInterval : emptyRationalInterval;
-		}
+		if (itv.isEmpty())
+			return isIntegral ? emptyIntegerInterval : emptyRationalInterval;
 
 		Number lo = itv.lower();
 		Number up = itv.upper();
@@ -1194,33 +1185,23 @@ public class RealNumberFactory implements NumberFactory {
 		// New upper and lower of result.union.
 		lo = lo == null ? null : add(multiply(lo, a), b);
 		up = up == null ? null : add(multiply(up, a), b);
-		if (a.signum() < 0) {
-			Number tempNum = lo;
-			boolean tempS = sl;
-
-			lo = up;
-			sl = su;
-			up = tempNum;
-			su = tempS;
-		} else if (a.signum() == 0) {
-			lo = b;
-			up = b;
-			sl = false;
-			su = false;
-		}
-		return new CommonInterval(isInt, lo, sl, up, su);
+		if (a.signum() < 0)
+			return new CommonInterval(isIntegral, up, su, lo, sl);
+		else if (a.signum() == 0)
+			return new CommonInterval(isIntegral, b, false, b, false);
+		else
+			return new CommonInterval(isIntegral, lo, sl, up, su);
 	}
 
 	@Override
 	public int compare(Interval i1, Interval i2) {
 		assert i1 != null && i2 != null;
-		assert i1.isIntegral() == i2.isIntegral();
 
-		int disjoint = 4;
-		int contains2 = 3; // i1 contains i2
-		int intersectNC = 2; // No contain
-		int contains1 = 1; // i2 contains i1
-		int exactlySame = 0;
+		boolean isIntegral = i1.isIntegral();
+
+		assert isIntegral == i2.isIntegral();
+
+		// int contains1 = 1; // i2 contains i1
 		int cmpL1L2 = 0, cmpL1U2 = 0;
 		int cmpU1L2 = 0, cmpU1U2 = 0;
 		Number lo1 = i1.lower(), lo2 = i2.lower();
@@ -1229,13 +1210,11 @@ public class RealNumberFactory implements NumberFactory {
 		boolean su1 = i1.strictUpper(), su2 = i2.strictUpper();
 
 		if (i1.isEmpty() && i2.isEmpty()) {
-			return exactlySame;
+			return EXACTLY_SAME;
 		} else if (i1.isEmpty()) {
-			// i1 is Empty
-			return contains1;
+			return CONTAINED_IN_INTERVAL2;
 		} else if (i2.isEmpty()) {
-			// i2 is Empty
-			return -contains2;
+			return CONTAINED_IN_INTERVAL1;
 		}
 
 		if (lo1 == null && lo2 == null) {
@@ -1260,23 +1239,18 @@ public class RealNumberFactory implements NumberFactory {
 			if (cmpU1U2 < 0) {
 				cmpU1L2 = compare(up1, lo2);
 				if (cmpU1L2 < 0) {
-					// Left Disjoint
-					return -disjoint;
+					return LEFT_DISJOINTED;
 				} else if (cmpU1L2 > 0) {
-					// Left Intersect No Contain
-					return -intersectNC;
+					return LEFT_INTERSECTED;
 				} else {
 					if (!su1 && !sl2) {
-						// Left Intersect No Contain
-						return -intersectNC;
+						return LEFT_INTERSECTED;
 					} else {
-						// Left Disjoint
-						return -disjoint;
+						return LEFT_DISJOINTED;
 					}
 				}
 			} else if (cmpU1U2 > 0) {
-				// Left Intersect i1 contains i2
-				return -contains2;
+				return CONTAINED_IN_INTERVAL1;
 			} else {
 				if (up1 == null || lo2 == null) {
 					cmpU1L2 = 1;
@@ -1284,35 +1258,27 @@ public class RealNumberFactory implements NumberFactory {
 					cmpU1L2 = compare(up1, lo2);
 				}
 				if (su1 && cmpU1L2 == 0) {
-					// Left Disjoint
-					return -disjoint;
+					return LEFT_DISJOINTED;
 				} else if (su1 && !su2 && cmpU1L2 > 0) {
-					// Left Intersect No Contain
-					return -intersectNC;
+					return LEFT_INTERSECTED;
 				} else {
-					// Left Intersect i1 contains i2
-					return -contains2;
+					return CONTAINED_IN_INTERVAL1;
 				}
 			}
 		} else if (cmpL1L2 > 0) {
 			if (cmpU1U2 < 0) {
-				// Right Intersect i2 contains i1
-				return contains1;
+				return CONTAINED_IN_INTERVAL2;
 			} else if (cmpU1U2 > 0) {
 				cmpL1U2 = compare(lo1, up2);
 				if (cmpL1U2 < 0) {
-					// Right Intersect No Contain
-					return intersectNC;
+					return RIGHT_INTERSECTED;
 				} else if (cmpL1U2 > 0) {
-					// Right Disjoint
-					return disjoint;
+					return RIGHT_DISJOINTED;
 				} else {
 					if (!sl1 && !su2) {
-						// Right Intersect No Contain
-						return intersectNC;
+						return RIGHT_INTERSECTED;
 					} else {
-						// Right Disjoint
-						return disjoint;
+						return RIGHT_DISJOINTED;
 					}
 				}
 			} else {
@@ -1322,14 +1288,11 @@ public class RealNumberFactory implements NumberFactory {
 					cmpL1U2 = compare(lo1, up2);
 				}
 				if (su2 && cmpL1U2 == 0) {
-					// Right Disjoint
-					return disjoint;
+					return RIGHT_DISJOINTED;
 				} else if (!su1 && su2 && cmpL1U2 < 0) {
-					// Right Intersection No contain
-					return intersectNC;
+					return RIGHT_INTERSECTED;
 				} else {
-					// Right Intersection i2 contains i1
-					return contains1;
+					return CONTAINED_IN_INTERVAL2;
 				}
 			}
 		} else {
@@ -1341,19 +1304,15 @@ public class RealNumberFactory implements NumberFactory {
 				}
 				if (cmpU1L2 == 0) {
 					if (sl2) {
-						// Left Disjoint
-						return -disjoint;
+						return LEFT_DISJOINTED;
 					} else {
-						// Left Intersect i2 contains i1
-						return -contains1;
+						return CONTAINED_IN_INTERVAL2;
 					}
 				} else if (cmpU1L2 > 0) {
 					if (!sl1 && sl2) {
-						// Left Intersect No contain
-						return -intersectNC;
+						return LEFT_INTERSECTED;
 					} else {
-						// Left Intersect i2 contains i1
-						return -contains1;
+						return CONTAINED_IN_INTERVAL2;
 					}
 				}
 			} else if (cmpU1U2 > 0) {
@@ -1364,51 +1323,40 @@ public class RealNumberFactory implements NumberFactory {
 				}
 				if (cmpL1U2 == 0) {
 					if (sl1) {
-						// Right Disjoint
-						return disjoint;
+						return RIGHT_DISJOINTED;
 					} else {
-						// Right Intersect i1 contains i2
-						return contains2;
+						return CONTAINED_IN_INTERVAL1;
 					}
 				} else if (cmpL1U2 < 0) {
 					if (sl1 && !sl2) {
-						// Right Intersect No contain
-						return intersectNC;
+						return RIGHT_INTERSECTED;
 					} else {
-						// Right Intersect i1 contains i2
-						return contains2;
+						return CONTAINED_IN_INTERVAL1;
 					}
 				}
 			} else {
 				if (sl1 && !sl2) {
 					if (!su1 && su2) {
-						// Right Intersect No Contain
-						return intersectNC;
+						return RIGHT_INTERSECTED;
 					} else {
-						// Right Intersect i2 contains i1
-						return contains1;
+						return CONTAINED_IN_INTERVAL2;
 					}
 				} else if (!sl1 && sl2) {
 					if (su1 && !su2) {
-						// Left Intersect No contain
-						return -intersectNC;
+						return LEFT_INTERSECTED;
 					} else {
-						// Left Intersect i1 contains i2
-						return -contains2;
+						return CONTAINED_IN_INTERVAL1;
 					}
 				} else {
 					if (su1 && !su2) {
-						// Left Intersect i2 contains i1
-						return -contains1;
+						return CONTAINED_IN_INTERVAL2;
 					} else if (!su1 && su2) {
-						// Right Intersect i1 contains i2
-						return contains2;
+						return CONTAINED_IN_INTERVAL1;
 					} // else Exactly Same
 				}
 			}
 		}
-		// Exactly Same
-		return exactlySame;
+		return EXACTLY_SAME;
 	}
 
 	@Override
