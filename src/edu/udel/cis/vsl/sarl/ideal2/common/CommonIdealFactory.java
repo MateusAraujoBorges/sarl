@@ -73,7 +73,7 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  */
 public class CommonIdealFactory implements Ideal2Factory {
 
-	public final static boolean debug = true;
+	public final static boolean debug = false;
 
 	/**
 	 * Threshold after which polynomial term maps are not computed.
