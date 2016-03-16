@@ -27,7 +27,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
-import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
@@ -153,15 +152,4 @@ public class UnionTest {
 
 	}
 
-	@Test
-	public void castInject() {
-		NumericExpression x = universe.rational(5, 6);
-		SymbolicExpression u_x = universe.unionInject(union1,
-				universe.intObject(1), x);
-		SymbolicExpression cast_x = universe.cast(union1, x);
-
-		assertEquals(union1, u_x.type());
-		assertEquals(union1, cast_x.type());
-		assertEquals(u_x, cast_x);
-	}
 }

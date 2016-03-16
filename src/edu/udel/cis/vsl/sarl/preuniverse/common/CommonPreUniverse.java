@@ -99,8 +99,8 @@ public class CommonPreUniverse implements PreUniverse {
 	 * Factory for producing general symbolic expressions.
 	 */
 	private ExpressionFactory expressionFactory;
-	
-	//private Comparator<>
+
+	// private Comparator<>
 
 	/**
 	 * Factory for producing and manipulating boolean expressions.
@@ -204,7 +204,7 @@ public class CommonPreUniverse implements PreUniverse {
 		numericFactory = expressionFactory.numericFactory();
 		numberFactory = numericFactory.numberFactory();
 		objectComparator = objectFactory.comparator();
-		//expressionFactory.
+		// expressionFactory.
 		booleanType = typeFactory.booleanType();
 		integerType = typeFactory.integerType();
 		realType = typeFactory.realType();
@@ -2224,19 +2224,23 @@ public class CommonPreUniverse implements PreUniverse {
 		if (oldType.isNumeric() && newType.isNumeric()) {
 			return numericFactory.cast((NumericExpression) expression, newType);
 		}
-		if (oldType.typeKind() == SymbolicTypeKind.UNION) {
-			Integer index = ((SymbolicUnionType) oldType).indexOfType(newType);
+		// if (oldType.typeKind() == SymbolicTypeKind.UNION) {
+		// Integer index = ((SymbolicUnionType) oldType).indexOfType(newType);
+		//
+		// if (index != null)
+		// return unionExtract(intObject(index), expression);
+		// }
+		// Making casts to union type illegal because in C you need to
+		// have member types that can occur with multiplicity > 1
+		// in a union.
 
-			if (index != null)
-				return unionExtract(intObject(index), expression);
-		}
-		if (newType.typeKind() == SymbolicTypeKind.UNION) {
-			Integer index = ((SymbolicUnionType) newType).indexOfType(oldType);
-
-			if (index != null)
-				return unionInject((SymbolicUnionType) newType,
-						intObject(index), expression);
-		}
+		// if (newType.typeKind() == SymbolicTypeKind.UNION) {
+		// Integer index = ((SymbolicUnionType) newType).indexOfType(oldType);
+		//
+		// if (index != null)
+		// return unionInject((SymbolicUnionType) newType,
+		// intObject(index), expression);
+		// }
 		throw err("Cannot cast from type " + oldType + " to type " + newType
 				+ ": " + expression);
 	}

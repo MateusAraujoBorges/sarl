@@ -44,15 +44,16 @@ public interface SymbolicUnionType extends SymbolicType {
 	 */
 	StringObject name();
 
-	/**
-	 * If this type exists in the sequence of types comprising this union, this
-	 * method will find the index of that type and return it; otherwise it
-	 * returns null.
-	 * 
-	 * @param type
-	 *            a symbolic type
-	 * @return index of this type in the type sequence or null
-	 */
-	Integer indexOfType(SymbolicType type);
+	// /**
+	// * If this type exists in the sequence of types comprising this union,
+	// this
+	// * method will find the index of that type and return it; otherwise it
+	// * returns null.
+	// *
+	// * @param type
+	// * a symbolic type
+	// * @return index of this type in the type sequence or null
+	// */
+	// Integer indexOfType(SymbolicType type);
 
 }
