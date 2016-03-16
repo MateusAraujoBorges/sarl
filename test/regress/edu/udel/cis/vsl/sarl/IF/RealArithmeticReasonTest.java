@@ -35,6 +35,7 @@ public class RealArithmeticReasonTest {
 	@Before
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
+		universe.setShowProverQueries(true);
 		realType = universe.realType();
 		one = universe.rational(1);
 		two = universe.rational(2);
@@ -98,27 +99,6 @@ public class RealArithmeticReasonTest {
 		
 		assertTrue(universe.reasoner(t).isValid(eq));
 	}
-
-
-	/**
-	 * 
-	 * a = (b+1)*(b+1) &&
-	 * c = b+1
-	 * ===>
-	 * a = c^2
-	 */
-	@Test
-	public void RealArithmeticReason2() {
-		NumericExpression bPlusOne = universe.add(b, one);
-		NumericExpression bPlusOneSqure = universe.multiply(bPlusOne, bPlusOne);
-		NumericExpression c2 = universe.multiply(c, c);
-		Reasoner r = universe.reasoner(universe.and(universe.equals(c, bPlusOne), universe.equals(a, bPlusOneSqure)));
-		BooleanExpression eq = universe.equals(a, c2);
-		ValidityResult result = r.valid(eq);
-		
-		assertEquals(ResultType.YES, result.getResultType());
-	}
-	
 	
 	/**
 	 * a >= b
