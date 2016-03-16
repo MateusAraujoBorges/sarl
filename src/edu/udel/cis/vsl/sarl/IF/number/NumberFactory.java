@@ -477,23 +477,34 @@ public interface NumberFactory {
 	Interval affineTransform(Interval interval, Number a, Number b);
 
 	/**
-	 * Computes the relationships of two {@link Interval}s.
-	 * 
-	 * It returns a negative integer iff <code>i1</code> is on the left side of
-	 * <code>i2</code>, a positive integer iff <code>i1</code> is on the right
-	 * side of <code>i2</code>, or 0 iff they are exactly same.
-	 * 
-	 * Moreover, the absolute value of the result would show the detailed
-	 * relationship: The value is 1 iff <code>i2</code> contains <code>i1</code>
-	 * , 2 iff they have intersection but no contain, 3 iff <code>i1</code>
-	 * contains <code>i2</code>, or 4 iff they are disjointed (-3 iff
-	 * <code>i2</code> is empty, 1 iff <code>i1</code> is empty).
+	 * Computes the relationships of two {@link Interval}s. <br>
+	 * <li>
+	 * Return -3, if the first {@link Interval} is on the <strong>left</strong>
+	 * side and <strong>disjointed</strong> with the second {@link Interval}</li>
+	 * <li>
+	 * Return -2, if the first {@link Interval} is on the <strong>left</strong>
+	 * side and <strong>intersected</strong> with the second {@link Interval}</li>
+	 * <li>
+	 * Return -1, if the first {@link Interval} <strong>contains</strong> the
+	 * second {@link Interval}</li> <li>
+	 * Return 0, if the first {@link Interval} is exactly <strong>same</strong>
+	 * with the second {@link Interval}</li> <li>
+	 * Return 1, if the first {@link Interval} <strong>is contained in</strong>
+	 * the second {@link Interval}</li> <li>
+	 * Return 2, if the first {@link Interval} is on the <strong>right</strong>
+	 * side and <strong>intersected</strong> with the second {@link Interval}</li>
+	 * <li>
+	 * Return 3, if the first {@link Interval} is on the <strong>right</strong>
+	 * side and <strong>disjointed</strong> with the second {@link Interval}</li>
+	 * </br>
 	 * 
 	 * @param i1
 	 *            a non-<code>null</code> {@link Interval}
 	 * @param i2
 	 *            a non-<code>null</code> {@link Interval} of same type as
 	 *            <code>i1</code>
+	 * @return an integer representing the relationship of two given
+	 *         {@link Interval}, the value is defined above.
 	 */
 	int compare(Interval i1, Interval i2);
 
