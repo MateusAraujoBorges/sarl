@@ -25,8 +25,6 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * Implementation of {@link SymbolicUnionType}
- * 
- * 
  */
 public class CommonSymbolicUnionType extends CommonSymbolicType
 		implements SymbolicUnionType {
@@ -43,9 +41,6 @@ public class CommonSymbolicUnionType extends CommonSymbolicType
 	 */
 	private StringObject name;
 
-	// private Map<SymbolicType, Integer> indexMap = new
-	// LinkedHashMap<SymbolicType, Integer>();
-
 	/**
 	 * holds the pureType of this unionType
 	 */
@@ -60,19 +55,6 @@ public class CommonSymbolicUnionType extends CommonSymbolicType
 	CommonSymbolicUnionType(StringObject name, SymbolicTypeSequence sequence) {
 		super(SymbolicTypeKind.UNION);
 		assert sequence != null;
-
-		// int n = sequence.numTypes();
-
-		// for (int i = 0; i < n; i++) {
-		// SymbolicType type1 = sequence.getType(i);
-		// Integer index = indexMap.get(type1);
-
-		// if (index != null)
-		// throw new IllegalArgumentException("Component of union type "
-		// + name + " occurred twice, at positions " + index
-		// + " and " + i + ": " + type1);
-		// indexMap.put(type1, i);
-		// }
 		assert name != null;
 		this.name = name;
 		this.sequence = sequence;
@@ -120,11 +102,6 @@ public class CommonSymbolicUnionType extends CommonSymbolicType
 		if (pureType != null && !pureType.isCanonic())
 			pureType = factory.canonic(pureType);
 	}
-
-	// @Override
-	// public Integer indexOfType(SymbolicType type) {
-	// return indexMap.get(type);
-	// }
 
 	/**
 	 * @return the pureType of this unionType You have to set the pureType first

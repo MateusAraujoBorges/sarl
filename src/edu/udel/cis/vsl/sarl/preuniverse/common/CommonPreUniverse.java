@@ -782,11 +782,7 @@ public class CommonPreUniverse implements PreUniverse {
 
 		switch (operator) {
 		case ADD: // 1 or 2 args
-			if (numArgs == 1) // collection
-				return add((Iterable<? extends NumericExpression>) args[0]);
-			else
-				return add((NumericExpression) args[0],
-						(NumericExpression) args[1]);
+			return add(type, args);
 		case AND: // 1 or 2 args
 			if (numArgs == 1) // collection
 				return and((Iterable<? extends BooleanExpression>) args[0]);
@@ -851,12 +847,7 @@ public class CommonPreUniverse implements PreUniverse {
 			return modulo((NumericExpression) args[0],
 					(NumericExpression) args[1]);
 		case MULTIPLY:
-			if (numArgs == 1) // collection
-				return multiply(
-						(Iterable<? extends NumericExpression>) args[0]);
-			else
-				return multiply((NumericExpression) args[0],
-						(NumericExpression) args[1]);
+			return multiply(type, args);
 		case NEGATIVE:
 			return minus((NumericExpression) args[0]);
 		case NEQ:
@@ -929,6 +920,35 @@ public class CommonPreUniverse implements PreUniverse {
 
 			while (iter.hasNext()) {
 				NumericExpression next = iter.next();
+
+				result = add(result, next);
+			}
+			return result;
+		}
+	}
+
+	/**
+	 * Adds a sequence of elements by applying binary addition (@link
+	 * {@link #add(NumericExpression, NumericExpression)}) from left to right.
+	 * 
+	 * @param type
+	 *            the type of the arguments and result
+	 * @param args
+	 *            array whose elements are all non-<code>null</code> instances
+	 *            of {@link NumericExpression}
+	 * @return the sum of the elements of <code>args</code>
+	 */
+	private NumericExpression add(SymbolicType type, SymbolicObject[] args) {
+		int n = args.length;
+
+		if (n == 0)
+			return type.isInteger() ? numericFactory.zeroInt()
+					: numericFactory.zeroReal();
+		else {
+			NumericExpression result = (NumericExpression) args[0];
+
+			for (int i = 1; i < n; i++) {
+				NumericExpression next = (NumericExpression) args[i];
 
 				result = add(result, next);
 			}
@@ -1234,6 +1254,37 @@ public class CommonPreUniverse implements PreUniverse {
 			NumericExpression arg1) {
 		checkSameType(arg0, arg1, "Arguments to multiply had different types");
 		return numericFactory.multiply(arg0, arg1);
+	}
+
+	/**
+	 * Multiplies a sequence of elements by applying binary multiplication
+	 * (@link {@link #multiply(NumericExpression, NumericExpression)}) from left
+	 * to right.
+	 * 
+	 * @param type
+	 *            the type of the arguments and the result
+	 * @param args
+	 *            array whose elements are all non-<code>null</code> instances
+	 *            of {@link NumericExpression}
+	 * @return the product of the elements of <code>args</code>
+	 */
+	private NumericExpression multiply(SymbolicType type,
+			SymbolicObject[] args) {
+		int n = args.length;
+
+		if (n == 0)
+			return type.isInteger() ? numericFactory.oneInt()
+					: numericFactory.oneReal();
+		else {
+			NumericExpression result = (NumericExpression) args[0];
+
+			for (int i = 1; i < n; i++) {
+				NumericExpression next = (NumericExpression) args[i];
+
+				result = multiply(result, next);
+			}
+			return result;
+		}
 	}
 
 	@Override
@@ -2224,23 +2275,6 @@ public class CommonPreUniverse implements PreUniverse {
 		if (oldType.isNumeric() && newType.isNumeric()) {
 			return numericFactory.cast((NumericExpression) expression, newType);
 		}
-		// if (oldType.typeKind() == SymbolicTypeKind.UNION) {
-		// Integer index = ((SymbolicUnionType) oldType).indexOfType(newType);
-		//
-		// if (index != null)
-		// return unionExtract(intObject(index), expression);
-		// }
-		// Making casts to union type illegal because in C you need to
-		// have member types that can occur with multiplicity > 1
-		// in a union.
-
-		// if (newType.typeKind() == SymbolicTypeKind.UNION) {
-		// Integer index = ((SymbolicUnionType) newType).indexOfType(oldType);
-		//
-		// if (index != null)
-		// return unionInject((SymbolicUnionType) newType,
-		// intObject(index), expression);
-		// }
 		throw err("Cannot cast from type " + oldType + " to type " + newType
 				+ ": " + expression);
 	}
