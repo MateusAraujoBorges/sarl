@@ -100,8 +100,6 @@ public class CommonPreUniverse implements PreUniverse {
 	 */
 	private ExpressionFactory expressionFactory;
 
-	// private Comparator<>
-
 	/**
 	 * Factory for producing and manipulating boolean expressions.
 	 */

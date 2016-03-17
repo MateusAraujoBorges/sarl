@@ -24,7 +24,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
- * Implementation of {@link SymbolicUnionType}
+ * Implementation of {@link SymbolicUnionType}.
  */
 public class CommonSymbolicUnionType extends CommonSymbolicType
 		implements SymbolicUnionType {
