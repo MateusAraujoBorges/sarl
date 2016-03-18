@@ -30,6 +30,7 @@ import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.object.common.CommonSymbolicObject;
+import edu.udel.cis.vsl.sarl.util.ArrayIterable;
 
 /**
  * Implementation of {@link SymbolicExpression} in which every argument belongs
@@ -90,6 +91,11 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	 */
 	public T[] arguments() {
 		return arguments;
+	}
+
+	@Override
+	public Iterable<T> getArguments() {
+		return new ArrayIterable<T>(arguments);
 	}
 
 	/**
@@ -236,33 +242,33 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		buffer.append(arg1.toStringBuffer(atomizeArgs));
 	}
 
-	/**
-	 * Computes string representation of a binary operator expression that may
-	 * take either one argument (a list of expressions) or two arguments.
-	 * 
-	 * @param buffer
-	 *            string buffer to which computed result should be appended
-	 * @param opString
-	 *            the string representation of the operator, e.g. "+"
-	 * @param atomizeArgs
-	 *            should each argument be atomized (surrounded by parens if
-	 *            necessary)?
-	 * @param atomizeResult
-	 *            should the final result be atomized?
-	 */
-	private void processFlexibleBinary(StringBuffer buffer, String opString,
-			boolean atomizeArgs, boolean atomizeResult) {
-		if (arguments.length == 1)
-			accumulate(buffer, opString, (SymbolicCollection<?>) arguments[0],
-					atomizeArgs);
-		else
-			processBinary(buffer, opString, arguments[0], arguments[1],
-					atomizeArgs);
-		if (atomizeResult) {
-			buffer.insert(0, '(');
-			buffer.append(')');
-		}
-	}
+	// /**
+	// * Computes string representation of a binary operator expression that may
+	// * take either one argument (a list of expressions) or two arguments.
+	// *
+	// * @param buffer
+	// * string buffer to which computed result should be appended
+	// * @param opString
+	// * the string representation of the operator, e.g. "+"
+	// * @param atomizeArgs
+	// * should each argument be atomized (surrounded by parens if
+	// * necessary)?
+	// * @param atomizeResult
+	// * should the final result be atomized?
+	// */
+	// private void processFlexibleBinary(StringBuffer buffer, String opString,
+	// boolean atomizeArgs, boolean atomizeResult) {
+	// if (arguments.length == 1)
+	// accumulate(buffer, opString, (SymbolicCollection<?>) arguments[0],
+	// atomizeArgs);
+	// else
+	// processBinary(buffer, opString, arguments[0], arguments[1],
+	// atomizeArgs);
+	// if (atomizeResult) {
+	// buffer.insert(0, '(');
+	// buffer.append(')');
+	// }
+	// }
 
 	private void processSum(StringBuffer buffer, boolean atomizeResult) {
 		int n = arguments.length;
@@ -316,6 +322,56 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		}
 	}
 
+	private void processAnd(StringBuffer buffer, boolean atomizeResult) {
+		int n = arguments.length;
+
+		assert n > 0;
+		if (n == 1) {
+			buffer.append(arguments[0].toStringBuffer(atomizeResult));
+		} else {
+			for (int i = 0; i < n; i++) {
+				T arg = arguments[i];
+				boolean atomizeArg = arg instanceof SymbolicExpression
+						&& ((SymbolicExpression) arg)
+								.operator() == SymbolicOperator.OR;
+				StringBuffer argString = arg.toStringBuffer(atomizeArg);
+
+				if (i > 0)
+					buffer.append(" && ");
+				buffer.append(argString);
+			}
+			if (atomizeResult) {
+				buffer.insert(0, '(');
+				buffer.append(')');
+			}
+		}
+	}
+
+	private void processOr(StringBuffer buffer, boolean atomizeResult) {
+		int n = arguments.length;
+
+		assert n > 0;
+		if (n == 1) {
+			buffer.append(arguments[0].toStringBuffer(atomizeResult));
+		} else {
+			for (int i = 0; i < n; i++) {
+				T arg = arguments[i];
+				boolean atomizeArg = arg instanceof SymbolicExpression
+						&& ((SymbolicExpression) arg)
+								.operator() == SymbolicOperator.AND;
+				StringBuffer argString = arg.toStringBuffer(atomizeArg);
+
+				if (i > 0)
+					buffer.append(" || ");
+				buffer.append(argString);
+			}
+			if (atomizeResult) {
+				buffer.insert(0, '(');
+				buffer.append(')');
+			}
+		}
+	}
+
 	@Override
 	public StringBuffer toStringBuffer(boolean atomize) {
 		if (debug)
@@ -341,7 +397,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			processSum(result, atomize);
 			return result;
 		case AND:
-			processFlexibleBinary(result, " && ", true, atomize);
+			processAnd(result, atomize);
 			return result;
 		case APPLY: {
 			result.append(arguments[0].toStringBuffer(true));
@@ -558,9 +614,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			result.append("NULL");
 			return result;
 		case OR:
-			processFlexibleBinary(result, " || ", false, atomize);
-			// if (atomize)
-			// atomize(result);
+			processOr(result, atomize);
 			return result;
 		case POWER:
 			result.append(arguments[0].toStringBuffer(true));

@@ -1,6 +1,5 @@
 package edu.udel.cis.vsl.sarl.simplify.common;
 
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,8 +11,6 @@ import java.util.Set;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.ContextPartition;
 
@@ -49,53 +46,57 @@ public class CommonContextPartition implements ContextPartition {
 	 */
 	private Map<SymbolicExpression, BooleanExpression> minimalContextMap = new HashMap<>();
 
-	/**
-	 * Given a boolean-valued symbolic expression <code>boolExpr</code>, returns
-	 * a sequence of boolean expressions whose conjunction is equivalent to
-	 * <code>boolExpr</code>. The decomposition should be highly non-trivial in
-	 * general, and this method should be efficient.
-	 * 
-	 * @param boolExpr
-	 *            a boolean symbolic expression (non-<code>null</code>)
-	 * @return sequence of symbolic expressions whose conjunction is equivalent
-	 *         to <code>boolExpr</code>
-	 */
-	private static BooleanExpression[] getClauses(BooleanExpression boolExpr) {
-		SymbolicOperator operator = boolExpr.operator();
-
-		if (operator == SymbolicOperator.AND) {
-			int numChildren = boolExpr.numArguments();
-			BooleanExpression[] clauses;
-
-			if (numChildren == 1) {
-				SymbolicCollection<?> collection = (SymbolicCollection<?>) boolExpr
-						.argument(0);
-				int count = 0;
-
-				clauses = new BooleanExpression[collection.size()];
-				for (SymbolicExpression expr : collection) {
-					clauses[count] = (BooleanExpression) expr;
-					count++;
-				}
-			} else if (numChildren == 2) {
-				ArrayList<BooleanExpression> clauseList = new ArrayList<>();
-
-				for (int i = 0; i < 2; i++) {
-					for (BooleanExpression b : getClauses((BooleanExpression) boolExpr
-							.argument(i))) {
-						clauseList.add(b);
-					}
-				}
-				clauses = new BooleanExpression[clauseList.size()];
-				clauseList.toArray(clauses);
-			} else {
-				throw new RuntimeException("unreachable");
-			}
-			return clauses;
-		} else {
-			return new BooleanExpression[] { boolExpr };
-		}
-	}
+	// /**
+	// * Given a boolean-valued symbolic expression <code>boolExpr</code>,
+	// returns
+	// * a sequence of boolean expressions whose conjunction is equivalent to
+	// * <code>boolExpr</code>. The decomposition should be highly non-trivial
+	// in
+	// * general, and this method should be efficient.
+	// *
+	// * @param boolExpr
+	// * a boolean symbolic expression (non-<code>null</code>)
+	// * @return sequence of symbolic expressions whose conjunction is
+	// equivalent
+	// * to <code>boolExpr</code>
+	// */
+	// private static BooleanExpression[] getClauses(BooleanExpression boolExpr)
+	// {
+	// SymbolicOperator operator = boolExpr.operator();
+	//
+	// if (operator == SymbolicOperator.AND) {
+	// int numChildren = boolExpr.numArguments();
+	// BooleanExpression[] clauses;
+	//
+	// if (numChildren == 1) {
+	// SymbolicCollection<?> collection = (SymbolicCollection<?>) boolExpr
+	// .argument(0);
+	// int count = 0;
+	//
+	// clauses = new BooleanExpression[collection.size()];
+	// for (SymbolicExpression expr : collection) {
+	// clauses[count] = (BooleanExpression) expr;
+	// count++;
+	// }
+	// } else if (numChildren == 2) {
+	// ArrayList<BooleanExpression> clauseList = new ArrayList<>();
+	//
+	// for (int i = 0; i < 2; i++) {
+	// for (BooleanExpression b : getClauses((BooleanExpression) boolExpr
+	// .argument(i))) {
+	// clauseList.add(b);
+	// }
+	// }
+	// clauses = new BooleanExpression[clauseList.size()];
+	// clauseList.toArray(clauses);
+	// } else {
+	// throw new RuntimeException("unreachable");
+	// }
+	// return clauses;
+	// } else {
+	// return new BooleanExpression[] { boolExpr };
+	// }
+	// }
 
 	/**
 	 * A class to use for temporary storage of data while the partition of the
@@ -150,7 +151,7 @@ public class CommonContextPartition implements ContextPartition {
 	 */
 	public CommonContextPartition(BooleanExpression context,
 			PreUniverse universe) {
-		BooleanExpression[] clauses = getClauses(context);
+		BooleanExpression[] clauses = context.getClauses();
 		int numClauses = clauses.length;
 		Map<SymbolicConstant, Partition> pMap = new HashMap<>();
 		int numClasses = 0;
@@ -260,10 +261,10 @@ public class CommonContextPartition implements ContextPartition {
 		if (result == null) {
 			Set<SymbolicConstant> vars = universe
 					.getFreeSymbolicConstants(expr);
-			
-			// TODO: also need free symbolic constants occurring in the 
-			// expr.type()????     the method above should do that.
-			
+
+			// TODO: also need free symbolic constants occurring in the
+			// expr.type()???? the method above should do that.
+
 			Set<Integer> resultClasses = new HashSet<>();
 
 			for (SymbolicConstant var : vars) {

@@ -132,11 +132,11 @@ public class CnfFactoryTest {
 		BooleanExpression foralltruechk = bef.exists(b, testingfalse);
 		BooleanExpression EXISTS = bef
 				.booleanExpression(SymbolicOperator.EXISTS, foralltruechk);
-		CnfExpression cnf2 = (CnfExpression) EXISTS;
+		BooleanPrimitive cnf2 = (BooleanPrimitive) EXISTS;
 		BooleanExpression existschk = bef.forall(b, testingtrue);
 		BooleanExpression FORALL = bef
 				.booleanExpression(SymbolicOperator.FORALL, existschk);
-		CnfExpression cnf3 = (CnfExpression) FORALL;
+		BooleanPrimitive cnf3 = (BooleanPrimitive) FORALL;
 		BooleanExpression andtrue = bef.and(p, q);
 		BooleanExpression ortrue = bef.or(p, q);
 		BooleanExpression nottrue = bef.not(q);
@@ -180,11 +180,11 @@ public class CnfFactoryTest {
 		BooleanExpression foralltruechk = bef.exists(b, testingfalse);
 		BooleanExpression EXISTS = bef
 				.booleanExpression(SymbolicOperator.EXISTS, foralltruechk);
-		CnfExpression cnf2 = (CnfExpression) EXISTS;
+		BooleanPrimitive cnf2 = (BooleanPrimitive) EXISTS;
 		BooleanExpression existschk = bef.forall(b, testingtrue);
 		BooleanExpression FORALL = bef
 				.booleanExpression(SymbolicOperator.FORALL, existschk);
-		CnfExpression cnf3 = (CnfExpression) FORALL;
+		BooleanPrimitive cnf3 = (BooleanPrimitive) FORALL;
 
 		assertEquals(bef.or(bef.not(p), bef.not(q)), bef.not(andtrue));
 		assertEquals(bef.and(bef.not(p), bef.not(q)), bef.not(ortrue));

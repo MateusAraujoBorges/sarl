@@ -19,18 +19,12 @@
 package edu.udel.cis.vsl.sarl.collections.common;
 
 import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Map.Entry;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
-import edu.udel.cis.vsl.sarl.collections.IF.SortedSymbolicMap;
-import edu.udel.cis.vsl.sarl.collections.IF.SortedSymbolicSet;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection.SymbolicCollectionKind;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSet;
 
 public class CollectionComparator implements Comparator<SymbolicCollection<?>> {
 
@@ -62,23 +56,9 @@ public class CollectionComparator implements Comparator<SymbolicCollection<?>> {
 			return result;
 		// compare two sequences, sets, compare two maps
 		switch (kind) {
-		case BASIC:
-			return compareBasic((BasicCollection<?>) o1,
-					(BasicCollection<?>) o2);
 		case SEQUENCE:
 			return compareSequences((SymbolicSequence<?>) o1,
 					(SymbolicSequence<?>) o2);
-		case SORTED_SET:
-			return compareSortedSets((SortedSymbolicSet<?>) o1,
-					(SortedSymbolicSet<?>) o2);
-		case UNSORTED_SET:
-			return compareUnsortedSets((SymbolicSet<?>) o1, (SymbolicSet<?>) o2);
-		case SORTED_MAP:
-			return compareSortedMaps((SortedSymbolicMap<?, ?>) o1,
-					(SortedSymbolicMap<?, ?>) o2);
-		case UNSORTED_MAP:
-			return compareUnsortedMaps((SymbolicMap<?, ?>) o1,
-					(SymbolicMap<?, ?>) o2);
 		default:
 			throw new SARLException("Unreachable");
 		}
@@ -94,7 +74,8 @@ public class CollectionComparator implements Comparator<SymbolicCollection<?>> {
 	 * @return the result if the the elements are not equal else it returns 0 if
 	 *         the sets were equal
 	 */
-	private int compareSequences(SymbolicSequence<?> s1, SymbolicSequence<?> s2) {
+	private int compareSequences(SymbolicSequence<?> s1,
+			SymbolicSequence<?> s2) {
 		int size = s1.size();
 
 		for (int i = 0; i < size; i++) {
@@ -106,95 +87,106 @@ public class CollectionComparator implements Comparator<SymbolicCollection<?>> {
 		return 0;
 	}
 
-	/**
-	 * Compares two sorted sets. Assumes sets have the same size.
-	 * 
-	 * @param s1
-	 *            a sorted symbolic set
-	 * @param s2
-	 *            a sorted symbolic set of the same size as <code>s1</code>
-	 * @return a negative integer if the first set precedes the second, 0 if the
-	 *         two sets are equal, a positive integer if the second set precedes
-	 *         the first
-	 */
-	private int compareSortedSets(SortedSymbolicSet<?> s1,
-			SortedSymbolicSet<?> s2) {
-		Iterator<? extends SymbolicExpression> iter1 = s1.iterator();
-		Iterator<? extends SymbolicExpression> iter2 = s2.iterator();
+	// /**
+	// * Compares two sorted sets. Assumes sets have the same size.
+	// *
+	// * @param s1
+	// * a sorted symbolic set
+	// * @param s2
+	// * a sorted symbolic set of the same size as <code>s1</code>
+	// * @return a negative integer if the first set precedes the second, 0 if
+	// the
+	// * two sets are equal, a positive integer if the second set precedes
+	// * the first
+	// */
+	// private int compareSortedSets(SortedSymbolicSet<?> s1,
+	// SortedSymbolicSet<?> s2) {
+	// Iterator<? extends SymbolicExpression> iter1 = s1.iterator();
+	// Iterator<? extends SymbolicExpression> iter2 = s2.iterator();
+	//
+	// while (iter1.hasNext()) {
+	// int result = elementComparator.compare(iter1.next(), iter2.next());
+	//
+	// if (result != 0)
+	// return result;
+	// }
+	// return 0;
+	// }
 
-		while (iter1.hasNext()) {
-			int result = elementComparator.compare(iter1.next(), iter2.next());
+	// /**
+	// * Compares two unsorted sets. Assumes sets have the same size.
+	// *
+	// * @param s1
+	// * a sorted symbolic set
+	// * @param s2
+	// * a sorted symbolic set of the same size as <code>s1</code>
+	// * @return a negative integer if the first set precedes the second, 0 if
+	// the
+	// * two sets are equal, a positive integer if the second set precedes
+	// * the first
+	// */
+	// private int compareUnsortedSets(SymbolicSet<?> s1, SymbolicSet<?> s2) {
+	// throw new SARLException(
+	// "Comparison of unsorted sets not yet implemented");
+	// }
 
-			if (result != 0)
-				return result;
-		}
-		return 0;
-	}
+	// /**
+	// * Compares two sorted maps.
+	// *
+	// * @param s1
+	// * a sorted symbolic map
+	// * @param s2
+	// * a sorted symbolic map
+	// * @return 0 if maps are equal, negative int if first precedes second,
+	// else
+	// * positive int
+	// */
+	// private <K1 extends SymbolicExpression, V1 extends SymbolicExpression, K2
+	// extends SymbolicExpression, V2 extends SymbolicExpression> int
+	// compareSortedMaps(
+	// SortedSymbolicMap<K1, V1> m1, SortedSymbolicMap<K2, V2> m2) {
+	// Iterator<Entry<K1, V1>> iter1 = m1.entries().iterator();
+	// Iterator<Entry<K2, V2>> iter2 = m2.entries().iterator();
+	//
+	// while (iter1.hasNext()) {
+	// Entry<? extends SymbolicExpression, ? extends SymbolicExpression> e1 =
+	// iter1
+	// .next();
+	// Entry<? extends SymbolicExpression, ? extends SymbolicExpression> e2 =
+	// iter2
+	// .next();
+	// int result = elementComparator.compare(e1.getKey(), e2.getKey());
+	//
+	// if (result != 0)
+	// return result;
+	// result = elementComparator.compare(e1.getValue(), e2.getValue());
+	// if (result != 0)
+	// return result;
+	// }
+	// return 0;
+	// }
 
-	/**
-	 * Compares two unsorted sets. Assumes sets have the same size.
-	 * 
-	 * @param s1
-	 *            a sorted symbolic set
-	 * @param s2
-	 *            a sorted symbolic set of the same size as <code>s1</code>
-	 * @return a negative integer if the first set precedes the second, 0 if the
-	 *         two sets are equal, a positive integer if the second set precedes
-	 *         the first
-	 */
-	private int compareUnsortedSets(SymbolicSet<?> s1, SymbolicSet<?> s2) {
-		throw new SARLException(
-				"Comparison of unsorted sets not yet implemented");
-	}
-
-	/**
-	 * Compares two sorted maps.
-	 * 
-	 * @param s1
-	 *            a sorted symbolic map
-	 * @param s2
-	 *            a sorted symbolic map
-	 * @return 0 if maps are equal, negative int if first precedes second, else
-	 *         positive int
-	 */
-	private <K1 extends SymbolicExpression, V1 extends SymbolicExpression, K2 extends SymbolicExpression, V2 extends SymbolicExpression> int compareSortedMaps(
-			SortedSymbolicMap<K1, V1> m1, SortedSymbolicMap<K2, V2> m2) {
-		Iterator<Entry<K1, V1>> iter1 = m1.entries().iterator();
-		Iterator<Entry<K2, V2>> iter2 = m2.entries().iterator();
-
-		while (iter1.hasNext()) {
-			Entry<? extends SymbolicExpression, ? extends SymbolicExpression> e1 = iter1
-					.next();
-			Entry<? extends SymbolicExpression, ? extends SymbolicExpression> e2 = iter2
-					.next();
-			int result = elementComparator.compare(e1.getKey(), e2.getKey());
-
-			if (result != 0)
-				return result;
-			result = elementComparator.compare(e1.getValue(), e2.getValue());
-			if (result != 0)
-				return result;
-		}
-		return 0;
-	}
-
-	/**
-	 * Compares two unsorted maps.
-	 * 
-	 * @param s1
-	 *            a symbolic map
-	 * @param s2
-	 *            a symbolic map
-	 * @return 0 if maps are equal, negative int if first precedes second, else
-	 *         positive int
-	 */
-	private <K1 extends SymbolicExpression, V1 extends SymbolicExpression, K2 extends SymbolicExpression, V2 extends SymbolicExpression> int compareUnsortedMaps(
-			SymbolicMap<K1, V1> m1, SymbolicMap<K2, V2> m2) {
-		throw new SARLException("Comparison of unsorted maps not supported");
-	}
-
-	private int compareBasic(BasicCollection<?> basic1,
-			BasicCollection<?> basic2) {
-		throw new SARLException("Comparison of basic collections not supported");
-	}
+	// /**
+	// * Compares two unsorted maps.
+	// *
+	// * @param s1
+	// * a symbolic map
+	// * @param s2
+	// * a symbolic map
+	// * @return 0 if maps are equal, negative int if first precedes second,
+	// else
+	// * positive int
+	// */
+	// private <K1 extends SymbolicExpression, V1 extends SymbolicExpression, K2
+	// extends SymbolicExpression, V2 extends SymbolicExpression> int
+	// compareUnsortedMaps(
+	// SymbolicMap<K1, V1> m1, SymbolicMap<K2, V2> m2) {
+	// throw new SARLException("Comparison of unsorted maps not supported");
+	// }
+	//
+	// private int compareBasic(BasicCollection<?> basic1,
+	// BasicCollection<?> basic2) {
+	// throw new SARLException(
+	// "Comparison of basic collections not supported");
+	// }
 }

@@ -25,7 +25,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.util.FastList;
@@ -1151,32 +1150,6 @@ public class CVCTranslator {
 		return new Pair<>(qrpair.left.clone(), qrpair.right.clone());
 	}
 
-	private FastList<String> translateAssoc(String operator,
-			String defaultValue, SymbolicCollection<?> terms) {
-		int size = terms.size();
-
-		if (size == 0) {
-			return new FastList<>(defaultValue);
-		} else if (size == 1) {
-			return translate(terms.getFirst());
-		} else {
-			boolean first = true;
-			FastList<String> result = new FastList<>();
-
-			for (SymbolicExpression term : terms) {
-				if (first) {
-					first = false;
-				} else {
-					result.add(operator);
-				}
-				result.add("(");
-				result.append(translate(term));
-				result.add(")");
-			}
-			return result;
-		}
-	}
-
 	private FastList<String> translateBinary(String operator,
 			SymbolicExpression arg0, SymbolicExpression arg1) {
 		FastList<String> result = new FastList<>("(");
@@ -1186,23 +1159,6 @@ public class CVCTranslator {
 		result.append(translate(arg1));
 		result.add(")");
 		return result;
-	}
-
-	private FastList<String> translateBinaryOrAssoc(String operator,
-			String defaultValue, SymbolicExpression expression) {
-		int numArgs = expression.numArguments();
-
-		if (numArgs == 2) {
-			return translateBinary(operator,
-					(SymbolicExpression) expression.argument(0),
-					(SymbolicExpression) expression.argument(1));
-		} else if (numArgs == 1) {
-			return translateAssoc(operator, defaultValue,
-					(SymbolicCollection<?>) expression.argument(0));
-		} else {
-			throw new SARLInternalException(
-					"Expected 1 or 2 arguments for " + operator);
-		}
 	}
 
 	private FastList<String> translateKeySet(String operator,
@@ -1247,7 +1203,7 @@ public class CVCTranslator {
 			result = translateKeySet(" + ", "0", expression);
 			break;
 		case AND:
-			result = translateBinaryOrAssoc(" AND ", "TRUE", expression);
+			result = translateKeySet(" AND ", "TRUE", expression);
 			break;
 		case APPLY:
 			result = translateApply(expression);
@@ -1336,7 +1292,7 @@ public class CVCTranslator {
 			result = translateNot(expression);
 			break;
 		case OR:
-			result = translateBinaryOrAssoc(" OR ", "FALSE", expression);
+			result = translateKeySet(" OR ", "FALSE", expression);
 			break;
 		case POWER:
 			result = translatePower(expression);

@@ -45,7 +45,6 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.common.KeySetFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
@@ -644,10 +643,10 @@ public class CommonIdealFactory implements Ideal2Factory {
 	 */
 	// TODO: use this to re-write factorTermMap? It might be better.
 	// still need the appropriate constant factor.
+	@SuppressWarnings("unused")
 	private Monic extractCommonality(Monic[] monics) {
 		int length = monics.length;
 		SymbolicType type = monics[0].type();
-		@SuppressWarnings("unchecked")
 		PrimitivePower[][] factorSets = new PrimitivePower[length][];
 		PrimitivePower[] common = monicFactory.emptySet();
 

@@ -1,5 +1,7 @@
 package edu.udel.cis.vsl.sarl.collections.IF;
 
+import java.util.LinkedList;
+
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
@@ -123,6 +125,11 @@ public class ExpressionStub implements SymbolicExpression {
 
 	public String toString() {
 		return this.name;
+	}
+
+	@Override
+	public Iterable<? extends SymbolicObject> getArguments() {
+		return new LinkedList<SymbolicObject>();
 	}
 
 }

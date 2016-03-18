@@ -22,7 +22,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.BooleanSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
-public class CnfSymbolicConstant extends CnfExpression
+public class CnfSymbolicConstant extends BooleanPrimitive
 		implements BooleanSymbolicConstant {
 
 	CnfSymbolicConstant(StringObject name, SymbolicType type) {

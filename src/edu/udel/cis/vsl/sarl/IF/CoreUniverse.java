@@ -1742,13 +1742,13 @@ public interface CoreUniverse {
 	// Sets...
 	// Under construction...
 
-	SymbolicExpression emptySet(SymbolicSetType setType);
+	// SymbolicExpression emptySet(SymbolicSetType setType);
 
-//	SymbolicExpression singletonSet(SymbolicSetType setType,
-//			SymbolicExpression value);
+	// SymbolicExpression singletonSet(SymbolicSetType setType,
+	// SymbolicExpression value);
 
-	BooleanExpression isElementOf(SymbolicExpression value,
-			SymbolicExpression set);
+	// BooleanExpression isElementOf(SymbolicExpression value,
+	// SymbolicExpression set);
 
 	BooleanExpression isSubsetOf(SymbolicExpression set1,
 			SymbolicExpression set2);

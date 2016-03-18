@@ -18,21 +18,12 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.collections.common;
 
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.Map;
-import java.util.Map.Entry;
 
-import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.SimpleEntry;
-import edu.udel.cis.vsl.sarl.collections.IF.SortedSymbolicMap;
-import edu.udel.cis.vsl.sarl.collections.IF.SortedSymbolicSet;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicMap;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSet;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
@@ -45,7 +36,7 @@ public class CommonCollectionFactory implements CollectionFactory {
 
 	private ObjectFactory objectFactory;
 
-	private SymbolicSet<?> /* emptyHashSet, */ emptySortedSet;
+	// private SymbolicSet<?> /* emptyHashSet, */ emptySortedSet;
 
 	// private SymbolicMap<?, ?> emptyHashMap, emptySortedMap;
 
@@ -76,8 +67,8 @@ public class CommonCollectionFactory implements CollectionFactory {
 		// elementComparator));
 		emptySequence = objectFactory
 				.canonic(new SimpleSequence<SymbolicExpression>());
-		emptySortedSet = objectFactory.canonic(
-				new SimpleSortedSet<SymbolicExpression>(elementComparator));
+		// emptySortedSet = objectFactory.canonic(
+		// new SimpleSortedSet<SymbolicExpression>(elementComparator));
 		// emptyHashSet = emptySortedSet;
 		// emptyHashMap = emptySortedMap;
 	}
@@ -87,11 +78,12 @@ public class CommonCollectionFactory implements CollectionFactory {
 		return comparator;
 	}
 
-	@Override
-	public <T extends SymbolicExpression> SymbolicCollection<T> basicCollection(
-			Collection<T> javaCollection) {
-		return new BasicCollection<T>(javaCollection);
-	}
+	// @Override
+	// public <T extends SymbolicExpression> SymbolicCollection<T>
+	// basicCollection(
+	// Collection<T> javaCollection) {
+	// return new BasicCollection<T>(javaCollection);
+	// }
 
 	// @SuppressWarnings("unchecked")
 	// @Override
@@ -99,11 +91,12 @@ public class CommonCollectionFactory implements CollectionFactory {
 	// return (SymbolicSet<T>) emptyHashSet;
 	// }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T extends SymbolicExpression> SortedSymbolicSet<T> emptySortedSet() {
-		return (SortedSymbolicSet<T>) emptySortedSet;
-	}
+	// @SuppressWarnings("unchecked")
+	// @Override
+	// public <T extends SymbolicExpression> SortedSymbolicSet<T>
+	// emptySortedSet() {
+	// return (SortedSymbolicSet<T>) emptySortedSet;
+	// }
 
 	// @Override
 	// public <T extends SymbolicExpression> SymbolicSet<T> singletonHashSet(
@@ -113,13 +106,14 @@ public class CommonCollectionFactory implements CollectionFactory {
 	// return empty.add(element);
 	// }
 
-	@Override
-	public <T extends SymbolicExpression> SortedSymbolicSet<T> singletonSortedSet(
-			T element) {
-		SortedSymbolicSet<T> empty = emptySortedSet();
-
-		return empty.add(element);
-	}
+	// @Override
+	// public <T extends SymbolicExpression> SortedSymbolicSet<T>
+	// singletonSortedSet(
+	// T element) {
+	// SortedSymbolicSet<T> empty = emptySortedSet();
+	//
+	// return empty.add(element);
+	// }
 
 	@Override
 	public <T extends SymbolicExpression> SymbolicSequence<T> sequence(
@@ -177,11 +171,12 @@ public class CommonCollectionFactory implements CollectionFactory {
 	// return empty.put(key, value);
 	// }
 
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
-			Map<K, V> javaMap) {
-		return new SimpleSortedMap<K, V>(javaMap, elementComparator);
-	}
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> sortedMap(
+	// Map<K, V> javaMap) {
+	// return new SimpleSortedMap<K, V>(javaMap, elementComparator);
+	// }
 
 	// @Override
 	// public <K extends SymbolicExpression, V extends SymbolicExpression>
@@ -190,86 +185,94 @@ public class CommonCollectionFactory implements CollectionFactory {
 	// return new SimpleSortedMap<K, V>(javaMap, elementComparator);
 	// }
 
-	@Override
-	public <T extends SymbolicExpression> SortedSymbolicSet<T> emptySortedSet(
-			Comparator<? super T> comparator) {
-		return new SimpleSortedSet<T>(comparator);
-	}
+	// @Override
+	// public <T extends SymbolicExpression> SortedSymbolicSet<T>
+	// emptySortedSet(
+	// Comparator<? super T> comparator) {
+	// return new SimpleSortedSet<T>(comparator);
+	// }
+	//
+	// @Override
+	// public <T extends SymbolicExpression> SortedSymbolicSet<T>
+	// singletonSortedSet(
+	// T element, Comparator<? super T> comparator) {
+	// SortedSymbolicSet<T> result = new SimpleSortedSet<T>(comparator);
+	//
+	// result = result.add(element);
+	// return result;
+	// }
 
-	@Override
-	public <T extends SymbolicExpression> SortedSymbolicSet<T> singletonSortedSet(
-			T element, Comparator<? super T> comparator) {
-		SortedSymbolicSet<T> result = new SimpleSortedSet<T>(comparator);
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> emptySortedMap(
+	// Comparator<? super K> comparator) {
+	// return new SimpleSortedMap<K, V>(comparator);
+	// }
 
-		result = result.add(element);
-		return result;
-	}
-
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> emptySortedMap(
-			Comparator<? super K> comparator) {
-		return new SimpleSortedMap<K, V>(comparator);
-	}
-
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
-			Comparator<? super K> comparator, Entry<K, V>[] entries) {
-		return new SimpleSortedMap<K, V>(comparator, entries);
-	}
-
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> singletonSortedMap(
-			Comparator<? super K> comparator, K key, V value) {
-		SortedSymbolicMap<K, V> result = new SimpleSortedMap<K, V>(comparator);
-
-		result = result.put(key, value);
-		return result;
-	}
-
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
-			Comparator<? super K> comparator, Map<K, V> javaMap) {
-		return new SimpleSortedMap<K, V>(javaMap, comparator);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> Entry<K, V> entry(
-			K key, V value) {
-		Entry<?, ?> e1 = new SimpleEntry(key, value);
-
-		return (Entry<K, V>) e1;
-	}
-
-	@Override
-	public <K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> mask(
-			SymbolicMap<K, V> map, boolean[] mask) {
-		int size = map.size();
-		int newSize = 0;
-
-		assert size == mask.length;
-		for (int i = 0; i < size; i++)
-			if (mask[i])
-				newSize++;
-		if (newSize == size)
-			return map;
-
-		@SuppressWarnings("unchecked")
-		Entry<K, V>[] newEntries = (Entry<K, V>[]) new Entry<?, ?>[newSize];
-		int count = 0;
-
-		for (Entry<K, V> entry : map.entries()) {
-			if (mask[count]) {
-				newEntries[count] = entry;
-				count++;
-			}
-		}
-		if (map instanceof SortedSymbolicMap<?, ?>) {
-			return sortedMap(((SortedSymbolicMap<K, V>) map).comparator(),
-					newEntries);
-		} else {
-			throw new SARLInternalException("Unsorted maps not implemented");
-		}
-	}
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> sortedMap(
+	// Comparator<? super K> comparator, Entry<K, V>[] entries) {
+	// return new SimpleSortedMap<K, V>(comparator, entries);
+	// }
+	//
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> singletonSortedMap(
+	// Comparator<? super K> comparator, K key, V value) {
+	// SortedSymbolicMap<K, V> result = new SimpleSortedMap<K, V>(comparator);
+	//
+	// result = result.put(key, value);
+	// return result;
+	// }
+	//
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> sortedMap(
+	// Comparator<? super K> comparator, Map<K, V> javaMap) {
+	// return new SimpleSortedMap<K, V>(javaMap, comparator);
+	// }
+	//
+	// @SuppressWarnings("unchecked")
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// Entry<K, V> entry(
+	// K key, V value) {
+	// Entry<?, ?> e1 = new SimpleEntry(key, value);
+	//
+	// return (Entry<K, V>) e1;
+	// }
+	//
+	// @Override
+	// public <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SymbolicMap<K, V> mask(
+	// SymbolicMap<K, V> map, boolean[] mask) {
+	// int size = map.size();
+	// int newSize = 0;
+	//
+	// assert size == mask.length;
+	// for (int i = 0; i < size; i++)
+	// if (mask[i])
+	// newSize++;
+	// if (newSize == size)
+	// return map;
+	//
+	// @SuppressWarnings("unchecked")
+	// Entry<K, V>[] newEntries = (Entry<K, V>[]) new Entry<?, ?>[newSize];
+	// int count = 0;
+	//
+	// for (Entry<K, V> entry : map.entries()) {
+	// if (mask[count]) {
+	// newEntries[count] = entry;
+	// count++;
+	// }
+	// }
+	// if (map instanceof SortedSymbolicMap<?, ?>) {
+	// return sortedMap(((SortedSymbolicMap<K, V>) map).comparator(),
+	// newEntries);
+	// } else {
+	// throw new SARLInternalException("Unsorted maps not implemented");
+	// }
+	// }
 
 }

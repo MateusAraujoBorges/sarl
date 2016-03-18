@@ -397,9 +397,12 @@ public class IdealSimplifier extends CommonSimplifier {
 	 */
 	private boolean extractBounds() {
 		if (assumption.operator() == SymbolicOperator.AND) {
-			for (BooleanExpression clause : assumption.booleanCollectionArg(0))
+			for (SymbolicObject arg : assumption.getArguments()) {
+				BooleanExpression clause = (BooleanExpression) arg;
+
 				if (!extractBoundsOr(clause, boundMap, booleanMap))
 					return false;
+			}
 		} else if (!extractBoundsOr(assumption, boundMap, booleanMap))
 			return false;
 		return updateConstantMap();
@@ -501,14 +504,15 @@ public class IdealSimplifier extends CommonSimplifier {
 			BoundMap originalBoundMap = aBoundMap.clone();
 			Map<BooleanExpression, Boolean> originalBooleanMap = copyBooleanMap(
 					aBooleanMap);
-			Iterator<? extends BooleanExpression> clauses = or
-					.booleanCollectionArg(0).iterator();
-			boolean satisfiable = extractBoundsBasic(clauses.next(), aBoundMap,
-					aBooleanMap); // result <- p & q0:
+			Iterator<? extends SymbolicObject> clauses = or.getArguments()
+					.iterator();
+			boolean satisfiable = extractBoundsBasic(
+					(BooleanExpression) clauses.next(), aBoundMap, aBooleanMap);
 
+			// result <- p & q0:
 			// result <- result | ((p & q1) | ... | (p & qn)) :
 			while (clauses.hasNext()) {
-				BooleanExpression clause = clauses.next();
+				BooleanExpression clause = (BooleanExpression) clauses.next();
 				BoundMap newBoundMap = originalBoundMap.clone();
 				Map<BooleanExpression, Boolean> newBooleanMap = copyBooleanMap(
 						originalBooleanMap);
@@ -637,7 +641,7 @@ public class IdealSimplifier extends CommonSimplifier {
 			// and add bounds
 			return true;
 		} else if (operator == SymbolicOperator.NOT) {
-			BooleanExpression primitive = basic.booleanArg(0);
+			BooleanExpression primitive = (BooleanExpression) basic.argument(0);
 			Boolean value = aBooleanMap.get(primitive);
 
 			if (value != null)
@@ -883,8 +887,8 @@ public class IdealSimplifier extends CommonSimplifier {
 		SymbolicOperator operator = assumption.operator();
 
 		if (operator == SymbolicOperator.AND) {
-			for (BooleanExpression or : assumption.booleanCollectionArg(0)) {
-				declareClauseFact(or);
+			for (SymbolicObject arg : assumption.getArguments()) {
+				declareClauseFact((BooleanExpression) arg);
 			}
 		} else {
 			declareClauseFact(assumption);
@@ -921,6 +925,8 @@ public class IdealSimplifier extends CommonSimplifier {
 		return result;
 	}
 
+	
+	@SuppressWarnings("unused")
 	private Monomial simplifyPolynomial2(Polynomial poly) {
 		Ideal2Factory id = info.idealFactory;
 

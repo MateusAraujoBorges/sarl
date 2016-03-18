@@ -436,11 +436,11 @@ public interface SymbolicExpression extends SymbolicObject {
 	SymbolicObject argument(int index);
 
 	/**
-	 * Returns arguments array
+	 * Returns the sequence of arguments as an {@link Iterable} object.
 	 * 
-	 * @return arguments array
+	 * @return the argument sequence as an {@link Iterable}
 	 */
-	//SymbolicObject[] arguments();
+	Iterable<? extends SymbolicObject> getArguments();
 
 	/**
 	 * A string representation appropriate for nesting in other expressions,

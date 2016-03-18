@@ -2,10 +2,8 @@ package edu.udel.cis.vsl.sarl.prove;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -15,7 +13,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.config.Configurations;
@@ -25,7 +22,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
@@ -70,8 +66,8 @@ public class AndTest {
 		provers = new LinkedList<TheoremProver>();
 		for (ProverInfo info : Configurations.getDefaultConfiguration()
 				.getProvers()) {
-			provers.add(Prove.newProverFactory(universe, info).newProver(
-					context));
+			provers.add(
+					Prove.newProverFactory(universe, info).newProver(context));
 		}
 	}
 
@@ -94,22 +90,18 @@ public class AndTest {
 	 */
 	private void check(ResultType expected, BooleanExpression predicate) {
 		for (TheoremProver prover : provers) {
-			assertEquals(prover.toString(), expected, prover.valid(predicate)
-					.getResultType());
+			assertEquals(prover.toString(), expected,
+					prover.valid(predicate).getResultType());
 		}
 	}
 
 	@Test
 	@Ignore
 	public void testTranslateAndOneArg() {
-		List<BooleanExpression> s1 = new ArrayList<BooleanExpression>();
-		s1.add(boolFalse);
-		s1.add(boolTrue);
-
-		SymbolicCollection<BooleanExpression> boolList = universe
-				.basicCollection(s1);
 		BooleanExpression andExp = (BooleanExpression) expressionFactory
-				.expression(SymbolicOperator.AND, boolType, boolList);
+				.expression(SymbolicOperator.AND, boolType, boolFalse,
+						boolTrue);
+
 		for (TheoremProver prover : provers) {
 			ValidityResult result = prover.valid(andExp);
 			assertEquals(ResultType.NO, result.getResultType());
@@ -126,11 +118,4 @@ public class AndTest {
 		check(ResultType.YES, universe.and(boolTrue, boolTrue));
 	}
 
-	@Test(expected = SARLInternalException.class)
-	public void translateThreeArg() {
-		BooleanExpression predicate = (BooleanExpression) expressionFactory
-				.expression(SymbolicOperator.AND, boolType, boolTrue, boolTrue,
-						boolFalse);
-		check(ResultType.NO, predicate);
-	}
 }

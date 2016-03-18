@@ -3,9 +3,7 @@ package edu.udel.cis.vsl.sarl.collections.common;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 
 import org.junit.After;
@@ -32,7 +30,7 @@ public class CommonCollectionFactoryTest {
 	CommonCollectionFactory collectionFactory;
 
 	private static SymbolicExpression three = new ExpressionStub("3");
-	private static SymbolicExpression five = new ExpressionStub("5");
+	// private static SymbolicExpression five = new ExpressionStub("5");
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -61,15 +59,16 @@ public class CommonCollectionFactoryTest {
 		assertTrue(collectionFactory.comparator() instanceof Comparator);
 	}
 
-	/**
-	 * Test method for basicCollection()
-	 */
-	@Test
-	public void testBasicCollection() {
-		Collection<SymbolicExpression> testCollection = new LinkedList<SymbolicExpression>();
-		assertTrue(collectionFactory
-				.basicCollection(testCollection) instanceof BasicCollection<?>);
-	}
+	// /**
+	// * Test method for basicCollection()
+	// */
+	// @Test
+	// public void testBasicCollection() {
+	// Collection<SymbolicExpression> testCollection = new
+	// LinkedList<SymbolicExpression>();
+	// assertTrue(collectionFactory
+	// .basicCollection(testCollection) instanceof BasicCollection<?>);
+	// }
 
 	/**
 	 * Test method for iterableSequence()
@@ -101,43 +100,45 @@ public class CommonCollectionFactoryTest {
 				"<3>");
 	}
 
-	/**
-	 * Test method for sortedMap(), one argument
-	 */
-	@Test
-	public void testSortedMap() {
-		HashMap<SymbolicExpression, SymbolicExpression> testMap = new HashMap<SymbolicExpression, SymbolicExpression>();
-		assertEquals(collectionFactory.sortedMap(elementComparator, testMap)
-				.put(five, three).toString(), "{5->3}");
-	}
+	// /**
+	// * Test method for sortedMap(), one argument
+	// */
+	// @Test
+	// public void testSortedMap() {
+	// HashMap<SymbolicExpression, SymbolicExpression> testMap = new
+	// HashMap<SymbolicExpression, SymbolicExpression>();
+	// assertEquals(collectionFactory.sortedMap(elementComparator, testMap)
+	// .put(five, three).toString(), "{5->3}");
+	// }
+	//
+	// /**
+	// * Test method for sortedMap(), two arguments
+	// */
+	// @Test
+	// public void testSortedMap2() {
+	// HashMap<SymbolicExpression, SymbolicExpression> testMap = new
+	// HashMap<SymbolicExpression, SymbolicExpression>();
+	// assertEquals(collectionFactory.sortedMap(testMap).put(five, three)
+	// .toString(), "{5->3}");
+	// }
 
-	/**
-	 * Test method for sortedMap(), two arguments
-	 */
-	@Test
-	public void testSortedMap2() {
-		HashMap<SymbolicExpression, SymbolicExpression> testMap = new HashMap<SymbolicExpression, SymbolicExpression>();
-		assertEquals(collectionFactory.sortedMap(testMap).put(five, three)
-				.toString(), "{5->3}");
-	}
-
-	/**
-	 * Test method for emptySortedSetComparator()
-	 */
-	@Test
-	public void testEmptySortedSetComparator() {
-		assertEquals(collectionFactory.emptySortedSet(elementComparator),
-				collectionFactory.emptySortedSet(elementComparator));
-	}
-
-	/**
-	 * Test method for singletonSortedSetComparator()
-	 */
-	@Test
-	public void testSingletonSortedSetComparator() {
-		assertEquals(
-				collectionFactory.singletonSortedSet(five, elementComparator),
-				collectionFactory.singletonSortedSet(five, elementComparator));
-	}
+	// /**
+	// * Test method for emptySortedSetComparator()
+	// */
+	// @Test
+	// public void testEmptySortedSetComparator() {
+	// assertEquals(collectionFactory.emptySortedSet(elementComparator),
+	// collectionFactory.emptySortedSet(elementComparator));
+	// }
+	//
+	// /**
+	// * Test method for singletonSortedSetComparator()
+	// */
+	// @Test
+	// public void testSingletonSortedSetComparator() {
+	// assertEquals(
+	// collectionFactory.singletonSortedSet(five, elementComparator),
+	// collectionFactory.singletonSortedSet(five, elementComparator));
+	// }
 
 }

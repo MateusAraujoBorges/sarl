@@ -18,31 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.collections.IF;
 
-// TODO: maybe you need a different Collection Factory for each
-// comparator? One for PrimitiveComparator, one for MonicComparator,...
-// They could be compared and exchanged even if they came from different
-// collection factories because they don't store a comparator, so they
-// would be interchangeable. BUT how would you compare them?
-// You would need a general comparator that would work on any symbolic
-// expressions. It wouldn't have to have anything to do with the
-// specific comparators used in the different factories.
-// But they all have to agree on equality (compareTo==0).
-// the same is true if you put the comparator inside each collection: you
-// STILL need a general comparator which can compare them all!
-
-// so: multiple CollectionFactories, multiple comparators
-
-// ALSO: collectionFactory is used throughout SARL to generate sequences,
-// which don't have any comparator.
-
-// let's just put the comparator inside the collection for now and
-// get rid of empty ones without specifying the comparator.
-// or insist there can only be one comparator?
-
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 
@@ -83,19 +59,20 @@ public interface CollectionFactory {
 	 */
 	void init();
 
-	/**
-	 * Takes in a Java collection and creates a new Basic Collection containing
-	 * the elements contained in the in the Java Collection passed in. This
-	 * method may or may not copy the elements out of the given collection.
-	 * Therefore the given collection should never be accessed directly after
-	 * this method is called.
-	 * 
-	 * @param javaCollection
-	 *            any kind of collection of symbolic expressions
-	 * @return a symbolic collection based on the given Java collection
-	 */
-	<T extends SymbolicExpression> SymbolicCollection<T> basicCollection(
-			Collection<T> javaCollection);
+	// /**
+	// * Takes in a Java collection and creates a new Basic Collection
+	// containing
+	// * the elements contained in the in the Java Collection passed in. This
+	// * method may or may not copy the elements out of the given collection.
+	// * Therefore the given collection should never be accessed directly after
+	// * this method is called.
+	// *
+	// * @param javaCollection
+	// * any kind of collection of symbolic expressions
+	// * @return a symbolic collection based on the given Java collection
+	// */
+	// <T extends SymbolicExpression> SymbolicCollection<T> basicCollection(
+	// Collection<T> javaCollection);
 
 	// /**
 	// * Returns the empty hash set.
@@ -104,23 +81,23 @@ public interface CollectionFactory {
 	// */
 	// <T extends SymbolicExpression> SymbolicSet<T> emptyHashSet();
 
-	/**
-	 * Returns the empty sorted set using default comparator.
-	 * 
-	 * @return the empty sorted set
-	 */
-	<T extends SymbolicExpression> SortedSymbolicSet<T> emptySortedSet();
-
-	/**
-	 * Returns the empty sorted set.
-	 * 
-	 * @param comparator
-	 *            Comparator used for sorting
-	 * 
-	 * @return the empty sorted set
-	 */
-	<T extends SymbolicExpression> SortedSymbolicSet<T> emptySortedSet(
-			Comparator<? super T> comparator);
+	// /**
+	// * Returns the empty sorted set using default comparator.
+	// *
+	// * @return the empty sorted set
+	// */
+	// <T extends SymbolicExpression> SortedSymbolicSet<T> emptySortedSet();
+	//
+	// /**
+	// * Returns the empty sorted set.
+	// *
+	// * @param comparator
+	// * Comparator used for sorting
+	// *
+	// * @return the empty sorted set
+	// */
+	// <T extends SymbolicExpression> SortedSymbolicSet<T> emptySortedSet(
+	// Comparator<? super T> comparator);
 
 	// /**
 	// * Returns the singleton hash set containing the one element.
@@ -132,27 +109,27 @@ public interface CollectionFactory {
 	// <T extends SymbolicExpression> SymbolicSet<T> singletonHashSet(T
 	// element);
 
-	/**
-	 * Returns the singleton sorted set containing the one element.
-	 *
-	 * @param element
-	 *            a symbolic expression
-	 * @return the sorted set consisting of the one element
-	 */
-	<T extends SymbolicExpression> SortedSymbolicSet<T> singletonSortedSet(
-			T element);
+	// /**
+	// * Returns the singleton sorted set containing the one element.
+	// *
+	// * @param element
+	// * a symbolic expression
+	// * @return the sorted set consisting of the one element
+	// */
+	// <T extends SymbolicExpression> SortedSymbolicSet<T> singletonSortedSet(
+	// T element);
 
-	/**
-	 * Returns the singleton sorted set containing the one element.
-	 * 
-	 * @param element
-	 *            a symbolic expression
-	 * @param comparator
-	 *            used for sorting
-	 * @return the set consisting of that one element
-	 */
-	<T extends SymbolicExpression> SortedSymbolicSet<T> singletonSortedSet(
-			T element, Comparator<? super T> comparator);
+	// /**
+	// * Returns the singleton sorted set containing the one element.
+	// *
+	// * @param element
+	// * a symbolic expression
+	// * @param comparator
+	// * used for sorting
+	// * @return the set consisting of that one element
+	// */
+	// <T extends SymbolicExpression> SortedSymbolicSet<T> singletonSortedSet(
+	// T element, Comparator<? super T> comparator);
 
 	/**
 	 * Returns a SymbolicSequence comprising the given sequence of elements.
@@ -200,13 +177,14 @@ public interface CollectionFactory {
 	// <K extends SymbolicExpression, V extends SymbolicExpression>
 	// SortedSymbolicMap<K, V> emptySortedMap();
 
-	/**
-	 * Returns an empty sorted symbolic map using given comparator on keys.
-	 * 
-	 * @return an empty sorted symbolic map
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> emptySortedMap(
-			Comparator<? super K> comparator);
+	// /**
+	// * Returns an empty sorted symbolic map using given comparator on keys.
+	// *
+	// * @return an empty sorted symbolic map
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> emptySortedMap(
+	// Comparator<? super K> comparator);
 
 	// /**
 	// * Returns an empty hash symbolic map.
@@ -229,18 +207,19 @@ public interface CollectionFactory {
 	// SortedSymbolicMap<K, V> singletonSortedMap(
 	// K key, V value);
 
-	/**
-	 * Returns the sorted map with one entry (key,value) and using the given
-	 * comparator on keys.
-	 * 
-	 * @param key
-	 *            the key for the entry
-	 * @param value
-	 *            the value for the entry
-	 * @return the map with the one entry
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> singletonSortedMap(
-			Comparator<? super K> comparator, K key, V value);
+	// /**
+	// * Returns the sorted map with one entry (key,value) and using the given
+	// * comparator on keys.
+	// *
+	// * @param key
+	// * the key for the entry
+	// * @param value
+	// * the value for the entry
+	// * @return the map with the one entry
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> singletonSortedMap(
+	// Comparator<? super K> comparator, K key, V value);
 
 	// /**
 	// * Returns the hash map with one entry (key,value).
@@ -255,25 +234,27 @@ public interface CollectionFactory {
 	// SymbolicMap<K, V> singletonHashMap(
 	// K key, V value);
 
-	/**
-	 * Returns a sorted symbolic map based on the given Java Map. The Java map
-	 * should not be modified after this method is invoked.
-	 * 
-	 * @param javaMap
-	 * @return a symbolic map based on the given Java map
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
-			Map<K, V> javaMap);
+	// /**
+	// * Returns a sorted symbolic map based on the given Java Map. The Java map
+	// * should not be modified after this method is invoked.
+	// *
+	// * @param javaMap
+	// * @return a symbolic map based on the given Java map
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> sortedMap(
+	// Map<K, V> javaMap);
 
-	/**
-	 * Returns a sorted symbolic map based on the given Java Map. The Java map
-	 * should not be modified after this method is invoked.
-	 * 
-	 * @param javaMap
-	 * @return a sorted symbolic map based on the given Java map
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
-			Comparator<? super K> comparator, Map<K, V> javaMap);
+	// /**
+	// * Returns a sorted symbolic map based on the given Java Map. The Java map
+	// * should not be modified after this method is invoked.
+	// *
+	// * @param javaMap
+	// * @return a sorted symbolic map based on the given Java map
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> sortedMap(
+	// Comparator<? super K> comparator, Map<K, V> javaMap);
 
 	// /**
 	// * Returns an (unsorted) hash symbolic map based on the given Java Map.
@@ -286,54 +267,61 @@ public interface CollectionFactory {
 	// SymbolicMap<K, V> hashMap(
 	// Map<K, V> javaMap);
 
-	/**
-	 * Returns an {@link Entry} with the specified key and value. This can be
-	 * used to create a {@link SymbolicMap}, e.g., in method
-	 * {@link #sortedMap(Comparator, Entry[])}.
-	 * 
-	 * @param key
-	 *            the key for the entry
-	 * @param value
-	 *            the value for the entry
-	 * @return an entry with that key and value
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> Entry<K, V> entry(
-			K key, V value);
+	// /**
+	// * Returns an {@link Entry} with the specified key and value. This can be
+	// * used to create a {@link SymbolicMap}, e.g., in method
+	// * {@link #sortedMap(Comparator, Entry[])}.
+	// *
+	// * @param key
+	// * the key for the entry
+	// * @param value
+	// * the value for the entry
+	// * @return an entry with that key and value
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression> Entry<K, V>
+	// entry(
+	// K key, V value);
 
-	/**
-	 * Returns a new sorted map backed by the given array of entries. The given
-	 * entries must be sorted according to the given comparator on the keys.
-	 * Failure to satisfy this precondition will result in unspecified behavior.
-	 * Use at your own risk!
-	 * 
-	 * @param comparator
-	 *            comparator on the key set <code>K</code>
-	 * @param entries
-	 *            list of entries for the new map, sorted with keys occurring in
-	 *            increasing order according to comparator
-	 * @return the new map
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SortedSymbolicMap<K, V> sortedMap(
-			Comparator<? super K> comparator, Entry<K, V>[] entries);
-
-	/**
-	 * Given a {@link SymbolicMap} returns the {@link SymbolicMap} obtained by
-	 * removing the entries specified by the given <code>mask</code> . The
-	 * <code>mask</code> is an array whose length is the
-	 * {@link SymbolicMap#size()} (number of entries) of <code>map</code>. A
-	 * <code>true</code> mask value indicates the corresponding entry should be
-	 * kept; a <code>false</code> value indicates the corresponding entry should
-	 * be removed.
-	 * 
-	 * @param map
-	 *            a non-<code>null</code> {@link SortedSymbolicMap}
-	 * @param mask
-	 *            array of boolean of length size of <code>map</code> specifying
-	 *            which entries to keep
-	 * @return the map obtained from given map by keeping the specified subset
-	 *         of entries
-	 */
-	<K extends SymbolicExpression, V extends SymbolicExpression> SymbolicMap<K, V> mask(
-			SymbolicMap<K, V> map, boolean[] mask);
+	// /**
+	// * Returns a new sorted map backed by the given array of entries. The
+	// given
+	// * entries must be sorted according to the given comparator on the keys.
+	// * Failure to satisfy this precondition will result in unspecified
+	// behavior.
+	// * Use at your own risk!
+	// *
+	// * @param comparator
+	// * comparator on the key set <code>K</code>
+	// * @param entries
+	// * list of entries for the new map, sorted with keys occurring in
+	// * increasing order according to comparator
+	// * @return the new map
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SortedSymbolicMap<K, V> sortedMap(
+	// Comparator<? super K> comparator, Entry<K, V>[] entries);
+	//
+	// /**
+	// * Given a {@link SymbolicMap} returns the {@link SymbolicMap} obtained by
+	// * removing the entries specified by the given <code>mask</code> . The
+	// * <code>mask</code> is an array whose length is the
+	// * {@link SymbolicMap#size()} (number of entries) of <code>map</code>. A
+	// * <code>true</code> mask value indicates the corresponding entry should
+	// be
+	// * kept; a <code>false</code> value indicates the corresponding entry
+	// should
+	// * be removed.
+	// *
+	// * @param map
+	// * a non-<code>null</code> {@link SortedSymbolicMap}
+	// * @param mask
+	// * array of boolean of length size of <code>map</code> specifying
+	// * which entries to keep
+	// * @return the map obtained from given map by keeping the specified subset
+	// * of entries
+	// */
+	// <K extends SymbolicExpression, V extends SymbolicExpression>
+	// SymbolicMap<K, V> mask(
+	// SymbolicMap<K, V> map, boolean[] mask);
 
 }

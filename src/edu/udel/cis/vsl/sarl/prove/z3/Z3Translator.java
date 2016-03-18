@@ -27,7 +27,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.util.FastList;
@@ -1202,26 +1201,6 @@ public class Z3Translator {
 		return result;
 	}
 
-	private FastList<String> translateAssoc(String operator,
-			String defaultValue, SymbolicCollection<?> terms) {
-		int size = terms.size();
-
-		if (size == 0) {
-			return new FastList<>(defaultValue);
-		} else if (size == 1) {
-			return translate(terms.getFirst());
-		} else {
-			FastList<String> result = new FastList<>("(", operator);
-
-			for (SymbolicExpression term : terms) {
-				result.add(" ");
-				result.append(translate(term));
-			}
-			result.add(")");
-			return result;
-		}
-	}
-
 	private FastList<String> translateKeySet(String operator,
 			String defaultValue, SymbolicExpression expression) {
 		int size = expression.numArguments();
@@ -1256,23 +1235,6 @@ public class Z3Translator {
 		return result;
 	}
 
-	private FastList<String> translateBinaryOrAssoc(String operator,
-			String defaultValue, SymbolicExpression expression) {
-		int numArgs = expression.numArguments();
-
-		if (numArgs == 2) {
-			return translateBinary(operator,
-					(SymbolicExpression) expression.argument(0),
-					(SymbolicExpression) expression.argument(1));
-		} else if (numArgs == 1) {
-			return translateAssoc(operator, defaultValue,
-					(SymbolicCollection<?>) expression.argument(0));
-		} else {
-			throw new SARLInternalException(
-					"Expected 1 or 2 arguments for " + operator);
-		}
-	}
-
 	/**
 	 * Translates a SARL symbolic expression to the language of CVC.
 	 * 
@@ -1290,7 +1252,7 @@ public class Z3Translator {
 			result = translateKeySet("+", "0", expression);
 			break;
 		case AND:
-			result = translateBinaryOrAssoc("and", "true", expression);
+			result = translateKeySet("and", "true", expression);
 			break;
 		case APPLY:
 			result = translateApply(expression);
@@ -1367,7 +1329,7 @@ public class Z3Translator {
 			result = translateNot(expression);
 			break;
 		case OR:
-			result = translateBinaryOrAssoc("or", "false", expression);
+			result = translateKeySet("or", "false", expression);
 			break;
 		case POWER:
 			result = translatePower(expression);

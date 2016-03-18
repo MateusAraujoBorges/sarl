@@ -51,9 +51,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSet;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
@@ -772,21 +770,14 @@ public class CommonPreUniverse implements PreUniverse {
 	 * expressions or SymbolicConstantExpressionIF. There are separate methods
 	 * for those.
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public SymbolicExpression make(SymbolicOperator operator, SymbolicType type,
 			SymbolicObject[] args) {
-		int numArgs = args.length;
-
 		switch (operator) {
-		case ADD: // 1 or 2 args
+		case ADD:
 			return add(type, args);
-		case AND: // 1 or 2 args
-			if (numArgs == 1) // collection
-				return and((Iterable<? extends BooleanExpression>) args[0]);
-			else
-				return and((BooleanExpression) args[0],
-						(BooleanExpression) args[1]);
+		case AND:
+			return and(args);
 		case APPLY: // 2 args: function and sequence
 			return apply((SymbolicExpression) args[0],
 					(SymbolicSequence<?>) args[1]);
@@ -853,13 +844,8 @@ public class CommonPreUniverse implements PreUniverse {
 					(SymbolicExpression) args[1]);
 		case NOT:
 			return not((BooleanExpression) args[0]);
-		case OR: {
-			if (numArgs == 1) // collection
-				return or((Iterable<? extends BooleanExpression>) args[0]);
-			else
-				return or((BooleanExpression) args[0],
-						(BooleanExpression) args[1]);
-		}
+		case OR:
+			return or(args);
 		case POWER: // exponent could be expression or int constant
 			if (args[1] instanceof SymbolicExpression)
 				return power((NumericExpression) args[0],
@@ -965,6 +951,40 @@ public class CommonPreUniverse implements PreUniverse {
 		for (BooleanExpression arg : args)
 			result = and(result, arg);
 		return result;
+	}
+
+	private BooleanExpression and(SymbolicObject[] args) {
+		int n = args.length;
+
+		if (n == 0)
+			return trueExpr;
+		else {
+			BooleanExpression result = (BooleanExpression) args[0];
+
+			for (int i = 1; i < n; i++) {
+				BooleanExpression next = (BooleanExpression) args[i];
+
+				result = and(result, next);
+			}
+			return result;
+		}
+	}
+
+	private BooleanExpression or(SymbolicObject[] args) {
+		int n = args.length;
+
+		if (n == 0)
+			return falseExpr;
+		else {
+			BooleanExpression result = (BooleanExpression) args[0];
+
+			for (int i = 1; i < n; i++) {
+				BooleanExpression next = (BooleanExpression) args[i];
+
+				result = or(result, next);
+			}
+			return result;
+		}
 	}
 
 	/**
@@ -2373,11 +2393,12 @@ public class CommonPreUniverse implements PreUniverse {
 		proverValidCount++;
 	}
 
-	@Override
-	public <T extends SymbolicExpression> SymbolicCollection<T> basicCollection(
-			Collection<T> javaCollection) {
-		return collectionFactory.basicCollection(javaCollection);
-	}
+	// @Override
+	// public <T extends SymbolicExpression> SymbolicCollection<T>
+	// basicCollection(
+	// Collection<T> javaCollection) {
+	// return collectionFactory.basicCollection(javaCollection);
+	// }
 
 	@Override
 	public SymbolicType referenceType() {
@@ -2648,11 +2669,11 @@ public class CommonPreUniverse implements PreUniverse {
 		}
 	}
 
-	@Override
-	public SymbolicExpression emptySet(SymbolicSetType setType) {
-		return expression(SymbolicOperator.CONCRETE, setType,
-				collectionFactory.emptySortedSet());
-	}
+	// @Override
+	// public SymbolicExpression emptySet(SymbolicSetType setType) {
+	// return expression(SymbolicOperator.CONCRETE, setType,
+	// collectionFactory.emptySortedSet());
+	// }
 
 	// @Override
 	// public SymbolicExpression singletonSet(SymbolicSetType setType,
@@ -2661,37 +2682,38 @@ public class CommonPreUniverse implements PreUniverse {
 	// collectionFactory.singletonHashSet(value));
 	// }
 
-	/**
-	 * Under construction.
-	 */
-	@Override
-	public BooleanExpression isElementOf(SymbolicExpression value,
-			SymbolicExpression set) {
-		if (set == null)
-			throw err("Set argument to isElementof is null");
-		if (set.type().typeKind() != SymbolicTypeKind.SET)
-			throw err("Argument to isElementOf does not have set type: " + set
-					+ "\nType is: " + set.type());
-		if (value == null)
-			throw err("Value argument to isElementOf is null");
-		if (set.operator() != SymbolicOperator.CONCRETE)
-			throw err("Sets must be concrete for now");
-		else {
-			SymbolicObject arg0 = set.argument(0);
-			boolean result;
-
-			if (!(arg0 instanceof SymbolicSet))
-				throw err("Argument of concrete set expression is not a set: "
-						+ set);
-			@SuppressWarnings("unchecked")
-			SymbolicSet<SymbolicExpression> contents = (SymbolicSet<SymbolicExpression>) arg0;
-			// check type of value compatible with set element type?
-			result = contents.contains(value);
-			return bool(result);
-			// TODO: problem: need to compute equals on each element???????
-			// Disjunction.
-		}
-	}
+	// /**
+	// * Under construction.
+	// */
+	// @Override
+	// public BooleanExpression isElementOf(SymbolicExpression value,
+	// SymbolicExpression set) {
+	// if (set == null)
+	// throw err("Set argument to isElementof is null");
+	// if (set.type().typeKind() != SymbolicTypeKind.SET)
+	// throw err("Argument to isElementOf does not have set type: " + set
+	// + "\nType is: " + set.type());
+	// if (value == null)
+	// throw err("Value argument to isElementOf is null");
+	// if (set.operator() != SymbolicOperator.CONCRETE)
+	// throw err("Sets must be concrete for now");
+	// else {
+	// SymbolicObject arg0 = set.argument(0);
+	// boolean result;
+	//
+	// if (!(arg0 instanceof SymbolicSet))
+	// throw err("Argument of concrete set expression is not a set: "
+	// + set);
+	// @SuppressWarnings("unchecked")
+	// SymbolicSet<SymbolicExpression> contents =
+	// (SymbolicSet<SymbolicExpression>) arg0;
+	// // check type of value compatible with set element type?
+	// result = contents.contains(value);
+	// return bool(result);
+	// // TODO: problem: need to compute equals on each element???????
+	// // Disjunction.
+	// }
+	// }
 
 	@Override
 	public BooleanExpression isSubsetOf(SymbolicExpression set1,

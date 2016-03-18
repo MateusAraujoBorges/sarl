@@ -30,7 +30,7 @@ public abstract class KeySetFactory<K extends SymbolicExpression, V extends Symb
 	 *            the key to look for; any member of K
 	 * @return index of the entry with that key, or -1 if there is none
 	 */
-	private int find(V[] set, K key) {
+	protected int find(V[] set, K key) {
 		int lo = 0, hi = set.length - 1;
 
 		while (lo <= hi) {
