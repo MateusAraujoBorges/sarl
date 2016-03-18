@@ -98,6 +98,19 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
+	 * Testing the add method for empty arg. It should have at least one
+	 * element, if not, throw exception.
+	 */
+	@Test(expected = SARLException.class)
+	public void addEmptySeqIntTest() {
+		List<NumericExpression> emptyList = new ArrayList<NumericExpression>();
+		NumericExpression result;
+
+		result = universe.add(emptyList);
+		assertEquals(universe.zeroInt(), result);
+	}
+
+	/**
 	 * Testing the subtract method for two concrete IntegerNumbers;test: 3 -
 	 * (-1) = 4;
 	 */
@@ -193,10 +206,29 @@ public class IntegerArithmeticTest {
 	}
 
 	/**
-	 * Testing the divide method for two concrete IntegerNumbers; In C,
-	 * a%b=a-(a/b)*b. test examples: a=4, b=3: a/b=1, a%b=4-3=1 a=4, b=-3:
-	 * a/b=-1, a%b=4-(-1)(-3)=1 a=-4, b=3: a/b=-1, a%b=-4-(-1)3=-1 a=-4, b=-3:
-	 * a/b=1, a%b=-4-1(-3)=-1
+	 * Testing the multiply method for empty arg. It should have at least one
+	 * element, if not, throw exception.
+	 */
+	@Test(expected = SARLException.class)
+	public void multiplyEmptySeqIntTest() {
+		List<NumericExpression> emptyList = new ArrayList<NumericExpression>();
+		NumericExpression result;
+
+		result = universe.multiply(emptyList);
+		assertEquals(universe.oneInt(), result);
+	}
+
+	/**
+	 * Testing the divide method for two concrete IntegerNumbers;
+	 * 
+	 * <pre>
+	 * In C, a%b=a-(a/b)*b. 
+	 * test examples: 
+	 * a=4, b=3: a/b=1, a%b=4-3=1 
+	 * a=4, b=-3: a/b=-1, a%b=4-(-1)(-3)=1 
+	 * a=-4, b=3: a/b=-1, a%b=-4-(-1)3=-1 
+	 * a=-4, b=-3: a/b=1, a%b=-4-1(-3)=-1
+	 * </pre>
 	 */
 	@Test
 	public void divideConcreteIntTest() {
