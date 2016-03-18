@@ -86,6 +86,8 @@ public class IntegerArithmeticDevTest {
 //		assertEquals(ResultType.YES, result2.getResultType());
 	}
 	
+	//TODO:
+	// cvc4 exception...
 	@Test
 	public void powerTest(){
 		SymbolicType integerType = universe.integerType();
