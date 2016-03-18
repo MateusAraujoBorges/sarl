@@ -69,37 +69,52 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
  * @author siegel
  */
 public interface SymbolicExpression extends SymbolicObject {
+	
+	// operators using sequences:
+	// APPLY, DENSE_ARRAY_WRITE.  Both take 2 args, second is sequence.
+	// APPLY: sequence of arguments to function.
+	// DENSE_ARRAY_WRITE: sequence of elements of an array.
+	// CONCRETE: argument can be sequence: elements of a tuple or array
+	
+	// Solution: create a SequenceObject<T>, a kind of SymbolicObject
+	// that just wraps an array of T.  Very similar to a HomogeneousExpression,
+	// but no type, and no operator.   Create a sequenceFactory, just like
+	// setFactory and keySetFactory.  Consider putting these "factories"
+	// util.
+	
+	// APPLY & DENSE_ARRAY_WRITE: in both cases, 2nd argument is a SequenceObject.
+	
+	// CONCRETE array and tuple: the arguments are the elements of the array
+	// or tuple.   If they are numeric, use the numeric factory to create;
+	// if they are boolean, use boolean factory, else use a HomogeneousExpression<SymbolicExpression>.
+
+	
+
 
 	/**
 	 * An enumerated type for the different kinds of symbolic expressions.
 	 */
 	public enum SymbolicOperator {
 		/**
-		 * Operator for an expression representing the sum of symbolic
-		 * expressions. This has 1 or 2 arguments. If 1, the argument is an
-		 * instance of <code>{@link Iterable}&lt;? extends
-		 * {@link NumericExpression}&gt;</code> with at least one element; the
-		 * {@link #ADD} expression represents the sum of the elements in the
-		 * collection. The elements of the collection must all have the same
-		 * numeric (integer or real) type. If 2, then both arguments are
-		 * {@link NumericExpression}s and have the same numeric (integer or
-		 * real) type, and the {@link #ADD} expression represents the sum of the
-		 * two arguments. Result is also a {@link NumericExpression}.
+		 * Operator for an expression representing the sum of its arguments. The
+		 * arguments and the expression are all instances of
+		 * {@link NumericExpression}. The arguments must all have the same
+		 * numeric (integer or real) type, which is also the type of the
+		 * expression. There can be any number of arguments (including 0). The
+		 * sum with 0 arguments is equivalent to the 0 of the type of the
+		 * expression.
 		 */
 		ADD,
 		/**
 		 * Operator for an expression representing the conjunction of symbolic
-		 * expressions of boolean type. Has 1 or 2 arguments, similar to
-		 * {@link #ADD}. If 1, the argument is an
-		 * <code>{@link Iterable}&lt;? extends
-		 * {@link BooleanExpression}&gt;</code>. All symbolic expressions in the
-		 * collection have boolean type. If there are 2 arguments, they are both
-		 * {@link BooleanExpression}s. Result is also a
-		 * {@link BooleanExpression}.
+		 * expressions of boolean type. The arguments and the expression are all
+		 * instances of {@link BooleanExpression}. The arguments and the
+		 * expression itself all have boolean type. There can be any number of
+		 * arguments (including 0). The conjunction with 0 arguments is
+		 * equivalent to the "true" expression.
 		 * 
 		 * @see #OR
 		 * @see #NOT
-		 * @see #ADD
 		 */
 		AND,
 		/**

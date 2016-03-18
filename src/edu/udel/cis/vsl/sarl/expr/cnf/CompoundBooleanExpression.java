@@ -74,7 +74,9 @@ public class CompoundBooleanExpression extends
 
 	@Override
 	public BooleanExpression[] getClauses() {
-		return arguments;
+		if (operator == SymbolicOperator.AND)
+			return arguments;
+		return new BooleanExpression[] { this };
 	}
 
 }
