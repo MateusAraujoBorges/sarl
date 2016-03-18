@@ -92,8 +92,8 @@ public class BooleanTest {
 		BooleanExpression nf = universe.not(f1);
 		BooleanExpression nnf = universe.not(nf);
 
-		assertEquals(universe.trueExpression(), nf);
-		assertEquals(universe.falseExpression(), nnf);
+		assertEquals(trueExpr, nf);
+		assertEquals(falseExpr, nnf);
 	}
 
 	/**
@@ -106,9 +106,9 @@ public class BooleanTest {
 		BooleanExpression ff = universe.and(f1, f2);
 		BooleanExpression tf = universe.and(f1, t1);
 
-		assertEquals(universe.trueExpression(), tt); // true iff both true
-		assertEquals(universe.falseExpression(), ff);
-		assertEquals(universe.falseExpression(), tf);
+		assertEquals(trueExpr, tt); // true iff both true
+		assertEquals(falseExpr, ff);
+		assertEquals(falseExpr, tf);
 	}
 
 	/**
@@ -133,10 +133,10 @@ public class BooleanTest {
 		booleanList3.add(falseExpr);
 		booleanList3.add(falseExpr);
 
-		assertEquals(universe.and(booleanList1), trueExpr);
-		assertEquals(universe.and(booleanList2), falseExpr);
-		assertEquals(universe.and(booleanList3), falseExpr);
-		assertEquals(universe.and(booleanEmptyList), trueExpr);
+		assertEquals(trueExpr, universe.and(booleanList1));
+		assertEquals(falseExpr, universe.and(booleanList2));
+		assertEquals(falseExpr, universe.and(booleanList3));
+		assertEquals(trueExpr, universe.and(booleanEmptyList));
 	}
 
 	/**
@@ -148,9 +148,9 @@ public class BooleanTest {
 		BooleanExpression ff = universe.or(f1, f2);
 		BooleanExpression tf = universe.or(f1, t1);
 
-		assertEquals(universe.trueExpression(), tt);
-		assertEquals(universe.falseExpression(), ff); // false iff both false
-		assertEquals(universe.trueExpression(), tf);
+		assertEquals(trueExpr, tt);
+		assertEquals(falseExpr, ff); // false iff both false
+		assertEquals(trueExpr, tf);
 	}
 
 	/**
@@ -175,10 +175,10 @@ public class BooleanTest {
 		booleanList3.add(falseExpr);
 		booleanList3.add(falseExpr);
 
-		assertEquals(universe.or(booleanList1), trueExpr);
-		assertEquals(universe.or(booleanList2), trueExpr);
-		assertEquals(universe.or(booleanList3), falseExpr);
-		assertEquals(universe.or(booleanEmptyList), falseExpr);
+		assertEquals(trueExpr, universe.or(booleanList1));
+		assertEquals(trueExpr, universe.or(booleanList2));
+		assertEquals(falseExpr, universe.or(booleanList3));
+		assertEquals(falseExpr, universe.or(booleanEmptyList));
 	}
 
 	/**
@@ -191,10 +191,10 @@ public class BooleanTest {
 		BooleanExpression ft = universe.implies(f1, t1);
 		BooleanExpression tf = universe.implies(t2, f2);
 
-		assertEquals(universe.trueExpression(), tt);
-		assertEquals(universe.trueExpression(), ff);
-		assertEquals(universe.trueExpression(), ft);
-		assertEquals(universe.falseExpression(), tf); // false iff T->F
+		assertEquals(trueExpr, tt);
+		assertEquals(trueExpr, ff);
+		assertEquals(trueExpr, ft);
+		assertEquals(falseExpr, tf); // false iff T->F
 	}
 
 	/**
@@ -207,10 +207,10 @@ public class BooleanTest {
 		BooleanExpression ft = universe.equiv(f1, t1);
 		BooleanExpression tf = universe.equiv(t2, f2);
 
-		assertEquals(universe.trueExpression(), tt); // true iff both the same
-		assertEquals(universe.trueExpression(), ff);
-		assertEquals(universe.falseExpression(), ft);
-		assertEquals(universe.falseExpression(), tf);
+		assertEquals(trueExpr, tt); // true iff both the same
+		assertEquals(trueExpr, ff);
+		assertEquals(falseExpr, ft);
+		assertEquals(falseExpr, tf);
 	}
 
 	/**
