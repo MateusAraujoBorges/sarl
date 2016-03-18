@@ -282,9 +282,11 @@ public class BooleanTest {
 		BooleanExpression b3 = universe.equals(x, x);
 		BooleanExpression b4 = universe.equals(universe.oneInt(), r1);
 
-		out.println("b1=" + b1);
-		out.println("b2=" + b2);
-		out.println("b4=" + b4);
+		if (debug) {
+			out.println("b1=" + b1);
+			out.println("b2=" + b2);
+			out.println("b4=" + b4);
+		}
 		assertEquals(falseExpr, b0);
 		assertEquals(trueExpr, b3);
 		assertEquals(trueExpr, b5); // test neq method
