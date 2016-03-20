@@ -69,27 +69,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
  * @author siegel
  */
 public interface SymbolicExpression extends SymbolicObject {
-	
-	// operators using sequences:
-	// APPLY, DENSE_ARRAY_WRITE.  Both take 2 args, second is sequence.
-	// APPLY: sequence of arguments to function.
-	// DENSE_ARRAY_WRITE: sequence of elements of an array.
-	// CONCRETE: argument can be sequence: elements of a tuple or array
-	
-	// Solution: create a SequenceObject<T>, a kind of SymbolicObject
-	// that just wraps an array of T.  Very similar to a HomogeneousExpression,
-	// but no type, and no operator.   Create a sequenceFactory, just like
-	// setFactory and keySetFactory.  Consider putting these "factories"
-	// util.
-	
-	// APPLY & DENSE_ARRAY_WRITE: in both cases, 2nd argument is a SequenceObject.
-	
-	// CONCRETE array and tuple: the arguments are the elements of the array
-	// or tuple.   If they are numeric, use the numeric factory to create;
-	// if they are boolean, use boolean factory, else use a HomogeneousExpression<SymbolicExpression>.
-
-	
-
 
 	/**
 	 * An enumerated type for the different kinds of symbolic expressions.
@@ -378,6 +357,10 @@ public interface SymbolicExpression extends SymbolicObject {
 		 * {@link NumericExpression} of the same type.
 		 */
 		SUBTRACT,
+		/**
+		 * Operator which represents its arguments as a single sequence.
+		 */
+		SEQUENCE,
 		/**
 		 * Operator used to represent a symbolic constant. Takes one argument, a
 		 * {@link StringObject}, which gives the name of the symbolic constant.

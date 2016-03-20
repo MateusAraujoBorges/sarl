@@ -1541,6 +1541,31 @@ public interface CoreUniverse {
 	// Arrays...
 
 	/**
+	 * <p>
+	 * Creates a concrete array expression backed by the given Java array. Any
+	 * changes to the Java array will also change the returned expression, so
+	 * the Java array should never be modified after this method is called.
+	 * </p>
+	 * 
+	 * <p>
+	 * Precondition: every element of <code>elements</code> must have type
+	 * <code>elementType</code>. This is <b>not</b> necessarily checked. If this
+	 * condition is not met, behavior is undefined.
+	 * </p>
+	 * 
+	 * @param elementType
+	 *            the type of each element of <code>elements</code>
+	 * @param elements
+	 *            array of symbolic expressions, each of type
+	 *            <code>elementType</code>
+	 * @return symbolic expression of type {@link SymbolicCompleteArrayType}
+	 *         with element type <code>elementType</code> and length
+	 *         <code>elements.length</code> wrapping <code>elements</code>
+	 */
+	SymbolicExpression array(SymbolicType elementType,
+			SymbolicExpression[] elements);
+
+	/**
 	 * Returns the concrete array consisting of given sequence of elements. The
 	 * type of the array will be the complete array type determined by the
 	 * element type and the number of elements.

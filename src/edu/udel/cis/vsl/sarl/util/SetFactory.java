@@ -1,12 +1,8 @@
-package edu.udel.cis.vsl.sarl.expr.common;
+package edu.udel.cis.vsl.sarl.util;
 
 import java.util.Comparator;
 
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
-import edu.udel.cis.vsl.sarl.util.BinaryOperator;
-
-public abstract class SetFactory<V extends SymbolicExpression>
-		extends KeySetFactory<V, V> {
+public abstract class SetFactory<V> extends KeySetFactory<V, V> {
 
 	private BinaryOperator<V> project1 = new BinaryOperator<V>() {
 		@Override

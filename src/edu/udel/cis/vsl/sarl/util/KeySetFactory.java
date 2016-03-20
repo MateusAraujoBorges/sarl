@@ -1,12 +1,9 @@
-package edu.udel.cis.vsl.sarl.expr.common;
+package edu.udel.cis.vsl.sarl.util;
 
 import java.util.Comparator;
 import java.util.Iterator;
 
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
-import edu.udel.cis.vsl.sarl.util.BinaryOperator;
-
-public abstract class KeySetFactory<K extends SymbolicExpression, V extends SymbolicExpression> {
+public abstract class KeySetFactory<K extends Object, V extends Object> {
 
 	private V[] emptySet;
 

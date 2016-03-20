@@ -29,8 +29,8 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
-import edu.udel.cis.vsl.sarl.expr.common.KeySetFactory;
 import edu.udel.cis.vsl.sarl.ideal.common.One;
+import edu.udel.cis.vsl.sarl.util.KeySetFactory;
 
 /**
  * <p>

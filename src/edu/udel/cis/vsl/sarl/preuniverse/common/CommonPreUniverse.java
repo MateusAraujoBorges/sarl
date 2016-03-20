@@ -55,11 +55,13 @@ import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
+import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 import edu.udel.cis.vsl.sarl.util.Pair;
+import edu.udel.cis.vsl.sarl.util.SequenceFactory;
 
 public class CommonPreUniverse implements PreUniverse {
 
@@ -122,6 +124,8 @@ public class CommonPreUniverse implements PreUniverse {
 	 */
 	private NumericExpressionFactory numericFactory;
 
+	private SequenceFactory<SymbolicExpression> exprSeqFactory;
+
 	/**
 	 * The comparator on all symbolic objects used by this universe to sort such
 	 * objects.
@@ -181,6 +185,8 @@ public class CommonPreUniverse implements PreUniverse {
 	 */
 	private boolean showProverQueries = false;
 
+	private SymbolicExpression[] emptyExprArray = new SymbolicExpression[0];
+
 	// Constructor...
 
 	/**
@@ -212,6 +218,14 @@ public class CommonPreUniverse implements PreUniverse {
 		cleaner = new BoundCleaner(this, collectionFactory, typeFactory);
 		arrayIndex = (NumericSymbolicConstant) canonic(
 				symbolicConstant(stringObject("i"), integerType));
+		exprSeqFactory = new SequenceFactory<SymbolicExpression>() {
+
+			@Override
+			protected SymbolicExpression[] newArray(int size) {
+				return new SymbolicExpression[size];
+			}
+
+		};
 	}
 
 	// Helper methods...
@@ -852,6 +866,9 @@ public class CommonPreUniverse implements PreUniverse {
 						(NumericExpression) args[1]);
 			else
 				return power((NumericExpression) args[0], (IntObject) args[1]);
+		case SEQUENCE:
+			// no checks?
+			return expression(operator, type, args);
 		case SUBTRACT:
 			return subtract((NumericExpression) args[0],
 					(NumericExpression) args[1]);
@@ -1705,9 +1722,13 @@ public class CommonPreUniverse implements PreUniverse {
 				memberIndex, object);
 	}
 
-	/**
-	 * Need to know type of elements in case empty.
-	 */
+	@Override
+	public SymbolicExpression array(SymbolicType elementType,
+			SymbolicExpression elements[]) {
+		return expression(SymbolicOperator.SEQUENCE,
+				arrayType(elementType, integer(elements.length)), elements);
+	}
+
 	@Override
 	public SymbolicExpression array(SymbolicType elementType,
 			Iterable<? extends SymbolicExpression> elements) {
@@ -1729,8 +1750,15 @@ public class CommonPreUniverse implements PreUniverse {
 						+ element.type());
 			count++;
 		}
-		return expression(SymbolicOperator.CONCRETE,
-				arrayType(elementType, integer(count)), sequence(elements));
+
+		SymbolicExpression[] elementArray = new SymbolicExpression[count];
+
+		count = 0;
+		for (SymbolicExpression element : elements) {
+			elementArray[count] = element;
+			count++;
+		}
+		return array(elementType, elementArray);
 	}
 
 	@Override
@@ -1741,15 +1769,14 @@ public class CommonPreUniverse implements PreUniverse {
 		if (type.typeKind() != SymbolicTypeKind.ARRAY)
 			throw err(
 					"argument concreteArray not array type:\n" + concreteArray);
-		if (concreteArray.operator() != SymbolicOperator.CONCRETE) {
+		if (concreteArray.operator() != SymbolicOperator.SEQUENCE) {
 			throw err(
 					"append invoked on non-concrete array:\n" + concreteArray);
 		} else {
-			@SuppressWarnings("unchecked")
-			SymbolicSequence<SymbolicExpression> elements = (SymbolicSequence<SymbolicExpression>) concreteArray
-					.argument(0);
+			HomogeneousExpression<?> hArray = (HomogeneousExpression<?>) concreteArray;
+			SymbolicExpression[] elements = (SymbolicExpression[]) hArray
+					.arguments();
 			SymbolicType elementType = ((SymbolicArrayType) type).elementType();
-			SymbolicExpression result;
 
 			if (element == null || element.isNull())
 				throw err("Element to append has illegal value:\n" + element);
@@ -1757,11 +1784,8 @@ public class CommonPreUniverse implements PreUniverse {
 				throw err("Element to append has incompatible type:\n"
 						+ "Expected: " + elementType + "\nSaw: "
 						+ element.type());
-			elements = elements.add(element);
-			type = arrayType(elementType, integer(elements.size()));
-			result = expression(SymbolicOperator.CONCRETE, type,
-					sequence(elements));
-			return result;
+			elements = exprSeqFactory.add(elements, element);
+			return array(elementType, elements);
 		}
 	}
 
@@ -1773,34 +1797,28 @@ public class CommonPreUniverse implements PreUniverse {
 		if (type.typeKind() != SymbolicTypeKind.ARRAY)
 			throw err(
 					"argument concreteArray not array type:\n" + concreteArray);
-		if (concreteArray.operator() != SymbolicOperator.CONCRETE) {
+		if (concreteArray.operator() != SymbolicOperator.SEQUENCE) {
 			throw err("argument concreteArray is not concrete:\n"
 					+ concreteArray);
 		} else {
 			SymbolicType elementType = ((SymbolicArrayType) type).elementType();
-			@SuppressWarnings("unchecked")
-			SymbolicSequence<SymbolicExpression> elements = (SymbolicSequence<SymbolicExpression>) concreteArray
-					.argument(0);
-			int length = elements.size();
-			SymbolicExpression result;
+			HomogeneousExpression<?> hArray = (HomogeneousExpression<?>) concreteArray;
+			SymbolicExpression[] elements = (SymbolicExpression[]) hArray
+					.arguments();
+			int length = elements.length;
 
 			if (index < 0 || index >= length)
 				throw err("Index in removeElementAt out of range:\narray: "
 						+ concreteArray + "\nlength: " + length + "\nindex: "
 						+ index);
-			elements = elements.remove(index);
-			type = arrayType(elementType, integer(elements.size()));
-			result = expression(SymbolicOperator.CONCRETE, type,
-					sequence(elements));
-			return result;
+			elements = exprSeqFactory.remove(elements, index);
+			return array(elementType, elements);
 		}
 	}
 
 	@Override
 	public SymbolicExpression emptyArray(SymbolicType elementType) {
-		return expression(SymbolicOperator.CONCRETE,
-				arrayType(elementType, zeroInt()),
-				collectionFactory.emptySequence());
+		return array(elementType, emptyExprArray);
 	}
 
 	@Override
@@ -1817,8 +1835,7 @@ public class CommonPreUniverse implements PreUniverse {
 			SymbolicExpression[] elements = new SymbolicExpression[lengthInt];
 
 			Arrays.fill(elements, value);
-			result = expression(SymbolicOperator.CONCRETE, arrayType,
-					collectionFactory.sequence(elements));
+			result = array(elementType, elements);
 		}
 		return result;
 	}
@@ -1875,9 +1892,9 @@ public class CommonPreUniverse implements PreUniverse {
 										+ lengthNumber + "\nindex: "
 										+ indexNumber);
 				}
-				if (op == SymbolicOperator.CONCRETE)
-					return ((SymbolicSequence<?>) array.argument(0))
-							.get(indexNumber.intValue());
+				if (op == SymbolicOperator.SEQUENCE)
+					return (SymbolicExpression) array
+							.argument(indexNumber.intValue());
 				else if (op == SymbolicOperator.DENSE_ARRAY_WRITE) {
 					SymbolicExpression origin = (SymbolicExpression) array
 							.argument(0);
@@ -1931,12 +1948,14 @@ public class CommonPreUniverse implements PreUniverse {
 							+ "\narray: " + array + "\nextent: " + lengthNumber
 							+ "\nindex: " + indexNumber);
 			}
-			if (op == SymbolicOperator.CONCRETE) {
-				@SuppressWarnings("unchecked")
-				SymbolicSequence<SymbolicExpression> sequence = (SymbolicSequence<SymbolicExpression>) array
-						.argument(0);
+			if (op == SymbolicOperator.SEQUENCE) {
+				HomogeneousExpression<?> hArray = (HomogeneousExpression<?>) array;
+				SymbolicExpression[] sequence = (SymbolicExpression[]) hArray
+						.arguments();
+				SymbolicExpression[] newSequence = exprSeqFactory.set(sequence,
+						indexInt, value);
 
-				return expression(op, arrayType, sequence.set(indexInt, value));
+				return expression(op, arrayType, newSequence);
 			}
 			if (indexInt < DENSE_ARRAY_MAX_SIZE) {
 				SymbolicSequence<SymbolicExpression> sequence;
@@ -1960,8 +1979,13 @@ public class CommonPreUniverse implements PreUniverse {
 				// has been over-written...
 				if (lengthNumber != null && sequence.getNumNull() == 0
 						&& lengthNumber.intValue() == sequence.size()) {
-					return expression(SymbolicOperator.CONCRETE, arrayType,
-							sequence);
+					int n = sequence.size();
+					SymbolicExpression[] newArray = new SymbolicExpression[n];
+
+					for (int i = 0; i < n; i++)
+						newArray[i] = sequence.get(i);
+					return expression(SymbolicOperator.SEQUENCE, arrayType,
+							newArray);
 				}
 				return expression(SymbolicOperator.DENSE_ARRAY_WRITE, arrayType,
 						origin, sequence);
@@ -2089,9 +2113,16 @@ public class CommonPreUniverse implements PreUniverse {
 				IntegerNumber lengthNumber = (IntegerNumber) extractNumber(
 						((SymbolicCompleteArrayType) arrayType).extent());
 
-				if (lengthNumber != null && count == lengthNumber.intValue())
-					return expression(SymbolicOperator.CONCRETE, arrayType,
-							sequence(values));
+				if (lengthNumber != null && count == lengthNumber.intValue()) {
+					SymbolicExpression[] elements = new SymbolicExpression[count];
+
+					count = 0;
+					for (SymbolicExpression value : values) {
+						elements[count] = value;
+						count++;
+					}
+					return array(elementType, elements);
+				}
 			}
 			return expression(SymbolicOperator.DENSE_ARRAY_WRITE, arrayType,
 					array, sequence(values));
@@ -2169,8 +2200,7 @@ public class CommonPreUniverse implements PreUniverse {
 					elements[i] = simpleSubstituter(boundVar, integer(i))
 							.apply(elementExpr);
 				}
-				return expression(SymbolicOperator.CONCRETE, arrayType,
-						collectionFactory.sequence(elements));
+				return array(arrayType.elementType(), elements);
 			}
 		}
 		return expression(SymbolicOperator.ARRAY_LAMBDA, arrayType, function);
@@ -2641,17 +2671,16 @@ public class CommonPreUniverse implements PreUniverse {
 		if (type.typeKind() != SymbolicTypeKind.ARRAY)
 			throw err(
 					"argument concreteArray not array type:\n" + concreteArray);
-		if (concreteArray.operator() != SymbolicOperator.CONCRETE) {
+		if (concreteArray.operator() != SymbolicOperator.SEQUENCE) {
 			throw err("argument concreteArray is not concrete:\n"
 					+ concreteArray);
 
 		} else {
 			SymbolicType elementType = ((SymbolicArrayType) type).elementType();
-			@SuppressWarnings("unchecked")
-			SymbolicSequence<SymbolicExpression> elements = (SymbolicSequence<SymbolicExpression>) concreteArray
-					.argument(0);
-			int length = elements.size();
-			SymbolicExpression result;
+			HomogeneousExpression<?> hArray = (HomogeneousExpression<?>) concreteArray;
+			SymbolicExpression[] elements = (SymbolicExpression[]) hArray
+					.arguments();
+			int length = elements.length;
 
 			if (index < 0 || index > length)
 				throw err("Index out of range:\narray: " + concreteArray
@@ -2661,11 +2690,8 @@ public class CommonPreUniverse implements PreUniverse {
 						"Argument value to method insertElementAt has incompatible type."
 								+ "\nvalue: " + value + "\ntype: "
 								+ value.type() + "\nExpected: " + elementType);
-			elements = elements.insert(index, value);
-			type = arrayType(elementType, integer(elements.size()));
-			result = expression(SymbolicOperator.CONCRETE, type,
-					sequence(elements));
-			return result;
+			elements = exprSeqFactory.insert(elements, index, value);
+			return array(elementType, elements);
 		}
 	}
 

@@ -1,4 +1,77 @@
 
+Step 1:
+  make concrete arrays instances of HomogeneousExpression<SymbolicExpression>
+
+Re-factor expressions/objects
+
+CURRENT:
+Symbolic Objects:
+current fields: kind, hashCode, hashed, id, order (5)
+current kinds of objects:
+BOOLEAN, CHAR, INT, NUMBER, STRING : make these primitive SymbolicExpressions
+TYPE, TYPE_SEQUENCE
+EXPRESSION_COLLECTION
+EXPRESSION
+
+NEW:
+
+  interface SymbolicObject
+     objectKind(): SymbolicObjectKind 
+     objectCategory(): TYPE, EXPRESSION, SEQUENCE, INT
+  interface SymbolicType extends SymbolicObject
+  interface Sequence<T> extends SymbolicObject
+  interface SymbolicExpression extends SymbolicObject
+  interface IntObject extends SymbolicObject
+  
+  class CommonObject implements SymbolicObject [hashCode, id]
+  class CommonSymbolicType extends CommonObject
+  class CommonSequence<T> extends SymbolicSequence<T>
+  
+    
+fields: hashCode, id (2)
+put hashed in id field: 
+  id=-2: not hashed
+  id=-1: hashed, but not canonic
+  id=0,1,2,... : canonic
+the object kind can be obtained by a method (not in field)
+equals: compare kinds, then go straight to the intrinsicEquals
+compare: can't just order by kind?
+hashCode:
+
+New kinds of objects:
+TYPE : a type, instanceof SymbolicType
+EXPRESSION : something representing a value, instanceof SymbolicExpression
+SEQUENCE : a sequence of objects of some kind, instanceof SequenceObject
+INT : a Java int
+
+interface SymbolicExpression: represents a value
+  type(): SymbolicType
+
+The following have 0 args:
+interface CharObject extends SymbolicExpression: getChar()
+interface StringObject extends SymbolicExpression: getString()
+interface BooleanObject extends SymbolicExpression: getBoolean()
+interface NumberObject extends SymbolicExpression: getNumber
+
+interface CompoundExpression extends SymbolicExpression:
+  completely determined by type, operator, arguments
+  operator(): SymbolicOperator
+  numArgs(): int
+  argument(int) : SymbolicObject
+  arguments: ... SymbolicObject
+
+Some compound expressions:
+
+ADD, MULTIPLY, etc.
+SEQUENCE: could be concrete array or tuple, depending on type.
+DENSE_ARRAY_WRITE (keep track of NULLs)
+  - make it a special class with its own fields (numNulls)
+APPLY
+
+Tuple types, function types also have sequences.
+----
+
+
 Design:
 
 universe

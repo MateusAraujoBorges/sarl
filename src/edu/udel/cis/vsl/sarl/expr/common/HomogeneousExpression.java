@@ -623,6 +623,15 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			if (atomize)
 				atomize(result);
 			return result;
+		case SEQUENCE:
+			result.append("[");
+			for (int i = 0; i < arguments.length; i++) {
+				if (i > 0)
+					result.append(",");
+				result.append(arguments[i].toStringBuffer(false));
+			}
+			result.append("]");
+			return result;
 		case SUBTRACT:
 			processBinary(result, " - ", arguments[0], arguments[1], true);
 			if (atomize)

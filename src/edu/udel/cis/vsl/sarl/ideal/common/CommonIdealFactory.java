@@ -46,7 +46,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
-import edu.udel.cis.vsl.sarl.expr.common.KeySetFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
@@ -59,6 +58,7 @@ import edu.udel.cis.vsl.sarl.number.real.Exponentiator;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 import edu.udel.cis.vsl.sarl.util.BinaryOperator;
+import edu.udel.cis.vsl.sarl.util.KeySetFactory;
 
 /**
  * <p>
