@@ -12,15 +12,18 @@ import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.expr.ArrayElementReference;
+import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.OffsetReference;
 import edu.udel.cis.vsl.sarl.IF.expr.ReferenceExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.TupleComponentReference;
 import edu.udel.cis.vsl.sarl.IF.expr.UnionMemberReference;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
@@ -73,7 +76,7 @@ public class ReferenceTest {
 
 	private SymbolicArrayType arrayType = universe.arrayType(realType);
 
-	//private SymbolicArrayType array2dType = universe.arrayType(arrayType);
+	// private SymbolicArrayType array2dType = universe.arrayType(arrayType);
 
 	private SymbolicTupleType tupleType = universe.tupleType(
 			universe.stringObject("tuple"),
@@ -245,9 +248,27 @@ public class ReferenceTest {
 	@Test
 	public void offset() {
 		OffsetReference or0 = universe.offsetReference(identityReference, zero);
-		//OffsetReference or1 = universe.offsetReference(identityReference, one);
+		// OffsetReference or1 = universe.offsetReference(identityReference,
+		// one);
 
 		assertEquals(x, universe.dereference(x, or0));
+	}
+
+	@Test
+	public void reasonerTest() {
+		ReferenceExpression self = universe.identityReference();
+		ReferenceExpression arrayEle1 = universe.arrayElementReference(self,
+				universe.integer(1));
+		Reasoner reasoner = universe.reasoner(universe.trueExpression());
+		SymbolicFunctionType functionType = universe
+				.functionType(Arrays.asList(universe.referenceType()),
+						universe.booleanType());
+		SymbolicConstant function = universe.symbolicConstant(
+				universe.stringObject("function"), functionType);
+		BooleanExpression claim = (BooleanExpression) universe.apply(function,
+				Arrays.asList(arrayEle1));
+
+		reasoner.isValid(claim);
 	}
 
 	@Test(expected = SARLException.class)
