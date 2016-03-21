@@ -3,6 +3,8 @@ package edu.udel.cis.vsl.sarl.IF;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -10,6 +12,7 @@ import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.ReferenceExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
@@ -209,5 +212,26 @@ public class TupleTest {
 		assertEquals(tuple_int_int1, tuple_int_int3);
 		assert sUniverse.equals(tuple_int_int1, tuple_int_int1).isTrue();
 		assert sUniverse.equals(tuple_int_int1, tuple_int_int2).isFalse();
+	}
+
+	@Test
+	public void tuple_substitute() {
+		SymbolicTupleType tupleType = sUniverse.tupleType(
+				sUniverse.stringObject("variable_ref"),
+				Arrays.asList(sUniverse.integerType(),
+						sUniverse.referenceType()));
+		ReferenceExpression self = sUniverse.identityReference();
+		ReferenceExpression arrayEle1 = sUniverse.arrayElementReference(self,
+				int_1);
+		SymbolicExpression tuple = sUniverse.tuple(tupleType,
+				Arrays.asList(int_1, arrayEle1));
+		Map<SymbolicExpression, SymbolicExpression> oldToNew = new HashMap<>();
+
+		oldToNew.put(int_1, int_2);
+
+		UnaryOperator<SymbolicExpression> substituter = sUniverse
+				.mapSubstituter(oldToNew);
+
+		tuple = substituter.apply(tuple);
 	}
 }
