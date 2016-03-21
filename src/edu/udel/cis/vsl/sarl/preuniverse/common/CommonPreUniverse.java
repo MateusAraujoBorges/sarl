@@ -866,7 +866,8 @@ public class CommonPreUniverse implements PreUniverse {
 						(NumericExpression) args[1]);
 			else
 				return power((NumericExpression) args[0], (IntObject) args[1]);
-		case SEQUENCE:
+		case TUPLE:
+		case ARRAY:
 			// no checks?
 			return expression(operator, type, args);
 		case SUBTRACT:
@@ -1725,7 +1726,7 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public SymbolicExpression array(SymbolicType elementType,
 			SymbolicExpression elements[]) {
-		return expression(SymbolicOperator.SEQUENCE,
+		return expression(SymbolicOperator.ARRAY,
 				arrayType(elementType, integer(elements.length)), elements);
 	}
 
@@ -1769,7 +1770,7 @@ public class CommonPreUniverse implements PreUniverse {
 		if (type.typeKind() != SymbolicTypeKind.ARRAY)
 			throw err(
 					"argument concreteArray not array type:\n" + concreteArray);
-		if (concreteArray.operator() != SymbolicOperator.SEQUENCE) {
+		if (concreteArray.operator() != SymbolicOperator.ARRAY) {
 			throw err(
 					"append invoked on non-concrete array:\n" + concreteArray);
 		} else {
@@ -1797,7 +1798,7 @@ public class CommonPreUniverse implements PreUniverse {
 		if (type.typeKind() != SymbolicTypeKind.ARRAY)
 			throw err(
 					"argument concreteArray not array type:\n" + concreteArray);
-		if (concreteArray.operator() != SymbolicOperator.SEQUENCE) {
+		if (concreteArray.operator() != SymbolicOperator.ARRAY) {
 			throw err("argument concreteArray is not concrete:\n"
 					+ concreteArray);
 		} else {
@@ -1892,7 +1893,7 @@ public class CommonPreUniverse implements PreUniverse {
 										+ lengthNumber + "\nindex: "
 										+ indexNumber);
 				}
-				if (op == SymbolicOperator.SEQUENCE)
+				if (op == SymbolicOperator.ARRAY)
 					return (SymbolicExpression) array
 							.argument(indexNumber.intValue());
 				else if (op == SymbolicOperator.DENSE_ARRAY_WRITE) {
@@ -1948,7 +1949,7 @@ public class CommonPreUniverse implements PreUniverse {
 							+ "\narray: " + array + "\nextent: " + lengthNumber
 							+ "\nindex: " + indexNumber);
 			}
-			if (op == SymbolicOperator.SEQUENCE) {
+			if (op == SymbolicOperator.ARRAY) {
 				HomogeneousExpression<?> hArray = (HomogeneousExpression<?>) array;
 				SymbolicExpression[] sequence = (SymbolicExpression[]) hArray
 						.arguments();
@@ -1984,7 +1985,7 @@ public class CommonPreUniverse implements PreUniverse {
 
 					for (int i = 0; i < n; i++)
 						newArray[i] = sequence.get(i);
-					return expression(SymbolicOperator.SEQUENCE, arrayType,
+					return expression(SymbolicOperator.ARRAY, arrayType,
 							newArray);
 				}
 				return expression(SymbolicOperator.DENSE_ARRAY_WRITE, arrayType,
@@ -2209,7 +2210,7 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public SymbolicExpression tuple(SymbolicTupleType type,
 			SymbolicExpression[] components) {
-		return expression(SymbolicOperator.SEQUENCE, type, components);
+		return expression(SymbolicOperator.TUPLE, type, components);
 	}
 
 	@Override
@@ -2253,7 +2254,7 @@ public class CommonPreUniverse implements PreUniverse {
 			throw new SARLException(
 					"Argument tuple to tupleRead does not have tuple type:\n"
 							+ tuple);
-		if (op == SymbolicOperator.SEQUENCE)
+		if (op == SymbolicOperator.TUPLE)
 			return (SymbolicExpression) tuple.argument(indexInt);
 		if (op == SymbolicOperator.DENSE_TUPLE_WRITE) {
 			SymbolicExpression value = ((SymbolicSequence<?>) tuple.argument(1))
@@ -2281,7 +2282,7 @@ public class CommonPreUniverse implements PreUniverse {
 		if (incompatible(fieldType, valueType))
 			throw err("Argument value to tupleWrite has incompatible type."
 					+ "\nExpected: " + fieldType + "\nSaw: " + valueType);
-		if (op == SymbolicOperator.SEQUENCE) {
+		if (op == SymbolicOperator.TUPLE) {
 			SymbolicExpression oldValue = (SymbolicExpression) tuple
 					.argument(indexInt);
 
@@ -2684,7 +2685,7 @@ public class CommonPreUniverse implements PreUniverse {
 		if (type.typeKind() != SymbolicTypeKind.ARRAY)
 			throw err(
 					"argument concreteArray not array type:\n" + concreteArray);
-		if (concreteArray.operator() != SymbolicOperator.SEQUENCE) {
+		if (concreteArray.operator() != SymbolicOperator.ARRAY) {
 			throw err("argument concreteArray is not concrete:\n"
 					+ concreteArray);
 

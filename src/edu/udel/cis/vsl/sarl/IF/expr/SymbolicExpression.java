@@ -106,6 +106,10 @@ public interface SymbolicExpression extends SymbolicObject {
 		 */
 		APPLY,
 		/**
+		 * A concrete array. The arguments are the elements of the array.
+		 */
+		ARRAY,
+		/**
 		 * Operator for an array expression of type <i>T</i>[] formed by
 		 * providing a function <i>f</i> from integers to <i>T</i>. Has one
 		 * argument: a symbolic expression <i>f</i> of
@@ -360,16 +364,16 @@ public interface SymbolicExpression extends SymbolicObject {
 		 */
 		SUBTRACT,
 		/**
-		 * Operator which represents its arguments as a single sequence.
-		 */
-		SEQUENCE,
-		/**
 		 * Operator used to represent a symbolic constant. Takes one argument, a
 		 * {@link StringObject}, which gives the name of the symbolic constant.
 		 * Note that a symbolic constant can have any {@link SymbolicType},
 		 * including a {@link SymbolicFunctionType}.
 		 */
 		SYMBOLIC_CONSTANT,
+		/**
+		 * A concrete tuple. The arguments are the components of the tuple.
+		 */
+		TUPLE,
 		/**
 		 * Operator for an expression representing the result of reading a
 		 * component of a tuple. Takes two arguments: arg0 is the tuple

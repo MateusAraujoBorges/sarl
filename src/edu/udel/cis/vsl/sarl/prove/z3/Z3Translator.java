@@ -383,7 +383,7 @@ public class Z3Translator {
 		// ARRAY_WRITE, DENSE_ARRAY_WRITE. A concrete (SEQUENCE) array always
 		// has complete type.
 		switch (array.operator()) {
-		case SEQUENCE:
+		case ARRAY:
 			throw new SARLInternalException("Unreachable");
 		case ARRAY_WRITE:
 		case DENSE_ARRAY_WRITE:
@@ -481,7 +481,7 @@ public class Z3Translator {
 		// ordered pair, just apply bigArray-val to get the array value
 		// component.
 		switch (array.operator()) {
-		case SEQUENCE:
+		case ARRAY:
 			return pretranslateConcreteArray(array);
 		case ARRAY_WRITE:
 			return pretranslateArrayWrite(array);
@@ -1256,6 +1256,9 @@ public class Z3Translator {
 		case APPLY:
 			result = translateApply(expression);
 			break;
+		case ARRAY:
+			result = translateConcreteArray(expression);
+			break;
 		case ARRAY_LAMBDA:
 			throw new TheoremProverException(
 					"Z3 does not handle array lambdas");
@@ -1333,18 +1336,6 @@ public class Z3Translator {
 		case POWER:
 			result = translatePower(expression);
 			break;
-		case SEQUENCE: {
-			SymbolicType type = expression.type();
-
-			if (type.typeKind() == SymbolicTypeKind.ARRAY)
-				result = translateConcreteArray(expression);
-			else if (type.typeKind() == SymbolicTypeKind.TUPLE)
-				result = translateConcreteTuple(expression);
-			else
-				throw new SARLInternalException(
-						"Unknown type for SEQUENCE: " + type);
-			break;
-		}
 		case SUBTRACT:
 			result = translateBinary("-",
 					(SymbolicExpression) expression.argument(0),
@@ -1353,6 +1344,9 @@ public class Z3Translator {
 		case SYMBOLIC_CONSTANT:
 			result = translateSymbolicConstant((SymbolicConstant) expression,
 					false);
+			break;
+		case TUPLE:
+			result = translateConcreteTuple(expression);
 			break;
 		case TUPLE_READ:
 			result = translateTupleRead(expression);

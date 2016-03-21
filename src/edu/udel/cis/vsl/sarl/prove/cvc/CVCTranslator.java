@@ -305,7 +305,7 @@ public class CVCTranslator {
 		// ARRAY_WRITE, DENSE_ARRAY_WRITE. A concrete (SEQUENCE) array always
 		// has complete type.
 		switch (array.operator()) {
-		case SEQUENCE:
+		case ARRAY:
 			throw new SARLInternalException(
 					"Unreachable because the array would have a complete array type");
 		case ARRAY_WRITE:
@@ -416,7 +416,7 @@ public class CVCTranslator {
 		// for expressions that are not translated to an explicit
 		// ordered pair, just append ".1" to get the array value component.
 		switch (array.operator()) {
-		case SEQUENCE:
+		case ARRAY:
 			return pretranslateConcreteArray(array);
 		case ARRAY_WRITE:
 			return pretranslateArrayWrite(array);
@@ -1209,6 +1209,9 @@ public class CVCTranslator {
 		case APPLY:
 			result = translateApply(expression);
 			break;
+		case ARRAY:
+			result = translateConcreteArray(expression);
+			break;
 		case ARRAY_LAMBDA:
 			// TODO: are they supported in CVC3?
 			throw new TheoremProverException(
@@ -1298,18 +1301,6 @@ public class CVCTranslator {
 		case POWER:
 			result = translatePower(expression);
 			break;
-		case SEQUENCE: {
-			SymbolicType type = expression.type();
-
-			if (type.typeKind() == SymbolicTypeKind.ARRAY)
-				result = translateConcreteArray(expression);
-			else if (type.typeKind() == SymbolicTypeKind.TUPLE)
-				result = translateConcreteTuple(expression);
-			else
-				throw new SARLInternalException(
-						"Unknown type for SEQUENCE: " + type);
-			break;
-		}
 		case SUBTRACT:
 			result = translateBinary(" - ",
 					(SymbolicExpression) expression.argument(0),
@@ -1318,6 +1309,9 @@ public class CVCTranslator {
 		case SYMBOLIC_CONSTANT:
 			result = translateSymbolicConstant((SymbolicConstant) expression,
 					false);
+			break;
+		case TUPLE:
+			result = translateConcreteTuple(expression);
 			break;
 		case TUPLE_READ:
 			result = translateTupleRead(expression);

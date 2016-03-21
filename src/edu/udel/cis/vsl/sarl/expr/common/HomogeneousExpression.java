@@ -407,6 +407,16 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			result.append(")");
 			return result;
 		}
+		case ARRAY: {
+			result.append("[");
+			for (int i = 0; i < arguments.length; i++) {
+				if (i > 0)
+					result.append(",");
+				result.append(arguments[i].toStringBuffer(false));
+			}
+			result.append("]");
+			return result;
+		}
 		case ARRAY_LAMBDA:
 			result.append("(");
 			result.append(type.toStringBuffer(false));
@@ -623,14 +633,14 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			if (atomize)
 				atomize(result);
 			return result;
-		case SEQUENCE:
-			result.append("[");
+		case TUPLE:
+			result.append("<");
 			for (int i = 0; i < arguments.length; i++) {
 				if (i > 0)
 					result.append(",");
 				result.append(arguments[i].toStringBuffer(false));
 			}
-			result.append("]");
+			result.append(">");
 			return result;
 		case SUBTRACT:
 			processBinary(result, " - ", arguments[0], arguments[1], true);

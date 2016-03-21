@@ -46,29 +46,30 @@ INT : a Java int
 
 interface SymbolicExpression: represents a value
   type(): SymbolicType
+  kind(): ExpressionKind
+  arguments(): SymbolicObject[]
+  numArguments(): int
+  argument(int): SymbolicObject
+  
+The following kinds of expressions have 0 args:
+CHAR:    interface CharObject extends SymbolicExpression: getChar()
+STRING:  interface StringObject extends SymbolicExpression: getString()
+BOOLEAN: interface BooleanObject extends SymbolicExpression: getBoolean()
+NUMBER:  interface NumberObject extends SymbolicExpression: getNumber
 
-The following have 0 args:
-interface CharObject extends SymbolicExpression: getChar()
-interface StringObject extends SymbolicExpression: getString()
-interface BooleanObject extends SymbolicExpression: getBoolean()
-interface NumberObject extends SymbolicExpression: getNumber
+interface HomogeneousExpression<T extends SymbolicObject> extends SymbolicExpression
+  arguments(): T[]
+  argument(int): T
 
-interface CompoundExpression extends SymbolicExpression:
-  completely determined by type, operator, arguments
-  operator(): SymbolicOperator
-  numArgs(): int
-  argument(int) : SymbolicObject
-  arguments: ... SymbolicObject
-
-Some compound expressions:
-
+Other SymbolicExpressions have a positive number of arguments
 ADD, MULTIPLY, etc.
 SEQUENCE: could be concrete array or tuple, depending on type.
 DENSE_ARRAY_WRITE (keep track of NULLs)
   - make it a special class with its own fields (numNulls)
 APPLY
 
-Tuple types, function types also have sequences.
+Tuple types, function types may also have SEQUENCE objects.
+
 ----
 
 
