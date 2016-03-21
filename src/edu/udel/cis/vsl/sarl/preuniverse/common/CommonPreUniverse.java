@@ -730,10 +730,10 @@ public class CommonPreUniverse implements PreUniverse {
 		return result;
 	}
 
-	protected SymbolicExpression tupleUnsafe(SymbolicTupleType type,
-			SymbolicSequence<?> components) {
-		return expression(SymbolicOperator.CONCRETE, type, components);
-	}
+	// protected SymbolicExpression tupleUnsafe(SymbolicTupleType type,
+	// SymbolicExpression[] components) {
+	// return expression(SymbolicOperator.SEQUENCE, type, components);
+	// }
 
 	// Public methods...
 
@@ -2208,27 +2208,38 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public SymbolicExpression tuple(SymbolicTupleType type,
+			SymbolicExpression[] components) {
+		return expression(SymbolicOperator.SEQUENCE, type, components);
+	}
+
+	@Override
+	public SymbolicExpression tuple(SymbolicTupleType type,
 			Iterable<? extends SymbolicExpression> components) {
 		SymbolicTypeSequence fieldTypes = type.sequence();
-		SymbolicSequence<? extends SymbolicExpression> sequence = sequence(
-				components);
 		int m = fieldTypes.numTypes();
-		int n = sequence.size();
+		SymbolicExpression[] componentArray = new SymbolicExpression[m];
+		int i = 0;
 
-		if (n != m)
-			throw err("In method tuple, tuple type has exactly" + m
-					+ " components but sequence has length " + n);
-		for (int i = 0; i < n; i++) {
+		for (SymbolicExpression component : components) {
+			if (i >= m)
+				throw err("In method tuple, number of components exceeded " + m
+						+ ", the number expected by tuple type " + type);
+
 			SymbolicType fieldType = fieldTypes.getType(i);
-			SymbolicType componentType = sequence.get(i).type();
+			SymbolicType componentType = component.type();
 
 			if (incompatible(fieldType, componentType))
 				throw err("Element " + i
 						+ " of components argument to method tuple has incompatible type.\n"
 						+ "\nExpected: " + fieldType + "\nSaw: "
 						+ componentType);
+			componentArray[i] = component;
+			i++;
 		}
-		return expression(SymbolicOperator.CONCRETE, type, sequence);
+		if (i != m)
+			throw err("In method tuple, tuple type has exactly" + m
+					+ " components but sequence has length " + i);
+		return tuple(type, componentArray);
 	}
 
 	@Override
@@ -2242,8 +2253,8 @@ public class CommonPreUniverse implements PreUniverse {
 			throw new SARLException(
 					"Argument tuple to tupleRead does not have tuple type:\n"
 							+ tuple);
-		if (op == SymbolicOperator.CONCRETE)
-			return ((SymbolicSequence<?>) tuple.argument(0)).get(indexInt);
+		if (op == SymbolicOperator.SEQUENCE)
+			return (SymbolicExpression) tuple.argument(indexInt);
 		if (op == SymbolicOperator.DENSE_TUPLE_WRITE) {
 			SymbolicExpression value = ((SymbolicSequence<?>) tuple.argument(1))
 					.get(indexInt);
@@ -2270,15 +2281,19 @@ public class CommonPreUniverse implements PreUniverse {
 		if (incompatible(fieldType, valueType))
 			throw err("Argument value to tupleWrite has incompatible type."
 					+ "\nExpected: " + fieldType + "\nSaw: " + valueType);
-		if (op == SymbolicOperator.CONCRETE) {
-			@SuppressWarnings("unchecked")
-			SymbolicSequence<SymbolicExpression> arg0 = (SymbolicSequence<SymbolicExpression>) tuple
-					.argument(0);
-			SymbolicExpression oldValue = arg0.get(indexInt);
+		if (op == SymbolicOperator.SEQUENCE) {
+			SymbolicExpression oldValue = (SymbolicExpression) tuple
+					.argument(indexInt);
 
 			if (value == oldValue)
 				return tuple;
-			return expression(op, tupleType, arg0.set(indexInt, value));
+
+			SymbolicExpression[] components = (SymbolicExpression[]) ((HomogeneousExpression<?>) tuple)
+					.arguments();
+			SymbolicExpression[] newComponents = exprSeqFactory.set(components,
+					indexInt, value);
+
+			return tuple(tupleType, newComponents);
 		} else if (op == SymbolicOperator.DENSE_TUPLE_WRITE) {
 			@SuppressWarnings("unchecked")
 			SymbolicSequence<SymbolicExpression> sequence = (SymbolicSequence<SymbolicExpression>) tuple
@@ -2293,7 +2308,13 @@ public class CommonPreUniverse implements PreUniverse {
 					return expression(SymbolicOperator.DENSE_TUPLE_WRITE,
 							tupleType, tuple.argument(0), sequence);
 			}
-			return expression(SymbolicOperator.CONCRETE, tupleType, sequence);
+
+			int n = sequence.size();
+			SymbolicExpression[] componentArray = new SymbolicExpression[n];
+
+			for (int i = 0; i < n; i++)
+				componentArray[i] = sequence.get(i);
+			return tuple(tupleType, componentArray);
 		} else {
 			int numComponents = tupleType.sequence().numTypes();
 			SymbolicExpression[] elementsArray = new SymbolicExpression[numComponents];
@@ -2305,8 +2326,7 @@ public class CommonPreUniverse implements PreUniverse {
 			elementsArray[indexInt] = value;
 			sequence = collectionFactory.sequence(elementsArray);
 			if (numComponents <= 1)
-				return expression(SymbolicOperator.CONCRETE, tupleType,
-						sequence);
+				return tuple(tupleType, elementsArray);
 			else
 				return expression(SymbolicOperator.DENSE_TUPLE_WRITE, tupleType,
 						tuple, sequence);
@@ -2422,13 +2442,6 @@ public class CommonPreUniverse implements PreUniverse {
 	public void incrementProverValidCount() {
 		proverValidCount++;
 	}
-
-	// @Override
-	// public <T extends SymbolicExpression> SymbolicCollection<T>
-	// basicCollection(
-	// Collection<T> javaCollection) {
-	// return collectionFactory.basicCollection(javaCollection);
-	// }
 
 	@Override
 	public SymbolicType referenceType() {

@@ -515,6 +515,24 @@ public class Z3Translator {
 		return result;
 	}
 
+	private FastList<String> translateConcreteTuple(SymbolicExpression tuple) {
+		// syntax: (mk-T e0 e1 ...)
+		FastList<String> result;
+		SymbolicTupleType type = (SymbolicTupleType) tuple.type();
+		int n = tuple.numArguments();
+
+		// declare the tuple type if you haven't already
+		translateType(type);
+		result = new FastList<String>("(" + tupleConstructor(type));
+		for (int i = 0; i < n; i++) {
+			SymbolicExpression member = (SymbolicExpression) tuple.argument(i);
+			result.add(" ");
+			result.append(translate(member));
+		}
+		result.add(")");
+		return result;
+	}
+
 	/**
 	 * Translates any concrete SymbolicExpression with concrete type to
 	 * equivalent Z3 expression using the ExprManager.
@@ -552,21 +570,6 @@ public class Z3Translator {
 			else
 				result = new FastList<>("(/ ", numerator, " ", denominator,
 						")");
-			break;
-		}
-		case TUPLE: {
-			// syntax: (mk-T e0 e1 ...)
-			SymbolicSequence<?> sequence = (SymbolicSequence<?>) object;
-
-			// declare the tuple type if you haven't already
-			translateType(type);
-			result = new FastList<String>(
-					"(" + tupleConstructor((SymbolicTupleType) type));
-			for (SymbolicExpression member : sequence) {
-				result.add(" ");
-				result.append(translate(member));
-			}
-			result.add(")");
 			break;
 		}
 		default:
@@ -1330,9 +1333,18 @@ public class Z3Translator {
 		case POWER:
 			result = translatePower(expression);
 			break;
-		case SEQUENCE:
-			result = translateConcreteArray(expression);
+		case SEQUENCE: {
+			SymbolicType type = expression.type();
+
+			if (type.typeKind() == SymbolicTypeKind.ARRAY)
+				result = translateConcreteArray(expression);
+			else if (type.typeKind() == SymbolicTypeKind.TUPLE)
+				result = translateConcreteTuple(expression);
+			else
+				throw new SARLInternalException(
+						"Unknown type for SEQUENCE: " + type);
 			break;
+		}
 		case SUBTRACT:
 			result = translateBinary("-",
 					(SymbolicExpression) expression.argument(0),

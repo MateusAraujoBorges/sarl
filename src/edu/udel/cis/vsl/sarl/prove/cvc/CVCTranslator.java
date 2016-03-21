@@ -450,6 +450,29 @@ public class CVCTranslator {
 		return result;
 	}
 
+	private FastList<String> translateConcreteTuple(SymbolicExpression tuple) {
+		// syntax:(x,y,z)
+		FastList<String> result;
+		int n = tuple.numArguments();
+
+		if (n == 1) { // no tuples of length 1 in CVC
+			result = translate((SymbolicExpression) tuple.argument(0));
+		} else {
+			result = new FastList<String>("(");
+			if (n > 0) { // possible to have tuple with 0 components
+				result.append(
+						translate((SymbolicExpression) tuple.argument(0)));
+				for (int i = 1; i < n; i++) {
+					result.add(",");
+					result.append(
+							translate((SymbolicExpression) tuple.argument(i)));
+				}
+			}
+			result.add(")");
+		}
+		return result;
+	}
+
 	/**
 	 * Translates any concrete SymbolicExpression with concrete type to
 	 * equivalent CVC Expr using the ExprManager.
@@ -476,26 +499,6 @@ public class CVCTranslator {
 		case REAL:
 			result = new FastList<>(object.toString());
 			break;
-		case TUPLE: {
-			// syntax:(x,y,z)
-			SymbolicSequence<?> sequence = (SymbolicSequence<?>) object;
-			int n = sequence.size();
-
-			if (n == 1) { // no tuples of length 1 in CVC
-				result = translate(sequence.get(0));
-			} else {
-				result = new FastList<String>("(");
-				if (n > 0) { // possible to have tuple with 0 components
-					result.append(translate(sequence.get(0)));
-					for (int i = 1; i < n; i++) {
-						result.add(",");
-						result.append(translate(sequence.get(i)));
-					}
-				}
-				result.add(")");
-			}
-			break;
-		}
 		default:
 			throw new SARLInternalException("Unknown concrete object: " + expr);
 		}
@@ -1295,9 +1298,18 @@ public class CVCTranslator {
 		case POWER:
 			result = translatePower(expression);
 			break;
-		case SEQUENCE:
-			result = translateConcreteArray(expression);
+		case SEQUENCE: {
+			SymbolicType type = expression.type();
+
+			if (type.typeKind() == SymbolicTypeKind.ARRAY)
+				result = translateConcreteArray(expression);
+			else if (type.typeKind() == SymbolicTypeKind.TUPLE)
+				result = translateConcreteTuple(expression);
+			else
+				throw new SARLInternalException(
+						"Unknown type for SEQUENCE: " + type);
 			break;
+		}
 		case SUBTRACT:
 			result = translateBinary(" - ",
 					(SymbolicExpression) expression.argument(0),

@@ -1723,6 +1723,20 @@ public interface CoreUniverse {
 	// Tuples...
 
 	/**
+	 * Returns the concrete tuple with the given members. This does NOT check
+	 * that members have types compatible with the fields types of the tuple
+	 * type. If they don't, the behavior is undefined.
+	 * 
+	 * @param type
+	 *            the tuple type
+	 * @param components
+	 *            the component expressions
+	 * @return the tuple formed from the components
+	 */
+	SymbolicExpression tuple(SymbolicTupleType type,
+			SymbolicExpression[] components);
+
+	/**
 	 * Returns the concrete tuple expression with the given tuple components.
 	 * 
 	 * @param type
@@ -2010,4 +2024,5 @@ public interface CoreUniverse {
 	 * @return set of unbound symbolic constants occurring in <code>expr</code>
 	 */
 	Set<SymbolicConstant> getFreeSymbolicConstants(SymbolicExpression expr);
+
 }
