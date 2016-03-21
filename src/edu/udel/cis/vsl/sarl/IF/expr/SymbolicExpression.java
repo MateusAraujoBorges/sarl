@@ -139,6 +139,8 @@ public interface SymbolicExpression extends SymbolicObject {
 		 */
 		CAST,
 		/**
+		 * TODO: this will go away in the refactoring.
+		 * 
 		 * Operator for a concrete value acting as a symbolic expression. One
 		 * argument, which is the concrete value. Argument may be
 		 * {@link BooleanObject}, {@link NumberObject}, {@link CharObject}, or

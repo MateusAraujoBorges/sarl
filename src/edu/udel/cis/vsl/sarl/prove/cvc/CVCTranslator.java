@@ -301,12 +301,13 @@ public class CVCTranslator {
 		if (type instanceof SymbolicCompleteArrayType)
 			return translate(((SymbolicCompleteArrayType) type).extent());
 		// there are three kinds of array expressions for which translation
-		// results in a literal ordered pair [int,array]: CONCRETE,
-		// ARRAY_WRITE, DENSE_ARRAY_WRITE. A CONCRETE array always
+		// results in a literal ordered pair [int,array]: SEQUENCE,
+		// ARRAY_WRITE, DENSE_ARRAY_WRITE. A concrete (SEQUENCE) array always
 		// has complete type.
 		switch (array.operator()) {
-		case CONCRETE:
-			throw new SARLInternalException("Unreachable");
+		case SEQUENCE:
+			throw new SARLInternalException(
+					"Unreachable because the array would have a complete array type");
 		case ARRAY_WRITE:
 		case DENSE_ARRAY_WRITE:
 			return lengthOfArray((SymbolicExpression) array.argument(0));
@@ -327,8 +328,7 @@ public class CVCTranslator {
 		NumericExpression extentExpression = arrayType.extent();
 		IntegerNumber extentNumber = (IntegerNumber) universe
 				.extractNumber(extentExpression);
-		SymbolicSequence<?> elements = (SymbolicSequence<?>) array.argument(0);
-		int size = elements.size();
+		int size = array.numArguments();
 		FastList<String> cvcArrayType = new FastList<>("ARRAY INT OF (");
 
 		cvcArrayType.append(translateType(elementType));
@@ -339,11 +339,12 @@ public class CVCTranslator {
 
 		if (size > 0) {
 			result.add(" WITH [0] := (");
-			result.append(translate(elements.get(0)));
+			result.append(translate((SymbolicExpression) array.argument(0)));
 			result.add(")");
 			for (int i = 1; i < size; i++) {
 				result.addAll(", [", Integer.toString(i), "] := (");
-				result.append(translate(elements.get(i)));
+				result.append(
+						translate((SymbolicExpression) array.argument(i)));
 				result.add(")");
 			}
 		}
@@ -415,7 +416,7 @@ public class CVCTranslator {
 		// for expressions that are not translated to an explicit
 		// ordered pair, just append ".1" to get the array value component.
 		switch (array.operator()) {
-		case CONCRETE:
+		case SEQUENCE:
 			return pretranslateConcreteArray(array);
 		case ARRAY_WRITE:
 			return pretranslateArrayWrite(array);
@@ -443,7 +444,7 @@ public class CVCTranslator {
 	 */
 	private FastList<String> translateConcreteArray(SymbolicExpression array) {
 		FastList<String> result = pretranslateConcreteArray(array);
-		int size = ((SymbolicSequence<?>) array.argument(0)).size();
+		int size = array.numArguments();
 
 		result = bigArray(new FastList<>(Integer.toString(size)), result);
 		return result;
@@ -463,9 +464,6 @@ public class CVCTranslator {
 		FastList<String> result;
 
 		switch (kind) {
-		case ARRAY:
-			result = translateConcreteArray(expr);
-			break;
 		case BOOLEAN:
 			result = new FastList<>(
 					((BooleanObject) object).getBoolean() ? "TRUE" : "FALSE");
@@ -1296,6 +1294,9 @@ public class CVCTranslator {
 			break;
 		case POWER:
 			result = translatePower(expression);
+			break;
+		case SEQUENCE:
+			result = translateConcreteArray(expression);
 			break;
 		case SUBTRACT:
 			result = translateBinary(" - ",
