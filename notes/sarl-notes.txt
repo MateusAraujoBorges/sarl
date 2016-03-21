@@ -47,23 +47,29 @@ INT : a Java int
 interface SymbolicExpression: represents a value
   type(): SymbolicType
   kind(): ExpressionKind
-  arguments(): SymbolicObject[]
+  getArguments(): SymbolicObject[]
   numArguments(): int
   argument(int): SymbolicObject
+NOTE: not every symbolic expression is completely determined by the
+operator, type, and arguments.  In particular, these are not:
   
 The following kinds of expressions have 0 args:
 CHAR:    interface CharObject extends SymbolicExpression: getChar()
 STRING:  interface StringObject extends SymbolicExpression: getString()
 BOOLEAN: interface BooleanObject extends SymbolicExpression: getBoolean()
-NUMBER:  interface NumberObject extends SymbolicExpression: getNumber
+NUMBER:  interface NumberObject extends SymbolicExpression: getNumber()
+
+The following kind of SymbolicExpression is completely determined by
+operator, type, and arguments:
 
 interface HomogeneousExpression<T extends SymbolicObject> extends SymbolicExpression
-  arguments(): T[]
+  getArguments(): T[]
+  arguments(): Iterable<T>
   argument(int): T
+  
 
 Other SymbolicExpressions have a positive number of arguments
 ADD, MULTIPLY, etc.
-SEQUENCE: could be concrete array or tuple, depending on type.
 DENSE_ARRAY_WRITE (keep track of NULLs)
   - make it a special class with its own fields (numNulls)
 APPLY

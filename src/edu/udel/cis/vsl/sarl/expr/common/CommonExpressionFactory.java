@@ -90,9 +90,9 @@ public class CommonExpressionFactory implements ExpressionFactory {
 
 	private ReferenceExpression identityReference;
 
-	private SymbolicSequence<NumericExpression> zeroSequence;
+	private NumericExpression zero;
 
-	private SymbolicSequence<NumericExpression> oneSequence;
+	private NumericExpression one;
 
 	/**
 	 * Constructor that builds a CommonExpressionFactory.
@@ -102,9 +102,8 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	 * @return CommonExpressionFactory
 	 */
 	public CommonExpressionFactory(NumericExpressionFactory numericFactory) {
-		NumericExpression zero = numericFactory.zeroInt();
-		NumericExpression one = numericFactory.oneInt();
-
+		this.zero = numericFactory.zeroInt();
+		this.one = numericFactory.oneInt();
 		this.numericFactory = numericFactory;
 		this.numberFactory = numericFactory.numberFactory();
 		this.objectFactory = numericFactory.objectFactory();
@@ -119,10 +118,6 @@ public class CommonExpressionFactory implements ExpressionFactory {
 		typeFactory.setExpressionComparator(expressionComparator);
 		collectionFactory.setElementComparator(expressionComparator);
 		objectFactory.setExpressionComparator(expressionComparator);
-		zeroSequence = objectFactory
-				.canonic(collectionFactory.singletonSequence(zero));
-		oneSequence = objectFactory
-				.canonic(collectionFactory.singletonSequence(one));
 	}
 
 	/**
@@ -148,13 +143,13 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	 * @return ReferenceExpression
 	 */
 	private ReferenceExpression concreteReferenceExpression(
-			SymbolicOperator operator, SymbolicObject arg0) {
+			SymbolicOperator operator, NumericExpression arg0) {
 		if (operator != SymbolicOperator.CONCRETE)
 			throw new SARLInternalException(
 					"Expected CONCRETE operator, not " + operator);
-		if (zeroSequence.equals(arg0))
+		if (arg0.isZero())
 			return nullReference;
-		if (oneSequence.equals(arg0))
+		if (arg0.isOne())
 			return identityReference;
 		throw new SARLInternalException(
 				"Unexpected concrete argument to reference: " + arg0);
@@ -224,7 +219,8 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	private SymbolicExpression referenceExpression(SymbolicOperator operator,
 			SymbolicObject[] arguments) {
 		if (operator == SymbolicOperator.CONCRETE)
-			return concreteReferenceExpression(operator, arguments[0]);
+			return concreteReferenceExpression(operator,
+					(NumericExpression) arguments[0]);
 		else if (operator == SymbolicOperator.APPLY)
 			return nonTrivialReferenceExpression(operator, arguments[0],
 					arguments[1]);
@@ -263,9 +259,9 @@ public class CommonExpressionFactory implements ExpressionFactory {
 				symbolicConstant(objectFactory.stringObject("OffsetRef"),
 						referenceFunctionType));
 		nullReference = objectFactory
-				.canonic(new CommonNullReference(referenceType, zeroSequence));
-		identityReference = objectFactory.canonic(
-				new CommonIdentityReference(referenceType, oneSequence));
+				.canonic(new CommonNullReference(referenceType, zero));
+		identityReference = objectFactory
+				.canonic(new CommonIdentityReference(referenceType, one));
 	}
 
 	/**

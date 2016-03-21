@@ -242,34 +242,6 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		buffer.append(arg1.toStringBuffer(atomizeArgs));
 	}
 
-	// /**
-	// * Computes string representation of a binary operator expression that may
-	// * take either one argument (a list of expressions) or two arguments.
-	// *
-	// * @param buffer
-	// * string buffer to which computed result should be appended
-	// * @param opString
-	// * the string representation of the operator, e.g. "+"
-	// * @param atomizeArgs
-	// * should each argument be atomized (surrounded by parens if
-	// * necessary)?
-	// * @param atomizeResult
-	// * should the final result be atomized?
-	// */
-	// private void processFlexibleBinary(StringBuffer buffer, String opString,
-	// boolean atomizeArgs, boolean atomizeResult) {
-	// if (arguments.length == 1)
-	// accumulate(buffer, opString, (SymbolicCollection<?>) arguments[0],
-	// atomizeArgs);
-	// else
-	// processBinary(buffer, opString, arguments[0], arguments[1],
-	// atomizeArgs);
-	// if (atomizeResult) {
-	// buffer.insert(0, '(');
-	// buffer.append(')');
-	// }
-	// }
-
 	private void processSum(StringBuffer buffer, boolean atomizeResult) {
 		int n = arguments.length;
 

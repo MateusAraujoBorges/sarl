@@ -20,7 +20,6 @@ package edu.udel.cis.vsl.sarl.expr.common;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 
 /**
  * The identity reference I, which is characterized by the property that
@@ -36,13 +35,11 @@ public class CommonIdentityReference extends CommonReferenceExpression {
 	 * 
 	 * @param referenceType
 	 *            the symbolic reference type
-	 * @param oneSequence
-	 *            the singleton sequence whose sole element is the concrete
-	 *            integer 1
+	 * @param one
+	 *            the concrete integer 1
 	 */
-	CommonIdentityReference(SymbolicType referenceType,
-			SymbolicSequence<NumericExpression> oneSequence) {
-		super(referenceType, oneSequence);
+	CommonIdentityReference(SymbolicType referenceType, NumericExpression one) {
+		super(referenceType, one);
 	}
 
 	/**

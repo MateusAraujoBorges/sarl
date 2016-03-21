@@ -20,7 +20,6 @@ package edu.udel.cis.vsl.sarl.expr.common;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 
 /**
  * The "null reference" is a useless reference value not equal to any of the
@@ -38,13 +37,12 @@ public class CommonNullReference extends CommonReferenceExpression {
 	 * 
 	 * @param referenceType
 	 *            the symbolic reference type
-	 * @param zeroSequence
-	 *            the singleton sequence whose sole element is the conrete
-	 *            integer 0
+	 * @param zero
+	 *            the concrete integer 0
 	 */
 	public CommonNullReference(SymbolicType referenceType,
-			SymbolicSequence<NumericExpression> zeroSequence) {
-		super(referenceType, zeroSequence);
+			NumericExpression zero) {
+		super(referenceType, zero);
 	}
 
 	/**
@@ -59,8 +57,7 @@ public class CommonNullReference extends CommonReferenceExpression {
 	/**
 	 * Method that returns NULL ReferenceKind.
 	 * 
-	 * @return ReferenceKind
-	 * 	NULL ReferenceKind
+	 * @return ReferenceKind NULL ReferenceKind
 	 */
 	@Override
 	public ReferenceKind referenceKind() {

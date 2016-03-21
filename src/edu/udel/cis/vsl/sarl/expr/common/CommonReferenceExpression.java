@@ -16,20 +16,18 @@ public abstract class CommonReferenceExpression extends
 		HomogeneousExpression<SymbolicObject> implements ReferenceExpression {
 
 	/**
-	 * Constructs a null reference or identity reference expression. The
-	 * codeSingleton argument should be a sequence of length 1 whose sole
-	 * element in an integer expression.
+	 * Constructs a null reference or identity reference expression.
 	 * 
 	 * @param referenceType
 	 *            the symbolic reference type
-	 * @param codeSingleton
-	 *            sequence of length 1 containing concrete integer 0 for null
-	 *            reference or concrete integer 1 for identity reference
+	 * @param code
+	 *            the concrete integer 0 for null reference or concrete integer
+	 *            1 for identity reference
 	 */
 	public CommonReferenceExpression(SymbolicType referenceType,
-			SymbolicSequence<NumericExpression> codeSingleton) {
-		super(SymbolicOperator.CONCRETE, referenceType,
-				new SymbolicObject[] { codeSingleton });
+			NumericExpression code) {
+		super(SymbolicOperator.TUPLE, referenceType,
+				new SymbolicExpression[] { code });
 	}
 
 	/**
