@@ -38,4 +38,5 @@ public class FunctionReasonTest {
 				Arrays.asList(arrayEle1));
 		reasoner.isValid(claim);
 	}
+	
 }
