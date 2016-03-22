@@ -208,4 +208,148 @@ public class BooleanReasonTest {
 		}
 		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
 	}
+
+	/**
+	 * not (A ^ B) equiv (not A) v (not B)
+	 */
+	@Test
+	public void DeMorganLawTest1() {
+		BooleanExpression e1 = universe.not(universe.and(A, B));
+		BooleanExpression e2 = universe.or(universe.not(A), universe.not(B));
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * not (A v B) equiv (not A) ^ (not B)
+	 */
+	@Test
+	public void DeMorganLawTest2() {
+		BooleanExpression e1 = universe.not(universe.or(A, B));
+		BooleanExpression e2 = universe.and(universe.not(A), universe.not(B));
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * A -> B equiv (not A) v B
+	 */
+	@Test
+	public void DeMorganLawTest3() {
+		BooleanExpression e1 = universe.implies(A, B);
+		BooleanExpression e2 = universe.or(universe.not(A), B);
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * not A equiv A -> false
+	 */
+	@Test
+	public void DeMorganLawTest4() {
+		BooleanExpression e1 = universe.not(A);
+		BooleanExpression e2 = universe.implies(A, falseExpr);
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * not (not A) equiv A
+	 */
+	@Test
+	public void doubleNegationTest() {
+		BooleanExpression e1 = universe.not(universe.not(A));
+		BooleanExpression e2 = A;
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * A ^ true equiv A
+	 */
+	@Test
+	public void neutralElementTest1() {
+		BooleanExpression e1 = universe.and(A, trueExpr);
+		BooleanExpression e2 = A;
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * A v false equiv A
+	 */
+	@Test
+	public void neutralElementTest2() {
+		BooleanExpression e1 = universe.or(A, falseExpr);
+		BooleanExpression e2 = A;
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * A ^ false equiv false
+	 */
+	@Test
+	public void absorptionElementTest1() {
+		BooleanExpression e1 = universe.and(A, falseExpr);
+		BooleanExpression e2 = falseExpr;
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * A v true equiv true
+	 */
+	@Test
+	public void absorptionElementTest2() {
+		BooleanExpression e1 = universe.or(A, trueExpr);
+		BooleanExpression e2 = trueExpr;
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
 }
