@@ -869,7 +869,14 @@ public class CommonPreUniverse implements PreUniverse {
 		case TUPLE:
 		case ARRAY:
 			// no checks?
-			return expression(operator, type, args);
+			if (args instanceof SymbolicExpression[])
+				return expression(operator, type, args);
+			else {
+				SymbolicExpression[] args2 = new SymbolicExpression[args.length];
+
+				System.arraycopy(args, 0, args2, 0, args.length);
+				return expression(operator, type, args2);
+			}
 		case SUBTRACT:
 			return subtract((NumericExpression) args[0],
 					(NumericExpression) args[1]);

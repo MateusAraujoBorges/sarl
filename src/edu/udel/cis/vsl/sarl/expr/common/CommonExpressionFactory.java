@@ -144,9 +144,9 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	 */
 	private ReferenceExpression concreteReferenceExpression(
 			SymbolicOperator operator, NumericExpression arg0) {
-		if (operator != SymbolicOperator.CONCRETE)
+		if (operator != SymbolicOperator.TUPLE)
 			throw new SARLInternalException(
-					"Expected CONCRETE operator, not " + operator);
+					"Expected TUPLE operator, not " + operator);
 		if (arg0.isZero())
 			return nullReference;
 		if (arg0.isOne())
@@ -218,7 +218,7 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	 */
 	private SymbolicExpression referenceExpression(SymbolicOperator operator,
 			SymbolicObject[] arguments) {
-		if (operator == SymbolicOperator.CONCRETE)
+		if (operator == SymbolicOperator.TUPLE)
 			return concreteReferenceExpression(operator,
 					(NumericExpression) arguments[0]);
 		else if (operator == SymbolicOperator.APPLY)
