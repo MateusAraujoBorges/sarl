@@ -214,24 +214,41 @@ public class TupleTest {
 		assert sUniverse.equals(tuple_int_int1, tuple_int_int2).isFalse();
 	}
 
+	/**
+	 * 
+	 * 
+	 * <pre>
+	 * Tuple type: variable_ref=<tupleType_int, reference>
+	 * Tuple: {{1}, [1]}
+	 * substituter map: {<{1}, {2}>}
+	 * Result after substitution: {{2}, [1]}
+	 * </pre>
+	 */
 	@Test
 	public void tuple_substitute() {
 		SymbolicTupleType tupleType = sUniverse.tupleType(
 				sUniverse.stringObject("variable_ref"),
-				Arrays.asList(sUniverse.integerType(),
-						sUniverse.referenceType()));
+				Arrays.asList(tupleType_int, sUniverse.referenceType()));
 		ReferenceExpression self = sUniverse.identityReference();
 		ReferenceExpression arrayEle1 = sUniverse.arrayElementReference(self,
 				int_1);
+		SymbolicExpression tupleInt1 = sUniverse.tuple(tupleType_int,
+				Arrays.asList(int_1));
+		SymbolicExpression tupleInt2 = sUniverse.tuple(tupleType_int,
+				Arrays.asList(int_2));
 		SymbolicExpression tuple = sUniverse.tuple(tupleType,
-				Arrays.asList(int_1, arrayEle1));
+				Arrays.asList(tupleInt1, arrayEle1));
 		Map<SymbolicExpression, SymbolicExpression> oldToNew = new HashMap<>();
 
-		oldToNew.put(int_1, int_2);
+		oldToNew.put(tupleInt1, tupleInt2);
 
 		UnaryOperator<SymbolicExpression> substituter = sUniverse
 				.mapSubstituter(oldToNew);
 
 		tuple = substituter.apply(tuple);
+		// field 0 should be updated
+		assertEquals(sUniverse.tupleRead(tuple, index_0), tupleInt2);
+		// field 1 remains unchanged
+		assertEquals(sUniverse.tupleRead(tuple, index_1), arrayEle1);
 	}
 }
