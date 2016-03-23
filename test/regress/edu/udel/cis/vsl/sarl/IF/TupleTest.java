@@ -29,6 +29,8 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
  */
 public class TupleTest {
 
+	private static boolean DEBUG = true;
+	
 	private SymbolicUniverse sUniverse;
 
 	private SymbolicTupleType tupleType_int, tupleType_real, tupleType_int_int,
@@ -66,6 +68,14 @@ public class TupleTest {
 
 	@After
 	public void tearDown() throws Exception {
+	}
+	
+	private void p(Object o){
+		if (DEBUG) System.out.println(o.toString());
+	}
+	
+	private void p(String s){
+		if (DEBUG) System.out.println(s);
 	}
 
 	// Interface:CoreUniverse
@@ -260,9 +270,12 @@ public class TupleTest {
 	 */
 	@Test
 	public void tuple_substitute2() {
-		SymbolicTupleType tupleType_VarRef = sUniverse.tupleType(
-				sUniverse.stringObject("variable_ref"),
+		SymbolicTupleType tupleType_Ref_TupleInt = sUniverse.tupleType(
+				sUniverse.stringObject("variable_ref_tupleInt"),
 				Arrays.asList(tupleType_int, sUniverse.referenceType()));
+		SymbolicTupleType tupleType_TupleInt_Ref = sUniverse.tupleType(
+				sUniverse.stringObject("variable_tupleInt_ref"),
+				Arrays.asList(sUniverse.referenceType(), tupleType_int));
 		ReferenceExpression self = sUniverse.identityReference();
 		ReferenceExpression arrayEle0 = sUniverse.arrayElementReference(self,
 				int_0);
@@ -272,7 +285,7 @@ public class TupleTest {
 				Arrays.asList(int_0));
 		SymbolicExpression tupleInt1 = sUniverse.tuple(tupleType_int,
 				Arrays.asList(int_1));
-		SymbolicExpression tuple = sUniverse.tuple(tupleType_VarRef,
+		SymbolicExpression tuple = sUniverse.tuple(tupleType_Ref_TupleInt,
 				Arrays.asList(tupleInt0, arrayEle0));
 		Map<SymbolicExpression, SymbolicExpression> oldToNew = new HashMap<>();
 
@@ -282,16 +295,18 @@ public class TupleTest {
 		UnaryOperator<SymbolicExpression> substituter = sUniverse
 				.mapSubstituter(oldToNew);
 
-		System.out.println(tuple.atomString());
-		System.out.println(((SymbolicTupleType)tuple.type()).sequence());
+		p("Before Substitution: ");
+		p(tuple.atomString());
+		p(((SymbolicTupleType)tuple.type()).sequence());
 		tuple = substituter.apply(tuple);
-		// field 0 should be updated
-		assertEquals(sUniverse.tupleRead(tuple, index_0), arrayEle1);
-		// field 1 remains unchanged
-		assertEquals(sUniverse.tupleRead(tuple, index_1), tupleInt1);
-		// 
-		//assertEqauls()
-		System.out.println(tuple.atomString());
-		System.out.println(((SymbolicTupleType)tuple.type()).sequence());
+		p("After Substitution: ");
+		p(tuple.atomString());
+		p(((SymbolicTupleType)tuple.type()).sequence());
+		// field 0 should be changed from tupleInt0 to arrayEle1
+		assertEquals(arrayEle1, sUniverse.tupleRead(tuple, index_0));
+		// field 1 should be changed from arrayEle0 to tupleInt1
+		assertEquals(tupleInt1, sUniverse.tupleRead(tuple, index_1));
+		// the type of result should be changed from <tuple_int, Ref> to <Ref, tuple_int>
+		assertEquals(tupleType_TupleInt_Ref.sequence(),  ((SymbolicTupleType)tuple.type()).sequence());
 	}
 }
