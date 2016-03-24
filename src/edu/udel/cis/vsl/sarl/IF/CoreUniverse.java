@@ -1577,7 +1577,7 @@ public interface CoreUniverse {
 	 * @return array consisting of those elements
 	 */
 	SymbolicExpression array(SymbolicType elementType,
-			Iterable<? extends SymbolicExpression> elements);
+			Iterable<? extends SymbolicObject> elements);
 
 	/**
 	 * Returns array of length 0.
@@ -1746,7 +1746,7 @@ public interface CoreUniverse {
 	 * @return the tuple formed from the components
 	 */
 	SymbolicExpression tuple(SymbolicTupleType type,
-			Iterable<? extends SymbolicExpression> components);
+			Iterable<? extends SymbolicObject> components);
 
 	/**
 	 * Returns an expression that represents the result of reading a component

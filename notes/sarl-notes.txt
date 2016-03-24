@@ -1,6 +1,23 @@
 
+subsumption:
+
+if a is a subset of b and a preceded b in dictionary order
+then a is a prefix of b
+
+if a is a subset of b then size(a)<size(b)
+
+
+1 4 6 7 8
+1 4 6 7 8 9
+1 4 6 7 8 10
+1 4 6 7 9
+2 3 4
+2 5 8 10
+4 7 8 : determine if I am subset of any of above?
+
+
 Step 1:
-  make concrete arrays instances of HomogeneousExpression<SymbolicExpression>
+make concrete arrays instances of HomogeneousExpression<SymbolicExpression>
 
 Re-factor expressions/objects
 

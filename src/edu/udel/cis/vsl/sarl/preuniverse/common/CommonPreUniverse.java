@@ -867,16 +867,10 @@ public class CommonPreUniverse implements PreUniverse {
 			else
 				return power((NumericExpression) args[0], (IntObject) args[1]);
 		case TUPLE:
+			return tuple((SymbolicTupleType) type, Arrays.asList(args));
 		case ARRAY:
-			// no checks?
-			if (args instanceof SymbolicExpression[])
-				return expression(operator, type, args);
-			else {
-				SymbolicExpression[] args2 = new SymbolicExpression[args.length];
-
-				System.arraycopy(args, 0, args2, 0, args.length);
-				return expression(operator, type, args2);
-			}
+			return array(((SymbolicArrayType) type).elementType(),
+					Arrays.asList(args));
 		case SUBTRACT:
 			return subtract((NumericExpression) args[0],
 					(NumericExpression) args[1]);
@@ -1739,15 +1733,22 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public SymbolicExpression array(SymbolicType elementType,
-			Iterable<? extends SymbolicExpression> elements) {
+			Iterable<? extends SymbolicObject> elements) {
 		int count = 0;
 
 		if (elementType == null)
 			throw err("Argument elementType to method array was null");
 		if (elements == null)
 			throw err("Argument elements to method array was null");
-		for (SymbolicExpression element : elements) {
-			if (element == null || element.isNull())
+		for (SymbolicObject object : elements) {
+			if (!(object instanceof SymbolicExpression))
+				throw err("Element " + count
+						+ " of elements: expected a SymbolicExpression, saw: "
+						+ object);
+
+			SymbolicExpression element = (SymbolicExpression) object;
+
+			if (element.isNull())
 				throw err("Element " + count
 						+ " of array elements argument has illegal value:\n"
 						+ element);
@@ -1762,8 +1763,8 @@ public class CommonPreUniverse implements PreUniverse {
 		SymbolicExpression[] elementArray = new SymbolicExpression[count];
 
 		count = 0;
-		for (SymbolicExpression element : elements) {
-			elementArray[count] = element;
+		for (SymbolicObject element : elements) {
+			elementArray[count] = (SymbolicExpression) element;
 			count++;
 		}
 		return array(elementType, elementArray);
@@ -2222,17 +2223,22 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public SymbolicExpression tuple(SymbolicTupleType type,
-			Iterable<? extends SymbolicExpression> components) {
+			Iterable<? extends SymbolicObject> components) {
 		SymbolicTypeSequence fieldTypes = type.sequence();
 		int m = fieldTypes.numTypes();
 		SymbolicExpression[] componentArray = new SymbolicExpression[m];
 		int i = 0;
 
-		for (SymbolicExpression component : components) {
+		for (SymbolicObject arg : components) {
 			if (i >= m)
 				throw err("In method tuple, number of components exceeded " + m
 						+ ", the number expected by tuple type " + type);
 
+			if (!(arg instanceof SymbolicExpression))
+				throw err("Component " + i + " in method tuple: "
+						+ "expected a SymbolicExpression, saw: " + arg);
+
+			SymbolicExpression component = (SymbolicExpression) arg;
 			SymbolicType fieldType = fieldTypes.getType(i);
 			SymbolicType componentType = component.type();
 
@@ -2715,52 +2721,6 @@ public class CommonPreUniverse implements PreUniverse {
 			return array(elementType, elements);
 		}
 	}
-
-	// @Override
-	// public SymbolicExpression emptySet(SymbolicSetType setType) {
-	// return expression(SymbolicOperator.CONCRETE, setType,
-	// collectionFactory.emptySortedSet());
-	// }
-
-	// @Override
-	// public SymbolicExpression singletonSet(SymbolicSetType setType,
-	// SymbolicExpression value) {
-	// return expression(SymbolicOperator.CONCRETE, setType,
-	// collectionFactory.singletonHashSet(value));
-	// }
-
-	// /**
-	// * Under construction.
-	// */
-	// @Override
-	// public BooleanExpression isElementOf(SymbolicExpression value,
-	// SymbolicExpression set) {
-	// if (set == null)
-	// throw err("Set argument to isElementof is null");
-	// if (set.type().typeKind() != SymbolicTypeKind.SET)
-	// throw err("Argument to isElementOf does not have set type: " + set
-	// + "\nType is: " + set.type());
-	// if (value == null)
-	// throw err("Value argument to isElementOf is null");
-	// if (set.operator() != SymbolicOperator.CONCRETE)
-	// throw err("Sets must be concrete for now");
-	// else {
-	// SymbolicObject arg0 = set.argument(0);
-	// boolean result;
-	//
-	// if (!(arg0 instanceof SymbolicSet))
-	// throw err("Argument of concrete set expression is not a set: "
-	// + set);
-	// @SuppressWarnings("unchecked")
-	// SymbolicSet<SymbolicExpression> contents =
-	// (SymbolicSet<SymbolicExpression>) arg0;
-	// // check type of value compatible with set element type?
-	// result = contents.contains(value);
-	// return bool(result);
-	// // TODO: problem: need to compute equals on each element???????
-	// // Disjunction.
-	// }
-	// }
 
 	@Override
 	public BooleanExpression isSubsetOf(SymbolicExpression set1,
