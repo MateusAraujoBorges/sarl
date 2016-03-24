@@ -22,7 +22,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
  */
 public class BooleanReasonTest {
 	public final static PrintStream out = System.out;
-	public final static boolean debug = true;
+	public final static boolean debug = false;
 	private SymbolicUniverse universe;
 	private BooleanExpression A, B, C;
 	private StringObject a_obj, b_obj, c_obj;
