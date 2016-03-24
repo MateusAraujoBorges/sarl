@@ -33,7 +33,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
@@ -53,7 +53,7 @@ public class IdealPowerTest {
 	private static PrintStream out = System.out;
 	private ObjectFactory objectFactory;
 	private SymbolicTypeFactory typeFactory;
-	private Ideal2Factory idealFactory;
+	private IdealFactory idealFactory;
 	/**
 	 * int constant -1
 	 */
@@ -88,7 +88,7 @@ public class IdealPowerTest {
 		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 		objectFactory = system.objectFactory();
 		typeFactory = system.typeFactory();
-		idealFactory = (Ideal2Factory) system.numericFactory();
+		idealFactory = (IdealFactory) system.numericFactory();
 		intNegOne = idealFactory.intConstant(-1);
 		intZero = idealFactory.zeroInt();
 		intOne = idealFactory.intConstant(1);

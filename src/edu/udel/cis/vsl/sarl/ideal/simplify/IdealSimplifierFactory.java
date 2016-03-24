@@ -19,7 +19,7 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 
@@ -27,7 +27,7 @@ public class IdealSimplifierFactory implements SimplifierFactory {
 
 	private SimplifierInfo info;
 
-	public IdealSimplifierFactory(Ideal2Factory idealFactory,
+	public IdealSimplifierFactory(IdealFactory idealFactory,
 			PreUniverse universe) {
 		info = new SimplifierInfo();
 		info.universe = universe;

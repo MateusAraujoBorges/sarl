@@ -36,7 +36,7 @@ public interface RationalExpression extends NumericExpression {
 	 * 
 	 * @return the numerator of this rational expression
 	 */
-	Monomial numerator(Ideal2Factory factory);
+	Monomial numerator(IdealFactory factory);
 
 	/**
 	 * Returns the denominator of this rational expression.
@@ -46,5 +46,5 @@ public interface RationalExpression extends NumericExpression {
 	 * 
 	 * @return the denominator of this rational expression
 	 */
-	Monomial denominator(Ideal2Factory factory);
+	Monomial denominator(IdealFactory factory);
 }

@@ -48,7 +48,7 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
@@ -60,7 +60,7 @@ import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifier;
 /**
  * <p>
  * An implementation of {@link Simplifier} for the "ideal" numeric factory
- * {@link Ideal2Factory}.
+ * {@link IdealFactory}.
  * </p>
  *
  * <p>
@@ -928,7 +928,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	
 	@SuppressWarnings("unused")
 	private Monomial simplifyPolynomial2(Polynomial poly) {
-		Ideal2Factory id = info.idealFactory;
+		IdealFactory id = info.idealFactory;
 
 		Number constant = constantMap.get(poly);
 
@@ -1015,7 +1015,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *         <code>poly</code> under the existing assumptions
 	 */
 	private Monomial simplifyPolynomial(Polynomial poly) {
-		Ideal2Factory id = info.idealFactory;
+		IdealFactory id = info.idealFactory;
 
 		while (true) { // repeat until stabilization
 			Number constant = constantMap.get(poly);
@@ -1655,7 +1655,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *         <code>poly</code>=0
 	 */
 	private BooleanExpression simplifyEQ0Poly(Polynomial poly) {
-		Ideal2Factory id = info.idealFactory;
+		IdealFactory id = info.idealFactory;
 		SymbolicType type = poly.type();
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Monic pseudo = affine.pseudo(); // non-null since zep non-constant
@@ -1914,7 +1914,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	// TODO: mainly here for debugging....
-	public Ideal2Factory getIdealFactory() {
+	public IdealFactory getIdealFactory() {
 		return info.idealFactory;
 	}
 }

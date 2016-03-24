@@ -26,7 +26,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 
@@ -72,28 +72,28 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Constant monomialConstant(Ideal2Factory factory) {
+	public Constant monomialConstant(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Monic monic(Ideal2Factory factory) {
+	public Monic monic(IdealFactory factory) {
 		return (Monic) factory.one(type());
 	}
 
 	@Override
-	public Monomial numerator(Ideal2Factory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Monomial denominator(Ideal2Factory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return factory.one(type());
 	}
 
 	@Override
-	public Monomial[] termMap(Ideal2Factory factory) {
-		return isZero() ? Ideal2Factory.emptyTermList : new Monomial[] { this };
+	public Monomial[] termMap(IdealFactory factory) {
+		return isZero() ? IdealFactory.emptyTermList : new Monomial[] { this };
 	}
 
 	@Override
@@ -102,7 +102,7 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Monomial[] expand(Ideal2Factory factory) {
+	public Monomial[] expand(IdealFactory factory) {
 		return termMap(factory);
 	}
 
@@ -112,17 +112,17 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+	public boolean hasNontrivialExpansion(IdealFactory factory) {
 		return false;
 	}
 
 	@Override
-	public int monomialOrder(Ideal2Factory factory) {
+	public int monomialOrder(IdealFactory factory) {
 		return 0;
 	}
 
 	@Override
-	public Monomial[] lower(Ideal2Factory factory) {
+	public Monomial[] lower(IdealFactory factory) {
 		return termMap(factory);
 	}
 }

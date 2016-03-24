@@ -24,7 +24,7 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
@@ -78,18 +78,18 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	private int totalDegree = -1;
 
 	/**
-	 * Cached result for method {@link #hasNontrivialExpansion(Ideal2Factory)}.
+	 * Cached result for method {@link #hasNontrivialExpansion(IdealFactory)}.
 	 * -1 means this has not yet been computed. 0 means false. 1 means true.
 	 */
 	byte hasNTE = -1;
 
 	/**
-	 * Cached result of {@link #expand(Ideal2Factory)}.
+	 * Cached result of {@link #expand(IdealFactory)}.
 	 */
 	private Monomial[] expansion = null;
 
 	/**
-	 * Cached result of {@link #termMap(Ideal2Factory)}.
+	 * Cached result of {@link #termMap(IdealFactory)}.
 	 */
 	private Monomial[] termMap = null;
 
@@ -104,17 +104,17 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	}
 
 	@Override
-	public Constant monomialConstant(Ideal2Factory factory) {
+	public Constant monomialConstant(IdealFactory factory) {
 		return factory.one(type());
 	}
 
 	@Override
-	public Monic monic(Ideal2Factory factory) {
+	public Monic monic(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public PrimitivePower[] monicFactors(Ideal2Factory factory) {
+	public PrimitivePower[] monicFactors(IdealFactory factory) {
 		return arguments;
 	}
 
@@ -123,12 +123,12 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	}
 
 	@Override
-	public Monomial numerator(Ideal2Factory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Monomial denominator(Ideal2Factory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return factory.one(type());
 	}
 
@@ -138,7 +138,7 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	}
 
 	@Override
-	public Monomial[] expand(Ideal2Factory factory) {
+	public Monomial[] expand(IdealFactory factory) {
 		if (expansion == null) {
 			if (!hasNontrivialExpansion(factory)) {
 				expansion = termMap(factory);
@@ -192,7 +192,7 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	}
 
 	@Override
-	public Monomial[] termMap(Ideal2Factory factory) {
+	public Monomial[] termMap(IdealFactory factory) {
 		if (termMap == null) {
 			termMap = new Monomial[] { this };
 		}
@@ -200,7 +200,7 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	}
 
 	@Override
-	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+	public boolean hasNontrivialExpansion(IdealFactory factory) {
 		if (hasNTE < 0) {
 			hasNTE = 0;
 			for (PrimitivePower pp : arguments) {
@@ -228,7 +228,7 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	}
 
 	@Override
-	public int monomialOrder(Ideal2Factory factory) {
+	public int monomialOrder(IdealFactory factory) {
 		// if (monomialOrder < 0) {
 		int monomialOrder = 0;
 		// for ()
@@ -244,7 +244,7 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	}
 
 	@Override
-	public Monomial[] lower(Ideal2Factory factory) {
+	public Monomial[] lower(IdealFactory factory) {
 		// if (lowering == null) {
 		Monomial[] lowering = null;
 		int order = monomialOrder(factory);

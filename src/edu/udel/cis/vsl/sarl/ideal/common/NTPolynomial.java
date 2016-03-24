@@ -26,7 +26,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
@@ -74,7 +74,7 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	private int totalDegree = -1;
 
 	/**
-	 * Cached value returned by {@link #expand(Ideal2Factory)}.
+	 * Cached value returned by {@link #expand(IdealFactory)}.
 	 */
 	private Monomial[] expansion = null;
 
@@ -84,13 +84,13 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	// private SymbolicMap<Monic, Monomial> lowering = null;
 
 	/**
-	 * Cached value returned by {@link #monicFactors(Ideal2Factory)}: a
+	 * Cached value returned by {@link #monicFactors(IdealFactory)}: a
 	 * singleton map from this to this.
 	 */
 	private PrimitivePower[] monicFactors = null;
 
 	/**
-	 * Cached result for method {@link #hasNontrivialExpansion(Ideal2Factory)}.
+	 * Cached result for method {@link #hasNontrivialExpansion(IdealFactory)}.
 	 * -1 means this has not yet been computed. 0 means false. 1 means true.
 	 */
 	byte hasNTE = -1;
@@ -127,7 +127,7 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public Monomial[] termMap(Ideal2Factory factory) {
+	public Monomial[] termMap(IdealFactory factory) {
 		return arguments;
 	}
 
@@ -151,7 +151,7 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public Constant constantTerm(Ideal2Factory factory) {
+	public Constant constantTerm(IdealFactory factory) {
 		Monomial lastTerm = arguments[arguments.length - 1];
 
 		return lastTerm instanceof Constant ? (Constant) lastTerm
@@ -159,7 +159,7 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public Monomial[] expand(Ideal2Factory factory) {
+	public Monomial[] expand(IdealFactory factory) {
 		if (expansion == null) {
 			Monomial[] termMap = termMap();
 
@@ -186,7 +186,7 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+	public boolean hasNontrivialExpansion(IdealFactory factory) {
 		if (hasNTE < 0) {
 			hasNTE = 0;
 			for (Monomial m : arguments) {
@@ -224,17 +224,17 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public Primitive primitive(Ideal2Factory factory) {
+	public Primitive primitive(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public IntObject primitivePowerExponent(Ideal2Factory factory) {
+	public IntObject primitivePowerExponent(IdealFactory factory) {
 		return factory.oneIntObject();
 	}
 
 	@Override
-	public PrimitivePower[] monicFactors(Ideal2Factory factory) {
+	public PrimitivePower[] monicFactors(IdealFactory factory) {
 		if (monicFactors == null) {
 			monicFactors = new PrimitivePower[] { this };
 			if (isCanonic())
@@ -249,12 +249,12 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public Constant monomialConstant(Ideal2Factory factory) {
+	public Constant monomialConstant(IdealFactory factory) {
 		return factory.one(type());
 	}
 
 	@Override
-	public Monic monic(Ideal2Factory factory) {
+	public Monic monic(IdealFactory factory) {
 		return this;
 	}
 
@@ -264,12 +264,12 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public Monomial numerator(Ideal2Factory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Monomial denominator(Ideal2Factory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return factory.one(type());
 	}
 
@@ -288,7 +288,7 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public int monomialOrder(Ideal2Factory factory) {
+	public int monomialOrder(IdealFactory factory) {
 		// if (monomialOrder < 0) {
 		int monomialOrder = 0;
 		for (Monomial monomial : arguments) {
@@ -303,7 +303,7 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public Monomial[] lower(Ideal2Factory factory) {
+	public Monomial[] lower(IdealFactory factory) {
 		// if (lowering == null) {
 		Monomial[] lowering = null;
 		int order = monomialOrder(factory);

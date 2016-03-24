@@ -10,8 +10,8 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.Ideal;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.simplify.IdealSimplifier;
 import edu.udel.cis.vsl.sarl.ideal.simplify.IdealSimplifierFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
@@ -50,7 +50,7 @@ public class CommonObjects {
 
 	static BooleanExpressionFactory boolExprFact;
 
-	static Ideal2Factory idealFactory;
+	static IdealFactory idealFactory;
 
 	static IdealSimplifierFactory idealSimplifierFactory;
 
@@ -130,9 +130,9 @@ public class CommonObjects {
 		system = PreUniverses.newIdealFactorySystem2();
 		preUniv = PreUniverses.newPreUniverse(system);
 		out = System.out;
-		idealFactory = (Ideal2Factory) system.expressionFactory()
+		idealFactory = (IdealFactory) system.expressionFactory()
 				.numericFactory();
-		idealSimplifierFactory = (IdealSimplifierFactory) Ideal2
+		idealSimplifierFactory = (IdealSimplifierFactory) Ideal
 				.newIdealSimplifierFactory(idealFactory, preUniv);
 		boolExprFact = PreUniverses.newIdealFactorySystem2().booleanFactory();
 		ratNeg1 = preUniv.rational(-1);

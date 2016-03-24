@@ -47,7 +47,7 @@ import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
@@ -62,7 +62,7 @@ import edu.udel.cis.vsl.sarl.util.KeySetFactory;
 
 /**
  * <p>
- * An implementation of {@link Ideal2Factory}. Several of the classes used to
+ * An implementation of {@link IdealFactory}. Several of the classes used to
  * represent expressions start with the letters "NT", which stands for
  * "non-trivial". For example {@link NTConstant} implements {@link Constant} and
  * represents any non-trivial constant, i.e., a constant which is not 1.
@@ -70,7 +70,7 @@ import edu.udel.cis.vsl.sarl.util.KeySetFactory;
  * 
  * @author Stephen F. Siegel
  */
-public class CommonIdealFactory implements Ideal2Factory {
+public class CommonIdealFactory implements IdealFactory {
 
 	public final static boolean debug = false;
 

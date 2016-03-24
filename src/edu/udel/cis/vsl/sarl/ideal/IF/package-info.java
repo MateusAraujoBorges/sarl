@@ -7,9 +7,9 @@
  * </p>
  * 
  * <p>
- * The entry point is {@link edu.udel.cis.vsl.sarl.ideal.IF.Ideal2 Ideal2}.
+ * The entry point is {@link edu.udel.cis.vsl.sarl.ideal.IF.Ideal Ideal2}.
  * That class provides static methods to get a new
- * {@link edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory Ideal2Factory}, an
+ * {@link edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory Ideal2Factory}, an
  * implementation of
  * {@link edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory}. It also
  * provides a method to get a simplifier factory.

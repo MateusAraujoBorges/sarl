@@ -21,7 +21,7 @@ package edu.udel.cis.vsl.sarl.ideal.common;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
@@ -39,12 +39,12 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 		implements Monomial {
 
 	/**
-	 * Cached value returned by {@link #expand(Ideal2Factory)}.
+	 * Cached value returned by {@link #expand(IdealFactory)}.
 	 */
 	private Monomial[] expansion = null;
 
 	/**
-	 * Cache value returned by {@link #termMap(Ideal2Factory)}.
+	 * Cache value returned by {@link #termMap(IdealFactory)}.
 	 */
 	private Monomial[] termMap = null;
 
@@ -75,7 +75,7 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Monic monic(Ideal2Factory factory) {
+	public Monic monic(IdealFactory factory) {
 		return (Monic) argument(1);
 	}
 
@@ -89,7 +89,7 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Constant monomialConstant(Ideal2Factory factory) {
+	public Constant monomialConstant(IdealFactory factory) {
 		return (Constant) argument(0);
 	}
 
@@ -103,17 +103,17 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Monomial numerator(Ideal2Factory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Monomial denominator(Ideal2Factory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return factory.one(type());
 	}
 
 	@Override
-	public Monomial[] expand(Ideal2Factory factory) {
+	public Monomial[] expand(IdealFactory factory) {
 		if (expansion == null) {
 			Monic monic = this.monic();
 
@@ -134,7 +134,7 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Monomial[] termMap(Ideal2Factory factory) {
+	public Monomial[] termMap(IdealFactory factory) {
 		if (termMap == null) {
 			Monic monic = monic();
 
@@ -156,7 +156,7 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+	public boolean hasNontrivialExpansion(IdealFactory factory) {
 		return monic().hasNontrivialExpansion(factory);
 	}
 
@@ -170,12 +170,12 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int monomialOrder(Ideal2Factory factory) {
+	public int monomialOrder(IdealFactory factory) {
 		return ((Monic) argument(1)).monomialOrder(factory);
 	}
 
 	@Override
-	public Monomial[] lower(Ideal2Factory factory) {
+	public Monomial[] lower(IdealFactory factory) {
 		// if (lowering == null) {
 		Monomial[] lowering;
 		int order = monomialOrder(factory);

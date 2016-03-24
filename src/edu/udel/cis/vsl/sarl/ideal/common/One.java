@@ -26,7 +26,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
@@ -44,7 +44,7 @@ public class One extends HomogeneousExpression<SymbolicObject>
 	private final static PrimitivePower[] emptyFactorList = new PrimitivePower[0];
 
 	/**
-	 * Cache of value returned by {@link #termMap(Ideal2Factory)}.
+	 * Cache of value returned by {@link #termMap(IdealFactory)}.
 	 */
 	private Monomial[] termMap = null;
 
@@ -67,27 +67,27 @@ public class One extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Constant monomialConstant(Ideal2Factory factory) {
+	public Constant monomialConstant(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Monic monic(Ideal2Factory factory) {
+	public Monic monic(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Monomial numerator(Ideal2Factory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Monomial denominator(Ideal2Factory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public PrimitivePower[] monicFactors(Ideal2Factory factory) {
+	public PrimitivePower[] monicFactors(IdealFactory factory) {
 		return emptyFactorList;
 	}
 
@@ -97,7 +97,7 @@ public class One extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Monomial[] termMap(Ideal2Factory factory) {
+	public Monomial[] termMap(IdealFactory factory) {
 		if (termMap == null) {
 			termMap = new Monomial[] { this };
 			if (isCanonic())
@@ -132,7 +132,7 @@ public class One extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Monomial[] expand(Ideal2Factory factory) {
+	public Monomial[] expand(IdealFactory factory) {
 		return termMap(factory);
 	}
 
@@ -142,7 +142,7 @@ public class One extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+	public boolean hasNontrivialExpansion(IdealFactory factory) {
 		return false;
 	}
 
@@ -154,12 +154,12 @@ public class One extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int monomialOrder(Ideal2Factory factory) {
+	public int monomialOrder(IdealFactory factory) {
 		return 0;
 	}
 
 	@Override
-	public Monomial[] lower(Ideal2Factory factory) {
+	public Monomial[] lower(IdealFactory factory) {
 		return termMap(factory);
 	}
 

@@ -23,7 +23,7 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
@@ -42,13 +42,13 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 		implements Primitive {
 
 	/**
-	 * Cache of value returned by {@link #monicFactors(Ideal2Factory)}.
+	 * Cache of value returned by {@link #monicFactors(IdealFactory)}.
 	 * Singleton map from this to this, cached.
 	 */
 	private PrimitivePower[] monicFactors = null;
 
 	/**
-	 * Cache of value returned by {@link #termMap(Ideal2Factory)}.
+	 * Cache of value returned by {@link #termMap(IdealFactory)}.
 	 */
 	private Monomial[] termMap = null;
 
@@ -58,7 +58,7 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public PrimitivePower[] monicFactors(Ideal2Factory factory) {
+	public PrimitivePower[] monicFactors(IdealFactory factory) {
 		if (monicFactors == null) {
 			monicFactors = new PrimitivePower[] { this };
 			if (isCanonic())
@@ -68,32 +68,32 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Constant monomialConstant(Ideal2Factory factory) {
+	public Constant monomialConstant(IdealFactory factory) {
 		return factory.one(type());
 	}
 
 	@Override
-	public Monic monic(Ideal2Factory factory) {
+	public Monic monic(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Primitive primitive(Ideal2Factory factory) {
+	public Primitive primitive(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public IntObject primitivePowerExponent(Ideal2Factory factory) {
+	public IntObject primitivePowerExponent(IdealFactory factory) {
 		return factory.oneIntObject();
 	}
 
 	@Override
-	public Monomial numerator(Ideal2Factory factory) {
+	public Monomial numerator(IdealFactory factory) {
 		return this;
 	}
 
 	@Override
-	public Monomial denominator(Ideal2Factory factory) {
+	public Monomial denominator(IdealFactory factory) {
 		return factory.one(type());
 	}
 
@@ -108,7 +108,7 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Monomial[] termMap(Ideal2Factory factory) {
+	public Monomial[] termMap(IdealFactory factory) {
 		if (termMap == null) {
 			termMap = new Monomial[] { this };
 			if (isCanonic())
@@ -118,7 +118,7 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Monomial[] expand(Ideal2Factory factory) {
+	public Monomial[] expand(IdealFactory factory) {
 		return termMap(factory);
 	}
 
@@ -128,7 +128,7 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public boolean hasNontrivialExpansion(Ideal2Factory factory) {
+	public boolean hasNontrivialExpansion(IdealFactory factory) {
 		return false;
 	}
 
@@ -142,12 +142,12 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int monomialOrder(Ideal2Factory factory) {
+	public int monomialOrder(IdealFactory factory) {
 		return 0;
 	}
 
 	@Override
-	public Monomial[] lower(Ideal2Factory factory) {
+	public Monomial[] lower(IdealFactory factory) {
 		return termMap(factory);
 	}
 }

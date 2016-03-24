@@ -20,7 +20,7 @@ package edu.udel.cis.vsl.sarl.ideal.IF;
 
 /**
  * A polynomial: an expression which is the sum of monomials. Use method
- * {@link #termMap(Ideal2Factory)} to get the term map for this
+ * {@link #termMap(IdealFactory)} to get the term map for this
  * {@link Polynomial}. There must be at least two (non-0) {@link Monomial}s in
  * the term map.
  * 
@@ -39,7 +39,7 @@ public interface Polynomial extends Primitive {
 	 * 
 	 * @return the constant term of this polynomial
 	 */
-	Constant constantTerm(Ideal2Factory factory);
+	Constant constantTerm(IdealFactory factory);
 
 	/**
 	 * The "polynomial degree" is the maximum monomial degree of the terms

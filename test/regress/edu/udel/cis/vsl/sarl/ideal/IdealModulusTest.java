@@ -32,7 +32,7 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
@@ -53,7 +53,7 @@ public class IdealModulusTest {
 	private NumberFactory numberFactory;
 	private ObjectFactory objectFactory;
 	private SymbolicTypeFactory typeFactory;
-	private Ideal2Factory idealFactory;
+	private IdealFactory idealFactory;
 
 	/**
 	 * real constant 1.5 (3/2)
@@ -95,7 +95,7 @@ public class IdealModulusTest {
 		numberFactory = system.numberFactory();
 		objectFactory = system.objectFactory();
 		typeFactory = system.typeFactory();
-		idealFactory = (Ideal2Factory) system.numericFactory();
+		idealFactory = (IdealFactory) system.numericFactory();
 		ratOnePointFive = numberFactory.rational("1.25");
 		constOnePointFive = idealFactory.constant(ratOnePointFive);
 		ratOne = numberFactory.rational("1");

@@ -37,12 +37,12 @@ import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
 /**
  * Entry point for the ideal module, providing static methods to create an
- * {@link Ideal2Factory} and a {@link SimplifierFactory}.
+ * {@link IdealFactory} and a {@link SimplifierFactory}.
  * 
  * @author siegel
  *
  */
-public class Ideal2 {
+public class Ideal {
 
 	/**
 	 * Creates a new ideal factory based on the given factories.
@@ -68,9 +68,9 @@ public class Ideal2 {
 	 *            the boolean expression factory used by the ideal factory to
 	 *            create and manipulate boolean expressions, instances of
 	 *            {@link BooleanExpression}
-	 * @return a new {@link Ideal2Factory} based on the given factories
+	 * @return a new {@link IdealFactory} based on the given factories
 	 */
-	public static Ideal2Factory newIdealFactory(NumberFactory numberFactory,
+	public static IdealFactory newIdealFactory(NumberFactory numberFactory,
 			ObjectFactory objectFactory, SymbolicTypeFactory typeFactory,
 			CollectionFactory collectionFactory,
 			BooleanExpressionFactory booleanFactory) {
@@ -85,7 +85,7 @@ public class Ideal2 {
 	 * expressions.
 	 * 
 	 * @param idealFactory
-	 *            the {@link Ideal2Factory} that the simplifiers will use to
+	 *            the {@link IdealFactory} that the simplifiers will use to
 	 *            simplify expressions
 	 * @param universe
 	 *            the symbolic universe that the simplifiers will use to create
@@ -94,7 +94,7 @@ public class Ideal2 {
 	 * @return a new simplifier factory based on ideal arithmetic
 	 */
 	public static SimplifierFactory newIdealSimplifierFactory(
-			Ideal2Factory idealFactory, PreUniverse universe) {
+			IdealFactory idealFactory, PreUniverse universe) {
 		return new IdealSimplifierFactory(idealFactory, universe);
 	}
 

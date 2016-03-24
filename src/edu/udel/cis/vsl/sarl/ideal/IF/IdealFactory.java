@@ -34,7 +34,7 @@ import edu.udel.cis.vsl.sarl.util.KeySetFactory;
 
 /**
  * <p>
- * An {@link Ideal2Factory} provides a few services beyond those guaranteed by
+ * An {@link IdealFactory} provides a few services beyond those guaranteed by
  * an arbitrary {@link NumericExpressionFactory}.
  * </p>
  * 
@@ -231,7 +231,7 @@ import edu.udel.cis.vsl.sarl.util.KeySetFactory;
  * 
  * @author siegel
  */
-public interface Ideal2Factory extends NumericExpressionFactory {
+public interface IdealFactory extends NumericExpressionFactory {
 
 	Monomial[] emptyTermList = new Monomial[0];
 

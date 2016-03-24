@@ -37,7 +37,7 @@ import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
@@ -69,7 +69,7 @@ public class IdealEqualityTest {
 	private NumberFactory numberFactory;
 	private ObjectFactory objectFactory;
 	private SymbolicTypeFactory typeFactory;
-	private Ideal2Factory idealFactory;
+	private IdealFactory idealFactory;
 	private BooleanExpressionFactory booleanFactory;
 
 	/**
@@ -107,7 +107,7 @@ public class IdealEqualityTest {
 		numberFactory = system.numberFactory();
 		objectFactory = system.objectFactory();
 		typeFactory = system.typeFactory();
-		idealFactory = (Ideal2Factory) system.numericFactory();
+		idealFactory = (IdealFactory) system.numericFactory();
 		booleanFactory = system.booleanFactory();
 		intOne = idealFactory.intConstant(1);
 		intTwo = idealFactory.intConstant(2);

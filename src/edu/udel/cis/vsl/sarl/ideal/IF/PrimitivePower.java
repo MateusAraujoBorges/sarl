@@ -37,7 +37,7 @@ public interface PrimitivePower extends Monic {
 	 * 
 	 * @return the base in this primitive power expansion
 	 */
-	Primitive primitive(Ideal2Factory factory);
+	Primitive primitive(IdealFactory factory);
 
 	/**
 	 * Returns the exponent in this primitive power expression, which is a
@@ -48,6 +48,6 @@ public interface PrimitivePower extends Monic {
 	 * 
 	 * @return the exponent of this expression
 	 */
-	IntObject primitivePowerExponent(Ideal2Factory factory);
+	IntObject primitivePowerExponent(IdealFactory factory);
 
 }

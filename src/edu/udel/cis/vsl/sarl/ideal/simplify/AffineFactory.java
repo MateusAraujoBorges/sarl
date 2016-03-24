@@ -24,7 +24,7 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
@@ -32,7 +32,7 @@ import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
 public class AffineFactory {
 
-	private Ideal2Factory idealFactory;
+	private IdealFactory idealFactory;
 
 	private NumberFactory numberFactory;
 
@@ -44,7 +44,7 @@ public class AffineFactory {
 
 	private SymbolicType integerType, realType;
 
-	public AffineFactory(Ideal2Factory idealFactory) {
+	public AffineFactory(IdealFactory idealFactory) {
 		this.idealFactory = idealFactory;
 		this.numberFactory = idealFactory.numberFactory();
 		this.typeFactory = idealFactory.typeFactory();

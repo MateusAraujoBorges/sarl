@@ -31,8 +31,8 @@ import edu.udel.cis.vsl.sarl.expr.cnf.CnfFactory;
 import edu.udel.cis.vsl.sarl.expr.common.CommonExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.common.CommonNumericExpressionFactory;
 import edu.udel.cis.vsl.sarl.herbrand.IF.Herbrand;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2;
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.Ideal;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
@@ -107,7 +107,7 @@ public class Expressions {
 			CollectionFactory collectionFactory) {
 		BooleanExpressionFactory booleanFactory = new CnfFactory(typeFactory,
 				objectFactory, collectionFactory);
-		NumericExpressionFactory numericFactory = Ideal2.newIdealFactory(
+		NumericExpressionFactory numericFactory = Ideal.newIdealFactory(
 				numberFactory, objectFactory, typeFactory, collectionFactory,
 				booleanFactory);
 
@@ -166,7 +166,7 @@ public class Expressions {
 			CollectionFactory collectionFactory) {
 		BooleanExpressionFactory booleanFactory = new CnfFactory(typeFactory,
 				objectFactory, collectionFactory);
-		NumericExpressionFactory idealFactory = Ideal2.newIdealFactory(
+		NumericExpressionFactory idealFactory = Ideal.newIdealFactory(
 				numberFactory, objectFactory, typeFactory, collectionFactory,
 				booleanFactory);
 		NumericExpressionFactory herbrandFactory = Herbrand.newHerbrandFactory(
@@ -193,16 +193,16 @@ public class Expressions {
 			ExpressionFactory standardExpressionFactory, PreUniverse universe) {
 		NumericExpressionFactory numericFactory = standardExpressionFactory
 				.numericFactory();
-		Ideal2Factory idealFactory;
+		IdealFactory idealFactory;
 
-		if (numericFactory instanceof Ideal2Factory)
-			idealFactory = (Ideal2Factory) numericFactory;
+		if (numericFactory instanceof IdealFactory)
+			idealFactory = (IdealFactory) numericFactory;
 		else if (numericFactory instanceof CommonNumericExpressionFactory)
-			idealFactory = (Ideal2Factory) ((CommonNumericExpressionFactory) numericFactory)
+			idealFactory = (IdealFactory) ((CommonNumericExpressionFactory) numericFactory)
 					.idealFactory();
 		else
 			throw new SARLInternalException("Unknown expression factory kind.");
 
-		return Ideal2.newIdealSimplifierFactory(idealFactory, universe);
+		return Ideal.newIdealSimplifierFactory(idealFactory, universe);
 	}
 }

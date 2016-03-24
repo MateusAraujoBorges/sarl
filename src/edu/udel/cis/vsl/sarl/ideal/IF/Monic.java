@@ -38,7 +38,7 @@ public interface Monic extends Monomial {
 	 * 
 	 * @return the factors of this monic as a map
 	 */
-	PrimitivePower[] monicFactors(Ideal2Factory factory);
+	PrimitivePower[] monicFactors(IdealFactory factory);
 
 	/**
 	 * Is this the trivial monic, i.e., the monic consisting of 0 factors (and

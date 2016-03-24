@@ -35,7 +35,7 @@ public interface Monomial extends RationalExpression {
 	 *            the ideal factory responsible for this monomial
 	 * @return the constant factor of this monomial
 	 */
-	Constant monomialConstant(Ideal2Factory factory);
+	Constant monomialConstant(IdealFactory factory);
 
 	/**
 	 * Returns the monic factor of this monomial.
@@ -44,7 +44,7 @@ public interface Monomial extends RationalExpression {
 	 *            the ideal factory responsible for this monomial
 	 * @return the monic factor of this monomial
 	 */
-	Monic monic(Ideal2Factory factory);
+	Monic monic(IdealFactory factory);
 
 	/**
 	 * Returns the degree of the monic where each factor is considered to have
@@ -69,14 +69,14 @@ public interface Monomial extends RationalExpression {
 	/**
 	 * Returns the expansion of this monomial.
 	 * 
-	 * @see Ideal2Factory
+	 * @see IdealFactory
 	 * 
 	 * @param factory
 	 *            the ideal factory responsible for this monomial
 	 * @return term map whose sum is equivalent to this but with no
 	 *         {@link Polynomial}s.
 	 */
-	Monomial[] expand(Ideal2Factory factory);
+	Monomial[] expand(IdealFactory factory);
 
 	/**
 	 * Determines whether or not this monomial has a non-trivial expansion. A
@@ -86,18 +86,18 @@ public interface Monomial extends RationalExpression {
 	 *            the ideal factory responsible for this monomial
 	 * @return <code>true</code> iff this monomial has a non-trivial expansion
 	 */
-	boolean hasNontrivialExpansion(Ideal2Factory factory);
+	boolean hasNontrivialExpansion(IdealFactory factory);
 
 	/**
 	 * Returns the term map of this monomial.
 	 * 
-	 * @see Ideal2Factory
+	 * @see IdealFactory
 	 * 
 	 * @param factory
 	 *            the ideal factory responsible for this monomial
 	 * @return a term map whose sum is equivalent to this monomial
 	 */
-	Monomial[] termMap(Ideal2Factory factory);
+	Monomial[] termMap(IdealFactory factory);
 
 	/**
 	 * Computes the "monomial order" of this {@link Monomial}. This is defined
@@ -126,16 +126,16 @@ public interface Monomial extends RationalExpression {
 	 * </p>
 	 * 
 	 * @param factory
-	 *            the {@link Ideal2Factory} responsible for this
+	 *            the {@link IdealFactory} responsible for this
 	 *            {@link Monomial}
 	 * @return the monomial order of this {@link Monomial}
 	 */
-	int monomialOrder(Ideal2Factory factory);
+	int monomialOrder(IdealFactory factory);
 
 	/**
 	 * <p>
 	 * Computes a term map from performing a single outer-level expansion. This
-	 * is in contrast with {@link #expand(Ideal2Factory)}, which performs a full
+	 * is in contrast with {@link #expand(IdealFactory)}, which performs a full
 	 * expansion.
 	 * </p>
 	 * 
@@ -148,9 +148,9 @@ public interface Monomial extends RationalExpression {
 	 * </p>
 	 * 
 	 * @param factory
-	 *            the {@link Ideal2Factory} responsible for this
+	 *            the {@link IdealFactory} responsible for this
 	 *            {@link Monomial}
 	 * @return a term map with lower monomial order.
 	 */
-	Monomial[] lower(Ideal2Factory factory);
+	Monomial[] lower(IdealFactory factory);
 }

@@ -18,7 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
-import edu.udel.cis.vsl.sarl.ideal.IF.Ideal2Factory;
+import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.util.BinaryOperator;
 
@@ -31,9 +31,9 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  */
 class PrimitivePowerMultiplier implements BinaryOperator<PrimitivePower> {
 	
-	private Ideal2Factory factory;
+	private IdealFactory factory;
 
-	public PrimitivePowerMultiplier(Ideal2Factory factory) {
+	public PrimitivePowerMultiplier(IdealFactory factory) {
 		this.factory = factory;
 	}
 
