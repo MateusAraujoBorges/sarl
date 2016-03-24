@@ -116,38 +116,6 @@ public class BooleanReasonTest {
 	}
 
 	/**
-	 * A ^ (A v B) equiv A
-	 */
-	@Test
-	public void absorptionTest1() {
-		BooleanExpression e1 = universe.and(A, universe.or(A, B));
-		BooleanExpression e2 = A;
-		Reasoner reasoner = universe.reasoner(trueExpr);
-
-		if (debug) {
-			out.println("e1 is " + e1);
-			out.println("e2 is " + e2);
-		}
-		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
-	}
-
-	/**
-	 * A v (A ^ B) equiv A
-	 */
-	@Test
-	public void absorptionTest2() {
-		BooleanExpression e1 = universe.or(A, universe.and(A, B));
-		BooleanExpression e2 = A;
-		Reasoner reasoner = universe.reasoner(trueExpr);
-
-		if (debug) {
-			out.println("e1 is " + e1);
-			out.println("e2 is " + e2);
-		}
-		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
-	}
-
-	/**
 	 * A ^ (not A) equiv false
 	 */
 	@Test
@@ -173,23 +141,6 @@ public class BooleanReasonTest {
 			out.println("e is " + e);
 		}
 		assertEquals(trueExpr, reasoner.simplify(e));
-	}
-
-	/**
-	 * A ^ (B v C) equiv (A ^ B) v (A ^ C)
-	 */
-	@Test
-	public void distributivityTest1() {
-		BooleanExpression e1 = universe.and(A, universe.or(B, C));
-		BooleanExpression e2 = universe.or(universe.and(A, B),
-				universe.and(A, C));
-		Reasoner reasoner = universe.reasoner(trueExpr);
-
-		if (debug) {
-			out.println("e1 is " + e1);
-			out.println("e2 is " + e2);
-		}
-		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
 	}
 
 	/**
