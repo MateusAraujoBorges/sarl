@@ -70,13 +70,17 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	 */
 	protected HomogeneousExpression(SymbolicOperator operator,
 			SymbolicType type, T[] arguments) {
-		super(SymbolicObjectKind.EXPRESSION);
 		assert operator != null;
 		assert operator == SymbolicOperator.NULL || type != null;
 		assert arguments != null;
 		this.operator = operator;
 		this.type = type;
 		this.arguments = arguments;
+	}
+
+	@Override
+	public SymbolicObjectKind symbolicObjectKind() {
+		return SymbolicObjectKind.EXPRESSION;
 	}
 
 	/**

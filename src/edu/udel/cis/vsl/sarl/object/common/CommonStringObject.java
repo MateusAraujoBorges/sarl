@@ -28,7 +28,7 @@ public class CommonStringObject extends CommonSymbolicObject
 	private String value;
 
 	CommonStringObject(String value) {
-		super(SymbolicObjectKind.STRING);
+		// super(SymbolicObjectKind.STRING);
 		this.value = value;
 	}
 
@@ -73,5 +73,10 @@ public class CommonStringObject extends CommonSymbolicObject
 	@Override
 	public StringBuffer toStringBufferLong() {
 		return new StringBuffer(value);
+	}
+
+	@Override
+	public SymbolicObjectKind symbolicObjectKind() {
+		return SymbolicObjectKind.STRING;
 	}
 }

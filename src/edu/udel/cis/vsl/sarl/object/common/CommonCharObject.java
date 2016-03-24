@@ -28,7 +28,7 @@ public class CommonCharObject extends CommonSymbolicObject
 	private char value;
 
 	CommonCharObject(char theChar) {
-		super(SymbolicObjectKind.CHAR);
+		// super(SymbolicObjectKind.CHAR);
 		this.value = theChar;
 	}
 
@@ -81,6 +81,11 @@ public class CommonCharObject extends CommonSymbolicObject
 	@Override
 	public StringBuffer toStringBufferLong() {
 		return new StringBuffer(Character.toString(value));
+	}
+
+	@Override
+	public SymbolicObjectKind symbolicObjectKind() {
+		return SymbolicObjectKind.CHAR;
 	}
 
 }

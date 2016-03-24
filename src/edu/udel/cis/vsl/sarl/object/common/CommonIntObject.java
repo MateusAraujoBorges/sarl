@@ -27,7 +27,7 @@ public class CommonIntObject extends CommonSymbolicObject implements IntObject {
 	private int value;
 
 	CommonIntObject(int value) {
-		super(SymbolicObjectKind.INT);
+		// super(SymbolicObjectKind.INT);
 		this.value = value;
 	}
 
@@ -123,6 +123,11 @@ public class CommonIntObject extends CommonSymbolicObject implements IntObject {
 	@Override
 	public StringBuffer toStringBufferLong() {
 		return new StringBuffer(Integer.toString(value));
+	}
+
+	@Override
+	public SymbolicObjectKind symbolicObjectKind() {
+		return SymbolicObjectKind.INT;
 	}
 
 }

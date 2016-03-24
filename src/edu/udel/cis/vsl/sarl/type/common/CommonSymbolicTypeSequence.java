@@ -58,7 +58,7 @@ public class CommonSymbolicTypeSequence extends CommonSymbolicObject
 	 *            SymbolicType
 	 */
 	public CommonSymbolicTypeSequence(Iterable<? extends SymbolicType> types) {
-		super(SymbolicObjectKind.TYPE_SEQUENCE);
+		// super(SymbolicObjectKind.TYPE_SEQUENCE);
 		assert types != null;
 		elements = new ArrayList<SymbolicType>();
 		for (SymbolicType type : types) {
@@ -77,7 +77,7 @@ public class CommonSymbolicTypeSequence extends CommonSymbolicObject
 	 *            a finite array[T] of SymbolicType
 	 */
 	public CommonSymbolicTypeSequence(SymbolicType[] types) {
-		super(SymbolicObjectKind.TYPE_SEQUENCE);
+		// super(SymbolicObjectKind.TYPE_SEQUENCE);
 		elements = new ArrayList<SymbolicType>(types.length);
 		for (SymbolicType type : types) {
 			if (type == null)
@@ -85,6 +85,11 @@ public class CommonSymbolicTypeSequence extends CommonSymbolicObject
 						"Cannot add null type to type sequence");
 			elements.add(type);
 		}
+	}
+
+	@Override
+	public SymbolicObjectKind symbolicObjectKind() {
+		return SymbolicObjectKind.TYPE_SEQUENCE;
 	}
 
 	@Override

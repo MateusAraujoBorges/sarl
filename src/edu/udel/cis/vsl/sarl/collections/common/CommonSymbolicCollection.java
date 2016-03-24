@@ -29,8 +29,13 @@ public abstract class CommonSymbolicCollection<T extends SymbolicExpression>
 	private SymbolicCollectionKind collectionKind;
 
 	CommonSymbolicCollection(SymbolicCollectionKind kind) {
-		super(SymbolicObjectKind.EXPRESSION_COLLECTION);
+		// super(SymbolicObjectKind.EXPRESSION_COLLECTION);
 		this.collectionKind = kind;
+	}
+
+	@Override
+	public SymbolicObjectKind symbolicObjectKind() {
+		return SymbolicObjectKind.EXPRESSION_COLLECTION;
 	}
 
 	@Override

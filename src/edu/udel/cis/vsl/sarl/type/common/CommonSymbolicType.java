@@ -27,8 +27,8 @@ import edu.udel.cis.vsl.sarl.object.common.CommonSymbolicObject;
  * 
  * @author alali
  */
-public abstract class CommonSymbolicType extends CommonSymbolicObject implements
-		SymbolicType {
+public abstract class CommonSymbolicType extends CommonSymbolicObject
+		implements SymbolicType {
 
 	/**
 	 * contains the kind of this type
@@ -39,7 +39,7 @@ public abstract class CommonSymbolicType extends CommonSymbolicObject implements
 	 * Constructs new SymbolicType object with given kind and ID number -1.
 	 */
 	CommonSymbolicType(SymbolicTypeKind kind) {
-		super(SymbolicObjectKind.TYPE);
+		// super(SymbolicObjectKind.TYPE);
 		assert kind != null;
 		this.kind = kind;
 	}
@@ -56,6 +56,11 @@ public abstract class CommonSymbolicType extends CommonSymbolicObject implements
 	protected abstract boolean typeEquals(CommonSymbolicType that);
 
 	@Override
+	public SymbolicObjectKind symbolicObjectKind() {
+		return SymbolicObjectKind.TYPE;
+	}
+
+	@Override
 	public boolean intrinsicEquals(SymbolicObject object) {
 		if (this == object)
 			return true;
@@ -64,7 +69,7 @@ public abstract class CommonSymbolicType extends CommonSymbolicObject implements
 
 			if (kind != that.kind)
 				return false;
-			
+
 			return typeEquals(that);
 		}
 		return false;

@@ -33,7 +33,7 @@ public class CommonNumberObject extends CommonSymbolicObject
 	private Number value;
 
 	CommonNumberObject(Number value) {
-		super(SymbolicObjectKind.NUMBER);
+		// super(SymbolicObjectKind.NUMBER);
 		this.value = value;
 	}
 
@@ -113,5 +113,10 @@ public class CommonNumberObject extends CommonSymbolicObject
 	@Override
 	public StringBuffer toStringBufferLong() {
 		return new StringBuffer(value.toString());
+	}
+
+	@Override
+	public SymbolicObjectKind symbolicObjectKind() {
+		return SymbolicObjectKind.NUMBER;
 	}
 }

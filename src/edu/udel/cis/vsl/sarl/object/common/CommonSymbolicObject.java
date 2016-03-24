@@ -29,6 +29,8 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  */
 public abstract class CommonSymbolicObject implements SymbolicObject {
 
+	// static fields ...
+
 	private final static int NOT_HASHED = -2;
 
 	private final static int HASHED = -1;
@@ -39,21 +41,12 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 	 */
 	private final static boolean debug = false;
 
-	/**
-	 * What kind of the symbolic object is this? Set upon construction.
-	 */
-	private SymbolicObjectKind kind;
+	// instance fields ...
 
 	/**
 	 * Cached hashCode, set upon first run of {@link #hashCode()}.
 	 */
 	private int hashCode;
-
-	// /**
-	// * Has the hash code of this object been computed and cached in field
-	// * {@link #hashCode}?
-	// */
-	// private boolean hashed = false;
 
 	/**
 	 * If this object has not been hashed, <code>id</code> will be
@@ -66,38 +59,17 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 	 */
 	private int id = NOT_HASHED;
 
-	// /**
-	// * An infinite-precision rational number associated to this object to
-	// * facilitate comparisons. CURRENTLY NOT USED.
-	// */
-	// private RationalNumber order;
+	// Constructors...
 
 	/**
-	 * Instantiates object and sets {@link #kind} as specified.
+	 * Instantiates object, initialized <code>id</code> to
+	 * <code>NOT_HASHED</code>.
 	 * 
-	 * @param kind
-	 *            the kind of symbolic object this is
 	 */
-	protected CommonSymbolicObject(SymbolicObjectKind kind) {
-		this.kind = kind;
+	protected CommonSymbolicObject() {
 	}
 
-	// /**
-	// * Sets the {@link #order} field to the specified number.
-	// *
-	// * @param number
-	// * an infinite precision rational number
-	// */
-	// public void setOrder(RationalNumber number) {
-	// order = number;
-	// }
-
-	// /**
-	// * @return the rational number {@link #order}.
-	// */
-	// public RationalNumber getOrder() {
-	// return order;
-	// }
+	// Methods...
 
 	public boolean isCanonic() {
 		return id >= 0;
@@ -114,11 +86,6 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 
 	public int id() {
 		return id;
-	}
-
-	@Override
-	public SymbolicObjectKind symbolicObjectKind() {
-		return kind;
 	}
 
 	/**
@@ -157,7 +124,7 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 		if (o instanceof CommonSymbolicObject) {
 			CommonSymbolicObject that = (CommonSymbolicObject) o;
 
-			if (kind != that.kind)
+			if (this.symbolicObjectKind() != that.symbolicObjectKind())
 				return false;
 			if (id >= 0 && that.id >= 0) {
 				return id == that.id;

@@ -28,7 +28,7 @@ public class CommonBooleanObject extends CommonSymbolicObject
 	private boolean value;
 
 	CommonBooleanObject(boolean value) {
-		super(SymbolicObjectKind.BOOLEAN);
+		// super(SymbolicObjectKind.BOOLEAN);
 		this.value = value;
 	}
 
@@ -92,6 +92,11 @@ public class CommonBooleanObject extends CommonSymbolicObject
 	@Override
 	public StringBuffer toStringBufferLong() {
 		return new StringBuffer(Boolean.toString(value));
+	}
+
+	@Override
+	public SymbolicObjectKind symbolicObjectKind() {
+		return SymbolicObjectKind.BOOLEAN;
 	}
 
 }
