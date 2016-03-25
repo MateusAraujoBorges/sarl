@@ -1,0 +1,32 @@
+/* PrimitivePower canonical form*/
+
+Description: define how PrimitivePower operations like power, multiply, divide, and add should transform to the canonical form.
+
+1. power: input is general expression of the form power(x, y), raise it to z power.
+	isRational:
+		Returns the value of the rational number as integer	                     
+	isInteger:
+		if z is positive integer, power(x,y)^z;
+		if a is negative integer, SARLException;
+		if a is zero, 
+			if base is zero, SARLException
+			else	return 1;
+	else:
+		power(power(x,y), z) —> power(x,y*z)
+
+2. multiply: input is (x^a)(y^b)
+	if x or y = 0, SARLException
+	else if x == y, (x^a)(y^b) -> x^(a+b)
+	else if a ==b, (xy)^a
+	else (x^a)(y^b)
+
+3. divide: input is (x^a)/(y^b)
+	if x == y, output is x^(a-b)
+	else if a == b, (x/y)^a
+	else (x^a)/(y^b)
+
+4. add: input is (x^a)+(y^b)
+	if x == y && a == b
+		2*x^a
+	else
+		output is (x^a)+(y^b)
