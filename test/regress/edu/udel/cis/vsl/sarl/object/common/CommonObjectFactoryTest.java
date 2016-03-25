@@ -8,13 +8,13 @@ import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
-import edu.udel.cis.vsl.sarl.collections.IF.ExpressionComparatorStub;
 import edu.udel.cis.vsl.sarl.number.real.RealNumberFactory;
 import edu.udel.cis.vsl.sarl.type.common.TypeComparator;
 import edu.udel.cis.vsl.sarl.type.common.TypeSequenceComparator;
 
 /**
  * Test class for CommonObjectFactory
+ * 
  * @author jtirrell
  *
  */
@@ -24,9 +24,10 @@ public class CommonObjectFactoryTest {
 	 * CommonObjectFactory that is instantiated during setUp
 	 */
 	CommonObjectFactory fac;
-	
+
 	/**
 	 * Instantiates this.fac to a CommonObjectFactory
+	 * 
 	 * @throws Exception
 	 */
 	@Before
@@ -34,7 +35,7 @@ public class CommonObjectFactoryTest {
 		this.fac = null;
 		this.fac = new CommonObjectFactory(new RealNumberFactory());
 	}
-	
+
 	/**
 	 * Method to test CommonObjectFactory.CommonObjectFactory
 	 */
@@ -57,18 +58,9 @@ public class CommonObjectFactoryTest {
 	@Test
 	public void testSetExpressionComparator() {
 		this.fac.setExpressionComparator(new ExpressionComparatorStub());
-		
-		assertTrue(this.fac.comparator().expressionComparator() instanceof ExpressionComparatorStub);
-	}
 
-	/**
-	 * Method to test CommonObjectFactory.setCollectionComparator
-	 */
-	@Test
-	public void testSetCollectionComparator() {
-		this.fac.setCollectionComparator(new CollectionComparatorStub());
-		
-		assertTrue(this.fac.comparator().collectionComparator() instanceof CollectionComparatorStub);
+		assertTrue(this.fac.comparator()
+				.expressionComparator() instanceof ExpressionComparatorStub);
 	}
 
 	/**
@@ -77,8 +69,9 @@ public class CommonObjectFactoryTest {
 	@Test
 	public void testSetTypeComparator() {
 		this.fac.setTypeComparator(new TypeComparator());
-		
-		assertTrue(this.fac.comparator().typeComparator() instanceof TypeComparator);
+
+		assertTrue(this.fac.comparator()
+				.typeComparator() instanceof TypeComparator);
 	}
 
 	/**
@@ -87,8 +80,9 @@ public class CommonObjectFactoryTest {
 	@Test
 	public void testSetTypeSequenceComparator() {
 		this.fac.setTypeSequenceComparator(new TypeSequenceComparator());
-		
-		assertTrue(this.fac.comparator().typeSequenceComparator() instanceof TypeSequenceComparator);
+
+		assertTrue(this.fac.comparator()
+				.typeSequenceComparator() instanceof TypeSequenceComparator);
 	}
 
 	/**
@@ -97,15 +91,13 @@ public class CommonObjectFactoryTest {
 	@Test
 	public void testInit() {
 		this.fac.setExpressionComparator(new ExpressionComparatorStub());
-		this.fac.setCollectionComparator(new CollectionComparatorStub());
 		this.fac.setTypeComparator(new TypeComparator());
 		this.fac.setTypeSequenceComparator(new TypeSequenceComparator());
-		
+
 		try {
 			this.fac.init();
 			assertTrue(true);
-		}
-		catch(Exception e)  {
+		} catch (Exception e) {
 			assertTrue(false);
 		}
 	}
@@ -173,19 +165,20 @@ public class CommonObjectFactoryTest {
 	public void testOneRealObj() {
 		assertEquals("1", this.fac.oneRealObj().toString());
 	}
-	
+
 	/**
 	 * Method to test CommonObjectFactory.numberObject
 	 */
 	@Test
 	public void testNumberObject() {
-		assertEquals("1", this.fac.numberObject(this.fac.numberFactory().integer(1)).toString());
+		assertEquals("1", this.fac
+				.numberObject(this.fac.numberFactory().integer(1)).toString());
 	}
-	
+
 	/**
 	 * Method to test thrown exception for CommonObjectFactory.numberObject()
 	 */
-	@Test(expected=SARLException.class)
+	@Test(expected = SARLException.class)
 	public void testNumberObjectException() {
 		this.fac.numberObject(null);
 	}
@@ -197,11 +190,11 @@ public class CommonObjectFactoryTest {
 	public void testStringObject() {
 		assertEquals("string", this.fac.stringObject("string").toString());
 	}
-	
+
 	/**
 	 * Method to test thrown exception for CommonObjectFactory.stringObject()
 	 */
-	@Test(expected=SARLException.class)
+	@Test(expected = SARLException.class)
 	public void testStringObjectException() {
 		this.fac.stringObject(null);
 	}
@@ -232,33 +225,22 @@ public class CommonObjectFactoryTest {
 	}
 
 	/**
-	 * Method to test CommonObjectFactory.objectWithId
-	 */
-	@Test
-	public void testObjectWithId() {
-		IntObject tempint = this.fac.intObject(2);
-		this.fac.canonic(tempint);
-		
-		assertEquals("2", this.fac.objectWithId(8).toString());
-	}
-
-	/**
 	 * Method to test CommonObjectFactory.objects() and canonic()
 	 */
 	@Test
 	public void testObjects() {
-		//make something canonic and check to make sure its added to the list
+		// make something canonic and check to make sure its added to the list
 		int originalcount = this.fac.objects().size();
 		IntObject tempint = this.fac.intObject(2);
-		
+
 		this.fac.canonic(tempint);
-		assertEquals(this.fac.objects().size(), originalcount+1);
+		assertEquals(this.fac.objects().size(), originalcount + 1);
 	}
-	
+
 	/**
 	 * Method to test thrown exception for CommonObjectFactory.canonic()
 	 */
-	@Test(expected=SARLException.class)
+	@Test(expected = SARLException.class)
 	public void testCanonicException() {
 		this.fac.canonic(null);
 	}
@@ -270,9 +252,9 @@ public class CommonObjectFactoryTest {
 	public void testNumObjects() {
 		int originalcount = this.fac.numObjects();
 		IntObject tempint = this.fac.intObject(2);
-		
+
 		this.fac.canonic(tempint);
-		assertEquals(this.fac.numObjects(), originalcount+1);
+		assertEquals(this.fac.numObjects(), originalcount + 1);
 	}
 
 }

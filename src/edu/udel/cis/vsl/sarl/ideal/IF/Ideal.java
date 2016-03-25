@@ -25,8 +25,6 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal.common.CommonIdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.simplify.IdealSimplifierFactory;
@@ -61,9 +59,6 @@ public class Ideal {
 	 *            the symbolic type factory used by the ideal factory to create
 	 *            and manipulate symbolic types, instances of
 	 *            {@link SymbolicType}
-	 * @param collectionFactory
-	 *            the factory used to manage symbolic collections, instances of
-	 *            {@link SymbolicCollection}
 	 * @param booleanFactory
 	 *            the boolean expression factory used by the ideal factory to
 	 *            create and manipulate boolean expressions, instances of
@@ -72,10 +67,9 @@ public class Ideal {
 	 */
 	public static IdealFactory newIdealFactory(NumberFactory numberFactory,
 			ObjectFactory objectFactory, SymbolicTypeFactory typeFactory,
-			CollectionFactory collectionFactory,
 			BooleanExpressionFactory booleanFactory) {
 		return new CommonIdealFactory(numberFactory, objectFactory, typeFactory,
-				collectionFactory, booleanFactory);
+				booleanFactory);
 	}
 
 	/**

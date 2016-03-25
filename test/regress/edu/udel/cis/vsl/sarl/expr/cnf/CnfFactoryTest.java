@@ -36,7 +36,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.Expressions;
@@ -58,7 +57,6 @@ public class CnfFactoryTest {
 
 	private static SymbolicType booleanType;
 	private static SymbolicTypeFactory stf;
-	private static CollectionFactory cf;
 	private static ObjectFactory of;
 	private static ExpressionFactory ef;
 
@@ -87,7 +85,6 @@ public class CnfFactoryTest {
 		factory = system.booleanFactory();
 		stf = system.typeFactory();
 		of = system.objectFactory();
-		cf = system.collectionFactory();
 		ef = system.expressionFactory();
 		booleanType = stf.booleanType();
 		p = factory.booleanSymbolicConstant(of.stringObject("p"));
@@ -120,7 +117,7 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void notTest() {
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of, cf);
+		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
 		BooleanExpression testingfalse = factory.falseExpr();
 		StringObject pobject = of.stringObject("a");
 		StringObject qobject = of.stringObject("b");
@@ -163,7 +160,7 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void cnFFactoryNotTest() {
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of, cf);
+		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
 		BooleanExpression testingfalse = factory.falseExpr();
 		StringObject pobject = of.stringObject("a");
 		StringObject qobject = of.stringObject("b");
@@ -203,7 +200,7 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void orTest() {
-		CnfFactory bef = (CnfFactory) Expressions.newCnfFactory(stf, of, cf);
+		CnfFactory bef = (CnfFactory) Expressions.newCnfFactory(stf, of);
 		StringObject pobject = of.stringObject("p");
 		StringObject qobject = of.stringObject("q");
 		StringObject robject = of.stringObject("r");
@@ -250,7 +247,7 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void orSimplifyTest() {
-		CnfFactory bef = (CnfFactory) Expressions.newCnfFactory(stf, of, cf);
+		CnfFactory bef = (CnfFactory) Expressions.newCnfFactory(stf, of);
 		bef.setBooleanExpressionSimplification(true);
 		StringObject pobject = of.stringObject("p");
 		StringObject qobject = of.stringObject("q");
@@ -298,7 +295,7 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void andTrueExprTest() {
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of, cf);
+		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
 		BooleanExpression testingtrue = factory.trueExpr();
 		BooleanExpression testingfalse = factory.falseExpr();
 		BooleanExpression falseExpr = bef.falseExpr();
@@ -318,7 +315,7 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void orTrueExprTest() {
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of, cf);
+		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
 
 		BooleanExpression testingtrue = factory.trueExpr();
 		BooleanExpression testingfalse = factory.falseExpr();
@@ -339,8 +336,8 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void booleannotTest() {
-		CnfFactory test = new CnfFactory(stf, of, cf);
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of, cf);
+		CnfFactory test = new CnfFactory(stf, of);
+		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
 		BooleanExpression falseEx = bef.falseExpr();
 
 		assertEquals(false, test.not(falseEx).isFalse());
@@ -352,8 +349,8 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void forAllTest() {
-		CnfFactory test = new CnfFactory(stf, of, cf);
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of, cf);
+		CnfFactory test = new CnfFactory(stf, of);
+		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
 		BooleanExpression falseEx = bef.falseExpr();
 		BooleanExpression trueEx = bef.trueExpr();
 		assertEquals(true, test.forall(x, falseEx).isFalse());
@@ -368,8 +365,8 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void existsTest() {
-		CnfFactory test = new CnfFactory(stf, of, cf);
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of, cf);
+		CnfFactory test = new CnfFactory(stf, of);
+		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
 		BooleanExpression falseEx = bef.falseExpr();
 		BooleanExpression trueEx = bef.trueExpr();
 		BooleanExpression b = bef.or(trueEx, falseEx);
@@ -388,7 +385,7 @@ public class CnfFactoryTest {
 	@Test
 	public void cnfSymbolicConstantTest() {
 		StringObject name = of.stringObject("Hello");
-		CnfFactory Test = new CnfFactory(stf, of, cf);
+		CnfFactory Test = new CnfFactory(stf, of);
 		CnfSymbolicConstant hellotest = (CnfSymbolicConstant) Test
 				.booleanSymbolicConstant(name);
 		StringObject hellomsg = of.stringObject("Hello");

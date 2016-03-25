@@ -14,9 +14,9 @@ import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
@@ -34,9 +34,6 @@ public class ObjectFactoryStub implements ObjectFactory {
 	public void setExpressionComparator(Comparator<SymbolicExpression> c) {
 	}
 
-	@Override
-	public void setCollectionComparator(Comparator<SymbolicCollection<?>> c) {
-	}
 
 	@Override
 	public void setTypeComparator(Comparator<SymbolicType> c) {
@@ -155,6 +152,37 @@ public class ObjectFactoryStub implements ObjectFactory {
 
 	@Override
 	public <T extends SymbolicObject> void canonize(T[] objectArray) {
+	}
+
+
+	@Override
+	public <T extends SymbolicExpression> SymbolicSequence<T> sequence(
+			Iterable<? extends T> elements) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public <T extends SymbolicExpression> SymbolicSequence<T> sequence(
+			T[] elements) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public <T extends SymbolicExpression> SymbolicSequence<T> singletonSequence(
+			T element) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public <T extends SymbolicExpression> SymbolicSequence<T> emptySequence() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

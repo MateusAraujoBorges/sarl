@@ -55,16 +55,6 @@ public class ObjectComparatorTest {
 	}
 
 	/**
-	 * Tests collectionComparator() and setCollectionComparator()
-	 */
-	@Test
-	public void testCollectionComparator() {
-		this.com.setCollectionComparator(new CollectionComparatorStub());
-		assertTrue(this.com
-				.collectionComparator() instanceof CollectionComparatorStub);
-	}
-
-	/**
 	 * Tests typeComparator() and setTypeComparator()
 	 */
 	@Test
@@ -90,7 +80,6 @@ public class ObjectComparatorTest {
 	public void testCompare() {
 		this.com.setTypeSequenceComparator(new TypeSequenceComparatorStub());
 		this.com.setTypeComparator(new TypeComparatorStub());
-		this.com.setCollectionComparator(new CollectionComparatorStub());
 		this.com.setExpressionComparator(new ExpressionComparatorStub());
 
 		CommonObjectFactory obFac = new CommonObjectFactory(
