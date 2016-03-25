@@ -352,4 +352,28 @@ public class BooleanReasonDevTest {
 		}
 		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
 	}
+
+	/**
+	 * (A -> B) -> A equiv A
+	 * 
+	 * <pre>
+	 * proof:
+	 * (A -> B) -> A equiv !(!A v B) v A
+	 * 				 equiv (A ^ !B) v A
+	 * 				 equiv A v (A ^ !B)
+	 * 				 equiv A
+	 * </pre>
+	 */
+	@Test
+	public void extraEquiv() {
+		BooleanExpression e1 = universe.implies(universe.implies(A, B), A);
+		BooleanExpression e2 = A;
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
+	}
 }
