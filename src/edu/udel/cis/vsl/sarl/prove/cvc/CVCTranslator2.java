@@ -1366,7 +1366,16 @@ public class CVCTranslator2 {
 		
 		return translation;
 	}
-
+	
+	/**
+	 * DIVIDE; SUBTRACT
+	 * LESS; LESS_EQ
+	 * 
+	 * @param operator
+	 * @param arg0
+	 * @param arg1
+	 * @return
+	 */
 	private Translation translateBinary(String operator,
 			SymbolicExpression arg0, SymbolicExpression arg1) {
 		Translation translation;
@@ -1384,16 +1393,56 @@ public class CVCTranslator2 {
 		
 		if(b1 || b2){
 			List<Translation> translations = new ArrayList<Translation>();
+			int translationsNum;
+			
 			if(b1) translations.add(t1);
 			if(b2) translations.add(t2);
-			result = postProcessForSideEffectsOfDivideOrModule(result, translations);
+			translationsNum = translations.size();
+			
+			if(operator.equals(" < ") || operator.equals(" <= ")){
+				result = postProcessForSideEffectsOfDivideOrModule(result, translations);
+				translation = new Translation(result);
+			}else{// merge side effects.
+				FastList<String> newConstraint = new FastList<>();
+				List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+				
+				if(translationsNum == 1 ){
+					Translation tempTranslation = translations.get(0);
+					
+					newConstraint = tempTranslation.getAuxConstraints().clone();
+					newAuxVars.addAll(tempTranslation.getAuxVars());
+				}else{
+					Translation tempTranslation1 = translations.get(0);
+					Translation tempTranslation2 = translations.get(1);
+					
+					newAuxVars.addAll(tempTranslation1.getAuxVars());
+					newAuxVars.addAll(tempTranslation2.getAuxVars());
+					newConstraint.add("(");
+					newConstraint.append(tempTranslation1.getAuxConstraints());
+					newConstraint.add(" AND ");
+					newConstraint.append(tempTranslation2.getAuxConstraints());
+					newConstraint.add(")");
+				}
+				translation = new Translation(result, true, newConstraint, newAuxVars);
+			}
+		}else{
+			translation = new Translation(result);
 		}
-		translation = new Translation(result);
 		return translation;
 	}
-
+	
+	/**
+	 * MULTIPLY; ADD
+	 * AND; OR
+	 * 
+	 * @param operator
+	 * @param defaultValue
+	 * @param expression
+	 * @return
+	 */
 	private Translation translateKeySet(String operator,
 			String defaultValue, SymbolicExpression expression) {
+		Translation translation;
 		int size = expression.numArguments();
 
 		if (size == 0) {
@@ -1420,10 +1469,33 @@ public class CVCTranslator2 {
 				result.append(t.getResult());
 				result.add(")");
 			}
-			if(divOrModole){
-				result = postProcessForSideEffectsOfDivideOrModule(result, translations);
+			if(divOrModole && (operator.equals(" + ")
+					|| operator.equals(" * "))){
+				int translationsNum = translations.size();
+				FastList<String> newConstraint = new FastList<>();
+				List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+				
+				if(translationsNum == 1 ){
+					Translation tempTranslation = translations.get(0);
+					
+					newConstraint = tempTranslation.getAuxConstraints().clone();
+					newAuxVars.addAll(tempTranslation.getAuxVars());
+				}else{
+					Translation tempTranslation1 = translations.get(0);
+					Translation tempTranslation2 = translations.get(1);
+					
+					newAuxVars.addAll(tempTranslation1.getAuxVars());
+					newAuxVars.addAll(tempTranslation2.getAuxVars());
+					newConstraint.add("(");
+					newConstraint.append(tempTranslation1.getAuxConstraints());
+					newConstraint.add(" AND ");
+					newConstraint.append(tempTranslation2.getAuxConstraints());
+					newConstraint.add(")");
+				}
+				translation = new Translation(result, true, newConstraint, newAuxVars);
+			}else{
+				translation = new Translation(result);
 			}
-			Translation translation = new Translation(result);
 			return translation;
 		}
 	}
