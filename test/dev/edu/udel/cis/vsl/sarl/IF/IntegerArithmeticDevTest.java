@@ -58,6 +58,7 @@ public class IntegerArithmeticDevTest {
 	 */
 	@Test
 	public void pairFucTest(){
+//		universe.setShowProverQueries(true);
 //		NumericExpression int_zero = universe.integer(0);
 		NumericExpression int_one = universe.integer(1);
 		NumericExpression int_two = universe.integer(2);
@@ -90,6 +91,7 @@ public class IntegerArithmeticDevTest {
 	// cvc4 exception...
 	@Test
 	public void powerTest(){
+		universe.setShowProverQueries(true);
 		SymbolicType integerType = universe.integerType();
 		NumericExpression int_two = universe.integer(2);
 		NumericExpression int_three = universe.integer(3);
@@ -98,7 +100,7 @@ public class IntegerArithmeticDevTest {
 				.symbolicConstant(universe.stringObject("x"), integerType);
 		NumericExpression twoPowerX = universe.power(int_two, x); // 2^x
 		BooleanExpression assumption = universe.equals(twoPowerX, int_eight);// 2^x = 8
-		System.out.println("assumption:"+assumption);
+//		System.out.println("assumption:"+assumption);
 		Reasoner r = universe.reasoner(assumption);
 		BooleanExpression deduction = universe.equals(x, int_three); // x == 3?
 		ValidityResult result = r.valid(deduction);
