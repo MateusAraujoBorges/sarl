@@ -35,8 +35,8 @@ package edu.udel.cis.vsl.sarl.IF.object;
  * <td>{@link edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression}</td>
  * </tr>
  * <tr>
- * <td>EXPRESSION_COLLECTION</td>
- * <td>{@link edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection}</td>
+ * <td>SEQUENCE</td>
+ * <td>{@link edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence}</td>
  * </tr>
  * <tr>
  * <td>TYPE</td>
@@ -70,7 +70,7 @@ package edu.udel.cis.vsl.sarl.IF.object;
 public interface SymbolicObject {
 
 	public enum SymbolicObjectKind {
-		BOOLEAN, CHAR, EXPRESSION, EXPRESSION_COLLECTION, INT, NUMBER, STRING, TYPE, TYPE_SEQUENCE
+		BOOLEAN, CHAR, EXPRESSION, SEQUENCE, INT, NUMBER, STRING, TYPE, TYPE_SEQUENCE
 	}
 
 	/**

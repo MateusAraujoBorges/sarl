@@ -145,7 +145,7 @@ public class ObjectComparator implements Comparator<SymbolicObject> {
 			case EXPRESSION:
 				return expressionComparator.compare((SymbolicExpression) o1,
 						(SymbolicExpression) o2);
-			case EXPRESSION_COLLECTION:
+			case SEQUENCE:
 				return compareSequences((SymbolicSequence<?>) o1,
 						(SymbolicSequence<?>) o2);
 			case TYPE:

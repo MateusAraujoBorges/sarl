@@ -202,7 +202,7 @@ public class ExpressionWalker {
 		case EXPRESSION:
 			walkExpression((SymbolicExpression) obj);
 			return;
-		case EXPRESSION_COLLECTION:
+		case SEQUENCE:
 			walkSequence((SymbolicSequence<?>) obj);
 			return;
 		case TYPE:

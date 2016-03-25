@@ -255,7 +255,7 @@ public abstract class CommonSimplifier implements Simplifier {
 			return object;
 		case EXPRESSION:
 			return apply((SymbolicExpression) object);
-		case EXPRESSION_COLLECTION:
+		case SEQUENCE:
 			return simplifySequence((SymbolicSequence<?>) object);
 		case TYPE:
 			return simplifyType((SymbolicType) object);

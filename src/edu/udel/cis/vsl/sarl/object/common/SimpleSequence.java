@@ -364,7 +364,7 @@ public class SimpleSequence<T extends SymbolicExpression>
 
 	@Override
 	public SymbolicObjectKind symbolicObjectKind() {
-		return SymbolicObjectKind.EXPRESSION_COLLECTION;
+		return SymbolicObjectKind.SEQUENCE;
 	}
 
 	@Override

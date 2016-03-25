@@ -341,7 +341,7 @@ public abstract class ExpressionSubstituter
 			return obj;
 		case EXPRESSION:
 			return substituteExpression((SymbolicExpression) obj, state);
-		case EXPRESSION_COLLECTION:
+		case SEQUENCE:
 			return substituteSequence((SymbolicSequence<?>) obj, state);
 		case TYPE:
 			return substituteType((SymbolicType) obj, state);
