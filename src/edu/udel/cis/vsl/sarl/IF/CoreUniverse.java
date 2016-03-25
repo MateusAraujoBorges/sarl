@@ -390,8 +390,7 @@ public interface CoreUniverse {
 	 * @return A {@link Pair} consisting of dimension (left) and base type
 	 *         (right).
 	 */
-	Pair<Integer, SymbolicType> arrayDimensionAndBaseType(
-			SymbolicArrayType type);
+	Pair<Integer, SymbolicType> arrayDimensionAndBaseType(SymbolicArrayType type);
 
 	/**
 	 * Returns the tuple type defined by the given sequence of component types.
@@ -422,8 +421,7 @@ public interface CoreUniverse {
 	 * @return the function type
 	 */
 	SymbolicFunctionType functionType(
-			Iterable<? extends SymbolicType> inputTypes,
-			SymbolicType outputType);
+			Iterable<? extends SymbolicType> inputTypes, SymbolicType outputType);
 
 	// 	@formatter:off
 
@@ -1519,8 +1517,7 @@ public interface CoreUniverse {
 	 * @return a boolean expression telling whether the object belongs to the
 	 *         specified member type
 	 */
-	BooleanExpression unionTest(IntObject memberIndex,
-			SymbolicExpression object);
+	BooleanExpression unionTest(IntObject memberIndex, SymbolicExpression object);
 
 	/**
 	 * Casts an object whose type is a union type to a representation whose type
@@ -1797,8 +1794,7 @@ public interface CoreUniverse {
 	SymbolicExpression setRemove(SymbolicExpression set,
 			SymbolicExpression value);
 
-	SymbolicExpression setUnion(SymbolicExpression set1,
-			SymbolicExpression set2);
+	SymbolicExpression setUnion(SymbolicExpression set1, SymbolicExpression set2);
 
 	SymbolicExpression setIntersection(SymbolicExpression set1,
 			SymbolicExpression set2);
@@ -1846,8 +1842,7 @@ public interface CoreUniverse {
 	 *            a symbolic expression
 	 * @return symbolic expression cast to new type
 	 */
-	SymbolicExpression cast(SymbolicType newType,
-			SymbolicExpression expression);
+	SymbolicExpression cast(SymbolicType newType, SymbolicExpression expression);
 
 	/**
 	 * "If-then-else" expression. Note that trueCase and falseCase must have the
@@ -1929,8 +1924,7 @@ public interface CoreUniverse {
 	 * @return the component of the given type which is referenced by the given
 	 *         reference
 	 */
-	SymbolicType referencedType(SymbolicType type,
-			ReferenceExpression reference);
+	SymbolicType referencedType(SymbolicType type, ReferenceExpression reference);
 
 	/**
 	 * Returns the identity (or "trivial") reference <code>I</code>. This is the
@@ -2024,5 +2018,13 @@ public interface CoreUniverse {
 	 * @return set of unbound symbolic constants occurring in <code>expr</code>
 	 */
 	Set<SymbolicConstant> getFreeSymbolicConstants(SymbolicExpression expr);
+
+	/**
+	 * SymbolicExpression bitand(SymbolicExpression left, SymbolicExpression
+	 * right);
+	 * 
+	 * SymbolicExpression integer2Bitvector(SymbolicExpression integer,
+	 * NumericExpression length);
+	 **/
 
 }
