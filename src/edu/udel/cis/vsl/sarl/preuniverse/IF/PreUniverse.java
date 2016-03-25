@@ -6,7 +6,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.CharObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * A {@link PreUniverse} provides most of the services of a
@@ -52,10 +52,7 @@ public interface PreUniverse extends CoreUniverse {
 	 */
 	SymbolicTypeSequence typeSequence(Iterable<? extends SymbolicType> types);
 
-	CollectionFactory collectionFactory();
-
-	// <T extends SymbolicExpression> SymbolicCollection<T> basicCollection(
-	// Collection<T> javaCollection);
+	ObjectFactory objectFactory();
 
 	/**
 	 * Changes the names of the bound variables in the expression so that every

@@ -27,7 +27,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 import edu.udel.cis.vsl.sarl.util.Pair;
@@ -76,7 +76,8 @@ public class BoundCleaner extends ExpressionSubstituter {
 		}
 
 		void push(SymbolicConstant key, SymbolicConstant value) {
-			stack.push(new Pair<SymbolicConstant, SymbolicConstant>(key, value));
+			stack.push(
+					new Pair<SymbolicConstant, SymbolicConstant>(key, value));
 		}
 
 		void pop() {
@@ -89,9 +90,9 @@ public class BoundCleaner extends ExpressionSubstituter {
 		}
 	}
 
-	public BoundCleaner(PreUniverse universe,
-			CollectionFactory collectionFactory, SymbolicTypeFactory typeFactory) {
-		super(universe, collectionFactory, typeFactory);
+	public BoundCleaner(PreUniverse universe, ObjectFactory objectFactory,
+			SymbolicTypeFactory typeFactory) {
+		super(universe, objectFactory, typeFactory);
 	}
 
 	@Override

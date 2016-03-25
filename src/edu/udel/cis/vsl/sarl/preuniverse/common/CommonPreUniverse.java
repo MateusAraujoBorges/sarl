@@ -38,6 +38,7 @@ import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
@@ -50,8 +51,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
@@ -110,12 +109,6 @@ public class CommonPreUniverse implements PreUniverse {
 	 * infinite precision integers and rationals).
 	 */
 	private NumberFactory numberFactory;
-
-	/**
-	 * Factory for producing and manipulating instances of SymbolicCollection,
-	 * which are various collections of symbolic expressions.
-	 */
-	private CollectionFactory collectionFactory;
 
 	/**
 	 * Factory for dealing with symbolic expressions of numeric (i.e., integer
@@ -197,16 +190,13 @@ public class CommonPreUniverse implements PreUniverse {
 	 *            a factory system
 	 */
 	public CommonPreUniverse(FactorySystem system) {
-		// this.system = system;
 		objectFactory = system.objectFactory();
 		typeFactory = system.typeFactory();
 		expressionFactory = system.expressionFactory();
 		booleanFactory = system.booleanFactory();
-		collectionFactory = system.collectionFactory();
 		numericFactory = expressionFactory.numericFactory();
 		numberFactory = numericFactory.numberFactory();
 		objectComparator = objectFactory.comparator();
-		// expressionFactory.
 		booleanType = typeFactory.booleanType();
 		integerType = typeFactory.integerType();
 		realType = typeFactory.realType();
@@ -215,7 +205,7 @@ public class CommonPreUniverse implements PreUniverse {
 		denseArrayMaxSize = numberFactory.integer(DENSE_ARRAY_MAX_SIZE);
 		quantifierExpandBound = numberFactory.integer(QUANTIFIER_EXPAND_BOUND);
 		nullExpression = expressionFactory.nullExpression();
-		cleaner = new BoundCleaner(this, collectionFactory, typeFactory);
+		cleaner = new BoundCleaner(this, objectFactory, typeFactory);
 		arrayIndex = (NumericSymbolicConstant) canonic(
 				symbolicConstant(stringObject("i"), integerType));
 		exprSeqFactory = new SequenceFactory<SymbolicExpression>() {
@@ -598,7 +588,7 @@ public class CommonPreUniverse implements PreUniverse {
 				for (int i = 0; i < numInputs; i++)
 					boundVariables[i] = boundVar(quantifierDepth + i,
 							inputTypes.getType(i));
-				sequence = collectionFactory.sequence(boundVariables);
+				sequence = objectFactory.sequence(boundVariables);
 				expr = equals(apply(arg0, sequence), apply(arg1, sequence),
 						quantifierDepth + numInputs);
 				for (int i = numInputs - 1; i >= 0; i--)
@@ -1595,7 +1585,7 @@ public class CommonPreUniverse implements PreUniverse {
 			Iterable<T> elements) {
 		if (elements instanceof SymbolicSequence<?>)
 			return (SymbolicSequence<T>) elements;
-		return collectionFactory.sequence(elements);
+		return objectFactory.sequence(elements);
 	}
 
 	/**
@@ -1979,7 +1969,7 @@ public class CommonPreUniverse implements PreUniverse {
 					origin = (SymbolicExpression) array.argument(0);
 				} else {
 					origin = array;
-					sequence = collectionFactory.emptySequence();
+					sequence = objectFactory.emptySequence();
 				}
 				sequence = sequence.setExtend(indexInt, value, nullExpression);
 				// if the length of the sequence is the extent of the array type
@@ -2338,7 +2328,7 @@ public class CommonPreUniverse implements PreUniverse {
 				elementsArray[i] = nullExpression;
 			}
 			elementsArray[indexInt] = value;
-			sequence = collectionFactory.sequence(elementsArray);
+			sequence = objectFactory.sequence(elementsArray);
 			if (numComponents <= 1)
 				return tuple(tupleType, elementsArray);
 			else
@@ -2824,39 +2814,38 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public UnaryOperator<SymbolicExpression> mapSubstituter(
 			Map<SymbolicExpression, SymbolicExpression> map) {
-		return new MapSubstituter(this, collectionFactory, typeFactory, map);
+		return new MapSubstituter(this, objectFactory, typeFactory, map);
 	}
 
 	@Override
 	public UnaryOperator<SymbolicExpression> nameSubstituter(
 			Map<StringObject, StringObject> nameMap) {
-		return new NameSubstituter(this, collectionFactory, typeFactory,
-				nameMap);
+		return new NameSubstituter(this, objectFactory, typeFactory, nameMap);
 	}
 
 	@Override
 	public UnaryOperator<SymbolicExpression> simpleSubstituter(
 			SymbolicConstant var, SymbolicExpression value) {
-		return new SimpleSubstituter(this, collectionFactory, typeFactory, var,
+		return new SimpleSubstituter(this, objectFactory, typeFactory, var,
 				value);
 	}
 
 	@Override
 	public UnaryOperator<SymbolicExpression> canonicalRenamer(String root,
 			Predicate<SymbolicConstant> ignore) {
-		return new CanonicalRenamer(this, collectionFactory, typeFactory, root,
+		return new CanonicalRenamer(this, typeFactory, objectFactory, root,
 				ignore);
 	}
 
 	@Override
 	public UnaryOperator<SymbolicExpression> canonicalRenamer(String root) {
-		return new CanonicalRenamer(this, collectionFactory, typeFactory, root,
+		return new CanonicalRenamer(this, typeFactory, objectFactory, root,
 				null);
 	}
 
 	@Override
-	public CollectionFactory collectionFactory() {
-		return collectionFactory;
+	public ObjectFactory objectFactory() {
+		return objectFactory;
 	}
 
 }

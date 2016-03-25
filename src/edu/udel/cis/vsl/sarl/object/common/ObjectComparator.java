@@ -30,9 +30,9 @@ import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 
 /**
  * Contains comparators for expressions, collections, types, and typesequences.
@@ -43,11 +43,6 @@ public class ObjectComparator implements Comparator<SymbolicObject> {
 	 * Expression Comparator, set using setExpressionComparator
 	 */
 	private Comparator<SymbolicExpression> expressionComparator;
-
-	/**
-	 * Collection Comparator, set using setCollectionComparator
-	 */
-	private Comparator<SymbolicCollection<?>> collectionComparator;
 
 	private NumberFactory numberFactory;
 
@@ -72,15 +67,6 @@ public class ObjectComparator implements Comparator<SymbolicObject> {
 	 */
 	public void setExpressionComparator(Comparator<SymbolicExpression> c) {
 		expressionComparator = c;
-	}
-
-	/**
-	 * Sets the collection comparator for this object
-	 * 
-	 * @param c
-	 */
-	public void setCollectionComparator(Comparator<SymbolicCollection<?>> c) {
-		collectionComparator = c;
 	}
 
 	/**
@@ -109,13 +95,6 @@ public class ObjectComparator implements Comparator<SymbolicObject> {
 	}
 
 	/**
-	 * @return the object's collection comparator
-	 */
-	public Comparator<SymbolicCollection<?>> collectionComparator() {
-		return collectionComparator;
-	}
-
-	/**
 	 * @return the object's type comparator
 	 */
 	public Comparator<SymbolicType> typeComparator() {
@@ -129,14 +108,21 @@ public class ObjectComparator implements Comparator<SymbolicObject> {
 		return typeSequenceComparator;
 	}
 
-	// TODO: possibly. Stick another field in SymbolicObject:
-	// RationalNumber order. Add a tree here?, which is sorted
-	// (TreeMap?). Whenever you canonicalize a
-	// SymbolicObject add it to the tree, and find the things
-	// immediately preceding and after it. Take their orders
-	// and average them and assign that to the new thing.
-	// Modify compare map: if both objects are canonic,
-	// just compare their orders.
+	private int compareSequences(SymbolicSequence<?> seq1,
+			SymbolicSequence<?> seq2) {
+		int size = seq1.size();
+		int result = size - seq2.size();
+
+		if (result != 0)
+			return result;
+		for (int i = 0; i < size; i++) {
+			result = expressionComparator.compare(seq1.get(i), seq2.get(i));
+			if (result != 0)
+				return result;
+		}
+		return 0;
+
+	}
 
 	/**
 	 * Compares two SymbolicObjects.
@@ -160,26 +146,26 @@ public class ObjectComparator implements Comparator<SymbolicObject> {
 				return expressionComparator.compare((SymbolicExpression) o1,
 						(SymbolicExpression) o2);
 			case EXPRESSION_COLLECTION:
-				return collectionComparator.compare((SymbolicCollection<?>) o1,
-						(SymbolicCollection<?>) o2);
+				return compareSequences((SymbolicSequence<?>) o1,
+						(SymbolicSequence<?>) o2);
 			case TYPE:
 				return typeComparator.compare((SymbolicType) o1,
 						(SymbolicType) o2);
 			case TYPE_SEQUENCE:
-				return typeSequenceComparator.compare(
-						(SymbolicTypeSequence) o1, (SymbolicTypeSequence) o2);
+				return typeSequenceComparator.compare((SymbolicTypeSequence) o1,
+						(SymbolicTypeSequence) o2);
 			case BOOLEAN:
-				return ((BooleanObject) o1).getBoolean() ? (((BooleanObject) o2)
-						.getBoolean() ? 0 : 1) : (((BooleanObject) o2)
-						.getBoolean() ? -1 : 0);
+				return ((BooleanObject) o1).getBoolean()
+						? (((BooleanObject) o2).getBoolean() ? 0 : 1)
+						: (((BooleanObject) o2).getBoolean() ? -1 : 0);
 			case INT:
 				return ((IntObject) o1).getInt() - ((IntObject) o2).getInt();
 			case NUMBER:
 				return numberFactory.compare(((NumberObject) o1).getNumber(),
 						((NumberObject) o2).getNumber());
 			case STRING:
-				return ((StringObject) o1).getString().compareTo(
-						((StringObject) o2).getString());
+				return ((StringObject) o1).getString()
+						.compareTo(((StringObject) o2).getString());
 			case CHAR:
 				return Character.compare(((CharObject) o1).getChar(),
 						((CharObject) o2).getChar());

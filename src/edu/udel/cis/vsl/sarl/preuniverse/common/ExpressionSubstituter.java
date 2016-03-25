@@ -18,10 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.preuniverse.common;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
@@ -30,6 +27,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
@@ -37,10 +35,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection.SymbolicCollectionKind;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
@@ -102,8 +97,8 @@ import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
  *
  * @author Stephen F. Siegel
  */
-public abstract class ExpressionSubstituter implements
-		UnaryOperator<SymbolicExpression> {
+public abstract class ExpressionSubstituter
+		implements UnaryOperator<SymbolicExpression> {
 
 	/**
 	 * An object for storing some information about the state of the search
@@ -128,7 +123,7 @@ public abstract class ExpressionSubstituter implements
 	/**
 	 * Factory used for producing {@link SymbolicCollection}s.
 	 */
-	protected CollectionFactory collectionFactory;
+	protected ObjectFactory objectFactory;
 
 	/**
 	 * Factory used for producing {@link SymbolicType}s.
@@ -160,9 +155,9 @@ public abstract class ExpressionSubstituter implements
 	 *            Factory used for producing {@link SymbolicType}s.
 	 */
 	public ExpressionSubstituter(PreUniverse universe,
-			CollectionFactory collectionFactory, SymbolicTypeFactory typeFactory) {
+			ObjectFactory objectFactory, SymbolicTypeFactory typeFactory) {
 		this.universe = universe;
-		this.collectionFactory = collectionFactory;
+		this.objectFactory = objectFactory;
 		this.typeFactory = typeFactory;
 	}
 
@@ -175,46 +170,6 @@ public abstract class ExpressionSubstituter implements
 	protected abstract SubstituterState newState();
 
 	/**
-	 * Performs substitution on each symbolic expression in any kind of
-	 * SymbolicCollection (set, map, ...). The result will be a
-	 * SymbolicCollection that is not necessarily the same kind as the original.
-	 * For most cases, this is OK: e.g., if this is going to be used as an
-	 * argument to make() where the operator is AND, OR, ADD, or MULTIPLY, since
-	 * that will only use collection to iterate over its contents. For other
-	 * purposes, a SymbolicSequence is required, and the method
-	 * substituteSequence should be used.
-	 * 
-	 * @param set
-	 *            a symbolic collection of any kind
-	 * @return a collection consisting of the substituted expressions
-	 */
-	private SymbolicCollection<?> substituteGenericCollection(
-			SymbolicCollection<?> set, SubstituterState state) {
-		Iterator<? extends SymbolicExpression> iter = set.iterator();
-
-		while (iter.hasNext()) {
-			SymbolicExpression oldElement = iter.next();
-			SymbolicExpression newElement = substituteExpression(oldElement,
-					state);
-
-			if (newElement != oldElement) {
-				Collection<SymbolicExpression> newSet = new LinkedList<SymbolicExpression>();
-
-				for (SymbolicExpression e : set) {
-					if (e == oldElement)
-						break;
-					newSet.add(e);
-				}
-				newSet.add(newElement);
-				while (iter.hasNext())
-					newSet.add(substituteExpression(iter.next(), state));
-				return collectionFactory.sequence(newSet);
-			}
-		}
-		return set;
-	}
-
-	/**
 	 * Returns a SymbolicSequence obtained by substituting values in a given
 	 * SymbolicSequence.
 	 * 
@@ -223,11 +178,22 @@ public abstract class ExpressionSubstituter implements
 	 * @return sequence consisting of substituted expression, in same order as
 	 *         original sequence
 	 */
-	private SymbolicSequence<?> substituteSequence(
-			SymbolicSequence<?> sequence, SubstituterState state) {
+	private SymbolicSequence<?> substituteSequence(SymbolicSequence<?> sequence,
+			SubstituterState state) {
+
+		SymbolicSequence<?> result;
+
+		if (state.isInitial()) {
+			sequence = (SymbolicSequence<?>) universe.canonic(sequence);
+			result = (SymbolicSequence<?>) cache.get(sequence);
+			if (result != null)
+				return result;
+		}
+
 		int size = sequence.size();
 		SymbolicExpression[] newElements = new SymbolicExpression[size];
 
+		result = sequence;
 		for (int i = 0; i < size; i++) {
 			SymbolicExpression oldElement = sequence.get(i);
 			SymbolicExpression newElement = substituteExpression(oldElement,
@@ -239,46 +205,14 @@ public abstract class ExpressionSubstituter implements
 				for (; i < size; i++)
 					newElements[i] = substituteExpression(sequence.get(i),
 							state);
-				return collectionFactory.sequence(newElements);
+				result = objectFactory.sequence(newElements);
+				break;
 			}
 		}
-		return sequence;
-	}
-
-	/**
-	 * Performs substitution on a {@link SymbolicCollection}. The kind of
-	 * collection returned is not necessarily the same as the given one. Only
-	 * sequences need to be preserved because other collections are all
-	 * processed through method
-	 * {@link PreUniverse#make(SymbolicOperator, SymbolicType, SymbolicObject[])}
-	 * anyway.
-	 * 
-	 * @param collection
-	 *            any kind of symbolic collection
-	 * @return a collection in which substitution has been applied to each
-	 *         element using the given map
-	 */
-	protected SymbolicCollection<?> substituteCollection(
-			SymbolicCollection<?> collection, SubstituterState state) {
-		SymbolicCollection<?> result;
 
 		if (state.isInitial()) {
-			collection = (SymbolicCollection<?>) universe.canonic(collection);
-			result = (SymbolicCollection<?>) cache.get(collection);
-			if (result != null)
-				return result;
-		}
-
-		SymbolicCollectionKind kind = collection.collectionKind();
-
-		if (kind == SymbolicCollectionKind.SEQUENCE)
-			result = substituteSequence((SymbolicSequence<?>) collection, state);
-		else
-			result = substituteGenericCollection(collection, state);
-
-		if (state.isInitial()) {
-			result = (SymbolicCollection<?>) universe.canonic(result);
-			cache.put(collection, result);
+			result = (SymbolicSequence<?>) universe.canonic(result);
+			cache.put(sequence, result);
 		}
 		return result;
 	}
@@ -408,7 +342,7 @@ public abstract class ExpressionSubstituter implements
 		case EXPRESSION:
 			return substituteExpression((SymbolicExpression) obj, state);
 		case EXPRESSION_COLLECTION:
-			return substituteCollection((SymbolicCollection<?>) obj, state);
+			return substituteSequence((SymbolicSequence<?>) obj, state);
 		case TYPE:
 			return substituteType((SymbolicType) obj, state);
 		case TYPE_SEQUENCE:

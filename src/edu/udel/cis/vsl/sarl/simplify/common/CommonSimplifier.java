@@ -21,9 +21,6 @@ package edu.udel.cis.vsl.sarl.simplify.common;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
@@ -32,6 +29,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
@@ -39,9 +37,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection.SymbolicCollectionKind;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 
@@ -237,56 +232,14 @@ public abstract class CommonSimplifier implements Simplifier {
 		return theSequence.apply(this);
 	}
 
-	/**
-	 * Simplifies a collection, but possibly returning a collection of a
-	 * different kind. Reason: it just going to go through
-	 * {@link PreUniverse#make(SymbolicOperator, SymbolicType, SymbolicObject[])}
-	 * anyway. Since make only requires an {@link Iterable}, it makes absolutely
-	 * no difference what kind of collection it uses.
-	 * 
-	 * @param collection
-	 * @return collection with all members simplified
-	 */
-	private SymbolicCollection<?> simplifyGenericCollection(
-			SymbolicCollection<?> collection) {
-		Iterator<? extends SymbolicExpression> iter = collection.iterator();
-		boolean change = false;
-		List<SymbolicExpression> list = new LinkedList<SymbolicExpression>();
-
-		while (iter.hasNext()) {
-			SymbolicExpression x = iter.next();
-			SymbolicExpression y = apply(x);
-
-			if (!change && x != y) {
-				change = true;
-			}
-			// equivalently, change = change || x != y;
-			list.add(y);
-		}
-		if (change) {
-			// return universe.basicCollection(list);
-			return universe.collectionFactory().sequence(list);
-		}
-		return collection;
-	}
-
-	private SymbolicCollection<?> simplifyCollectionWork(
-			SymbolicCollection<?> collection) {
-		SymbolicCollectionKind kind = collection.collectionKind();
-
-		if (kind == SymbolicCollectionKind.SEQUENCE)
-			return simplifySequenceWork((SymbolicSequence<?>) collection);
-		return simplifyGenericCollection(collection);
-	}
-
-	protected SymbolicCollection<?> simplifyCollection(
-			SymbolicCollection<?> collection) {
-		SymbolicCollection<?> result = (SymbolicCollection<?>) getCachedSimplification(
+	protected SymbolicSequence<?> simplifySequence(
+			SymbolicSequence<?> collection) {
+		SymbolicSequence<?> result = (SymbolicSequence<?>) getCachedSimplification(
 				collection);
 
 		if (result == null) {
-			result = simplifyCollectionWork(collection);
-			result = (SymbolicCollection<?>) universe.canonic(result);
+			result = simplifySequenceWork(collection);
+			result = (SymbolicSequence<?>) universe.canonic(result);
 			cacheSimplification(collection, result);
 		}
 		return result;
@@ -303,7 +256,7 @@ public abstract class CommonSimplifier implements Simplifier {
 		case EXPRESSION:
 			return apply((SymbolicExpression) object);
 		case EXPRESSION_COLLECTION:
-			return simplifyCollection((SymbolicCollection<?>) object);
+			return simplifySequence((SymbolicSequence<?>) object);
 		case TYPE:
 			return simplifyType((SymbolicType) object);
 		case TYPE_SEQUENCE:

@@ -37,11 +37,10 @@ import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
@@ -69,8 +68,6 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	private BooleanExpressionFactory booleanFactory;
 
 	private SymbolicTypeFactory typeFactory;
-
-	private CollectionFactory collectionFactory;
 
 	private SymbolicExpression nullExpression;
 
@@ -109,14 +106,12 @@ public class CommonExpressionFactory implements ExpressionFactory {
 		this.objectFactory = numericFactory.objectFactory();
 		this.booleanFactory = numericFactory.booleanFactory();
 		this.typeFactory = numericFactory.typeFactory();
-		this.collectionFactory = numericFactory.collectionFactory();
 		this.expressionComparator = new ExpressionComparator(
 				numericFactory.comparator(), objectFactory.comparator(),
 				typeFactory.typeComparator());
 		this.nullExpression = objectFactory.canonic(expression(
 				SymbolicOperator.NULL, null, new SymbolicObject[] {}));
 		typeFactory.setExpressionComparator(expressionComparator);
-		collectionFactory.setElementComparator(expressionComparator);
 		objectFactory.setExpressionComparator(expressionComparator);
 	}
 
@@ -404,7 +399,7 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	 */
 	private SymbolicSequence<SymbolicExpression> parentIndexSequence(
 			ReferenceExpression parent, NumericExpression index) {
-		return collectionFactory
+		return objectFactory
 				.sequence(new SymbolicExpression[] { parent, index });
 	}
 
@@ -420,7 +415,7 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	 */
 	private SymbolicSequence<SymbolicExpression> parentIndexSequence(
 			ReferenceExpression parent, IntObject index) {
-		return collectionFactory.sequence(new SymbolicExpression[] { parent,
+		return objectFactory.sequence(new SymbolicExpression[] { parent,
 				numericFactory.number(objectFactory.numberObject(
 						numberFactory.integer(index.getInt()))) });
 	}

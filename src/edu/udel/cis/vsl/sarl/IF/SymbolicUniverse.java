@@ -23,7 +23,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 
 /**
  * <p>
@@ -35,10 +34,9 @@ import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
  * </p>
  * 
  * <p>
- * {@SymbolicExpression}s are one kind of symbolic object.
- * Other symbolic objects include {@link SymbolicCollection}s (such as
- * sequences, sets, and maps), {@link SymbolicType}s, and various concrete
- * {@link SymbolicObject}s.
+ * {@SymbolicExpression}s are one kind of symbolic object. Other symbolic
+ * objects include {@link SymbolicCollection}s (such as sequences, sets, and
+ * maps), {@link SymbolicType}s, and various concrete {@link SymbolicObject}s.
  * </p>
  * <p>
  * {@link SymbolicObject}s implement the Immutable Pattern: all symbolic objects

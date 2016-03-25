@@ -10,8 +10,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 import edu.udel.cis.vsl.sarl.util.Pair;
@@ -48,7 +47,8 @@ public class CanonicalRenamer extends ExpressionSubstituter {
 		}
 
 		void push(SymbolicConstant key, SymbolicConstant value) {
-			stack.push(new Pair<SymbolicConstant, SymbolicConstant>(key, value));
+			stack.push(
+					new Pair<SymbolicConstant, SymbolicConstant>(key, value));
 		}
 
 		void pop() {
@@ -107,10 +107,9 @@ public class CanonicalRenamer extends ExpressionSubstituter {
 	 *            all will be renamed)
 	 */
 	public CanonicalRenamer(PreUniverse universe,
-			CollectionFactory collectionFactory,
-			SymbolicTypeFactory typeFactory, String root,
-			Predicate<SymbolicConstant> ignore) {
-		super(universe, collectionFactory, typeFactory);
+			SymbolicTypeFactory typeFactory, ObjectFactory objectFactory,
+			String root, Predicate<SymbolicConstant> ignore) {
+		super(universe, objectFactory, typeFactory);
 		this.root = root;
 		this.ignore = ignore;
 	}

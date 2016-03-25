@@ -34,9 +34,9 @@ import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
@@ -50,10 +50,6 @@ public class CommonObjectFactory implements ObjectFactory {
 
 	private ArrayList<SymbolicObject> objectList = new ArrayList<SymbolicObject>();
 
-	// TODO: think about this: cache the total order for fast
-	// comparisons...
-	// private NavigableSet<SymbolicObject> sortedSet;
-
 	private BooleanObject trueObj, falseObj;
 
 	private IntObject zeroIntObj, oneIntObj;
@@ -61,6 +57,8 @@ public class CommonObjectFactory implements ObjectFactory {
 	private NumberObject zeroIntegerObj, zeroRealObj, oneIntegerObj, oneRealObj;
 
 	private ObjectComparator comparator;
+
+	private SymbolicSequence<?> emptySequence;
 
 	public CommonObjectFactory(NumberFactory numberFactory) {
 		this.numberFactory = numberFactory;
@@ -74,6 +72,7 @@ public class CommonObjectFactory implements ObjectFactory {
 		this.zeroRealObj = canonic(numberObject(numberFactory.zeroRational()));
 		this.oneIntegerObj = canonic(numberObject(numberFactory.oneInteger()));
 		this.oneRealObj = canonic(numberObject(numberFactory.oneRational()));
+		this.emptySequence = canonic(new SimpleSequence<SymbolicExpression>());
 	}
 
 	@Override
@@ -84,11 +83,6 @@ public class CommonObjectFactory implements ObjectFactory {
 	@Override
 	public void setExpressionComparator(Comparator<SymbolicExpression> c) {
 		comparator.setExpressionComparator(c);
-	}
-
-	@Override
-	public void setCollectionComparator(Comparator<SymbolicCollection<?>> c) {
-		comparator.setCollectionComparator(c);
 	}
 
 	@Override
@@ -104,13 +98,8 @@ public class CommonObjectFactory implements ObjectFactory {
 	@Override
 	public void init() {
 		assert comparator.expressionComparator() != null;
-		assert comparator.collectionComparator() != null;
 		assert comparator.typeComparator() != null;
 		assert comparator.typeSequenceComparator() != null;
-		// TODO set the orders of all the objects you already created??
-		// maybe only do this the first time they are used in
-		// a comparison. How will the other comparators
-		// do this
 	}
 
 	@Override
@@ -138,10 +127,9 @@ public class CommonObjectFactory implements ObjectFactory {
 				objectList.add(object);
 				return object;
 			}
+
 			@SuppressWarnings("unchecked")
 			T result2 = (T) result;
-
-			// TODO set the order if you can.
 
 			return result2;
 		}
@@ -241,6 +229,30 @@ public class CommonObjectFactory implements ObjectFactory {
 			if (!element.isCanonic())
 				objectArray[i] = canonic(element);
 		}
+	}
+
+	@Override
+	public <T extends SymbolicExpression> SymbolicSequence<T> sequence(
+			Iterable<? extends T> elements) {
+		return new SimpleSequence<T>(elements);
+	}
+
+	@Override
+	public <T extends SymbolicExpression> SymbolicSequence<T> sequence(
+			T[] elements) {
+		return new SimpleSequence<T>(elements);
+	}
+
+	@Override
+	public <T extends SymbolicExpression> SymbolicSequence<T> singletonSequence(
+			T element) {
+		return new SimpleSequence<T>(element);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T extends SymbolicExpression> SymbolicSequence<T> emptySequence() {
+		return (SymbolicSequence<T>) emptySequence;
 	}
 
 }

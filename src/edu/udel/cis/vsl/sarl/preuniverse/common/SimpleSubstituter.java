@@ -7,7 +7,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
@@ -47,11 +47,10 @@ public class SimpleSubstituter extends ExpressionSubstituter {
 		}
 	}
 
-	public SimpleSubstituter(PreUniverse universe,
-			CollectionFactory collectionFactory,
+	public SimpleSubstituter(PreUniverse universe, ObjectFactory objectFactory,
 			SymbolicTypeFactory typeFactory, SymbolicConstant var,
 			SymbolicExpression value) {
-		super(universe, collectionFactory, typeFactory);
+		super(universe, objectFactory, typeFactory);
 		this.var = var;
 		this.value = value;
 	}

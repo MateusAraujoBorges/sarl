@@ -23,8 +23,6 @@ import edu.udel.cis.vsl.sarl.IF.config.Configurations;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
 import edu.udel.cis.vsl.sarl.IF.config.SARLConfig;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.Collections;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.Expressions;
 import edu.udel.cis.vsl.sarl.ideal.IF.Ideal;
@@ -120,13 +118,11 @@ public class Universes {
 		NumberFactory numberFactory = Numbers.REAL_FACTORY;
 		ObjectFactory objectFactory = Objects.newObjectFactory(numberFactory);
 		SymbolicTypeFactory typeFactory = Types.newTypeFactory(objectFactory);
-		CollectionFactory collectionFactory = Collections
-				.newCollectionFactory(objectFactory);
 		ExpressionFactory expressionFactory = Expressions
 				.newStandardExpressionFactory2(numberFactory, objectFactory,
-						typeFactory, collectionFactory);
+						typeFactory);
 		FactorySystem system = PreUniverses.newFactorySystem(objectFactory,
-				typeFactory, expressionFactory, collectionFactory);
+				typeFactory, expressionFactory);
 		CommonSymbolicUniverse universe = new CommonSymbolicUniverse(system);
 		SimplifierFactory simplifierFactory = Expressions
 				.standardSimplifierFactory2(expressionFactory, universe);

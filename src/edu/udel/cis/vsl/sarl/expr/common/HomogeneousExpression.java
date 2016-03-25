@@ -24,10 +24,9 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.object.common.CommonSymbolicObject;
 import edu.udel.cis.vsl.sarl.util.ArrayIterable;
@@ -212,7 +211,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	 *            should each argument be atomized (surrounded by parens if
 	 */
 	private void accumulate(StringBuffer buffer, String opString,
-			SymbolicCollection<?> operands, boolean atomizeArgs) {
+			SymbolicSequence<?> operands, boolean atomizeArgs) {
 		boolean first = true;
 
 		for (SymbolicExpression arg : operands) {
@@ -378,8 +377,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		case APPLY: {
 			result.append(arguments[0].toStringBuffer(true));
 			result.append("(");
-			accumulate(result, ",", (SymbolicCollection<?>) arguments[1],
-					false);
+			accumulate(result, ",", (SymbolicSequence<?>) arguments[1], false);
 			result.append(")");
 			return result;
 		}

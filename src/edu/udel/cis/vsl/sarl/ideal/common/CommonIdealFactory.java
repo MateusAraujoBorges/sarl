@@ -43,8 +43,6 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
@@ -103,12 +101,6 @@ public class CommonIdealFactory implements IdealFactory {
 	 * manipulate symbolic types, instances of {@link SymbolicType}.
 	 */
 	private SymbolicTypeFactory typeFactory;
-
-	/**
-	 * The factory used to manage symbolic collections, instances of
-	 * {@link SymbolicCollection}.
-	 */
-	private CollectionFactory collectionFactory;
 
 	private KeySetFactory<Primitive, PrimitivePower> monicFactory;
 
@@ -262,9 +254,6 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            the symbolic type factory used by this ideal factory to create
 	 *            and manipulate symbolic types, instances of
 	 *            {@link SymbolicType}
-	 * @param collectionFactory
-	 *            the factory used to manage symbolic collections, instances of
-	 *            {@link SymbolicCollection}
 	 * @param booleanFactory
 	 *            the boolean expression factory used by this ideal factory to
 	 *            create and manipulate boolean expressions, instances of
@@ -272,12 +261,10 @@ public class CommonIdealFactory implements IdealFactory {
 	 */
 	public CommonIdealFactory(NumberFactory numberFactory,
 			ObjectFactory objectFactory, SymbolicTypeFactory typeFactory,
-			CollectionFactory collectionFactory,
 			BooleanExpressionFactory booleanFactory) {
 		this.numberFactory = numberFactory;
 		this.objectFactory = objectFactory;
 		this.typeFactory = typeFactory;
-		this.collectionFactory = collectionFactory;
 		this.booleanFactory = booleanFactory;
 		this.trueExpr = booleanFactory.trueExpr();
 		this.falseExpr = booleanFactory.falseExpr();
@@ -287,10 +274,6 @@ public class CommonIdealFactory implements IdealFactory {
 		this.integerType = typeFactory.integerType();
 		this.realType = typeFactory.realType();
 		this.oneIntObject = objectFactory.oneIntObj();
-		// this.emptyPrimitiveMap = collectionFactory
-		// .emptySortedMap(this.primitiveComparator);
-		// this.emptyMonicMap = collectionFactory
-		// .emptySortedMap(this.monicComparator);
 		this.oneInt = objectFactory.canonic(new One(integerType,
 				objectFactory.numberObject(numberFactory.oneInteger())));
 		this.oneReal = objectFactory.canonic(new One(realType,
@@ -301,7 +284,6 @@ public class CommonIdealFactory implements IdealFactory {
 		this.oneTermMapInt = new Monomial[] { oneInt };
 		this.oneTermMapReal = new Monomial[] { oneReal };
 		this.monomialAdder = new MonomialAdder(this);
-		// this.monomialNegater = new MonomialNegater(this);
 		this.primitivePowerMultiplier = new PrimitivePowerMultiplier(this);
 		this.primitivePowerDivider = new PrimitivePowerDivider(this);
 		this.integerExponentiator = new Exponentiator<NumericExpression>(
@@ -2022,11 +2004,6 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public SymbolicTypeFactory typeFactory() {
 		return typeFactory;
-	}
-
-	@Override
-	public CollectionFactory collectionFactory() {
-		return collectionFactory;
 	}
 
 	@Override

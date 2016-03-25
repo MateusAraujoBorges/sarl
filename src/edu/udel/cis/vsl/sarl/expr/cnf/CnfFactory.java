@@ -29,7 +29,6 @@ import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
@@ -114,8 +113,7 @@ public class CnfFactory implements BooleanExpressionFactory {
 	// Constructors...
 
 	public CnfFactory(SymbolicTypeFactory typeFactory,
-			ObjectFactory objectFactory, CollectionFactory collectionFactory) {
-		// this.collectionFactory = collectionFactory;
+			ObjectFactory objectFactory) {
 		this._booleanType = typeFactory.booleanType();
 		this.trueExpr = objectFactory
 				.canonic(booleanExpression(SymbolicOperator.CONCRETE,

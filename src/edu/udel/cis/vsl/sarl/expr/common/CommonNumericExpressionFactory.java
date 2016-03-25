@@ -35,7 +35,6 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
@@ -57,8 +56,6 @@ public class CommonNumericExpressionFactory
 	private NumericExpressionFactory herbrandFactory;
 
 	private SymbolicTypeFactory typeFactory;
-
-	private CollectionFactory collectionFactory;
 
 	private SymbolicRealType herbrandRealType, idealRealType;
 
@@ -87,7 +84,6 @@ public class CommonNumericExpressionFactory
 		this.booleanFactory = idealFactory.booleanFactory();
 		this.typeFactory = idealFactory.typeFactory();
 		this.objectFactory = typeFactory.objectFactory();
-		this.collectionFactory = idealFactory.collectionFactory();
 		this.numberFactory = idealFactory.numberFactory();
 		this.herbrandRealType = typeFactory.herbrandRealType();
 		this.herbrandIntegerType = typeFactory.herbrandIntegerType();
@@ -219,16 +215,6 @@ public class CommonNumericExpressionFactory
 	@Override
 	public SymbolicTypeFactory typeFactory() {
 		return typeFactory;
-	}
-
-	/**
-	 * Getter method that returns collectionFactory.
-	 * 
-	 * @return CollectionFactory
-	 */
-	@Override
-	public CollectionFactory collectionFactory() {
-		return collectionFactory;
 	}
 
 	/**

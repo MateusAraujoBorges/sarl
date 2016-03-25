@@ -31,7 +31,6 @@ import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
@@ -89,13 +88,6 @@ public interface NumericExpressionFactory {
 	SymbolicTypeFactory typeFactory();
 
 	/**
-	 * Returns the collection factory used by this numeric expression factory.
-	 * 
-	 * @return the collection factory
-	 */
-	CollectionFactory collectionFactory();
-
-	/**
 	 * Returns a comparator on all numeric expressions that are controlled by
 	 * this factory
 	 * 
@@ -107,22 +99,6 @@ public interface NumericExpressionFactory {
 
 	NumericSymbolicConstant symbolicConstant(StringObject name,
 			SymbolicType type);
-
-	// /**
-	// * Returns an expression, given the operator, type, and collection of
-	// arguments
-	// * @param operator
-	// * A SymbolicOperator
-	// * @param numericType
-	// * A SymbolicType
-	// * @param arguments
-	// * Collection of arguments
-	// * @return
-	// * Returns a NumericExpression
-	// */
-	//
-	// NumericExpression expression(SymbolicOperator operator,
-	// SymbolicType numericType, Collection<SymbolicObject> arguments);
 
 	/**
 	 * Returns an expression, given the operator, type, and array of arguments
@@ -138,54 +114,6 @@ public interface NumericExpressionFactory {
 	NumericExpression expression(SymbolicOperator operator,
 			SymbolicType numericType, SymbolicObject... arguments);
 
-	// /**
-	// * Returns an expression, given the operator, type, and an argument
-	// * @param operator
-	// * A SymbolicOperator
-	// * @param numericType
-	// * A SymbolicType
-	// * @param arg0
-	// * A SymbolicObject
-	// * @return
-	// * Returns a NumericExpression
-	// */
-	// NumericExpression expression(SymbolicOperator operator,
-	// SymbolicType numericType, SymbolicObject arg0);
-	//
-	// /**
-	// * Returns an expression, given the operator, type, and two arguments
-	// * @param operator
-	// * A SymbolicOperator
-	// * @param numericType
-	// * A SymbolicType
-	// * @param arg0
-	// * A SymbolicObject
-	// * @param arg1
-	// * A SymbolicObject
-	// * @return
-	// * Returns a NumericExpression
-	// */
-	// NumericExpression expression(SymbolicOperator operator,
-	// SymbolicType numericType, SymbolicObject arg0, SymbolicObject arg1);
-	//
-	// /**
-	// * Returns an expression, given the operator, type, and three arguments
-	// * @param operator
-	// * A SymbolicOperator
-	// * @param numericType
-	// * A SymbolicType
-	// * @param arg0
-	// * A SymbolicObject
-	// * @param arg1
-	// * A SymbolicObject
-	// * @param arg2
-	// * A SymbolicObject
-	// * @return
-	// * Returns a NumericExpression
-	// */
-	// NumericExpression expression(SymbolicOperator operator,
-	// SymbolicType numericType, SymbolicObject arg0, SymbolicObject arg1,
-	// SymbolicObject arg2);
 	/**
 	 * Returns a symbolic expression of integer type with the value of 0
 	 * 

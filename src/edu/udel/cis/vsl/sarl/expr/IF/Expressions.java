@@ -25,8 +25,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.expr.cnf.CnfFactory;
 import edu.udel.cis.vsl.sarl.expr.common.CommonExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.common.CommonNumericExpressionFactory;
@@ -78,9 +76,8 @@ public class Expressions {
 	 * @return the new boolean expression factory
 	 */
 	public static BooleanExpressionFactory newCnfFactory(
-			SymbolicTypeFactory typeFactory, ObjectFactory objectFactory,
-			CollectionFactory collectionFactory) {
-		return new CnfFactory(typeFactory, objectFactory, collectionFactory);
+			SymbolicTypeFactory typeFactory, ObjectFactory objectFactory) {
+		return new CnfFactory(typeFactory, objectFactory);
 	}
 
 	/**
@@ -103,13 +100,11 @@ public class Expressions {
 	 */
 	public static ExpressionFactory newIdealExpressionFactory2(
 			NumberFactory numberFactory, ObjectFactory objectFactory,
-			SymbolicTypeFactory typeFactory,
-			CollectionFactory collectionFactory) {
+			SymbolicTypeFactory typeFactory) {
 		BooleanExpressionFactory booleanFactory = new CnfFactory(typeFactory,
-				objectFactory, collectionFactory);
+				objectFactory);
 		NumericExpressionFactory numericFactory = Ideal.newIdealFactory(
-				numberFactory, objectFactory, typeFactory, collectionFactory,
-				booleanFactory);
+				numberFactory, objectFactory, typeFactory, booleanFactory);
 
 		return newExpressionFactory(numericFactory);
 	}
@@ -133,13 +128,11 @@ public class Expressions {
 	 */
 	public static ExpressionFactory newHerbrandExpressionFactory(
 			NumberFactory numberFactory, ObjectFactory objectFactory,
-			SymbolicTypeFactory typeFactory,
-			CollectionFactory collectionFactory) {
+			SymbolicTypeFactory typeFactory) {
 		BooleanExpressionFactory booleanFactory = new CnfFactory(typeFactory,
-				objectFactory, collectionFactory);
+				objectFactory);
 		NumericExpressionFactory numericFactory = Herbrand.newHerbrandFactory(
-				numberFactory, objectFactory, typeFactory, collectionFactory,
-				booleanFactory);
+				numberFactory, objectFactory, typeFactory, booleanFactory);
 
 		return newExpressionFactory(numericFactory);
 	}
@@ -162,16 +155,13 @@ public class Expressions {
 	 */
 	public static ExpressionFactory newStandardExpressionFactory2(
 			NumberFactory numberFactory, ObjectFactory objectFactory,
-			SymbolicTypeFactory typeFactory,
-			CollectionFactory collectionFactory) {
+			SymbolicTypeFactory typeFactory) {
 		BooleanExpressionFactory booleanFactory = new CnfFactory(typeFactory,
-				objectFactory, collectionFactory);
+				objectFactory);
 		NumericExpressionFactory idealFactory = Ideal.newIdealFactory(
-				numberFactory, objectFactory, typeFactory, collectionFactory,
-				booleanFactory);
+				numberFactory, objectFactory, typeFactory, booleanFactory);
 		NumericExpressionFactory herbrandFactory = Herbrand.newHerbrandFactory(
-				numberFactory, objectFactory, typeFactory, collectionFactory,
-				booleanFactory);
+				numberFactory, objectFactory, typeFactory, booleanFactory);
 		NumericExpressionFactory numericFactory = new CommonNumericExpressionFactory(
 				idealFactory, herbrandFactory);
 

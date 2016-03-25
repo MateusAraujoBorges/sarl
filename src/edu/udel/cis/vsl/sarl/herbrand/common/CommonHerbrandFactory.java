@@ -31,10 +31,9 @@ import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicConstant;
@@ -50,8 +49,6 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 	private ObjectFactory objectFactory;
 
 	private SymbolicTypeFactory typeFactory;
-
-	private CollectionFactory collectionFactory;
 
 	private Comparator<NumericExpression> comparator;
 
@@ -69,12 +66,10 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 
 	public CommonHerbrandFactory(NumberFactory numberFactory,
 			ObjectFactory objectFactory, SymbolicTypeFactory typeFactory,
-			CollectionFactory collectionFactory,
 			BooleanExpressionFactory booleanFactory) {
 		this.numberFactory = numberFactory;
 		this.objectFactory = objectFactory;
 		this.typeFactory = typeFactory;
-		this.collectionFactory = collectionFactory;
 		this.booleanFactory = booleanFactory;
 		this.herbrandIntegerType = typeFactory.herbrandIntegerType();
 		this.herbrandRealType = typeFactory.herbrandRealType();
@@ -98,7 +93,7 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 
 	private SymbolicSequence<NumericExpression> sequence(NumericExpression e0,
 			NumericExpression e1) {
-		return collectionFactory.sequence(new NumericExpression[] { e0, e1 });
+		return objectFactory.sequence(new NumericExpression[] { e0, e1 });
 	}
 
 	private SymbolicFunctionType realBinaryOp() {
@@ -344,11 +339,6 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 	}
 
 	@Override
-	public CollectionFactory collectionFactory() {
-		return collectionFactory;
-	}
-
-	@Override
 	public Comparator<NumericExpression> comparator() {
 		return comparator;
 	}
@@ -469,7 +459,7 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 		SymbolicType type = arg.type();
 
 		return expression(SymbolicOperator.APPLY, type, negativeOperator(type),
-				collectionFactory.singletonSequence(arg));
+				objectFactory.singletonSequence(arg));
 	}
 
 	@Override

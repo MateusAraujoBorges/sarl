@@ -30,9 +30,9 @@ import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 import edu.udel.cis.vsl.sarl.object.common.ObjectComparator;
 
 public interface ObjectFactory {
@@ -48,13 +48,6 @@ public interface ObjectFactory {
 	 * @param c
 	 */
 	void setExpressionComparator(Comparator<SymbolicExpression> c);
-
-	/**
-	 * Sets the Collection Comparator of the ObjectFactory
-	 * 
-	 * @param c
-	 */
-	void setCollectionComparator(Comparator<SymbolicCollection<?>> c);
 
 	/**
 	 * Sets the TypeComparator of the ObjectFactory
@@ -183,5 +176,43 @@ public interface ObjectFactory {
 	 * @return Returns the length of the objectList
 	 */
 	int numObjects();
+
+	/**
+	 * Returns a SymbolicSequence comprising the given sequence of elements.
+	 * 
+	 * @param elements
+	 *            any object providing an iterator over SymbolicExpressionIF
+	 * @return a single SymbolicExpressionSequenceIF which wraps the given list
+	 *         of elements
+	 */
+	<T extends SymbolicExpression> SymbolicSequence<T> sequence(
+			Iterable<? extends T> elements);
+
+	/**
+	 * Returns a SymbolicSequence comprising the sequence of elements specified
+	 * as an array.
+	 * 
+	 * @param elements
+	 *            any array of SymbolicExpressionIF
+	 * @return a single SymbolicExpressionSequenceIF which wraps the given list
+	 *         of elements
+	 */
+	<T extends SymbolicExpression> SymbolicSequence<T> sequence(T[] elements);
+
+	/**
+	 * Returns the sequence of length 1 consisting of the given element.
+	 * 
+	 * @param element
+	 * @return the sequence consisting of just the one element
+	 */
+	<T extends SymbolicExpression> SymbolicSequence<T> singletonSequence(
+			T element);
+
+	/**
+	 * Returns the empty sequence.
+	 * 
+	 * @return the empty sequence
+	 */
+	<T extends SymbolicExpression> SymbolicSequence<T> emptySequence();
 
 }

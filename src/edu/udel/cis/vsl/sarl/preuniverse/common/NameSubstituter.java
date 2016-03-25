@@ -6,7 +6,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.collections.IF.CollectionFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
@@ -27,9 +27,9 @@ public class NameSubstituter extends ExpressionSubstituter {
 	private Map<StringObject, StringObject> map;
 
 	public NameSubstituter(PreUniverse universe,
-			CollectionFactory collectionFactory,
-			SymbolicTypeFactory typeFactory, Map<StringObject, StringObject> map) {
-		super(universe, collectionFactory, typeFactory);
+ ObjectFactory objectFactory, SymbolicTypeFactory typeFactory,
+			Map<StringObject, StringObject> map) {
+		super(universe, objectFactory, typeFactory);
 		this.map = map;
 	}
 

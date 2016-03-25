@@ -12,6 +12,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
@@ -19,7 +20,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
-import edu.udel.cis.vsl.sarl.collections.IF.SymbolicCollection;
 
 /**
  * Walks a symbolic expression to collect all free (unbound) symbolic constants
@@ -57,11 +57,11 @@ public class ExpressionWalker {
 	 * Walks over the elements of a collection, adding free symbolic constants
 	 * found to <code>result</code>.
 	 * 
-	 * @param collection
-	 *            a non-<code>null</code> symbolic collection
+	 * @param seq
+	 *            a non-<code>null</code> symbolic sequence
 	 */
-	private void walkCollection(SymbolicCollection<?> collection) {
-		for (SymbolicExpression expr : collection)
+	private void walkSequence(SymbolicSequence<?> seq) {
+		for (SymbolicExpression expr : seq)
 			walkExpression(expr);
 	}
 
@@ -203,7 +203,7 @@ public class ExpressionWalker {
 			walkExpression((SymbolicExpression) obj);
 			return;
 		case EXPRESSION_COLLECTION:
-			walkCollection((SymbolicCollection<?>) obj);
+			walkSequence((SymbolicSequence<?>) obj);
 			return;
 		case TYPE:
 			walkType((SymbolicType) obj);
