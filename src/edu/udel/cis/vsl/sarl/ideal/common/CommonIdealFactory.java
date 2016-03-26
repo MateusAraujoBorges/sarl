@@ -52,10 +52,8 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
-import edu.udel.cis.vsl.sarl.number.real.Exponentiator;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
-import edu.udel.cis.vsl.sarl.util.BinaryOperator;
 import edu.udel.cis.vsl.sarl.util.KeySetFactory;
 
 /**
@@ -192,18 +190,6 @@ public class CommonIdealFactory implements IdealFactory {
 
 	private PrimitivePowerDivider primitivePowerDivider;
 
-	/**
-	 * An object used to raise integer numeric expressions to some concrete
-	 * nonnegative integer power, efficiently.
-	 */
-	private Exponentiator<NumericExpression> integerExponentiator;
-
-	/**
-	 * An object used to raise real numeric expressions to some concrete
-	 * nonnegative integer power, efficiently.
-	 */
-	private Exponentiator<NumericExpression> realExponentiator;
-
 	private class MonicFactory
 			extends KeySetFactory<Primitive, PrimitivePower> {
 
@@ -286,27 +272,6 @@ public class CommonIdealFactory implements IdealFactory {
 		this.monomialAdder = new MonomialAdder(this);
 		this.primitivePowerMultiplier = new PrimitivePowerMultiplier(this);
 		this.primitivePowerDivider = new PrimitivePowerDivider(this);
-		this.integerExponentiator = new Exponentiator<NumericExpression>(
-				new BinaryOperator<NumericExpression>() {
-
-					@Override
-					public NumericExpression apply(NumericExpression x,
-							NumericExpression y) {
-						return multiplyMonomials((Monomial) x, (Monomial) y);
-					}
-
-				}, oneInt);
-		this.realExponentiator = new Exponentiator<NumericExpression>(
-				new BinaryOperator<NumericExpression>() {
-
-					@Override
-					public NumericExpression apply(NumericExpression x,
-							NumericExpression y) {
-						return multiplyRational((RationalExpression) x,
-								(RationalExpression) y);
-					}
-
-				}, oneReal);
 		this.monicFactory = new MonicFactory(primitiveComparator);
 		this.polynomialFactory = new PolynomialFactory(monicComparator);
 	}
@@ -439,6 +404,16 @@ public class CommonIdealFactory implements IdealFactory {
 				(IntegerNumber) c2.number()));
 	}
 
+	/**
+	 * Raises a constant to the <code>n</code>th power, where <code>n</code> is
+	 * a positive, concrete int.
+	 * 
+	 * @param base
+	 *            any non-<code>null</code> {@link Constant}
+	 * @param n
+	 *            positive int
+	 * @return <code>base</code> raised to <code>n</code>-th power
+	 */
 	private Constant powerConstant(Constant base, int n) {
 		Number baseValue = base.number();
 		SymbolicType type = base.type();
@@ -1661,10 +1636,19 @@ public class CommonIdealFactory implements IdealFactory {
 	 */
 	private NumericExpression powerNumber(NumericExpression base,
 			IntegerNumber exponent) {
-		if (base.type().isReal())
-			return realExponentiator.exp(base, exponent);
-		else
-			return integerExponentiator.exp(base, exponent);
+		// nothing can be done if exponent is larger than max int because
+		// the canonical form uses Java ints for exponents...
+		int exp = exponent.intValue();
+
+		if (base instanceof Monomial)
+			return power((Monomial) base, exp);
+		else {
+			RationalExpression rat = (RationalExpression) base;
+			Monomial num = rat.numerator(this), den = rat.denominator(this);
+
+			return divide(power(num, exp), power(den, exp));
+		}
+
 	}
 
 	/**
@@ -1914,6 +1898,27 @@ public class CommonIdealFactory implements IdealFactory {
 
 		return ntRationalExpression(power(num, n), power(den, n));
 	}
+
+
+	// /**
+	// * Power when exponent is not concrete or not integral.
+	// *
+	// *
+	// * @param base
+	// * @param exponent
+	// * @return
+	// */
+	// private NumericExpression powerGeneral(NumericExpression base,
+	// NumericExpression exponent) {
+	// Monomial num = ((RationalExpression) base).numerator(this),
+	// den = ((RationalExpression) base).denominator(this);
+	// Number c = num.monomialConstant(this).number();
+	//
+	// if (c.signum() < 0) {
+	// return powerPositive(base, numberFactory.negate(c));
+	// } else
+	// return powerPositive(base, c);
+	// }
 
 	/**
 	 * Raises base to exponent power, where exponent may be any kind of number.
@@ -2191,29 +2196,6 @@ public class CommonIdealFactory implements IdealFactory {
 				: factorTermMap(terms);
 	}
 
-	// @Override
-	// public <V extends SymbolicExpression> SymbolicMap<Monic, V>
-	// monicSingletonMap(
-	// Monic key, V value) {
-	// return collectionFactory.singletonSortedMap(monicComparator, key,
-	// value);
-	// }
-	//
-	// @Override
-	// public <V extends SymbolicExpression> SymbolicMap<Primitive, V>
-	// primitiveSingletonMap(
-	// Primitive key, V value) {
-	// return collectionFactory.singletonSortedMap(primitiveComparator, key,
-	// value);
-	// }
-
-	// @SuppressWarnings("unchecked")
-	// @Override
-	// public <V extends SymbolicExpression> SymbolicMap<Primitive, V>
-	// emptyPrimitiveMap() {
-	// return (SymbolicMap<Primitive, V>) emptyPrimitiveMap;
-	// }
-
 	/**
 	 * Computes the result of raising the given primitive to the given concrete
 	 * integer exponent.
@@ -2350,13 +2332,6 @@ public class CommonIdealFactory implements IdealFactory {
 		}
 		return result;
 	}
-
-	// @SuppressWarnings("unchecked")
-	// @Override
-	// public <V extends SymbolicExpression> SymbolicMap<Monic, V>
-	// emptyMonicMap() {
-	// return (SymbolicMap<Monic, V>) emptyMonicMap;
-	// }
 
 	@Override
 	public Monomial multiplyConstantMonomial(Constant constant,

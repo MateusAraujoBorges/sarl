@@ -30,3 +30,51 @@ Description: define how PrimitivePower operations like power, multiply, divide, 
 		2*x^a
 	else
 		output is (x^a)+(y^b)
+
+		
+		--------------
+		
+Can new normal form just be: PrimitivePowers can have any numeric expression
+for exponent? (not just concrete int anymore)
+no longer polynomials, but so what?
+no longer expansion?
+
+
+-----
+
+
+incremental step:
+
+during simpification, simplify a monic by looking for the "true bases" of each 
+primitive power and combining.
+
+The true base of x^n is:
+  if x = POWER(a,b), the true base in true base of a, otherwise true base is x
+  
+the following can happen immediately:
+power(ab,c) ---> power(a,c)*power(b,c)
+power(power(a,b),c) ---> power(a,b*c)
+power(a/b,c) ---> power(a,c)/power(b,c)
+etc
+
+power(RationalExpression, exp)
+power(Monomial, exp)
+power(Monic, exp)
+power(PrimitivePower, exp)
+power(Primitive, exp)
+
+n is a monic
+exp = c*n/d
+if c<0, replace with -c and invert at end
+if c is one, proceed with exp=n/d
+let c=c1/c2, where c1 and c2 are integers.  replace with
+
+exp=c1*(1/c2)*n/d, c1 positive integer.  replace with
+
+result = ConcreteExpPower[power(base, (1/c2)*n/d), c1]
+
+Write concretePower(base, exp), where exp is a concrete integer.
+
+
+powerConcreteExp(NumericExpression base, int exp);
+etc.
