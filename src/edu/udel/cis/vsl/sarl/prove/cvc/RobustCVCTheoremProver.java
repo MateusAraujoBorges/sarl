@@ -209,6 +209,10 @@ public class RobustCVCTheoremProver implements TheoremProver {
 					predicate);
 			FastList<String> predicateDecls = translator.getDeclarations();
 			FastList<String> predicateText = translator.getTranslation();
+			
+			System.out.println("predicateDecls:"+predicateDecls);
+			System.out.println("predicateText:"+predicateText);
+			
 			predicateDecls.print(stdin);
 			stdin.print("QUERY ");
 			predicateText.print(stdin);
