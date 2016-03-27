@@ -364,10 +364,10 @@ public class CVCTranslator {
 		cvcArrayType.add(")");
 		assert extentNumber != null && extentNumber.intValue() == size;
 
-		FastList<String> result = new FastList<>(newCvcAuxVar(cvcArrayType));
+		FastList<String> result = new FastList<>(newCvcAuxVar(cvcArrayType.clone()));
 		
-		cvcDeclarations.addAll(result.toString(), ":");
-		cvcDeclarations.append(cvcArrayType);
+		cvcDeclarations.addAll(result.toString(), ":    ");
+		cvcDeclarations.append(cvcArrayType.clone());
 		cvcDeclarations.add(";\n");
 		
 		if (size > 0) {
