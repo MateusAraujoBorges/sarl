@@ -78,3 +78,18 @@ Write concretePower(base, exp), where exp is a concrete integer.
 
 powerConcreteExp(NumericExpression base, int exp);
 etc.
+
+
+----
+
+simplifyMonic:
+
+given pp=PrimitivePower[x,n]:
+
+trueBasePair(pp):
+  if x=POWER(b,e) then [b,e*n] else [x,n]
+add them up.
+
+Pair<Primitive,RationalExpression>
+  
+

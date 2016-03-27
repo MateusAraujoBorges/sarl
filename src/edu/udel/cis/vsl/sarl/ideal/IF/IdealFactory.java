@@ -23,6 +23,7 @@ import java.util.Comparator;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
@@ -573,4 +574,6 @@ public interface IdealFactory extends NumericExpressionFactory {
 	 * @return the result of summing the terms in the term map
 	 */
 	Polynomial polynomial(SymbolicType type, Monomial[] terms);
+
+	IntegerNumber getConcreteExponent(RationalExpression exponent);
 }

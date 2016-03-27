@@ -371,7 +371,7 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            a constant of the same type as c1
 	 * @return the constant c1/c2
 	 */
-	private Constant divide(Constant c1, Constant c2) {
+	private Constant divideConstants(Constant c1, Constant c2) {
 		return constant(objectFactory
 				.numberObject(numberFactory.divide(c1.number(), c2.number())));
 	}
@@ -414,7 +414,7 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            positive int
 	 * @return <code>base</code> raised to <code>n</code>-th power
 	 */
-	private Constant powerConstant(Constant base, int n) {
+	private Constant powerConstantInt(Constant base, int n) {
 		Number baseValue = base.number();
 		SymbolicType type = base.type();
 		Number result = one(type).number();
@@ -435,6 +435,28 @@ public class CommonIdealFactory implements IdealFactory {
 		return constant(result);
 	}
 
+	private RationalExpression powerConstantRat(Constant base,
+			RationalExpression exponent) {
+		return expression(SymbolicOperator.POWER, base.type(), base, exponent);
+	}
+
+	// Primitives...
+
+	private RationalExpression powerPrimitiveRat(Primitive base,
+			RationalExpression exponent) {
+		if (base.operator() == SymbolicOperator.POWER) {
+			NumericExpression b = (NumericExpression) base.argument(0);
+			NumericExpression e = (NumericExpression) base.argument(1);
+
+			// (b^e)^exponent = b^(e*exponent)
+			return power(b, multiply(e, exponent));
+		} else {
+			return expression(SymbolicOperator.POWER, base.type(), base,
+					exponent);
+		}
+
+	}
+
 	// Primitive Powers...
 
 	/**
@@ -453,9 +475,36 @@ public class CommonIdealFactory implements IdealFactory {
 		return new NTPrimitivePower(primitive, exponent);
 	}
 
-	private PrimitivePower power(PrimitivePower base, int exponent) {
+	private PrimitivePower powerPPInt(PrimitivePower base, int exponent) {
 		return primitivePower(base.primitive(this), objectFactory.intObject(
 				base.primitivePowerExponent(this).getInt() * exponent));
+	}
+
+	/**
+	 * Computes base raised to exponent power.
+	 * 
+	 * Preconditions: base is not a Primitive; if the monomial constant of the
+	 * numerator of <code>exponent</code> is an integer, it is 1.
+	 * 
+	 * @param base
+	 * @param exponent
+	 * @return
+	 */
+	private RationalExpression powerPPRat(PrimitivePower base,
+			RationalExpression exponent) {
+		IntegerNumber n = numberFactory
+				.integer(base.primitivePowerExponent(this).getInt());
+		RationalExpression nRat;
+
+		if (exponent.type().isInteger()) {
+			nRat = constant(n);
+		} else {
+			nRat = constant(numberFactory.integerToRational(n));
+		}
+
+		NumericExpression newExponent = multiply(nRat, exponent);
+
+		return power(base.primitive(this), newExponent);
 	}
 
 	// Monics...
@@ -649,6 +698,24 @@ public class CommonIdealFactory implements IdealFactory {
 		return monic(type, common);
 	}
 
+	/**
+	 * 
+	 * Preconditions: base is not a PrimitivePower; if the monomial constant of
+	 * the numerator of <code>exponent</code> is an integer, it is 1.
+	 * 
+	 * @param base
+	 * @param exponent
+	 * @return
+	 */
+	RationalExpression powerMonicRat(Monic base, RationalExpression exponent) {
+		RationalExpression result = one(base.type());
+
+		for (PrimitivePower pp : base.monicFactors(this)) {
+			result = multiplyRational(result, power(pp, exponent));
+		}
+		return result;
+	}
+
 	// Monomials...
 
 	/**
@@ -675,8 +742,10 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            a non-zero constant
 	 * @return the quotient monomial/constant
 	 */
-	private Monomial divide(Monomial monomial, Constant constant) {
-		return monomial(divide(monomial.monomialConstant(this), constant),
+	private Monomial divideMonomialConstant(Monomial monomial,
+			Constant constant) {
+		return monomial(
+				divideConstants(monomial.monomialConstant(this), constant),
 				monomial.monic(this));
 	}
 
@@ -752,8 +821,8 @@ public class CommonIdealFactory implements IdealFactory {
 			if (!gcd.isOne()) {
 				Constant gcdConstant = constant(gcd);
 
-				q1 = divide(q1, gcdConstant);
-				q2 = divide(q2, gcdConstant);
+				q1 = divideMonomialConstant(q1, gcdConstant);
+				q2 = divideMonomialConstant(q2, gcdConstant);
 				r = multiplyConstantMonomial(gcdConstant, r);
 			}
 		}
@@ -780,7 +849,7 @@ public class CommonIdealFactory implements IdealFactory {
 	 * @return result of division as {@link Monomial}, which might be a new
 	 *         primitive expression
 	 */
-	private Monomial intDivideMonomials(Monomial numerator,
+	private Monomial divideIntegerMonomials(Monomial numerator,
 			Monomial denominator) {
 		assert numerator.type().isInteger();
 		assert denominator.type().isInteger();
@@ -873,7 +942,7 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            a non-<code>null</code> non-0 monomial of real type
 	 * @return numerator/denominator
 	 */
-	private RationalExpression divide(Monomial numerator,
+	private RationalExpression divideRealMonomials(Monomial numerator,
 			Monomial denominator) {
 		assert numerator.type().isReal();
 		assert denominator.type().isReal();
@@ -892,8 +961,9 @@ public class CommonIdealFactory implements IdealFactory {
 			Constant denomConstant = denominator.monomialConstant(this);
 
 			if (!denomConstant.isOne()) {
-				denominator = divide(denominator, denomConstant);
-				numerator = divide(numerator, denomConstant);
+				denominator = divideMonomialConstant(denominator,
+						denomConstant);
+				numerator = divideMonomialConstant(numerator, denomConstant);
 			}
 			if (denominator.isOne())
 				return numerator;
@@ -1152,8 +1222,8 @@ public class CommonIdealFactory implements IdealFactory {
 		return booleanFactory.and(result, isNegative(p2));
 	}
 
-	private Monomial power(Monomial base, int exponent) {
-		return monomial(powerConstant(base.monomialConstant(this), exponent),
+	private Monomial powerMonomialInt(Monomial base, int exponent) {
+		return monomial(powerConstantInt(base.monomialConstant(this), exponent),
 				power(base.monic(this), exponent));
 	}
 
@@ -1165,6 +1235,22 @@ public class CommonIdealFactory implements IdealFactory {
 			return zero(m1.type());
 		else
 			return factorTermMap(t);
+	}
+
+	/**
+	 * 
+	 * Preconditions: base is not a Monic or Constant; if the monomial constant
+	 * of the numerator of <code>exponent</code> is an integer, it is 1.
+	 * 
+	 * @param base
+	 * @param exponent
+	 * @return
+	 */
+	private RationalExpression powerMonomialRat(Monomial base,
+			RationalExpression exponent) {
+		return multiplyRational(
+				powerConstantRat(base.monomialConstant(this), exponent),
+				power(base.monic(this), exponent));
 	}
 
 	// Term maps...
@@ -1434,7 +1520,7 @@ public class CommonIdealFactory implements IdealFactory {
 				multiplyMonomials(a2, b1divgcd));
 		Monomial denominator = multiplyMonomials(b1, b2divgcd);
 
-		return divide(numerator, denominator);
+		return divideRealMonomials(numerator, denominator);
 	}
 
 	private BooleanExpression isZero(RationalExpression rational) {
@@ -1526,7 +1612,8 @@ public class CommonIdealFactory implements IdealFactory {
 		// r1 = objectFactory.canonic(r1);
 		// r2 = objectFactory.canonic(r2);
 
-		return divide(multiplyMonomials(r1.numerator(this), r2.numerator(this)),
+		return divideRealMonomials(
+				multiplyMonomials(r1.numerator(this), r2.numerator(this)),
 				multiplyMonomials(r1.denominator(this), r2.denominator(this)));
 	}
 
@@ -1539,21 +1626,23 @@ public class CommonIdealFactory implements IdealFactory {
 	 * @return 1/r
 	 */
 	private RationalExpression invert(RationalExpression r) {
-		return divide(r.denominator(this), r.numerator(this));
+		return divideRealMonomials(r.denominator(this), r.numerator(this));
 	}
 
 	/**
-	 * Division of two rational expressions (which must necessarily have real
-	 * type).
+	 * Division of two rational expressions of real type.
+	 * 
+	 * Precondition: type is real.
 	 * 
 	 * @param r1
-	 *            a rational expression
+	 *            a rational expression of real type
 	 * @param r2
-	 *            a rational expression
+	 *            a rational expression of real type
 	 * @return r1/r2 as rational expression
 	 */
-	private RationalExpression divide(RationalExpression r1,
+	private RationalExpression divideRationals(RationalExpression r1,
 			RationalExpression r2) {
+		assert r1.type().isReal();
 		return multiplyRational(r1, invert(r2));
 	}
 
@@ -1566,8 +1655,38 @@ public class CommonIdealFactory implements IdealFactory {
 	 * @return negation of that rational expression in normal form
 	 */
 	private RationalExpression negate(RationalExpression rational) {
-		return divide(negate(rational.numerator(this)),
+		return divideRealMonomials(negate(rational.numerator(this)),
 				rational.denominator(this));
+	}
+
+	/**
+	 * Computes base raised to exponent power.
+	 * 
+	 * Preconditions: if the monomial constant of the numerator of
+	 * <code>exponent</code> is an integer, it is 1.
+	 * 
+	 * Consider making this a method in the individual classes.
+	 * 
+	 * @param base
+	 * @param exponent
+	 * @return
+	 */
+	private RationalExpression powerRatRat(RationalExpression base,
+			RationalExpression exponent) {
+		if (base instanceof Constant)
+			return powerConstantRat((Constant) base, exponent);
+		if (base instanceof Primitive)
+			return powerPrimitiveRat((Primitive) base, exponent);
+		if (base instanceof PrimitivePower)
+			return powerPPRat((PrimitivePower) base, exponent);
+		if (base instanceof Monic)
+			return powerMonicRat((Monic) base, exponent);
+		if (base instanceof Monomial)
+			return powerMonomialRat((Monomial) base, exponent);
+
+		Monomial num = base.numerator(this), den = base.denominator(this);
+
+		return divide(power(num, exponent), power(den, exponent));
 	}
 
 	// General numeric expressions...
@@ -1623,6 +1742,19 @@ public class CommonIdealFactory implements IdealFactory {
 		return result;
 	}
 
+	private RationalExpression powerNumericInt(NumericExpression base,
+			int exp) {
+		if (base instanceof Monomial)
+			return powerMonomialInt((Monomial) base, exp);
+		else {
+			RationalExpression rat = (RationalExpression) base;
+			Monomial num = rat.numerator(this), den = rat.denominator(this);
+
+			return divideRealMonomials(powerMonomialInt(num, exp),
+					powerMonomialInt(den, exp));
+		}
+	}
+
 	/**
 	 * Computes result of raising <code>base</code> to the <code>exponent</code>
 	 * power.
@@ -1634,21 +1766,13 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            the exponent, which must be positive
 	 * @return the result of raising base to the power exponent
 	 */
-	private NumericExpression powerNumber(NumericExpression base,
+	private RationalExpression powerNumericInteger(NumericExpression base,
 			IntegerNumber exponent) {
 		// nothing can be done if exponent is larger than max int because
 		// the canonical form uses Java ints for exponents...
 		int exp = exponent.intValue();
 
-		if (base instanceof Monomial)
-			return power((Monomial) base, exp);
-		else {
-			RationalExpression rat = (RationalExpression) base;
-			Monomial num = rat.numerator(this), den = rat.denominator(this);
-
-			return divide(power(num, exp), power(den, exp));
-		}
-
+		return powerNumericInt(base, exp);
 	}
 
 	/**
@@ -1857,15 +1981,16 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	@Override
-	public NumericExpression divide(NumericExpression arg0,
+	public RationalExpression divide(NumericExpression arg0,
 			NumericExpression arg1) {
 		if (arg0 instanceof Constant && arg1 instanceof Constant)
-			return divide((Constant) arg0, (Constant) arg1);
+			return divideConstants((Constant) arg0, (Constant) arg1);
 		if (arg0.type().isInteger())
-			return intDivideMonomials((Monomial) arg0, (Monomial) arg1);
+			return divideIntegerMonomials((Monomial) arg0, (Monomial) arg1);
 		if (arg0 instanceof Monomial && arg1 instanceof Monomial)
-			return divide((Monomial) arg0, (Monomial) arg1);
-		return divide((RationalExpression) arg0, (RationalExpression) arg1);
+			return divideRealMonomials((Monomial) arg0, (Monomial) arg1);
+		return divideRationals((RationalExpression) arg0,
+				(RationalExpression) arg1);
 	}
 
 	@Override
@@ -1891,34 +2016,71 @@ public class CommonIdealFactory implements IdealFactory {
 		int n = exponent.getInt();
 
 		if (base instanceof Monomial)
-			return power((Monomial) base, n);
+			return powerMonomialInt((Monomial) base, n);
 
 		Monomial num = ((RationalExpression) base).numerator(this);
 		Monomial den = ((RationalExpression) base).denominator(this);
 
-		return ntRationalExpression(power(num, n), power(den, n));
+		return ntRationalExpression(powerMonomialInt(num, n),
+				powerMonomialInt(den, n));
 	}
 
+	@Override
+	public IntegerNumber getConcreteExponent(RationalExpression exponent) {
+		Monomial num = exponent.numerator(this);
+		Number c = num.monomialConstant(this).number();
 
-	// /**
-	// * Power when exponent is not concrete or not integral.
-	// *
-	// *
-	// * @param base
-	// * @param exponent
-	// * @return
-	// */
-	// private NumericExpression powerGeneral(NumericExpression base,
-	// NumericExpression exponent) {
-	// Monomial num = ((RationalExpression) base).numerator(this),
-	// den = ((RationalExpression) base).denominator(this);
-	// Number c = num.monomialConstant(this).number();
-	//
-	// if (c.signum() < 0) {
-	// return powerPositive(base, numberFactory.negate(c));
-	// } else
-	// return powerPositive(base, c);
-	// }
+		if (c instanceof IntegerNumber) {
+			return (IntegerNumber) c;
+		} else {
+			return numberFactory.numerator((RationalNumber) c);
+		}
+	}
+
+	/**
+	 * Power when exponent is not concrete or not integral.
+	 * 
+	 * Preconditions: <code>exponent</code> is not a concrete integer.
+	 * <code>base</code> is not 0 or 1.
+	 *
+	 * @param base
+	 * @param exponent
+	 * @return
+	 */
+	private RationalExpression powerGeneral(RationalExpression base,
+			RationalExpression exponent) {
+		// Monomial num = exponent.numerator(this);
+		// Number c = num.monomialConstant(this).number();
+		// IntegerNumber c1 = c instanceof IntegerNumber ? (IntegerNumber) c
+		// : numberFactory.numerator((RationalNumber) c);
+		IntegerNumber c1 = getConcreteExponent(exponent);
+
+		if (c1.isOne())
+			return powerRatRat(base, exponent);
+
+		// now c1 is not 1. It might be -1.
+
+		RationalExpression newExponent = divide(exponent,
+				constant(exponent.type().isInteger() ? c1
+						: numberFactory.integerToRational(c1)));
+		RationalExpression result = powerRatRat(base, newExponent);
+		boolean invert;
+
+		if (c1.signum() < 0) {
+			c1 = numberFactory.negate(c1);
+			invert = true;
+		} else {
+			invert = false;
+		}
+
+		// now c1 is a positive integer, maybe 1
+
+		if (!c1.isOne())
+			result = powerNumericInteger(result, c1);
+		if (invert)
+			result = invert(result);
+		return result;
+	}
 
 	/**
 	 * Raises base to exponent power, where exponent may be any kind of number.
@@ -1928,9 +2090,10 @@ public class CommonIdealFactory implements IdealFactory {
 	 * 
 	 */
 	@Override
-	public NumericExpression power(NumericExpression base,
+	public RationalExpression power(NumericExpression base,
 			NumericExpression exponent) {
 		Number exponentNumber = extractNumber(exponent);
+		boolean isInteger = base.type().isInteger();
 
 		if (exponentNumber != null) {
 			if (exponentNumber instanceof RationalNumber) {
@@ -1944,26 +2107,31 @@ public class CommonIdealFactory implements IdealFactory {
 				int signum = exponentNumber.signum();
 
 				if (signum > 0)
-					return powerNumber(base, exponentInteger);
-				else {
-					boolean isInteger = base.type().isInteger();
-
-					if (signum < 0) {
-						if (isInteger)
-							throw new SARLException(
-									"Power expression with integer base and negative exponent:\n"
-											+ base + "\n" + exponent);
-						return invert((RationalExpression) powerNumber(base,
-								numberFactory.negate(exponentInteger)));
-					} else {
-						if (base.isZero())
-							throw new SARLException("0^0 is undefined");
-						return isInteger ? oneInt : oneReal;
-					}
+					return powerNumericInteger(base, exponentInteger);
+				else if (signum < 0) {
+					if (isInteger)
+						throw new SARLException(
+								"Power expression with integer base and negative exponent:\n"
+										+ base + "\n" + exponent);
+					return invert((RationalExpression) powerNumericInteger(base,
+							numberFactory.negate(exponentInteger)));
+				} else { // exponent = 0
+					if (base.isZero())
+						throw new SARLException("0^0 is undefined");
+					return isInteger ? oneInt : oneReal;
 				}
 			}
 		}
-		return expression(SymbolicOperator.POWER, base.type(), base, exponent);
+
+		// at this point exponent is not a concrete integer
+
+		if (base.isZero())
+			return isInteger ? zeroInt : zeroReal;
+		if (base.isOne())
+			return isInteger ? oneInt : oneReal;
+
+		return powerGeneral((RationalExpression) base,
+				(RationalExpression) exponent);
 	}
 
 	@Override
@@ -2355,7 +2523,7 @@ public class CommonIdealFactory implements IdealFactory {
 		PrimitivePower[] newFactors = new PrimitivePower[n];
 
 		for (int i = 0; i < n; i++) {
-			newFactors[i] = power(factors[i], exponent);
+			newFactors[i] = powerPPInt(factors[i], exponent);
 		}
 		return monic(base.type(), newFactors);
 	}

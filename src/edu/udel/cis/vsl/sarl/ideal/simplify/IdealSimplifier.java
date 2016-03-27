@@ -54,6 +54,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifier;
 
@@ -899,6 +900,55 @@ public class IdealSimplifier extends CommonSimplifier {
 	// * ................. Simplification Routines................... *
 	// ****************************************************************
 
+	private Monic simplifyPowers(Monic monic) {
+		IdealFactory idf = info.idealFactory;
+		PrimitivePower[] factors = monic.monicFactors(idf);
+		boolean isInteger = monic.type().isInteger();
+		Map<Primitive, NumericExpression> powerMap = new HashMap<>();
+		boolean change = false;
+		NumberFactory nf = info.numberFactory;
+
+		for (PrimitivePower pp : factors) {
+			Primitive p = pp.primitive(idf);
+			int n = pp.primitivePowerExponent(idf).getInt();
+			NumericExpression e = idf.constant(isInteger ? nf.integer(n)
+					: nf.integerToRational(nf.integer(n)));
+			NumericExpression exp;
+			Primitive base;
+
+			if (p.operator() == SymbolicOperator.POWER) {
+				base = (Primitive) p.argument(0);
+				exp = idf.multiply(e, (NumericExpression) p.argument(1));
+				change = change || n != idf
+						.getConcreteExponent((RationalExpression) exp)
+						.intValue();
+			} else {
+				base = p;
+				exp = e;
+			}
+
+			NumericExpression oldExp = powerMap.get(base);
+
+			if (oldExp == null) {
+				powerMap.put(base, exp);
+			} else {
+				powerMap.put(base, idf.add(oldExp, exp));
+				change = true;
+			}
+		}
+		if (change) {
+			Monic result = (Monic) idf.one(monic.type());
+
+			for (Entry<Primitive, NumericExpression> entry : powerMap
+					.entrySet()) {
+				result = (Monic) idf.multiply(result,
+						idf.power(entry.getKey(), entry.getValue()));
+			}
+			return result;
+		}
+		return monic;
+	}
+
 	/**
 	 * Simplifies a {@link Monic} that is not a {@link Polynomial}.
 	 * 
@@ -920,12 +970,15 @@ public class IdealSimplifier extends CommonSimplifier {
 		if (constant != null)
 			return info.idealFactory.constant(constant);
 
-		Monomial result = (Monomial) super.simplifyGenericExpression(monic);
+		// simplify powers:
+		Monomial result = simplifyPowers(monic);
 
+		if (result != monic)
+			return (Monomial) apply(result);
+		result = (Monomial) super.simplifyGenericExpression(monic);
 		return result;
 	}
 
-	
 	@SuppressWarnings("unused")
 	private Monomial simplifyPolynomial2(Polynomial poly) {
 		IdealFactory id = info.idealFactory;
