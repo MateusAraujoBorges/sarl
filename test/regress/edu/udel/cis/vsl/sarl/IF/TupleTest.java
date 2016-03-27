@@ -29,7 +29,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
  */
 public class TupleTest {
 
-	private static boolean DEBUG = true;
+	private static boolean DEBUG = false;
 	
 	private SymbolicUniverse sUniverse;
 
@@ -268,14 +268,11 @@ public class TupleTest {
 	 * Result after substitution: {[1], {1}}
 	 * </pre>
 	 */
-	@Test
+	@Test(expected=SARLException.class)
 	public void tuple_substitute2() {
 		SymbolicTupleType tupleType_Ref_TupleInt = sUniverse.tupleType(
 				sUniverse.stringObject("variable_ref_tupleInt"),
 				Arrays.asList(tupleType_int, sUniverse.referenceType()));
-		SymbolicTupleType tupleType_TupleInt_Ref = sUniverse.tupleType(
-				sUniverse.stringObject("variable_tupleInt_ref"),
-				Arrays.asList(sUniverse.referenceType(), tupleType_int));
 		ReferenceExpression self = sUniverse.identityReference();
 		ReferenceExpression arrayEle0 = sUniverse.arrayElementReference(self,
 				int_0);
@@ -306,7 +303,5 @@ public class TupleTest {
 		assertEquals(arrayEle1, sUniverse.tupleRead(tuple, index_0));
 		// field 1 should be changed from arrayEle0 to tupleInt1
 		assertEquals(tupleInt1, sUniverse.tupleRead(tuple, index_1));
-		// the type of result should be changed from <tuple_int, Ref> to <Ref, tuple_int>
-		assertEquals(tupleType_TupleInt_Ref.sequence(),  ((SymbolicTupleType)tuple.type()).sequence());
 	}
 }
