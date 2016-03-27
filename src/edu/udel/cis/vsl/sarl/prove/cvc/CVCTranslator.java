@@ -1,6 +1,8 @@
 package edu.udel.cis.vsl.sarl.prove.cvc;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
@@ -98,7 +100,7 @@ public class CVCTranslator {
 	 * Mapping of SARL symbolic expression to corresponding CVC expression. Used
 	 * to cache the results of translation.
 	 */
-	private Map<SymbolicExpression, FastList<String>> expressionMap;
+	private Map<SymbolicExpression, Translation> expressionMap;
 
 	/**
 	 * Mapping of pairs (t1,t2) of SARL types to the uninterpreted function
@@ -139,11 +141,20 @@ public class CVCTranslator {
 	 * expression.
 	 */
 	private FastList<String> cvcTranslation;
+	
+	/**
+	 * This variable is used to deal with intDivOrModulo
+	 * When the expression is in a forall expression or a exists expression,
+	 * "int division" and "modulo" need to be translated;
+	 * otherwise, they don't need to be since the original approach is working fine.
+	 */
+	private Boolean isInForallOrExistes;
 
 	// Constructors...
 
 	CVCTranslator(PreUniverse universe, SymbolicExpression theExpression,
 			boolean simplifyIntDivision) throws TheoremProverException {
+		this.isInForallOrExistes = false;
 		this.simplifyIntDivision = simplifyIntDivision;
 		this.universe = universe;
 		this.cvcAuxVarCount = 0;
@@ -157,11 +168,12 @@ public class CVCTranslator {
 		else
 			this.intDivMap = null;
 		this.cvcDeclarations = new FastList<>();
-		this.cvcTranslation = translate(theExpression);
+		this.cvcTranslation = translate(theExpression).getResult();
 	}
 
 	CVCTranslator(CVCTranslator startingContext,
 			SymbolicExpression theExpression) throws TheoremProverException {
+		this.isInForallOrExistes = false;
 		this.simplifyIntDivision = startingContext.simplifyIntDivision;
 		this.universe = startingContext.universe;
 		this.cvcAuxVarCount = startingContext.cvcAuxVarCount;
@@ -175,7 +187,7 @@ public class CVCTranslator {
 		else
 			intDivMap = null;
 		this.cvcDeclarations = new FastList<>();
-		this.cvcTranslation = translate(theExpression);
+		this.cvcTranslation = translate(theExpression).getResult();
 	}
 
 	// Private methods...
@@ -223,10 +235,11 @@ public class CVCTranslator {
 	 */
 	private String newCvcAuxVar(FastList<String> type) {
 		String name = "t" + cvcAuxVarCount;
-
-		cvcDeclarations.addAll(name, ":");
-		cvcDeclarations.append(type);
-		cvcDeclarations.add(";\n");
+		if(!isInForallOrExistes){
+			cvcDeclarations.addAll(name, ":");
+			cvcDeclarations.append(type);
+			cvcDeclarations.add(";\n");
+		}
 		cvcAuxVarCount++;
 		return name;
 	}
@@ -290,7 +303,7 @@ public class CVCTranslator {
 	 *            a SARL expression of array type
 	 * @return translation into CVC of length of that array
 	 */
-	private FastList<String> lengthOfArray(SymbolicExpression array) {
+	private Translation lengthOfArray(SymbolicExpression array) {
 		SymbolicArrayType type = (SymbolicArrayType) array.type();
 
 		// imagine translating "length(a)" for a symbolic constant a.
@@ -314,14 +327,30 @@ public class CVCTranslator {
 		default:
 			FastList<String> result = new FastList<>("(");
 
-			result.append(translate(array));
+			result.append(translate(array).getResult());
 			result.add(").0");
-			return result;
+			Translation res = new Translation(result);
+			return res;
+		}
+	}
+	
+	private void combineTranslations(Translation t, 
+			List<Translation> translations){
+		t.setIsDivOrModulo(true);
+		int size = translations.size();
+		for(int i=0; i<size; i++){
+			Translation tempTranslation = translations.get(i);
+			t.getAuxVars().addAll(tempTranslation.getAuxVars());
+			FastList<String> auxConstraints = t.getAuxConstraints();
+			auxConstraints.add("AND (");
+			auxConstraints.append(tempTranslation.getAuxConstraints().clone());
+			auxConstraints.add(")");
 		}
 	}
 
-	private FastList<String> pretranslateConcreteArray(
+	private Translation pretranslateConcreteArray(
 			SymbolicExpression array) {
+		Translation res;
 		SymbolicCompleteArrayType arrayType = (SymbolicCompleteArrayType) array
 				.type();
 		SymbolicType elementType = arrayType.elementType();
@@ -336,23 +365,32 @@ public class CVCTranslator {
 		assert extentNumber != null && extentNumber.intValue() == size;
 
 		FastList<String> result = new FastList<>(newCvcAuxVar(cvcArrayType));
-
+		
+		cvcDeclarations.addAll(result.toString(), ":");
+		cvcDeclarations.append(cvcArrayType);
+		cvcDeclarations.add(";\n");
+		
 		if (size > 0) {
 			result.add(" WITH [0] := (");
-			result.append(translate((SymbolicExpression) array.argument(0)));
+			result.append(translate((SymbolicExpression) array.argument(0)).getResult());
 			result.add(")");
 			for (int i = 1; i < size; i++) {
 				result.addAll(", [", Integer.toString(i), "] := (");
 				result.append(
-						translate((SymbolicExpression) array.argument(i)));
+						translate((SymbolicExpression) array.argument(i)).getResult());
 				result.add(")");
 			}
 		}
-		return result;
+		res = new Translation(result);
+		return res;
 	}
 
-	private FastList<String> pretranslateArrayWrite(
+	private Translation pretranslateArrayWrite(
 			SymbolicExpression arrayWrite) {
+		Translation res;
+		Translation tempTranslation;
+		Boolean involveDivOrModulo = false;
+		List<Translation> translations = new ArrayList<Translation>();
 		// syntax: a WITH [10] := 2/3
 		SymbolicExpression arrayExpression = (SymbolicExpression) arrayWrite
 				.argument(0);
@@ -361,18 +399,37 @@ public class CVCTranslator {
 		SymbolicExpression valueExpression = (SymbolicExpression) arrayWrite
 				.argument(2);
 		FastList<String> result = new FastList<>("(");
-
-		result.append(valueOfArray(arrayExpression));
+		
+		result.append(valueOfArray(arrayExpression).getResult());
 		result.add(") WITH [");
-		result.append(translate(indexExpression));
+		tempTranslation = translate(indexExpression);
+		if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+			translations.add(tempTranslation);
+			involveDivOrModulo = true;
+			
+		}
+		result.append(tempTranslation.getResult());
 		result.add("] := (");
-		result.append(translate(valueExpression));
+		tempTranslation = translate(valueExpression);
+		if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+			translations.add(tempTranslation);
+			involveDivOrModulo = true;
+		}
+		result.append(translate(valueExpression).getResult());
 		result.add(")");
-		return result;
+		res = new Translation(result);
+		if(involveDivOrModulo && isInForallOrExistes){
+			combineTranslations(res, translations);
+		}
+		return res;
 	}
 
-	private FastList<String> pretranslateDenseArrayWrite(
+	private Translation pretranslateDenseArrayWrite(
 			SymbolicExpression denseArrayWrite) {
+		Translation res;
+		List<Translation> translations = new ArrayList<Translation>();
+		Translation tempTranslation;
+		Boolean involveDivOrModulo = false;
 		// syntax: a WITH [10] := 2/3, [42] := 3/2;
 		SymbolicExpression arrayExpression = (SymbolicExpression) denseArrayWrite
 				.argument(0);
@@ -382,7 +439,7 @@ public class CVCTranslator {
 		FastList<String> result = new FastList<>("(");
 		boolean first = true;
 
-		result.append(valueOfArray(arrayExpression));
+		result.append(valueOfArray(arrayExpression).getResult());
 		result.add(")");
 		for (int i = 0; i < n; i++) {
 			SymbolicExpression element = elements.get(i);
@@ -395,11 +452,21 @@ public class CVCTranslator {
 					result.add(", ");
 				}
 				result.addAll("[", Integer.toString(i), "] := (");
-				result.append(translate(element));
+				tempTranslation = translate(element);
+				if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+					translations.add(tempTranslation);
+					involveDivOrModulo = true;
+					
+				}
+				result.append(tempTranslation.getResult());
 				result.add(")");
 			}
 		}
-		return result;
+		res = new Translation(result);
+		if(involveDivOrModulo && isInForallOrExistes){
+			combineTranslations(res, translations);
+		}
+		return res;
 	}
 
 	/**
@@ -410,11 +477,16 @@ public class CVCTranslator {
 	 * @param array
 	 * @return
 	 */
-	private FastList<String> valueOfArray(SymbolicExpression array) {
+	private Translation valueOfArray(SymbolicExpression array) {
 		// the idea is to catch any expression which would be translated
 		// as an explicit ordered pair [len,val] and return just the val.
 		// for expressions that are not translated to an explicit
 		// ordered pair, just append ".1" to get the array value component.
+		Translation res;
+		List<Translation> translations = new ArrayList<Translation>();
+		Translation tempTranslation;
+		Boolean involveDivOrModulo = false;
+		
 		switch (array.operator()) {
 		case ARRAY:
 			return pretranslateConcreteArray(array);
@@ -424,10 +496,19 @@ public class CVCTranslator {
 			return pretranslateDenseArrayWrite(array);
 		default: {
 			FastList<String> result = new FastList<>("(");
-
-			result.append(translate(array));
+			tempTranslation = translate(array);
+			if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+				translations.add(tempTranslation);
+				involveDivOrModulo = true;
+				
+			}
+			result.append(tempTranslation.getResult());
 			result.add(").1");
-			return result;
+			res = new Translation(result);
+			if(involveDivOrModulo && isInForallOrExistes){
+				combineTranslations(res, translations);
+			}
+			return res;
 		}
 		}
 	}
@@ -442,35 +523,38 @@ public class CVCTranslator {
 	 *            the arrayType
 	 * @return CVC translation of the concrete array
 	 */
-	private FastList<String> translateConcreteArray(SymbolicExpression array) {
-		FastList<String> result = pretranslateConcreteArray(array);
+	private Translation translateConcreteArray(SymbolicExpression array) {
+		Translation res = pretranslateConcreteArray(array);
+		
 		int size = array.numArguments();
-
-		result = bigArray(new FastList<>(Integer.toString(size)), result);
-		return result;
+		FastList<String> r = bigArray(new FastList<>(Integer.toString(size)), res.getResult());
+		res = new Translation(r);
+		return res;
 	}
 
-	private FastList<String> translateConcreteTuple(SymbolicExpression tuple) {
+	private Translation translateConcreteTuple(SymbolicExpression tuple) {
+		Translation res;
 		// syntax:(x,y,z)
 		FastList<String> result;
 		int n = tuple.numArguments();
 
 		if (n == 1) { // no tuples of length 1 in CVC
-			result = translate((SymbolicExpression) tuple.argument(0));
+			result = translate((SymbolicExpression) tuple.argument(0)).getResult();
 		} else {
 			result = new FastList<String>("(");
 			if (n > 0) { // possible to have tuple with 0 components
 				result.append(
-						translate((SymbolicExpression) tuple.argument(0)));
+						translate((SymbolicExpression) tuple.argument(0)).getResult());
 				for (int i = 1; i < n; i++) {
 					result.add(",");
 					result.append(
-							translate((SymbolicExpression) tuple.argument(i)));
+							translate((SymbolicExpression) tuple.argument(i)).getResult());
 				}
 			}
 			result.add(")");
 		}
-		return result;
+		res = new Translation(result);
+		return res;
 	}
 
 	/**
@@ -480,12 +564,12 @@ public class CVCTranslator {
 	 * @param expr
 	 * @return the CVC equivalent Expr
 	 */
-	private FastList<String> translateConcrete(SymbolicExpression expr) {
+	private Translation translateConcrete(SymbolicExpression expr) {
+		Translation translation;
 		SymbolicType type = expr.type();
 		SymbolicTypeKind kind = type.typeKind();
 		SymbolicObject object = expr.argument(0);
 		FastList<String> result;
-
 		switch (kind) {
 		case BOOLEAN:
 			result = new FastList<>(
@@ -502,7 +586,8 @@ public class CVCTranslator {
 		default:
 			throw new SARLInternalException("Unknown concrete object: " + expr);
 		}
-		return result;
+		translation = new Translation(result);
+		return translation;
 	}
 
 	/**
@@ -519,8 +604,9 @@ public class CVCTranslator {
 	 *            is this a bound variable?
 	 * @return the name of the symbolic constant as a fast string list
 	 */
-	private FastList<String> translateSymbolicConstant(
+	private Translation translateSymbolicConstant(
 			SymbolicConstant symbolicConstant, boolean isBoundVariable) {
+		Translation  translation;
 		String name = symbolicConstant.name().getString();
 		SymbolicType symbolicType = symbolicConstant.type();
 		FastList<String> type = translateType(symbolicType);
@@ -532,7 +618,8 @@ public class CVCTranslator {
 			cvcDeclarations.add(";\n");
 		}
 		this.variableMap.put(symbolicConstant, result);
-		return result.clone();
+		translation = new Translation(result.clone());
+		return translation;
 	}
 
 	/**
@@ -545,14 +632,27 @@ public class CVCTranslator {
 	 * @param expr
 	 * @return
 	 */
-	private FastList<String> translateLambda(SymbolicExpression expr) {
+	private Translation translateLambda(SymbolicExpression expr) {
+		Translation res;
+		List<Translation> translations = new ArrayList<Translation>();
+		Translation tempTranslation;
+		Boolean involveDivOrModulo = false;
 		FastList<String> result = new FastList<>("LAMBDA (",
 				((SymbolicConstant) expr.argument(0)).name().getString(), ":");
 
 		result.append(translateType(expr.type()));
 		result.add("):");
-		result.append(translate((SymbolicExpression) expr.argument(1)));
-		return result;
+		tempTranslation = translate((SymbolicExpression) expr.argument(1));
+		if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+			translations.add(tempTranslation);
+			involveDivOrModulo = true;
+		}
+		result.append(tempTranslation.getResult());
+		res = new Translation(result);
+		if(involveDivOrModulo && isInForallOrExistes){
+			combineTranslations(res, translations);
+		}
+		return res;
 	}
 
 	/**
@@ -562,18 +662,35 @@ public class CVCTranslator {
 	 *            a SARL symbolic expression of form a[i]
 	 * @return an equivalent CVC expression
 	 */
-	private FastList<String> translateArrayRead(SymbolicExpression expr) {
+	private Translation translateArrayRead(SymbolicExpression expr) {
+		Translation res;
 		SymbolicExpression arrayExpression = (SymbolicExpression) expr
 				.argument(0);
 		NumericExpression indexExpression = (NumericExpression) expr
 				.argument(1);
 		FastList<String> result = new FastList<>("(");
+		Translation tempTranslation;
+		Boolean involveDivOrModulo = false;;
+		Boolean tempBool;
+		List<Translation> translations = new ArrayList<Translation>();
 
-		result.append(valueOfArray(arrayExpression));
+		result.append(valueOfArray(arrayExpression).getResult());
 		result.add(")[");
-		result.append(translate(indexExpression));
+		tempTranslation = translate(indexExpression);
+		if(isInForallOrExistes){
+			tempBool = tempTranslation.getIsDivOrModulo();
+			if(tempBool){
+				translations.add(tempTranslation);
+				involveDivOrModulo = true;
+			}
+		}
+		result.append(tempTranslation.getResult());
 		result.add("]");
-		return result;
+		res = new Translation(result);
+		if(involveDivOrModulo && isInForallOrExistes){
+			combineTranslations(res, translations);
+		}
+		return res;
 	}
 
 	/**
@@ -586,22 +703,37 @@ public class CVCTranslator {
 	 *            a SARL symbolic expression of form t.i
 	 * @return an equivalent CVC expression
 	 */
-	private FastList<String> translateTupleRead(SymbolicExpression expr) {
+	private Translation translateTupleRead(SymbolicExpression expr) {
 		SymbolicExpression tupleExpression = (SymbolicExpression) expr
 				.argument(0);
 		int tupleLength = ((SymbolicTupleType) tupleExpression.type())
 				.sequence().numTypes();
 		int index = ((IntObject) expr.argument(1)).getInt();
+		Translation tempTranslation;
+		Boolean involveDivOrModulo = false;
+		List<Translation> translations = new ArrayList<Translation>();
 
 		if (tupleLength == 1) {
 			assert index == 0;
 			return translate((SymbolicExpression) expr.argument(0));
 		} else {
+			Translation res;
 			FastList<String> result = new FastList<>("(");
-
-			result.append(translate(tupleExpression));
+			
+			tempTranslation = translate(tupleExpression);
+			if(isInForallOrExistes){
+				if(tempTranslation.getIsDivOrModulo()){
+					translations.add(tempTranslation);
+					involveDivOrModulo = true;
+				}
+			}
+			result.append(translate(tupleExpression).getResult());
 			result.add(")." + index);
-			return result;
+			res = new Translation(result);
+			if(involveDivOrModulo && isInForallOrExistes){
+				combineTranslations(res, translations);
+			}
+			return res;
 		}
 	}
 
@@ -613,10 +745,11 @@ public class CVCTranslator {
 	 *            a SARL array update expression "a WITH [i] := v"
 	 * @return the result of translating to CVC
 	 */
-	private FastList<String> translateArrayWrite(SymbolicExpression expr) {
-		FastList<String> result = pretranslateArrayWrite(expr);
+	private Translation translateArrayWrite(SymbolicExpression expr) {
+		Translation result = pretranslateArrayWrite(expr);
 
-		result = bigArray(lengthOfArray(expr), result);
+		FastList<String> res = bigArray(lengthOfArray(expr).getResult(), result.getResult());
+		result = new Translation(res);
 		return result;
 	}
 
@@ -632,7 +765,10 @@ public class CVCTranslator {
 	 *            a SARL tuple update expression
 	 * @return the result of translating to CVC
 	 */
-	private FastList<String> translateTupleWrite(SymbolicExpression expr) {
+	private Translation translateTupleWrite(SymbolicExpression expr) {
+		Translation tempTranslation;
+		Boolean involveDivOrModulo = false;
+		List<Translation> translations = new ArrayList<Translation>();
 		SymbolicExpression tupleExpression = (SymbolicExpression) expr
 				.argument(0);
 		int index = ((IntObject) expr.argument(1)).getInt();
@@ -645,13 +781,28 @@ public class CVCTranslator {
 			assert index == 0;
 			return translate(valueExpression);
 		} else {
+			Translation res;
 			FastList<String> result = new FastList<>("(");
-
-			result.append(translate(tupleExpression));
+			
+			tempTranslation = translate(tupleExpression);
+			if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+				translations.add(tempTranslation);
+				involveDivOrModulo = true;
+			}
+			result.append(tempTranslation.getResult());
 			result.addAll(") WITH .", Integer.toString(index), " := (");
-			result.append(translate(valueExpression));
+			tempTranslation = translate(valueExpression);
+			if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+				translations.add(tempTranslation);
+				involveDivOrModulo = true;
+			}
+			result.append(translate(valueExpression).getResult());
 			result.add(")");
-			return result;
+			res = new Translation(result);
+			if(involveDivOrModulo && isInForallOrExistes){
+				combineTranslations(res, translations);
+			}
+			return res;
 		}
 	}
 
@@ -663,11 +814,13 @@ public class CVCTranslator {
 	 *            a SARL expression of kind DENSE_ARRAY_WRITE
 	 * @return the result of translating expr to CVC
 	 */
-	private FastList<String> translateDenseArrayWrite(SymbolicExpression expr) {
-		FastList<String> result = pretranslateDenseArrayWrite(expr);
+	private Translation translateDenseArrayWrite(SymbolicExpression expr) {
+		Translation res;
+		FastList<String> result = pretranslateDenseArrayWrite(expr).getResult();
 
-		result = bigArray(lengthOfArray(expr), result);
-		return result;
+		result = bigArray(lengthOfArray(expr).getResult(), result);
+		res = new Translation(result);
+		return res;
 	}
 
 	/**
@@ -679,7 +832,7 @@ public class CVCTranslator {
 	 *            {@link SymbolicOperator#DENSE_TUPLE_WRITE}
 	 * @return result of translating to CVC
 	 */
-	private FastList<String> translateDenseTupleWrite(SymbolicExpression expr) {
+	private Translation translateDenseTupleWrite(SymbolicExpression expr) {
 		SymbolicExpression tupleExpression = (SymbolicExpression) expr
 				.argument(0);
 		int tupleLength = ((SymbolicTupleType) expr.type()).sequence()
@@ -687,24 +840,48 @@ public class CVCTranslator {
 		// syntax t WITH .0 := blah, .1 := blah, ...
 		SymbolicSequence<?> values = (SymbolicSequence<?>) expr.argument(1);
 		int numValues = values.size();
-
+		Translation tempTranslation;
+		Boolean involveDivOrModulo = false;
+		List<Translation> translations = new ArrayList<Translation>();
+		
 		if (numValues == 0) {
-			return translate(tupleExpression);
+			tempTranslation = translate(tupleExpression);
+			if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+				translations.add(tempTranslation);
+				involveDivOrModulo = true;
+			}
+			return tempTranslation;
 		}
 		if (tupleLength == 1) {
 			assert numValues == 1;
 			SymbolicExpression value = values.get(0);
 
 			if (value.isNull()) {
-				return translate(tupleExpression);
+				tempTranslation = translate(tupleExpression);
+				if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+					translations.add(tempTranslation);
+					involveDivOrModulo = true;
+				}
+				return tempTranslation;
 			} else {
-				return translate(value);
+				tempTranslation = translate(value);
+				if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+					translations.add(tempTranslation);
+					involveDivOrModulo = true;
+				}
+				return tempTranslation;
 			}
 		} else {
+			Translation res;
 			FastList<String> result = new FastList<>("(");
 			boolean first = true;
-
-			result.append(translate(tupleExpression));
+			
+			tempTranslation = translate(tupleExpression);
+			if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+				translations.add(tempTranslation);
+				involveDivOrModulo = true;
+			}
+			result.append(tempTranslation.getResult());
 			result.add(")");
 			for (int i = 0; i < numValues; i++) {
 				SymbolicExpression value = values.get(i);
@@ -717,11 +894,20 @@ public class CVCTranslator {
 						result.add(", ");
 					}
 					result.addAll(".", Integer.toString(i), " := (");
-					result.append(translate(value));
+					tempTranslation = translate(value);
+					if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+						translations.add(tempTranslation);
+						involveDivOrModulo = true;
+					}
+					result.append(tempTranslation.getResult());
 					result.add(")");
 				}
 			}
-			return result;
+			res = new Translation(result);
+			if(involveDivOrModulo && isInForallOrExistes){
+				combineTranslations(res, translations);
+			}
+			return res;
 		}
 	}
 
@@ -733,21 +919,25 @@ public class CVCTranslator {
 	 *            a SARL "exists" or "forall" expression
 	 * @return result of translating to CVC
 	 */
-	private FastList<String> translateQuantifier(SymbolicExpression expr) {
+	private Translation translateQuantifier(SymbolicExpression expr) {
 		// syntax: FORALL (x : T) : pred
+		Translation res;
 		SymbolicOperator kind = expr.operator();
 		SymbolicConstant boundVariable = (SymbolicConstant) expr.argument(0);
 		String name = boundVariable.name().getString();
 		BooleanExpression predicate = (BooleanExpression) expr.argument(1);
 		FastList<String> result = new FastList<>(kind.toString());
-
-		expressionMap.put(boundVariable, new FastList<>(name));
+		
+		expressionMap.put(boundVariable, new Translation(new FastList<String>(name)));
 		result.addAll(" (", name, " : ");
 		result.append(translateType(boundVariable.type()));
 		result.add(") : (");
-		result.append(translate(predicate));
+		result.append(translate(predicate).getResult());
 		result.add(")");
-		return result;
+//		System.out.println("cvcDecl:\n"+cvcDeclarations);
+//		System.out.println("quantifier result\n"+result);
+		res = new Translation(result);
+		return res;
 	}
 
 	/**
@@ -766,15 +956,16 @@ public class CVCTranslator {
 	 *            <code>expr1</code>
 	 * @return result of translating into CVC the assertion "expr1=expr2"
 	 */
-	private FastList<String> processEquality(SymbolicExpression expr1,
+	private Translation processEquality(SymbolicExpression expr1,
 			SymbolicExpression expr2) {
 		FastList<String> result;
+		Translation res;
 
 		if (expr1.type().typeKind() == SymbolicTypeKind.ARRAY) {
 			// lengths are equal and forall i (0<=i<length).a[i]=b[i].
 			// syntax: ((len1) = (len2)) AND
 			// FORALL (i : INT) : (( 0 <= i AND i < len1) => ( ... ))
-			FastList<String> extent1 = lengthOfArray(expr1);
+			FastList<String> extent1 = lengthOfArray(expr1).getResult();
 			NumericSymbolicConstant index = newSarlAuxVar();
 			String indexString = index.name().getString();
 			SymbolicExpression read1 = universe.arrayRead(expr1, index);
@@ -783,20 +974,62 @@ public class CVCTranslator {
 			result = new FastList<>("((");
 			result.append(extent1.clone());
 			result.add(") = (");
-			result.append(lengthOfArray(expr2));
+			result.append(lengthOfArray(expr2).getResult());
 			result.addAll(")) AND FORALL (", indexString, " : INT) : ((0 <= ",
 					indexString, " AND ", indexString, " < ");
 			result.append(extent1);
 			result.add(") => (");
-			result.append(processEquality(read1, read2));
+			result.append(processEquality(read1, read2).getResult());
 			result.add(")");
 		} else {
-			result = new FastList<>("(");
-			result.append(translate(expr1));
+			Translation t1 = translate(expr1);
+			Translation t2 = translate(expr2);
+			result = new FastList<>("((");
+			result.append(t1.getResult());
 			result.add(") = (");
-			result.append(translate(expr2));
-			result.add(")");
+			result.append(t2.getResult());
+			result.add("))");
+			
+			Boolean b1 = t1.getIsDivOrModulo();
+			Boolean b2 = t2.getIsDivOrModulo();
+			
+			List<Translation> translations = new ArrayList<Translation>();
+			if(b1 || b2){
+				if(b1) translations.add(t1);
+				if(b2) translations.add(t2);
+				result = postProcessForSideEffectsOfDivideOrModule(result, translations);
+			}
 		}
+		res = new Translation(result);
+		return res;
+	}
+	
+	private FastList<String> postProcessForSideEffectsOfDivideOrModule(FastList<String> currentResult,
+			List<Translation> translations){
+		String exist = SymbolicOperator.EXISTS.toString();
+		FastList<String> result = new FastList<>("(");
+		result.add(exist+ " (");
+		int translationNum = translations.size();
+		for(int i=0; i<translationNum; i++){
+			List<FastList<String>> auxVars = translations.get(i).getAuxVars();
+			int auxVarNum = auxVars.size();
+			for(int j=0; j<auxVarNum; j++){
+				if(i != translationNum-1 || j != auxVarNum-1){
+					result.append(auxVars.get(j));
+					result.add(" : INT, ");
+				}else{
+					result.append(auxVars.get(j));
+					result.add(" : INT");
+				}
+			}
+		}
+		result.add(") : (");
+		result.append(currentResult);
+		for(int i=0; i<translationNum; i++){
+			result.add(" AND ");
+			result.append(translations.get(i).getAuxConstraints());
+		}
+		result.add("))");
 		return result;
 	}
 
@@ -809,12 +1042,12 @@ public class CVCTranslator {
 	 *            {@link SymbolicOperator.EQUALS}
 	 * @return the equivalent CVC
 	 */
-	private FastList<String> translateEquality(SymbolicExpression expr) {
+	private Translation translateEquality(SymbolicExpression expr) {
 		SymbolicExpression leftExpression = (SymbolicExpression) expr
 				.argument(0);
 		SymbolicExpression rightExpression = (SymbolicExpression) expr
 				.argument(1);
-		FastList<String> result = processEquality(leftExpression,
+		Translation result = processEquality(leftExpression,
 				rightExpression);
 
 		return result;
@@ -865,16 +1098,18 @@ public class CVCTranslator {
 	 *            a "union extract" expression
 	 * @return result of translating to CVC
 	 */
-	private FastList<String> translateUnionExtract(SymbolicExpression expr) {
+	private Translation translateUnionExtract(SymbolicExpression expr) {
+		Translation res;
 		int index = ((IntObject) expr.argument(0)).getInt();
 		SymbolicExpression arg = (SymbolicExpression) expr.argument(1);
 		SymbolicUnionType unionType = (SymbolicUnionType) arg.type();
 		FastList<String> result = new FastList<>(selector(unionType, index));
 
 		result.add("(");
-		result.append(translate(arg));
+		result.append(translate(arg).getResult());
 		result.add(")");
-		return result;
+		res = new Translation(result);
+		return res;
 	}
 
 	/**
@@ -902,16 +1137,18 @@ public class CVCTranslator {
 	 *            a "union inject" expression
 	 * @return the CVC translation of that expression
 	 */
-	private FastList<String> translateUnionInject(SymbolicExpression expr) {
+	private Translation translateUnionInject(SymbolicExpression expr) {
+		Translation res;
 		int index = ((IntObject) expr.argument(0)).getInt();
 		SymbolicExpression arg = (SymbolicExpression) expr.argument(1);
 		SymbolicUnionType unionType = (SymbolicUnionType) expr.type();
 		FastList<String> result = new FastList<>(constructor(unionType, index));
 
 		result.add("(");
-		result.append(translate(arg));
+		result.append(translate(arg).getResult());
 		result.add(")");
-		return result;
+		res = new Translation(result);
+		return res;
 	}
 
 	/**
@@ -938,7 +1175,8 @@ public class CVCTranslator {
 	 *            a "union test" expression
 	 * @return the CVC translation of that expression
 	 */
-	private FastList<String> translateUnionTest(SymbolicExpression expr) {
+	private Translation translateUnionTest(SymbolicExpression expr) {
+		Translation res;
 		int index = ((IntObject) expr.argument(0)).getInt();
 		SymbolicExpression arg = (SymbolicExpression) expr.argument(1);
 		SymbolicUnionType unionType = (SymbolicUnionType) arg.type();
@@ -946,12 +1184,14 @@ public class CVCTranslator {
 				"is_" + constructor(unionType, index));
 
 		result.add("(");
-		result.append(translate(arg));
+		result.append(translate(arg).getResult());
 		result.add(")");
-		return result;
+		res = new Translation(result);
+		return res;
 	}
 
-	private FastList<String> translateCast(SymbolicExpression expression) {
+	private Translation translateCast(SymbolicExpression expression) {
+		Translation translation;
 		SymbolicExpression argument = (SymbolicExpression) expression
 				.argument(0);
 		SymbolicType originalType = argument.type();
@@ -977,12 +1217,17 @@ public class CVCTranslator {
 
 		FastList<String> result = new FastList<>(castFunction, "(");
 
-		result.append(translate(argument));
+		result.append(translate(argument).getResult());
 		result.add(")");
-		return result;
+		translation = new Translation(result);
+		return translation;
 	}
 
-	private FastList<String> translateApply(SymbolicExpression expression) {
+	private Translation translateApply(SymbolicExpression expression) {
+		Translation translation;
+		Translation tempTranslation;
+		List<Translation> translations = new ArrayList<Translation>();
+		Boolean involveDivOrModulo =  false;
 		SymbolicExpression function = (SymbolicExpression) expression
 				.argument(0);
 		SymbolicSequence<?> arguments = (SymbolicSequence<?>) expression
@@ -990,108 +1235,267 @@ public class CVCTranslator {
 		boolean first = true;
 		FastList<String> result = new FastList<String>("(");
 
-		result.append(translate(function));
+		result.append(translate(function).getResult());
 		result.add(")(");
 		for (SymbolicExpression arg : arguments) {
 			if (first)
 				first = false;
 			else
 				result.add(", ");
-			result.append(translate(arg));
+			tempTranslation = translate(arg);
+			if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+				translations.add(tempTranslation);
+				involveDivOrModulo = true;
+			}
+			result.append(tempTranslation.getResult());
 		}
 		result.add(")");
-		return result;
+		translation = new Translation(result);
+		if(involveDivOrModulo && isInForallOrExistes){
+			combineTranslations(translation, translations);
+		}
+		return translation;
 	}
 
-	private FastList<String> translateNegative(SymbolicExpression expression) {
+	private Translation translateNegative(SymbolicExpression expression) {
+		Translation translation;
+		Translation tempTranslation;
+		List<Translation> translations = new ArrayList<Translation>();
+		Boolean involveDivOrModulo =  false;
 		FastList<String> result = new FastList<>("-(");
-
-		result.append(translate((SymbolicExpression) expression.argument(0)));
+		
+		tempTranslation = translate((SymbolicExpression) expression.argument(0));
+		if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+			translations.add(tempTranslation);
+			involveDivOrModulo = true;
+		}
+		result.append(tempTranslation.getResult());
 		result.add(")");
-		return result;
+		translation = new Translation(result);
+		if(isInForallOrExistes && involveDivOrModulo){
+			combineTranslations(translation, translations);
+		}
+		return translation;
 	}
 
-	private FastList<String> translateNEQ(SymbolicExpression expression) {
+	private Translation translateNEQ(SymbolicExpression expression) {
+		Translation translation;
 		FastList<String> result = new FastList<>("NOT(");
 
 		result.append(
 				processEquality((SymbolicExpression) expression.argument(0),
-						(SymbolicExpression) expression.argument(1)));
+						(SymbolicExpression) expression.argument(1)).getResult());
 		result.add(")");
-		return result;
+		translation = new Translation(result);
+		return translation;
 	}
 
-	private FastList<String> translateNot(SymbolicExpression expression) {
+	private Translation translateNot(SymbolicExpression expression) {
+		Translation translation;
 		FastList<String> result = new FastList<>("NOT(");
 
-		result.append(translate((SymbolicExpression) expression.argument(0)));
+		result.append(translate((SymbolicExpression) expression.argument(0)).getResult());
 		result.add(")");
-		return result;
+		translation = new Translation(result);
+		return translation;
 	}
 
-	private FastList<String> translatePower(SymbolicExpression expression) {
+	private Translation translatePower(SymbolicExpression expression) {
 		// apparently "^" but not documented
+		Translation translation;
 		SymbolicObject exponent = expression.argument(1);
 		FastList<String> result = new FastList<>("(");
-
-		result.append(translate((SymbolicExpression) expression.argument(0)));
+		Translation tempTranslation;
+		List<Translation> translations = new ArrayList<Translation>();
+		Boolean involveDivOrModulo =  false;
+		
+		tempTranslation = translate((SymbolicExpression) expression.argument(0));
+		if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+			translations.add(tempTranslation);
+			involveDivOrModulo = true;
+		}
+		result.append(tempTranslation.getResult());
 		result.add(")^");
 		if (exponent instanceof IntObject)
 			result.add(exponent.toString());
 		else {
 			result.add("(");
-			result.append(translate((SymbolicExpression) exponent));
+			tempTranslation = translate((SymbolicExpression) exponent);
+			if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+				translations.add(tempTranslation);
+				involveDivOrModulo = true;
+			}
+			result.append(tempTranslation.getResult());
 			result.add(")");
 		}
-		return result;
+		translation = new Translation(result);
+		if(involveDivOrModulo && isInForallOrExistes){
+			combineTranslations(translation, translations);
+		}
+		return translation;
 	}
 
-	private FastList<String> translateCond(SymbolicExpression expression) {
+	private Translation translateCond(SymbolicExpression expression) {
 		// syntax: IF b THEN x ELSE y ENDIF
+		Translation translation;
 		FastList<String> result = new FastList<>("IF (");
-
-		result.append(translate((SymbolicExpression) expression.argument(0)));
+		Translation tempTranslation;
+		List<Translation> translations = new ArrayList<Translation>();
+		Boolean involveDivOrModulo =  false;
+		
+		tempTranslation = translate((SymbolicExpression) expression.argument(0));
+		if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+			translations.add(tempTranslation);
+			involveDivOrModulo = true;
+		}
+		result.append(tempTranslation.getResult());
 		result.add(") THEN (");
-		result.append(translate((SymbolicExpression) expression.argument(1)));
+		tempTranslation = translate((SymbolicExpression) expression.argument(1));
+		if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+			translations.add(tempTranslation);
+			involveDivOrModulo = true;
+		}
+		result.append(translate((SymbolicExpression) expression.argument(1)).getResult());
 		result.add(") ELSE (");
-		result.append(translate((SymbolicExpression) expression.argument(2)));
+		tempTranslation = translate((SymbolicExpression) expression.argument(2));
+		if(isInForallOrExistes && tempTranslation.getIsDivOrModulo()){
+			translations.add(tempTranslation);
+			involveDivOrModulo = true;
+		}
+		result.append(translate((SymbolicExpression) expression.argument(2)).getResult());
 		result.add(") ENDIF");
-		return result;
+		translation = new Translation(result);
+		if(isInForallOrExistes && involveDivOrModulo){
+			combineTranslations(translation, translations);
+		}
+		return translation;
 	}
-
-	// TODO: problem occurs if arg1 or arg2 involves a quantified variable.
-	// The auxiliary constraints need to go inside the current scope:
-	// need to back up to the beginning of the scope
-
-	// when you translate a FORALL:
-	// translation of body should return a pair, second component of which
-	// is the aux. vars and relations.
-	// take the second part and insert it, then insert the first part.
-
-	// now the decls are going into a global cvcDeclarations, but
-	// we need this to be returned instead --- maybe a triple?
-
-	// While we are at it: the reasoner should translate a query of the
-	// form forall x.phi by making x a free variable and making the query
-	// phi.
-
-	// now every translation method should return a structure?
-	// 1. list of decls
-	// 2. list of constraints on those decls
-	// 3. translation of expr
-
-	// what do with 1, 2, and 3 depends on whether you are at
-	// the outermost (global) scope. If you are, then the decls
-	// all get added to the cvcDeclarations, and the constraints get
-	// inserted there as assertions too, and the translation become
-	// cvcTranslation. Otherwise the extras (1 and 2) keep
-	// bubbling up the call stack until they hit a quantifier,
-	// then they get inserted as follows:
-
-	// forall x:T (
-
-	private Pair<FastList<String>, FastList<String>> getIntDivInfo(
-			NumericExpression arg1, NumericExpression arg2) {
+	
+	private Translation getIntDivInfoInsideForallOrExsits(NumericExpression arg1, 
+			NumericExpression arg2, SymbolicOperator operator){
+		Translation translation;
+		FastList<String> quotient;
+		FastList<String> remainder;
+		FastList<String> numerator = translate(arg1).getResult();
+		FastList<String> denominator = translate(arg2).getResult();
+		// numerator-denominator pair:
+		Pair<NumericExpression, NumericExpression> ndpair = new Pair<>(arg1,
+				arg2);
+		// quotient-remainder pair:
+		Pair<FastList<String>, FastList<String>> qrpair = intDivMap.get(ndpair);
+		if (qrpair == null) {
+			quotient = new FastList<>(
+					newCvcAuxVar(new FastList<String>("INT")));
+			remainder = new FastList<>(
+					newCvcAuxVar(new FastList<String>("INT")));
+		}else{
+			quotient = qrpair.left.clone();
+			remainder = qrpair.right.clone();
+		}
+		
+		// numerator = quotient*denominator + remainder
+		FastList<String> constraint1 = new FastList<>("((");
+		constraint1.append(numerator.clone());
+		constraint1.add(") = (");
+	    constraint1.append(quotient.clone());
+		constraint1.add(")*(");
+		constraint1.append(denominator.clone());
+		constraint1.add(") + (");
+		constraint1.append(remainder.clone());
+		constraint1.add("))");
+		
+		/**
+		 * ((sign(numerator) = sign(remainder)) || (reminder = 0))
+		 * (sign(numerator) = sign(remainder)) ==>
+		 * (remainder>0 && (numerator)>0) || (remainder<0 && (numerator)<0)
+		 * 
+		 * (((((remainder)>0) && ((numerator)>0)) || (((remainder)<0) && ((numerator)<0))) || ((reminder) == 0))
+		 * 
+		 * 
+		*/
+		FastList<String> constraint2 = new FastList<>();
+		constraint2.add("(((((");
+		constraint2.append(remainder.clone());
+		constraint2.add(") > 0 ) AND ((");
+		constraint2.append(numerator.clone());
+		constraint2.add(") > 0 )) OR (((");
+		constraint2.append(remainder.clone());
+		constraint2.add(") < 0 ) AND ((");
+		constraint2.append(numerator.clone());
+		constraint2.add(") < 0 ))) OR ((");
+		constraint2.append(remainder.clone());
+		constraint2.add(") = 0 ))");
+		
+		/**
+		 * |reminder| < |denominator| ==>
+		 * 
+		 * ((((reminder) >=0) && ((denominator)>0) && ((denominator)>(reminder))) ||
+	 	 * (((reminder) >=0) && ((denominator)<0) && ((0 - (denominator)) > (reminder))) ||
+	 	 * (((reminder) <=0) && ((denominator)<0) && ((reminder) > (denominator))) ||
+	 	 * (((reminder)<=0) && ((denominator)>0) && ((0 - (denominator)) < (reminder))))
+		 */
+		
+		FastList<String> constraint3 = new FastList<>();
+		constraint3.add("((((");
+		constraint3.append(remainder.clone());
+		constraint3.add(") >= 0) AND ((");
+		constraint3.append(denominator.clone());
+		constraint3.add(") > 0) AND ((");
+		constraint3.append(denominator.clone());
+		constraint3.add(") > (");
+		constraint3.append(remainder.clone());
+		constraint3.add("))) OR (((");
+		constraint3.append(remainder.clone());
+		constraint3.add(") >= 0) AND ((");
+		constraint3.append(denominator.clone());
+		constraint3.add(") < 0) AND ((0 - (");
+		constraint3.append(denominator.clone());
+		constraint3.add(")) > (");
+		constraint3.append(remainder.clone());
+		constraint3.add("))) OR (((");
+		constraint3.append(remainder.clone());
+		constraint3.add(") <= 0) AND ((");
+		constraint3.append(denominator.clone());
+		constraint3.add(") < 0) AND ((");
+		constraint3.append(remainder.clone());
+		constraint3.add(") > (");
+		constraint3.append(denominator.clone());
+		constraint3.add("))) OR (((");
+		constraint3.append(remainder.clone());
+		constraint3.add(") <= 0) AND ((");
+		constraint3.append(denominator.clone());
+		constraint3.add(") > 0) AND (( 0 - (");
+		constraint3.append(denominator.clone());
+		constraint3.add(")) < (");
+		constraint3.append(remainder.clone());
+		constraint3.add("))))");
+		
+		FastList<String> constraints = new FastList<>("(");
+		
+		constraints.append(constraint1);
+		constraints.add(" AND ");
+		constraints.append(constraint2);
+		constraints.add(" AND ");
+		constraints.append(constraint3);
+		constraints.add(")");
+		
+		List<FastList<String>> auxVars = new ArrayList<FastList<String>>();
+		
+		auxVars.add(quotient.clone());
+		auxVars.add(remainder.clone());
+		if(operator == SymbolicOperator.INT_DIVIDE)
+			translation = new Translation(quotient.clone(), true, constraints, auxVars);
+		else if(operator == SymbolicOperator.MODULO)
+			translation = new Translation(remainder.clone(), true, constraints, auxVars);
+		else 
+			translation = new Translation(quotient.clone());
+		
+		return translation;
+	}
+	
+	private Translation getIntDivInfoOutsideForallOrExists(NumericExpression arg1, 
+			NumericExpression arg2, SymbolicOperator operator){
+		Translation translation;
 		// numerator-denominator pair:
 		Pair<NumericExpression, NumericExpression> ndpair = new Pair<>(arg1,
 				arg2);
@@ -1103,8 +1507,8 @@ public class CVCTranslator {
 					newCvcAuxVar(new FastList<String>("INT")));
 			FastList<String> remainder = new FastList<>(
 					newCvcAuxVar(new FastList<String>("INT")));
-			FastList<String> numerator = translate(arg1);
-			FastList<String> denominator = translate(arg2);
+			FastList<String> numerator = translate(arg1).getResult();
+			FastList<String> denominator = translate(arg2).getResult();
 
 			// numerator = quotient*denominator + remainder
 			FastList<String> constraint1 = new FastList<>("(");
@@ -1148,42 +1552,188 @@ public class CVCTranslator {
 			qrpair = new Pair<>(quotient, remainder);
 			intDivMap.put(ndpair, qrpair);
 		}
-		return new Pair<>(qrpair.left.clone(), qrpair.right.clone());
+		
+		if(operator == SymbolicOperator.INT_DIVIDE)
+			translation = new Translation(qrpair.left.clone());
+		else if(operator == SymbolicOperator.MODULO)
+			translation = new Translation(qrpair.right.clone());
+		else 
+			translation = new Translation(qrpair.left.clone());
+		return translation;
+		
 	}
 
-	private FastList<String> translateBinary(String operator,
+	// 
+	// The auxiliary constraints need to go inside the current scope:
+	// need to back up to the beginning of the scope
+
+	// when you translate a FORALL:
+	// translation of body should return a pair, second component of which
+	// is the aux. vars and relations.
+	// take the second part and insert it, then insert the first part.
+
+	// now the decls are going into a global cvcDeclarations, but
+	// we need this to be returned instead --- maybe a triple?
+
+	// While we are at it: the reasoner should translate a query of the
+	// form forall x.phi by making x a free variable and making the query
+	// phi.
+
+	// now every translation method should return a structure?
+	// 1. list of decls
+	// 2. list of constraints on those decls
+	// 3. translation of expr
+
+	// what do with 1, 2, and 3 depends on whether you are at
+	// the outermost (global) scope. If you are, then the decls
+	// all get added to the cvcDeclarations, and the constraints get
+	// inserted there as assertions too, and the translation become
+	// cvcTranslation. Otherwise the extras (1 and 2) keep
+	// bubbling up the call stack until they hit a quantifier,
+	// then they get inserted as follows:
+
+	// forall x:T (
+	// TODO the translation of division and modulo still get too complicated
+	// and need to be improved if there is any.
+	private Translation getIntDivInfo(
+			NumericExpression arg1, NumericExpression arg2, SymbolicOperator operator) {
+		
+		if(isInForallOrExistes){
+			return getIntDivInfoInsideForallOrExsits(arg1, arg2, operator);
+		}else
+			return getIntDivInfoOutsideForallOrExists(arg1, arg2, operator);
+	}
+	
+	/**
+	 * DIVIDE; SUBTRACT
+	 * LESS; LESS_EQ
+	 * 
+	 * @param operator
+	 * @param arg0
+	 * @param arg1
+	 * @return
+	 */
+	private Translation translateBinary(String operator,
 			SymbolicExpression arg0, SymbolicExpression arg1) {
+		Translation translation;
+		Translation t1 = translate(arg0);
+		Translation t2 = translate(arg1);
 		FastList<String> result = new FastList<>("(");
-
-		result.append(translate(arg0));
+		
+		result.append(t1.getResult());
 		result.addAll(") ", operator, " (");
-		result.append(translate(arg1));
+		result.append(t2.getResult());
 		result.add(")");
-		return result;
+		
+		Boolean b1 = t1.getIsDivOrModulo();
+		Boolean b2 = t2.getIsDivOrModulo();
+		
+		if((b1 || b2) && isInForallOrExistes){
+			List<Translation> translations = new ArrayList<Translation>();
+			int translationsNum;
+			
+			if(b1) translations.add(t1);
+			if(b2) translations.add(t2);
+			translationsNum = translations.size();
+			
+			if(operator.equals(" < ") || operator.equals(" <= ")){
+				result = postProcessForSideEffectsOfDivideOrModule(result, translations);
+				translation = new Translation(result);
+			}else{// merge side effects.
+				FastList<String> newConstraint = new FastList<>();
+				List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+				
+				if(translationsNum == 1 ){
+					Translation tempTranslation = translations.get(0);
+					
+					newConstraint = tempTranslation.getAuxConstraints().clone();
+					newAuxVars.addAll(tempTranslation.getAuxVars());
+				}else{
+					Translation tempTranslation1 = translations.get(0);
+					Translation tempTranslation2 = translations.get(1);
+					
+					newAuxVars.addAll(tempTranslation1.getAuxVars());
+					newAuxVars.addAll(tempTranslation2.getAuxVars());
+					newConstraint.add("(");
+					newConstraint.append(tempTranslation1.getAuxConstraints());
+					newConstraint.add(" AND ");
+					newConstraint.append(tempTranslation2.getAuxConstraints());
+					newConstraint.add(")");
+				}
+				translation = new Translation(result, true, newConstraint, newAuxVars);
+			}
+		}else{
+			translation = new Translation(result);
+		}
+		return translation;
 	}
-
-	private FastList<String> translateKeySet(String operator,
+	
+	/**
+	 * MULTIPLY; ADD
+	 * AND; OR
+	 * 
+	 * @param operator
+	 * @param defaultValue
+	 * @param expression
+	 * @return
+	 */
+	private Translation translateKeySet(String operator,
 			String defaultValue, SymbolicExpression expression) {
+		Translation translation;
 		int size = expression.numArguments();
 
 		if (size == 0) {
-			return new FastList<>(defaultValue);
+			return new Translation(new FastList<>(defaultValue));
 		} else if (size == 1) {
 			return translate((SymbolicExpression) expression.argument(0));
 		} else {
+			Boolean divOrModole = false;
+			List<Translation> translations = new ArrayList<>();
 			FastList<String> result = new FastList<>();
-
+			
 			for (int i = 0; i < size; i++) {
 				SymbolicExpression term = (SymbolicExpression) expression
 						.argument(i);
-
+				Translation t = translate(term);
+				
+				if(t.getIsDivOrModulo()){
+					translations.add(t.clone());
+					divOrModole = true;
+				}
 				if (i > 0)
 					result.add(operator);
 				result.add("(");
-				result.append(translate(term));
+				result.append(t.getResult());
 				result.add(")");
 			}
-			return result;
+			if(divOrModole && isInForallOrExistes &&(operator.equals(" + ")
+					|| operator.equals(" * "))){
+				int translationsNum = translations.size();
+				FastList<String> newConstraint = new FastList<>();
+				List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+				
+				if(translationsNum == 1 ){
+					Translation tempTranslation = translations.get(0);
+					
+					newConstraint = tempTranslation.getAuxConstraints().clone();
+					newAuxVars.addAll(tempTranslation.getAuxVars());
+				}else{
+					Translation tempTranslation1 = translations.get(0);
+					Translation tempTranslation2 = translations.get(1);
+					
+					newAuxVars.addAll(tempTranslation1.getAuxVars());
+					newAuxVars.addAll(tempTranslation2.getAuxVars());
+					newConstraint.add("(");
+					newConstraint.append(tempTranslation1.getAuxConstraints());
+					newConstraint.add(" AND ");
+					newConstraint.append(tempTranslation2.getAuxConstraints());
+					newConstraint.add(")");
+				}
+				translation = new Translation(result, true, newConstraint, newAuxVars);
+			}else{
+				translation = new Translation(result);
+			}
+			return translation;
 		}
 	}
 
@@ -1194,10 +1744,10 @@ public class CVCTranslator {
 	 *            a non-null SymbolicExpression
 	 * @return translation to CVC as a fast list of strings
 	 */
-	private FastList<String> translateWork(SymbolicExpression expression)
+	private Translation translateWork(SymbolicExpression expression)
 			throws TheoremProverException {
 		SymbolicOperator operator = expression.operator();
-		FastList<String> result;
+		Translation result;
 
 		switch (operator) {
 		case ADD:
@@ -1247,13 +1797,16 @@ public class CVCTranslator {
 			break;
 		case EXISTS:
 		case FORALL:
+			isInForallOrExistes = true;
 			result = translateQuantifier(expression);
+			isInForallOrExistes = false;
 			break;
 		case INT_DIVIDE:
 			if (simplifyIntDivision) {
 				result = getIntDivInfo(
 						(NumericExpression) expression.argument(0),
-						(NumericExpression) expression.argument(1)).left;
+						(NumericExpression) expression.argument(1),
+						SymbolicOperator.INT_DIVIDE);
 			} else {
 				result = translateBinary(" DIV ",
 						(SymbolicExpression) expression.argument(0),
@@ -1274,10 +1827,12 @@ public class CVCTranslator {
 					(SymbolicExpression) expression.argument(1));
 			break;
 		case MODULO:
-			if (simplifyIntDivision)
+			if (simplifyIntDivision){
 				result = getIntDivInfo(
 						(NumericExpression) expression.argument(0),
-						(NumericExpression) expression.argument(1)).right;
+						(NumericExpression) expression.argument(1),
+						SymbolicOperator.MODULO);
+			}
 			else
 				result = translateBinary(" MOD ",
 						(SymbolicExpression) expression.argument(0),
@@ -1456,15 +2011,15 @@ public class CVCTranslator {
 		return result.clone();
 	}
 
-	private FastList<String> translate(SymbolicExpression expression)
+	private Translation translate(SymbolicExpression expression)
 			throws TheoremProverException {
-		FastList<String> result = expressionMap.get(expression);
-
-		if (result == null) {
-			result = translateWork(expression);
-			this.expressionMap.put(expression, result);
+		Translation res = expressionMap.get(expression);
+		
+		if (res == null) {
+			res = translateWork(expression);
+			this.expressionMap.put(expression, res);
 		}
-		return result.clone();
+		return res.clone();
 	}
 
 	// Exported methods...
