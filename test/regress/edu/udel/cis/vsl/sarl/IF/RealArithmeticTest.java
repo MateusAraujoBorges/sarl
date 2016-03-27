@@ -82,6 +82,7 @@ public class RealArithmeticTest {
 	@Before
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
+//		universe.setShowProverQueries(true);
 		negPointTwoFive = universe.rational(-0.25);
 		zero = universe.rational(0);
 		one = universe.rational(1);
@@ -593,4 +594,5 @@ public class RealArithmeticTest {
 		assertEquals(f, b0);
 		assertEquals(t, b3);
 	}
+	
 }
