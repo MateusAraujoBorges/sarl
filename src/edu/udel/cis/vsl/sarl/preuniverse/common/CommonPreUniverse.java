@@ -2964,9 +2964,10 @@ public class CommonPreUniverse implements PreUniverse {
 
 		int lenVal = lenNum.intValue();
 		int intVal = 0;
+		int maxVal = Integer.MAX_VALUE;
+		// TODO: Set the max limit of intVal based on the length
 
-		for (int i = lenVal - 1, j = 1; i >= 0; i--, j *= 2) {
-			// TODO: Set the max limit of intVal based on the length
+		for (int i = lenVal - 1, j = 1; i >= 0 && j <= maxVal; i--, j *= 2) {
 			NumericExpression index = integer(i);
 			BooleanExpression boolArrayElement = (BooleanExpression) arrayRead(
 					bitvector, index);
