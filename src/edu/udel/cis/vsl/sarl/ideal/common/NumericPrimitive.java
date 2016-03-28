@@ -28,6 +28,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
@@ -42,8 +43,8 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 		implements Primitive {
 
 	/**
-	 * Cache of value returned by {@link #monicFactors(IdealFactory)}.
-	 * Singleton map from this to this, cached.
+	 * Cache of value returned by {@link #monicFactors(IdealFactory)}. Singleton
+	 * map from this to this, cached.
 	 */
 	private PrimitivePower[] monicFactors = null;
 
@@ -149,5 +150,27 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 	@Override
 	public Monomial[] lower(IdealFactory factory) {
 		return termMap(factory);
+	}
+
+	@Override
+	public RationalExpression powerRational(IdealFactory factory,
+			RationalExpression exponent) {
+		if (operator() == SymbolicOperator.POWER) {
+			RationalExpression b = (RationalExpression) argument(0);
+			RationalExpression e = (RationalExpression) argument(1);
+
+			// (b^e)^exponent = b^(e*exponent)
+			return factory.power(b, factory.multiply(e, exponent));
+		}
+		return factory.expression(SymbolicOperator.POWER, type(), this,
+				exponent);
+	}
+
+	@Override
+	public PrimitivePower powerInt(IdealFactory factory, int exponent) {
+		// what if this is a POWER operation? no difference, simplifier
+		// will simplify if needed
+		return factory.primitivePower(this,
+				factory.objectFactory().intObject(exponent));
 	}
 }

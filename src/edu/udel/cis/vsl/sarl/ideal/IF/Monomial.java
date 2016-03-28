@@ -126,8 +126,7 @@ public interface Monomial extends RationalExpression {
 	 * </p>
 	 * 
 	 * @param factory
-	 *            the {@link IdealFactory} responsible for this
-	 *            {@link Monomial}
+	 *            the {@link IdealFactory} responsible for this {@link Monomial}
 	 * @return the monomial order of this {@link Monomial}
 	 */
 	int monomialOrder(IdealFactory factory);
@@ -148,9 +147,11 @@ public interface Monomial extends RationalExpression {
 	 * </p>
 	 * 
 	 * @param factory
-	 *            the {@link IdealFactory} responsible for this
-	 *            {@link Monomial}
+	 *            the {@link IdealFactory} responsible for this {@link Monomial}
 	 * @return a term map with lower monomial order.
 	 */
 	Monomial[] lower(IdealFactory factory);
+
+	@Override
+	Monomial powerInt(IdealFactory factory, int exponent);
 }

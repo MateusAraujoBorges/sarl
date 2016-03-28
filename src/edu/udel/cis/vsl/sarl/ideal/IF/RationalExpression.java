@@ -47,4 +47,45 @@ public interface RationalExpression extends NumericExpression {
 	 * @return the denominator of this rational expression
 	 */
 	Monomial denominator(IdealFactory factory);
+
+	/**
+	 * <p>
+	 * Computes an expression equivalent to raising this expression to the
+	 * <code>exponent</code> power.
+	 * </p>
+	 * 
+	 * <p>
+	 * Preconditions:
+	 * <ul>
+	 * <li>if the monomial constant of the numerator of <code>exponent</code> is
+	 * an integer (including a real integer), it is 1</li>
+	 * <li>if this has integer type then <code>exponent</code> has integer type
+	 * </li>
+	 * </ul>
+	 * </p>
+	 * 
+	 * @param factory
+	 *            the ideal factory responsible for this expression
+	 * @param exponent
+	 *            the power to which this expression should be raised
+	 * @return an expression equivalent to raising this expression to the
+	 *         <code>exponent</code> power
+	 */
+	RationalExpression powerRational(IdealFactory factory,
+			RationalExpression exponent);
+
+	/**
+	 * Computes an expression equivalent to raising this expression to the
+	 * <code>exponent</code> power. In this case the exponent is a concrete
+	 * positive Java int.
+	 * 
+	 * @param factory
+	 *            the ideal factory responsible for this expression
+	 * @param exponent
+	 *            the power to which this expression should be raised, must be
+	 *            positive
+	 * @return an expression equivalent to raising this expression to the
+	 *         <code>exponent</code> power
+	 */
+	RationalExpression powerInt(IdealFactory factory, int exponent);
 }

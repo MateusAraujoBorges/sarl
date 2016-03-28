@@ -18,6 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.IF;
 
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 
@@ -45,5 +46,8 @@ public interface Constant extends Monomial {
 	 * @return <code>value().getNumber()</code>
 	 */
 	Number number();
+
+	@Override
+	Constant powerInt(IdealFactory factory, int exponent);
 
 }

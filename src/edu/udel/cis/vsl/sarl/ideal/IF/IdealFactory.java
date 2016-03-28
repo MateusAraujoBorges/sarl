@@ -21,22 +21,26 @@ package edu.udel.cis.vsl.sarl.ideal.IF;
 import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
+import edu.udel.cis.vsl.sarl.ideal.common.NTMonic;
+import edu.udel.cis.vsl.sarl.ideal.common.NTRationalExpression;
 import edu.udel.cis.vsl.sarl.ideal.common.One;
 import edu.udel.cis.vsl.sarl.util.KeySetFactory;
 
 /**
  * <p>
- * An {@link IdealFactory} provides a few services beyond those guaranteed by
- * an arbitrary {@link NumericExpressionFactory}.
+ * An {@link IdealFactory} provides a few services beyond those guaranteed by an
+ * arbitrary {@link NumericExpressionFactory}.
  * </p>
  * 
  * <p>
@@ -347,7 +351,43 @@ public interface IdealFactory extends NumericExpressionFactory {
 	 */
 	PrimitivePower primitivePower(Primitive primitive, IntObject exponent);
 
+	/**
+	 * Given the exponent in a potential power expression, this method computes
+	 * a concrete positive integer that can be factored out of that exponent to
+	 * be used as a {@link PrimitivePower} exponent. The exponent can be safely
+	 * divided by the integer returned by this method. If this method is given e
+	 * and returns n, then the power expression can be rewritten as a
+	 * {@link PrimitivePower} with primitive POWER(x,e/n) and exponent n.
+	 * 
+	 * @param exponent
+	 *            a non-<code>null</code> rational expression of integer or real
+	 *            type
+	 * @return an concrete positive integer <code>n</code> which can be factored
+	 *         out from <code>exponent</code>
+	 */
+	IntegerNumber getConcreteExponent(RationalExpression exponent);
+
 	// Monics...
+
+	/**
+	 * Returns a (possibly trivial) monic as specified. If the given monic map
+	 * is empty, this returns 1 (an instance of {@link One} of the appropriate
+	 * type). If the monic map has a single entry, this returns the value for
+	 * that entry, which is a {@link PrimitivePower}. Otherwise, returns a
+	 * non-trivial monic (instance of {@link NTMonic}).
+	 * 
+	 * @see #ntMonic(SymbolicType, SymbolicMap)
+	 * 
+	 * @param type
+	 *            either integer or real type
+	 * @param factorSet
+	 *            a monic map with any number of entries; this maps a primitive
+	 *            to a power of that primitive; all keys and values must have
+	 *            type consistent with <code>type</code>
+	 * @return instance of {@link Monic} corresponding to arguments as described
+	 *         above
+	 */
+	Monic monic(SymbolicType type, PrimitivePower[] factorSet);
 
 	/**
 	 * Given a {@link Monic} returns the {@link Monic} obtained by removing some
@@ -448,8 +488,6 @@ public interface IdealFactory extends NumericExpressionFactory {
 	Monomial multiplyConstantMonomial(Constant constant, Monomial monomial);
 
 	// Term maps...
-
-	// DO WE NEED A SEPARATE type for term map????
 
 	/**
 	 * <p>
@@ -575,5 +613,46 @@ public interface IdealFactory extends NumericExpressionFactory {
 	 */
 	Polynomial polynomial(SymbolicType type, Monomial[] terms);
 
-	IntegerNumber getConcreteExponent(RationalExpression exponent);
+	// Rational Expressions...
+
+	/**
+	 * Constructs new instance of {@link NTRationalExpression}. Nothing is
+	 * checked.
+	 * 
+	 * <p>
+	 * Preconditions: numerator is not 0. If real type, denominator has degree
+	 * at least 1 and leading coefficient 1. The numerator and denominator have
+	 * no common factors in their factorizations.
+	 * </p>
+	 * 
+	 * @param numerator
+	 *            the polynomial to use as numerator
+	 * @param denominator
+	 *            the polynomial to use as denominator
+	 * @return rational expression p/q
+	 */
+	RationalExpression ntRationalExpression(Monomial numerator,
+			Monomial denominator);
+
+	// General
+
+	@Override
+	RationalExpression power(NumericExpression arg0, NumericExpression arg1);
+
+	@Override
+	RationalExpression expression(SymbolicOperator operator,
+			SymbolicType numericType, SymbolicObject... arguments);
+
+	@Override
+	RationalExpression add(NumericExpression arg0, NumericExpression arg1);
+
+	@Override
+	RationalExpression subtract(NumericExpression arg0, NumericExpression arg1);
+
+	@Override
+	RationalExpression multiply(NumericExpression arg0, NumericExpression arg1);
+
+	@Override
+	RationalExpression divide(NumericExpression arg0, NumericExpression arg1);
+
 }

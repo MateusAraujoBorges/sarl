@@ -19,6 +19,7 @@
 package edu.udel.cis.vsl.sarl.ideal.common;
 
 import edu.udel.cis.vsl.sarl.IF.number.Number;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
@@ -29,6 +30,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
+import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 
 /**
  * A constant which is not 1.
@@ -124,5 +126,35 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 	@Override
 	public Monomial[] lower(IdealFactory factory) {
 		return termMap(factory);
+	}
+
+	@Override
+	public RationalExpression powerRational(IdealFactory factory,
+			RationalExpression exponent) {
+		return factory.expression(SymbolicOperator.POWER, type(), this,
+				exponent);
+	}
+
+	@Override
+	public Constant powerInt(IdealFactory factory, int n) {
+		Number baseValue = number();
+		SymbolicType type = type();
+		Number result = factory.one(type).number();
+		NumberFactory nf = factory.numberFactory();
+
+		assert n >= 0;
+		if (n > 0) {
+			while (true) {
+				if (n % 2 != 0) {
+					result = nf.multiply(result, baseValue);
+					n -= 1;
+					if (n == 0)
+						break;
+				}
+				baseValue = nf.multiply(baseValue, baseValue);
+				n /= 2;
+			}
+		}
+		return factory.constant(result);
 	}
 }

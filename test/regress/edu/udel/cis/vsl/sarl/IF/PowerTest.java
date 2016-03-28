@@ -3,6 +3,7 @@ package edu.udel.cis.vsl.sarl.IF;
 import static org.junit.Assert.assertEquals;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -44,10 +45,14 @@ public class PowerTest {
 		}
 	}
 
+	private NumericExpression sqrt(NumericExpression expr) {
+		return universe.power(expr, universe.rational(1, 2));
+	}
+
 	@Test
 	public void sqaureRootOfSquare() {
 		NumericExpression x2 = universe.power(x, 2);
-		NumericExpression x3 = universe.power(x2, universe.rational(1, 2));
+		NumericExpression x3 = sqrt(x2);
 
 		debug("x2 = " + x2);
 		debug("x2^(1/2) = " + x3);
@@ -91,7 +96,7 @@ public class PowerTest {
 
 	@Test
 	public void simpProd1() {
-		NumericExpression sqrtx = universe.power(x, universe.rational(1, 2));
+		NumericExpression sqrtx = sqrt(x);
 		NumericExpression x32 = universe.multiply(x, sqrtx);
 		NumericExpression x32s = reasoner.simplify(x32);
 		NumericExpression expected = universe.power(x, universe.rational(3, 2));
@@ -105,11 +110,37 @@ public class PowerTest {
 
 	@Test
 	public void sqrtxsq() {
-		NumericExpression sqrtx = universe.power(x, universe.rational(1, 2));
+		NumericExpression sqrtx = sqrt(x);
 		NumericExpression y = universe.multiply(sqrtx, sqrtx);
 		NumericExpression ys = reasoner.simplify(y);
 
 		assertEquals(x, ys);
+	}
+
+	@Test
+	public void sqrtx_y_sqrtx() {
+		NumericExpression sqrtx = sqrt(x);
+		NumericExpression w = universe.multiply(Arrays.asList(sqrtx, y, sqrtx));
+
+		debug("w = " + w);
+
+		NumericExpression ws = reasoner.simplify(w);
+
+		debug("ws = " + ws);
+		assertEquals(universe.multiply(x, y), ws);
+	}
+
+	@Test
+	public void x_div_sqrtx() {
+		NumericExpression sqrtx = sqrt(x);
+		NumericExpression w = universe.divide(x, sqrtx);
+
+		debug("w = " + w);
+
+		NumericExpression ws = reasoner.simplify(w);
+
+		debug("ws = " + ws);
+		assertEquals(sqrtx, ws);
 	}
 
 }

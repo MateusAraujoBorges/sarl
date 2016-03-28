@@ -404,58 +404,7 @@ public class CommonIdealFactory implements IdealFactory {
 				(IntegerNumber) c2.number()));
 	}
 
-	/**
-	 * Raises a constant to the <code>n</code>th power, where <code>n</code> is
-	 * a positive, concrete int.
-	 * 
-	 * @param base
-	 *            any non-<code>null</code> {@link Constant}
-	 * @param n
-	 *            positive int
-	 * @return <code>base</code> raised to <code>n</code>-th power
-	 */
-	private Constant powerConstantInt(Constant base, int n) {
-		Number baseValue = base.number();
-		SymbolicType type = base.type();
-		Number result = one(type).number();
-
-		assert n >= 0;
-		if (n > 0) {
-			while (true) {
-				if (n % 2 != 0) {
-					result = numberFactory.multiply(result, baseValue);
-					n -= 1;
-					if (n == 0)
-						break;
-				}
-				baseValue = numberFactory.multiply(baseValue, baseValue);
-				n /= 2;
-			}
-		}
-		return constant(result);
-	}
-
-	private RationalExpression powerConstantRat(Constant base,
-			RationalExpression exponent) {
-		return expression(SymbolicOperator.POWER, base.type(), base, exponent);
-	}
-
 	// Primitives...
-
-	private RationalExpression powerPrimitiveRat(Primitive base,
-			RationalExpression exponent) {
-		if (base.operator() == SymbolicOperator.POWER) {
-			NumericExpression b = (NumericExpression) base.argument(0);
-			NumericExpression e = (NumericExpression) base.argument(1);
-
-			// (b^e)^exponent = b^(e*exponent)
-			return power(b, multiply(e, exponent));
-		} else {
-			return expression(SymbolicOperator.POWER, base.type(), base,
-					exponent);
-		}
-
-	}
 
 	// Primitive Powers...
 
@@ -475,38 +424,6 @@ public class CommonIdealFactory implements IdealFactory {
 		return new NTPrimitivePower(primitive, exponent);
 	}
 
-	private PrimitivePower powerPPInt(PrimitivePower base, int exponent) {
-		return primitivePower(base.primitive(this), objectFactory.intObject(
-				base.primitivePowerExponent(this).getInt() * exponent));
-	}
-
-	/**
-	 * Computes base raised to exponent power.
-	 * 
-	 * Preconditions: base is not a Primitive; if the monomial constant of the
-	 * numerator of <code>exponent</code> is an integer, it is 1.
-	 * 
-	 * @param base
-	 * @param exponent
-	 * @return
-	 */
-	private RationalExpression powerPPRat(PrimitivePower base,
-			RationalExpression exponent) {
-		IntegerNumber n = numberFactory
-				.integer(base.primitivePowerExponent(this).getInt());
-		RationalExpression nRat;
-
-		if (exponent.type().isInteger()) {
-			nRat = constant(n);
-		} else {
-			nRat = constant(numberFactory.integerToRational(n));
-		}
-
-		NumericExpression newExponent = multiply(nRat, exponent);
-
-		return power(base.primitive(this), newExponent);
-	}
-
 	// Monics...
 
 	/**
@@ -523,34 +440,6 @@ public class CommonIdealFactory implements IdealFactory {
 	 */
 	private NTMonic ntMonic(SymbolicType type, PrimitivePower[] factorSet) {
 		return new NTMonic(type, factorSet);
-	}
-
-	/**
-	 * Returns a (possibly trivial) monic as specified. If the given monic map
-	 * is empty, this returns 1 (an instance of {@link One} of the appropriate
-	 * type). If the monic map has a single entry, this returns the value for
-	 * that entry, which is a {@link PrimitivePower}. Otherwise, returns a
-	 * non-trivial monic (instance of {@link NTMonic}).
-	 * 
-	 * @see #ntMonic(SymbolicType, SymbolicMap)
-	 * 
-	 * @param type
-	 *            either integer or real type
-	 * @param factorSet
-	 *            a monic map with any number of entries; this maps a primitive
-	 *            to a power of that primitive; all keys and values must have
-	 *            type consistent with <code>type</code>
-	 * @return instance of {@link Monic} corresponding to arguments as described
-	 *         above
-	 */
-	private Monic monic(SymbolicType type, PrimitivePower[] factorSet) {
-		int n = factorSet.length;
-
-		if (n == 0)
-			return one(type);
-		if (n == 1)
-			return factorSet[0];
-		return ntMonic(type, factorSet);
 	}
 
 	/**
@@ -698,24 +587,6 @@ public class CommonIdealFactory implements IdealFactory {
 		return monic(type, common);
 	}
 
-	/**
-	 * 
-	 * Preconditions: base is not a PrimitivePower; if the monomial constant of
-	 * the numerator of <code>exponent</code> is an integer, it is 1.
-	 * 
-	 * @param base
-	 * @param exponent
-	 * @return
-	 */
-	RationalExpression powerMonicRat(Monic base, RationalExpression exponent) {
-		RationalExpression result = one(base.type());
-
-		for (PrimitivePower pp : base.monicFactors(this)) {
-			result = multiplyRational(result, power(pp, exponent));
-		}
-		return result;
-	}
-
 	// Monomials...
 
 	/**
@@ -770,10 +641,6 @@ public class CommonIdealFactory implements IdealFactory {
 				monomial(m1.monomialConstant(this), monicTriple[1]),
 				monomial(m2.monomialConstant(this), monicTriple[2]) };
 	}
-
-	// following is how to do integer division and modulus operations
-	// on monomials. no need to factor now that we are dealing
-	// with monomials instead of polynomials.
 
 	/**
 	 * Given two non-zero {@link Monomial}s m1 and m2 of integer type, factor
@@ -1143,27 +1010,6 @@ public class CommonIdealFactory implements IdealFactory {
 		return isLEQ0orGEQ0(monomial, false);
 	}
 
-	@Override
-	public BooleanExpression isZero(Monomial monomial) {
-		// X1^n1...Xn^nr =0 iff X1=0 || ... || Xn=0
-		Number number = extractNumber(monomial);
-
-		if (number != null)
-			return number.isZero() ? trueExpr : falseExpr;
-
-		SymbolicType type = monomial.type();
-		Constant zero = zero(type);
-		Monic monic = monomial.monic(this);
-		BooleanExpression result = falseExpr;
-
-		for (Primitive p : monicFactory.getKeys(monic.monicFactors(this))) {
-			// consider expanding p
-			result = booleanFactory.or(result, booleanFactory
-					.booleanExpression(SymbolicOperator.EQUALS, zero, p));
-		}
-		return result;
-	}
-
 	private BooleanExpression isNonZero(Monomial monomial) {
 		// X1^n1...Xn^nr !=0 iff X1!=0 && ... && Xn!=0
 		Number number = extractNumber(monomial);
@@ -1222,11 +1068,6 @@ public class CommonIdealFactory implements IdealFactory {
 		return booleanFactory.and(result, isNegative(p2));
 	}
 
-	private Monomial powerMonomialInt(Monomial base, int exponent) {
-		return monomial(powerConstantInt(base.monomialConstant(this), exponent),
-				power(base.monic(this), exponent));
-	}
-
 	private Monomial addNoCommon(Monomial m1, Monomial m2) {
 		Monomial[] t1 = m1.termMap(this), t2 = m2.termMap(this),
 				t = addTermMaps(t1, t2);
@@ -1235,22 +1076,6 @@ public class CommonIdealFactory implements IdealFactory {
 			return zero(m1.type());
 		else
 			return factorTermMap(t);
-	}
-
-	/**
-	 * 
-	 * Preconditions: base is not a Monic or Constant; if the monomial constant
-	 * of the numerator of <code>exponent</code> is an integer, it is 1.
-	 * 
-	 * @param base
-	 * @param exponent
-	 * @return
-	 */
-	private RationalExpression powerMonomialRat(Monomial base,
-			RationalExpression exponent) {
-		return multiplyRational(
-				powerConstantRat(base.monomialConstant(this), exponent),
-				power(base.monic(this), exponent));
 	}
 
 	// Term maps...
@@ -1471,27 +1296,6 @@ public class CommonIdealFactory implements IdealFactory {
 	// Rational expressions...
 
 	/**
-	 * Constructs new instance of {@link NTRationalExpression}. Nothing is
-	 * checked.
-	 * 
-	 * <p>
-	 * Preconditions: numerator is not 0. If real type, denominator has degree
-	 * at least 1 and leading coefficient 1. The numerator and denominator have
-	 * no common factors in their factorizations.
-	 * </p>
-	 * 
-	 * @param numerator
-	 *            the polynomial to use as numerator
-	 * @param denominator
-	 *            the polynomial to use as denominator
-	 * @return rational expression p/q
-	 */
-	private NTRationalExpression ntRationalExpression(Monomial numerator,
-			Monomial denominator) {
-		return new NTRationalExpression(numerator, denominator);
-	}
-
-	/**
 	 * <p>
 	 * Adds two rational expressions. The factorizations are used so that in the
 	 * resulting rational expression, the numerator and denominator have not
@@ -1659,36 +1463,6 @@ public class CommonIdealFactory implements IdealFactory {
 				rational.denominator(this));
 	}
 
-	/**
-	 * Computes base raised to exponent power.
-	 * 
-	 * Preconditions: if the monomial constant of the numerator of
-	 * <code>exponent</code> is an integer, it is 1.
-	 * 
-	 * Consider making this a method in the individual classes.
-	 * 
-	 * @param base
-	 * @param exponent
-	 * @return
-	 */
-	private RationalExpression powerRatRat(RationalExpression base,
-			RationalExpression exponent) {
-		if (base instanceof Constant)
-			return powerConstantRat((Constant) base, exponent);
-		if (base instanceof Primitive)
-			return powerPrimitiveRat((Primitive) base, exponent);
-		if (base instanceof PrimitivePower)
-			return powerPPRat((PrimitivePower) base, exponent);
-		if (base instanceof Monic)
-			return powerMonicRat((Monic) base, exponent);
-		if (base instanceof Monomial)
-			return powerMonomialRat((Monomial) base, exponent);
-
-		Monomial num = base.numerator(this), den = base.denominator(this);
-
-		return divide(power(num, exponent), power(den, exponent));
-	}
-
 	// General numeric expressions...
 
 	/**
@@ -1742,19 +1516,6 @@ public class CommonIdealFactory implements IdealFactory {
 		return result;
 	}
 
-	private RationalExpression powerNumericInt(NumericExpression base,
-			int exp) {
-		if (base instanceof Monomial)
-			return powerMonomialInt((Monomial) base, exp);
-		else {
-			RationalExpression rat = (RationalExpression) base;
-			Monomial num = rat.numerator(this), den = rat.denominator(this);
-
-			return divideRealMonomials(powerMonomialInt(num, exp),
-					powerMonomialInt(den, exp));
-		}
-	}
-
 	/**
 	 * Computes result of raising <code>base</code> to the <code>exponent</code>
 	 * power.
@@ -1770,9 +1531,55 @@ public class CommonIdealFactory implements IdealFactory {
 			IntegerNumber exponent) {
 		// nothing can be done if exponent is larger than max int because
 		// the canonical form uses Java ints for exponents...
-		int exp = exponent.intValue();
+		return ((RationalExpression) base).powerInt(this, exponent.intValue());
+	}
 
-		return powerNumericInt(base, exp);
+	/**
+	 * <p>
+	 * Computes power when exponent is not concrete or not integral.
+	 * </p>
+	 * 
+	 * <p>
+	 * Preconditions: <code>exponent</code> is not a concrete integer.
+	 * <code>base</code> is not 0 or 1.
+	 * </p>
+	 *
+	 * @param base
+	 *            the base is the power operation
+	 * @param exponent
+	 *            the exponent in the power operation
+	 * @return expression equivalent to raising <code>base</code> to the
+	 *         <code>exponent</code> power
+	 */
+	private RationalExpression powerGeneral(RationalExpression base,
+			RationalExpression exponent) {
+		IntegerNumber c1 = getConcreteExponent(exponent);
+
+		if (c1.isOne())
+			return base.powerRational(this, exponent);
+
+		// now c1 is not 1. It might be -1.
+
+		RationalExpression newExponent = divide(exponent,
+				constant(exponent.type().isInteger() ? c1
+						: numberFactory.integerToRational(c1)));
+		RationalExpression result = base.powerRational(this, newExponent);
+		boolean invert;
+
+		if (c1.signum() < 0) {
+			c1 = numberFactory.negate(c1);
+			invert = true;
+		} else {
+			invert = false;
+		}
+
+		// now c1 is a positive integer, maybe 1
+
+		if (!c1.isOne())
+			result = powerNumericInteger(result, c1);
+		if (invert)
+			result = invert(result);
+		return result;
 	}
 
 	/**
@@ -1798,8 +1605,6 @@ public class CommonIdealFactory implements IdealFactory {
 			return numericExpression;
 
 		SymbolicOperator operator = numericExpression.operator();
-		// SymbolicObject arg0 = numericExpression.argument(0);
-		// SymbolicObjectKind kind0 = arg0.symbolicObjectKind();
 
 		switch (operator) {
 		case ADD:
@@ -1951,7 +1756,28 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	@Override
-	public NumericExpression add(NumericExpression arg0,
+	public BooleanExpression isZero(Monomial monomial) {
+		// X1^n1...Xn^nr =0 iff X1=0 || ... || Xn=0
+		Number number = extractNumber(monomial);
+
+		if (number != null)
+			return number.isZero() ? trueExpr : falseExpr;
+
+		SymbolicType type = monomial.type();
+		Constant zero = zero(type);
+		Monic monic = monomial.monic(this);
+		BooleanExpression result = falseExpr;
+
+		for (Primitive p : monicFactory.getKeys(monic.monicFactors(this))) {
+			// consider expanding p
+			result = booleanFactory.or(result, booleanFactory
+					.booleanExpression(SymbolicOperator.EQUALS, zero, p));
+		}
+		return result;
+	}
+
+	@Override
+	public RationalExpression add(NumericExpression arg0,
 			NumericExpression arg1) {
 		if (arg0 instanceof Constant && arg1 instanceof Constant)
 			return add((Constant) arg0, (Constant) arg1);
@@ -1963,13 +1789,13 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	@Override
-	public NumericExpression subtract(NumericExpression arg0,
+	public RationalExpression subtract(NumericExpression arg0,
 			NumericExpression arg1) {
 		return add(arg0, minus(arg1));
 	}
 
 	@Override
-	public NumericExpression multiply(NumericExpression arg0,
+	public RationalExpression multiply(NumericExpression arg0,
 			NumericExpression arg1) {
 		if (arg0 instanceof Constant && arg1 instanceof Constant)
 			return multiplyConstants((Constant) arg0, (Constant) arg1);
@@ -2015,14 +1841,12 @@ public class CommonIdealFactory implements IdealFactory {
 	public NumericExpression power(NumericExpression base, IntObject exponent) {
 		int n = exponent.getInt();
 
-		if (base instanceof Monomial)
-			return powerMonomialInt((Monomial) base, n);
-
-		Monomial num = ((RationalExpression) base).numerator(this);
-		Monomial den = ((RationalExpression) base).denominator(this);
-
-		return ntRationalExpression(powerMonomialInt(num, n),
-				powerMonomialInt(den, n));
+		assert n >= 0;
+		if (n == 0)
+			return one(base.type());
+		if (n == 1)
+			return base;
+		return ((RationalExpression) base).powerInt(this, n);
 	}
 
 	@Override
@@ -2037,58 +1861,6 @@ public class CommonIdealFactory implements IdealFactory {
 		}
 	}
 
-	/**
-	 * Power when exponent is not concrete or not integral.
-	 * 
-	 * Preconditions: <code>exponent</code> is not a concrete integer.
-	 * <code>base</code> is not 0 or 1.
-	 *
-	 * @param base
-	 * @param exponent
-	 * @return
-	 */
-	private RationalExpression powerGeneral(RationalExpression base,
-			RationalExpression exponent) {
-		// Monomial num = exponent.numerator(this);
-		// Number c = num.monomialConstant(this).number();
-		// IntegerNumber c1 = c instanceof IntegerNumber ? (IntegerNumber) c
-		// : numberFactory.numerator((RationalNumber) c);
-		IntegerNumber c1 = getConcreteExponent(exponent);
-
-		if (c1.isOne())
-			return powerRatRat(base, exponent);
-
-		// now c1 is not 1. It might be -1.
-
-		RationalExpression newExponent = divide(exponent,
-				constant(exponent.type().isInteger() ? c1
-						: numberFactory.integerToRational(c1)));
-		RationalExpression result = powerRatRat(base, newExponent);
-		boolean invert;
-
-		if (c1.signum() < 0) {
-			c1 = numberFactory.negate(c1);
-			invert = true;
-		} else {
-			invert = false;
-		}
-
-		// now c1 is a positive integer, maybe 1
-
-		if (!c1.isOne())
-			result = powerNumericInteger(result, c1);
-		if (invert)
-			result = invert(result);
-		return result;
-	}
-
-	/**
-	 * Raises base to exponent power, where exponent may be any kind of number.
-	 * Handles special case where exponent is a concrete integer number.
-	 * 
-	 * TODO: (a^b)^c=a^(bc). (a^b)(a^c)=a^(b+c)
-	 * 
-	 */
 	@Override
 	public RationalExpression power(NumericExpression base,
 			NumericExpression exponent) {
@@ -2296,6 +2068,17 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public One one(SymbolicType type) {
 		return type.isInteger() ? oneInt : oneReal;
+	}
+
+	@Override
+	public Monic monic(SymbolicType type, PrimitivePower[] factorSet) {
+		int n = factorSet.length;
+	
+		if (n == 0)
+			return one(type);
+		if (n == 1)
+			return factorSet[0];
+		return ntMonic(type, factorSet);
 	}
 
 	@Override
@@ -2517,17 +2300,6 @@ public class CommonIdealFactory implements IdealFactory {
 			return oneTermMapReal;
 	}
 
-	private Monic power(Monic base, int exponent) {
-		PrimitivePower[] factors = base.monicFactors(this);
-		int n = factors.length;
-		PrimitivePower[] newFactors = new PrimitivePower[n];
-
-		for (int i = 0; i < n; i++) {
-			newFactors[i] = powerPPInt(factors[i], exponent);
-		}
-		return monic(base.type(), newFactors);
-	}
-
 	@Override
 	public Monomial[] powerTermMap(SymbolicType type, Monomial[] map,
 			IntObject exponent) {
@@ -2579,6 +2351,14 @@ public class CommonIdealFactory implements IdealFactory {
 			}
 		}
 		return monic(monic.type(), newFactors);
+	}
+
+	// Rational expressions...
+	
+	@Override
+	public NTRationalExpression ntRationalExpression(Monomial numerator,
+			Monomial denominator) {
+		return new NTRationalExpression(numerator, denominator);
 	}
 
 	@Override

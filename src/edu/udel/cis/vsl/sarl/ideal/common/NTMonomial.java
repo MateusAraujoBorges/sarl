@@ -26,6 +26,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
+import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
@@ -47,11 +48,6 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	 * Cache value returned by {@link #termMap(IdealFactory)}.
 	 */
 	private Monomial[] termMap = null;
-
-	// /**
-	// * Cache value returned by {@link #lower(Ideal2Factory)}.
-	// */
-	// private SymbolicMap<Monic, Monomial> lowering = null;
 
 	/**
 	 * Constructs new {@link NTMonomial} using given <code>constant</code> and
@@ -176,7 +172,6 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 
 	@Override
 	public Monomial[] lower(IdealFactory factory) {
-		// if (lowering == null) {
 		Monomial[] lowering;
 		int order = monomialOrder(factory);
 		Monic monic = this.monic();
@@ -190,7 +185,21 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 		}
 		if (isCanonic())
 			factory.objectFactory().canonize(lowering);
-		// }
 		return lowering;
 	}
+
+	@Override
+	public RationalExpression powerRational(IdealFactory factory,
+			RationalExpression exponent) {
+		return factory.multiply(
+				monomialConstant().powerRational(factory, exponent),
+				monic().powerRational(factory, exponent));
+	}
+
+	@Override
+	public Monomial powerInt(IdealFactory factory, int exponent) {
+		return factory.monomial(monomialConstant().powerInt(factory, exponent),
+				monic().powerInt(factory, exponent));
+	}
+
 }

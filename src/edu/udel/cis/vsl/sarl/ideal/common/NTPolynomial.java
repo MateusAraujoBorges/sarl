@@ -32,6 +32,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
@@ -78,14 +79,9 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	 */
 	private Monomial[] expansion = null;
 
-	// /**
-	// * Cached value returned by {@link #lower(Ideal2Factory)}.
-	// */
-	// private SymbolicMap<Monic, Monomial> lowering = null;
-
 	/**
-	 * Cached value returned by {@link #monicFactors(IdealFactory)}: a
-	 * singleton map from this to this.
+	 * Cached value returned by {@link #monicFactors(IdealFactory)}: a singleton
+	 * map from this to this.
 	 */
 	private PrimitivePower[] monicFactors = null;
 
@@ -94,11 +90,6 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	 * -1 means this has not yet been computed. 0 means false. 1 means true.
 	 */
 	byte hasNTE = -1;
-
-	// /**
-	// * Cached result of {@link #monomialOrder(Ideal2Factory)}.
-	// */
-	// private int monomialOrder = -1;
 
 	/**
 	 * <p>
@@ -289,7 +280,6 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 
 	@Override
 	public int monomialOrder(IdealFactory factory) {
-		// if (monomialOrder < 0) {
 		int monomialOrder = 0;
 		for (Monomial monomial : arguments) {
 			int mo = monomial.monomialOrder(factory);
@@ -298,13 +288,11 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 				monomialOrder = mo;
 		}
 		monomialOrder++;
-		// }
 		return monomialOrder;
 	}
 
 	@Override
 	public Monomial[] lower(IdealFactory factory) {
-		// if (lowering == null) {
 		Monomial[] lowering = null;
 		int order = monomialOrder(factory);
 		Monomial[] termMap = termMap();
@@ -320,7 +308,19 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 		} else {
 			lowering = termMap;
 		}
-		// }
 		return lowering;
+	}
+
+	@Override
+	public RationalExpression powerRational(IdealFactory factory,
+			RationalExpression exponent) {
+		return factory.expression(SymbolicOperator.POWER, type(), this,
+				exponent);
+	}
+
+	@Override
+	public PrimitivePower powerInt(IdealFactory factory, int exponent) {
+		return factory.primitivePower(this,
+				factory.objectFactory().intObject(exponent));
 	}
 }

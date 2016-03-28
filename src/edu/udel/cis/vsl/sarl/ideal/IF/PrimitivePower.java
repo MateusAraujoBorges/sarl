@@ -50,4 +50,7 @@ public interface PrimitivePower extends Monic {
 	 */
 	IntObject primitivePowerExponent(IdealFactory factory);
 
+	@Override
+	PrimitivePower powerInt(IdealFactory factory, int exponent);
+
 }

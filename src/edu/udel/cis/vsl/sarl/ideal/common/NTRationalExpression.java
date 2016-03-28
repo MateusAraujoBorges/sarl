@@ -86,4 +86,19 @@ public class NTRationalExpression extends HomogeneousExpression<Monomial>
 	public Monomial denominator() {
 		return argument(1);
 	}
+
+	@Override
+	public RationalExpression powerRational(IdealFactory factory,
+			RationalExpression exponent) {
+		Monomial num = argument(0), den = argument(1);
+
+		return factory.divide(num.powerRational(factory, exponent),
+				den.powerRational(factory, exponent));
+	}
+
+	@Override
+	public RationalExpression powerInt(IdealFactory factory, int n) {
+		return factory.ntRationalExpression(numerator().powerInt(factory, n),
+				denominator().powerInt(factory, n));
+	}
 }

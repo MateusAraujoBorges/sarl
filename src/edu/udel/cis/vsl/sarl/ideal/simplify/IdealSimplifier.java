@@ -900,53 +900,94 @@ public class IdealSimplifier extends CommonSimplifier {
 	// * ................. Simplification Routines................... *
 	// ****************************************************************
 
-	private Monic simplifyPowers(Monic monic) {
+	/**
+	 * Build up entries in power map from the monic factors.
+	 * 
+	 * @param powerMap
+	 *            map from the primitives to the exponent assigned to that
+	 *            primitive in the final result
+	 * @param positive
+	 *            if true, exponents should be added to the entries in powerMap,
+	 *            otherwise they should be subtracted from entries
+	 * @param monic
+	 * 
+	 * @return true iff change occurred
+	 */
+	private boolean simplifyPowers(Map<Primitive, RationalExpression> powerMap,
+			boolean positive, Monic monic) {
 		IdealFactory idf = info.idealFactory;
 		PrimitivePower[] factors = monic.monicFactors(idf);
 		boolean isInteger = monic.type().isInteger();
-		Map<Primitive, NumericExpression> powerMap = new HashMap<>();
 		boolean change = false;
 		NumberFactory nf = info.numberFactory;
 
 		for (PrimitivePower pp : factors) {
-			Primitive p = pp.primitive(idf);
-			int n = pp.primitivePowerExponent(idf).getInt();
-			NumericExpression e = idf.constant(isInteger ? nf.integer(n)
-					: nf.integerToRational(nf.integer(n)));
-			NumericExpression exp;
+			Primitive primitive = pp.primitive(idf);
+			int outerExponent = pp.primitivePowerExponent(idf).getInt();
+			IntegerNumber signedOuterExponent = nf
+					.integer(positive ? outerExponent : -outerExponent);
+			RationalExpression realSignedOuterExponent = idf
+					.constant(isInteger ? signedOuterExponent
+							: nf.integerToRational(signedOuterExponent));
+			RationalExpression newExponent;
 			Primitive base;
 
-			if (p.operator() == SymbolicOperator.POWER) {
-				base = (Primitive) p.argument(0);
-				exp = idf.multiply(e, (NumericExpression) p.argument(1));
-				change = change || n != idf
-						.getConcreteExponent((RationalExpression) exp)
-						.intValue();
+			if (primitive.operator() == SymbolicOperator.POWER) {
+				base = (Primitive) primitive.argument(0);
+				newExponent = idf.multiply(realSignedOuterExponent,
+						(RationalExpression) primitive.argument(1));
+				change = change || outerExponent != idf
+						.getConcreteExponent(newExponent).intValue();
 			} else {
-				base = p;
-				exp = e;
+				base = primitive;
+				newExponent = realSignedOuterExponent;
 			}
 
-			NumericExpression oldExp = powerMap.get(base);
+			NumericExpression oldExponent = powerMap.get(base);
 
-			if (oldExp == null) {
-				powerMap.put(base, exp);
+			if (oldExponent == null) {
+				powerMap.put(base, newExponent);
 			} else {
-				powerMap.put(base, idf.add(oldExp, exp));
+				powerMap.put(base, idf.add(oldExponent, newExponent));
 				change = true;
 			}
 		}
-		if (change) {
-			Monic result = (Monic) idf.one(monic.type());
+		return change;
+	}
 
-			for (Entry<Primitive, NumericExpression> entry : powerMap
+	/**
+	 * Simplifies any {@link SymbolicOperator#POWER} operations occurring in a
+	 * rational expression.
+	 * 
+	 * @param rational
+	 *            a rational expression
+	 * @return equivalent rational expression in which power operations that can
+	 *         be combined are combined or simplified
+	 */
+	private RationalExpression simplifyPowersRational(
+			RationalExpression rational) {
+		IdealFactory idf = info.idealFactory;
+		Monomial numerator = rational.numerator(idf),
+				denominator = rational.denominator(idf);
+		Monic m1 = numerator.monic(idf), m2 = denominator.monic(idf);
+		Map<Primitive, RationalExpression> powerMap = new HashMap<>();
+		boolean change1 = simplifyPowers(powerMap, true, m1);
+		boolean change2 = simplifyPowers(powerMap, false, m2);
+
+		if (change1 || change2) {
+			RationalExpression result = idf.one(rational.type());
+
+			for (Entry<Primitive, RationalExpression> entry : powerMap
 					.entrySet()) {
-				result = (Monic) idf.multiply(result,
+				result = idf.multiply(result,
 						idf.power(entry.getKey(), entry.getValue()));
 			}
+			result = idf.divide(
+					idf.multiply(result, numerator.monomialConstant(idf)),
+					denominator.monomialConstant(idf));
 			return result;
 		}
-		return monic;
+		return rational;
 	}
 
 	/**
@@ -969,14 +1010,7 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		if (constant != null)
 			return info.idealFactory.constant(constant);
-
-		// simplify powers:
-		Monomial result = simplifyPowers(monic);
-
-		if (result != monic)
-			return (Monomial) apply(result);
-		result = (Monomial) super.simplifyGenericExpression(monic);
-		return result;
+		return (Monomial) super.simplifyGenericExpression(monic);
 	}
 
 	@SuppressWarnings("unused")
@@ -1110,16 +1144,8 @@ public class IdealSimplifier extends CommonSimplifier {
 
 			Monomial result = simplified ? id.addMonomials(terms) : poly;
 
-			// TODO: can't decide whether to expand or not.
+			// can't decide whether to expand or not.
 			// For now, only expanding for "=0"...
-
-			// if (result.hasNontrivialExpansion(id)) {
-			// SymbolicMap<Monic, Monomial> t = result.expand(id);
-			//
-			// result = t.isEmpty() ? id.zero(result.type())
-			// : id.factorTermMap(t);
-			// }
-
 			if (result == poly)
 				return result;
 			if (!(result instanceof Polynomial))
@@ -1756,30 +1782,6 @@ public class IdealSimplifier extends CommonSimplifier {
 			if (rightSign < 0 || (rightSign == 0 && interval.strictUpper()))
 				return info.falseExpr;
 		}
-
-		// if (poly.monomialOrder(id) >= 2) {
-		//
-		// if (debug) {
-		// out.println("Lowering polynomial of order "
-		// + poly.monomialOrder(id));
-		// out.flush();
-		// }
-		//
-		// SymbolicMap<Monic, Monomial> termMap = poly.lower(id);
-		//
-		// if (debug) {
-		// out.println("Lowering complete");
-		// out.flush();
-		// }
-		//
-		// if (termMap.isEmpty())
-		// return info.trueExpr;
-		//
-		// BooleanExpression result = (BooleanExpression) apply(
-		// id.isZero(id.factorTermMap(termMap)));
-		//
-		// return result;
-		// }
 		if (poly.hasNontrivialExpansion(id)) {
 			Monomial[] termMap = poly.expand(id);
 
@@ -1794,6 +1796,32 @@ public class IdealSimplifier extends CommonSimplifier {
 				return result;
 		}
 		return null;
+	}
+
+	private RationalExpression simplifyRationalExpression(
+			RationalExpression expression) {
+
+		if (expression instanceof Constant) // optimization
+			return expression;
+
+		RationalExpression result1;
+
+		if (expression instanceof Polynomial)
+			result1 = simplifyPolynomial((Polynomial) expression);
+		else if (expression instanceof Monic)
+			result1 = simplifyMonic((Monic) expression);
+		else
+			result1 = (RationalExpression) simplifyGenericExpression(
+					expression);
+
+		if (result1 instanceof Primitive || result1 instanceof Constant)
+			return result1;
+
+		RationalExpression result2 = simplifyPowersRational(result1);
+
+		if (result2 == result1)
+			return result1;
+		return (RationalExpression) apply(result2);
 	}
 
 	// Exported methods.............................................
@@ -1819,12 +1847,8 @@ public class IdealSimplifier extends CommonSimplifier {
 	@Override
 	protected SymbolicExpression simplifyExpression(
 			SymbolicExpression expression) {
-		if (expression instanceof Constant) // optimization
-			return expression;
-		if (expression instanceof Polynomial)
-			return simplifyPolynomial((Polynomial) expression);
-		if (expression instanceof Monic)
-			return simplifyMonic((Monic) expression);
+		if (expression instanceof RationalExpression)
+			return simplifyRationalExpression((RationalExpression) expression);
 
 		SymbolicType type = expression.type();
 
@@ -1936,18 +1960,11 @@ public class IdealSimplifier extends CommonSimplifier {
 		return substitutionMap;
 	}
 
-	/**
-	 * This method takes the assumption in the IdealSimplifier and reduces the
-	 * Context to its basic form.
-	 */
 	@Override
 	public BooleanExpression getReducedContext() {
 		return assumption;
 	}
 
-	/**
-	 * This method takes the assumption in the IdealSimplifier and
-	 */
 	@Override
 	public BooleanExpression getFullContext() {
 		if (fullContext == null) {
@@ -1964,10 +1981,5 @@ public class IdealSimplifier extends CommonSimplifier {
 			}
 		}
 		return fullContext;
-	}
-
-	// TODO: mainly here for debugging....
-	public IdealFactory getIdealFactory() {
-		return info.idealFactory;
 	}
 }

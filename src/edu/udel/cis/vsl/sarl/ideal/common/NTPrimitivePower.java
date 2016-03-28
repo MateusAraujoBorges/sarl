@@ -20,6 +20,7 @@ package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.io.PrintStream;
 
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
@@ -30,6 +31,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
@@ -65,11 +67,6 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 	 * Cached result of {@link #termMap(IdealFactory)}.
 	 */
 	private Monomial[] termMap = null;
-
-	// /**
-	// * Cached result of {@link #lower(Ideal2Factory)}.
-	// */
-	// private SymbolicMap<Monic, Monomial> lowering = null;
 
 	/**
 	 * Constructs new {@link NTPrimitivePower} with given primitive and
@@ -236,8 +233,6 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 			of.canonize(expansion);
 		if (monicFactors != null)
 			of.canonize(monicFactors);
-		// if (lowering != null && !lowering.isCanonic())
-		// lowering = of.canonic(lowering);
 	}
 
 	@Override
@@ -247,7 +242,6 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 
 	@Override
 	public Monomial[] lower(IdealFactory factory) {
-		// if (lowering == null) {
 		Monomial[] lowering;
 		Primitive primitive = ((Primitive) argument(0));
 
@@ -259,7 +253,31 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 			if (isCanonic())
 				factory.objectFactory().canonize(lowering);
 		}
-		// }
 		return lowering;
+	}
+
+	@Override
+	public RationalExpression powerRational(IdealFactory factory,
+			RationalExpression exponent) {
+		int n = exponent().getInt();
+		RationalExpression nRat;
+
+		if (exponent.type().isInteger()) {
+			nRat = factory.intConstant(n);
+		} else {
+			NumberFactory nf = factory.numberFactory();
+
+			nRat = factory.constant(nf.integerToRational(nf.integer(n)));
+		}
+
+		RationalExpression newExponent = factory.multiply(nRat, exponent);
+
+		return factory.power(primitive(), newExponent);
+	}
+
+	@Override
+	public PrimitivePower powerInt(IdealFactory factory, int exponent) {
+		return factory.primitivePower(primitive(), factory.objectFactory()
+				.intObject(exponent().getInt() * exponent));
 	}
 }

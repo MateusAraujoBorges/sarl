@@ -29,6 +29,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
+import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
@@ -66,11 +67,6 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	 */
 	private int monomialDegree = -1;
 
-	// /**
-	// * Cached value returned by method {@link #monomialOrder()}.
-	// */
-	// private int monomialOrder = -1;
-
 	/**
 	 * Cached value returned by method {@link #totalDegree()}. Initial value is
 	 * -1, indicating the method has not yet been called.
@@ -92,11 +88,6 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	 * Cached result of {@link #termMap(IdealFactory)}.
 	 */
 	private Monomial[] termMap = null;
-
-	// /**
-	// * Cached result of {@link #lowering(Ideal2Factory)}.
-	// */
-	// private SymbolicMap<Monic, Monomial> lowering = null;
 
 	protected NTMonic(SymbolicType type, PrimitivePower[] factorMap) {
 		super(SymbolicOperator.MULTIPLY, type, factorMap);
@@ -264,5 +255,29 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 		}
 		// }
 		return lowering;
+	}
+
+	@Override
+	public RationalExpression powerRational(IdealFactory factory,
+			RationalExpression exponent) {
+		RationalExpression result = factory.one(type());
+
+		for (PrimitivePower pp : monicFactors()) {
+			result = factory.multiply(result,
+					pp.powerRational(factory, exponent));
+		}
+		return result;
+	}
+
+	@Override
+	public Monic powerInt(IdealFactory factory, int exponent) {
+		PrimitivePower[] factors = monicFactors();
+		int n = factors.length;
+		PrimitivePower[] newFactors = new PrimitivePower[n];
+
+		for (int i = 0; i < n; i++) {
+			newFactors[i] = factors[i].powerInt(factory, exponent);
+		}
+		return factory.monic(type(), newFactors);
 	}
 }

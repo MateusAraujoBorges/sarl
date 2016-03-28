@@ -47,4 +47,7 @@ public interface Monic extends Monomial {
 	 * @return <code>true</code> iff this monic is trivial
 	 */
 	boolean isTrivialMonic();
+
+	@Override
+	Monic powerInt(IdealFactory factory, int exponent);
 }
