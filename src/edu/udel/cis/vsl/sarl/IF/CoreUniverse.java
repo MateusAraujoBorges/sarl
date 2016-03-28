@@ -2025,11 +2025,12 @@ public interface CoreUniverse {
 	 * 
 	 * @param left
 	 *            a non-<code>null</code> {@link SymbolicExpression}
-	 *            representing an array.
+	 *            representing an array of booleans. The length of this
+	 *            array should be concrete.
 	 * @param right
 	 *            a non-<code>null</code> {@link SymbolicExpression}
-	 *            representing an array with the same type and length of the
-	 *            left array.
+	 *            representing an array of booleans with the same type of the
+	 *            left array. And the length of this array should be concrete.
 	 * @return a {@link SymbolicExpression} representing the result array.
 	 */
 	SymbolicExpression bitand(SymbolicExpression left, SymbolicExpression right);
@@ -2042,11 +2043,11 @@ public interface CoreUniverse {
 	 *            representing an integer.
 	 * @param length
 	 *            a non-<code>null</code> {@link NumericExpression} representing
-	 *            the length of the bit vector.
+	 *            the length of the bit vector. It should be a concrete value.
 	 * @return a non-<code>null</code> {@link SymbolicExpression} representing a
 	 *         bit vector.
 	 */
-	SymbolicExpression integer2Bitvector(SymbolicExpression integer,
+	SymbolicExpression integer2Bitvector(NumericExpression integer,
 			NumericExpression length);
 
 	/**
@@ -2059,6 +2060,5 @@ public interface CoreUniverse {
 	 * @return a non-<code>null</code> {@link SymbolicExpression} representing
 	 *         an integer.
 	 */
-	SymbolicExpression bitvector2Integer(SymbolicExpression bitvector);
-
+	NumericExpression bitvector2Integer(SymbolicExpression bitvector);
 }
