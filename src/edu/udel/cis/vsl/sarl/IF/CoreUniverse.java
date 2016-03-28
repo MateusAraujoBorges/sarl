@@ -2020,11 +2020,45 @@ public interface CoreUniverse {
 	Set<SymbolicConstant> getFreeSymbolicConstants(SymbolicExpression expr);
 
 	/**
-	 * SymbolicExpression bitand(SymbolicExpression left, SymbolicExpression
-	 * right);
+	 * Returns the result of bit-and operation for two given bit vectors, those
+	 * two vectors are in the form of {@link SymbolicExpression}.
 	 * 
-	 * SymbolicExpression integer2Bitvector(SymbolicExpression integer,
-	 * NumericExpression length);
-	 **/
+	 * @param left
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array.
+	 * @param right
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array with the same type and length of the
+	 *            left array.
+	 * @return a {@link SymbolicExpression} representing the result array.
+	 */
+	SymbolicExpression bitand(SymbolicExpression left, SymbolicExpression right);
+
+	/**
+	 * Returns the conversion of a bit vector from an integer.
+	 * 
+	 * @param integer
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an integer.
+	 * @param length
+	 *            a non-<code>null</code> {@link NumericExpression} representing
+	 *            the length of the bit vector.
+	 * @return a non-<code>null</code> {@link SymbolicExpression} representing a
+	 *         bit vector.
+	 */
+	SymbolicExpression integer2Bitvector(SymbolicExpression integer,
+			NumericExpression length);
+
+	/**
+	 * Returns the conversion of an integer from a bit vector.
+	 * 
+	 * @param integer
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing a bit vector.
+	 * 
+	 * @return a non-<code>null</code> {@link SymbolicExpression} representing
+	 *         an integer.
+	 */
+	SymbolicExpression bitvector2Integer(SymbolicExpression bitvector);
 
 }

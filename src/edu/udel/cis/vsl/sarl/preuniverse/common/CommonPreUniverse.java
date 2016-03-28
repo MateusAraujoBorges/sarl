@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.lang.model.type.TypeKind;
+
 import edu.udel.cis.vsl.sarl.IF.Predicate;
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
@@ -206,8 +208,8 @@ public class CommonPreUniverse implements PreUniverse {
 		quantifierExpandBound = numberFactory.integer(QUANTIFIER_EXPAND_BOUND);
 		nullExpression = expressionFactory.nullExpression();
 		cleaner = new BoundCleaner(this, objectFactory, typeFactory);
-		arrayIndex = (NumericSymbolicConstant) canonic(
-				symbolicConstant(stringObject("i"), integerType));
+		arrayIndex = (NumericSymbolicConstant) canonic(symbolicConstant(
+				stringObject("i"), integerType));
 		exprSeqFactory = new SequenceFactory<SymbolicExpression>() {
 
 			@Override
@@ -332,8 +334,8 @@ public class CommonPreUniverse implements PreUniverse {
 	 *            a symbolic type
 	 * @return a boolean expression which holds iff the two types are compatible
 	 */
-	private BooleanExpression compatible(SymbolicType type0, SymbolicType type1,
-			int nestingDepth) {
+	private BooleanExpression compatible(SymbolicType type0,
+			SymbolicType type1, int nestingDepth) {
 		// since the "equals" case should be by far the most frequent
 		// case, we check it first...
 		if (type0.equals(type1))
@@ -361,16 +363,19 @@ public class CommonPreUniverse implements PreUniverse {
 					a1.elementType(), nestingDepth);
 
 			if (a0.isComplete() && a1.isComplete())
-				result = and(result,
+				result = and(
+						result,
 						equals(((SymbolicCompleteArrayType) a0).extent(),
 								((SymbolicCompleteArrayType) a1).extent(),
 								nestingDepth));
 			return result;
 		}
 		case FUNCTION:
-			return and(compatibleTypeSequence(
-					((SymbolicFunctionType) type0).inputTypes(),
-					((SymbolicFunctionType) type1).inputTypes(), nestingDepth),
+			return and(
+					compatibleTypeSequence(
+							((SymbolicFunctionType) type0).inputTypes(),
+							((SymbolicFunctionType) type1).inputTypes(),
+							nestingDepth),
 					compatible(((SymbolicFunctionType) type0).outputType(),
 							((SymbolicFunctionType) type1).outputType(),
 							nestingDepth));
@@ -411,8 +416,7 @@ public class CommonPreUniverse implements PreUniverse {
 	 * @return a boolean expression which holds iff the two types are compatible
 	 */
 	@Override
-	public BooleanExpression compatible(SymbolicType type0,
-			SymbolicType type1) {
+	public BooleanExpression compatible(SymbolicType type0, SymbolicType type1) {
 		return compatible(type0, type1, 0);
 	}
 
@@ -453,16 +457,20 @@ public class CommonPreUniverse implements PreUniverse {
 				ArrayElementReference ref0 = (ArrayElementReference) arg0;
 				ArrayElementReference ref1 = (ArrayElementReference) arg1;
 
-				result = and(result, equals(ref0.getIndex(), ref1.getIndex(),
-						quantifierDepth));
+				result = and(
+						result,
+						equals(ref0.getIndex(), ref1.getIndex(),
+								quantifierDepth));
 				break;
 			}
 			case OFFSET: {
 				OffsetReference ref0 = (OffsetReference) arg0;
 				OffsetReference ref1 = (OffsetReference) arg1;
 
-				result = and(result, equals(ref0.getOffset(), ref1.getOffset(),
-						quantifierDepth));
+				result = and(
+						result,
+						equals(ref0.getOffset(), ref1.getOffset(),
+								quantifierDepth));
 				break;
 			}
 			case TUPLE_COMPONENT: {
@@ -482,10 +490,8 @@ public class CommonPreUniverse implements PreUniverse {
 				break;
 			}
 			default:
-				throw err(
-						"Unreachable because the only kinds of NTReferenceExpression "
-								+ "are as listed above.\n" + "This is: "
-								+ kind);
+				throw err("Unreachable because the only kinds of NTReferenceExpression "
+						+ "are as listed above.\n" + "This is: " + kind);
 			}
 		} else {
 			// either both are identity of both are null
@@ -564,8 +570,12 @@ public class CommonPreUniverse implements PreUniverse {
 			else {
 				NumericSymbolicConstant index = intBoundVar(quantifierDepth);
 
-				result = and(result,
-						forallInt(index, zeroInt(), length,
+				result = and(
+						result,
+						forallInt(
+								index,
+								zeroInt(),
+								length,
 								equals(arrayRead(arg0, index),
 										arrayRead(arg1, index),
 										quantifierDepth + 1)));
@@ -606,8 +616,10 @@ public class CommonPreUniverse implements PreUniverse {
 			for (int i = 0; i < numComponents; i++) {
 				IntObject index = intObject(i);
 
-				result = and(result, equals(tupleRead(arg0, index),
-						tupleRead(arg1, index), quantifierDepth));
+				result = and(
+						result,
+						equals(tupleRead(arg0, index), tupleRead(arg1, index),
+								quantifierDepth));
 			}
 			return result;
 		}
@@ -620,22 +632,22 @@ public class CommonPreUniverse implements PreUniverse {
 						.argument(1);
 
 				if (arg1.operator() == SymbolicOperator.UNION_INJECT)
-					return index.equals(arg1.argument(0))
-							? and(result,
-									equals(value0,
-											(SymbolicExpression) arg1
-													.argument(1),
-											quantifierDepth))
-							: falseExpr;
+					return index.equals(arg1.argument(0)) ? and(
+							result,
+							equals(value0,
+									(SymbolicExpression) arg1.argument(1),
+									quantifierDepth)) : falseExpr;
 				else
-					return and(result,
+					return and(
+							result,
 							and(unionTest(index, arg1),
 									equals(value0, unionExtract(index, arg1),
 											quantifierDepth)));
 			} else if (arg1.operator() == SymbolicOperator.UNION_INJECT) {
 				IntObject index = (IntObject) arg1.argument(0);
 
-				return and(result,
+				return and(
+						result,
 						and(unionTest(index, arg0),
 								equals((SymbolicExpression) arg1.argument(1),
 										unionExtract(index, arg0),
@@ -654,8 +666,10 @@ public class CommonPreUniverse implements PreUniverse {
 					clause = and(clause, unionTest(index, arg1));
 					if (clause.isFalse())
 						continue;
-					clause = and(clause, equals(unionExtract(index, arg0),
-							unionExtract(index, arg1), quantifierDepth));
+					clause = and(
+							clause,
+							equals(unionExtract(index, arg0),
+									unionExtract(index, arg1), quantifierDepth));
 					if (clause.isFalse())
 						continue;
 					expr = or(expr, clause);
@@ -682,19 +696,21 @@ public class CommonPreUniverse implements PreUniverse {
 
 			if (size > 1)
 				for (int i = 1; i < size; i++)
-					result = and(result, compatible(seq0.getType(i),
-							seq1.getType(i), nestingDepth));
+					result = and(
+							result,
+							compatible(seq0.getType(i), seq1.getType(i),
+									nestingDepth));
 			return result;
 		}
 	}
 
-	protected BooleanExpression forallIntConcrete(NumericSymbolicConstant index,
-			IntegerNumber low, IntegerNumber high,
-			BooleanExpression predicate) {
+	protected BooleanExpression forallIntConcrete(
+			NumericSymbolicConstant index, IntegerNumber low,
+			IntegerNumber high, BooleanExpression predicate) {
 		BooleanExpression result = trueExpr;
 
-		for (IntegerNumber i = low; numberFactory.compare(i,
-				high) < 0; i = numberFactory.increment(i)) {
+		for (IntegerNumber i = low; numberFactory.compare(i, high) < 0; i = numberFactory
+				.increment(i)) {
 			SymbolicExpression iExpression = number(numberObject(i));
 			BooleanExpression substitutedPredicate = (BooleanExpression) simpleSubstituter(
 					index, iExpression).apply(predicate);
@@ -705,12 +721,11 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	protected BooleanExpression existsIntConcrete(SymbolicConstant index,
-			IntegerNumber low, IntegerNumber high,
-			BooleanExpression predicate) {
+			IntegerNumber low, IntegerNumber high, BooleanExpression predicate) {
 		BooleanExpression result = falseExpr;
 
-		for (IntegerNumber i = low; numberFactory.compare(i,
-				high) < 0; i = numberFactory.increment(i)) {
+		for (IntegerNumber i = low; numberFactory.compare(i, high) < 0; i = numberFactory
+				.increment(i)) {
 			SymbolicExpression iExpression = number(numberObject(i));
 			BooleanExpression substitutedPredicate = (BooleanExpression) simpleSubstituter(
 					index, iExpression).apply(predicate);
@@ -775,8 +790,8 @@ public class CommonPreUniverse implements PreUniverse {
 	 * for those.
 	 */
 	@Override
-	public SymbolicExpression make(SymbolicOperator operator, SymbolicType type,
-			SymbolicObject[] args) {
+	public SymbolicExpression make(SymbolicOperator operator,
+			SymbolicType type, SymbolicObject[] args) {
 		switch (operator) {
 		case ADD:
 			return add(type, args);
@@ -869,8 +884,8 @@ public class CommonPreUniverse implements PreUniverse {
 		case TUPLE_READ:
 			return tupleRead((SymbolicExpression) args[0], (IntObject) args[1]);
 		case TUPLE_WRITE:
-			return tupleWrite((SymbolicExpression) args[0], (IntObject) args[1],
-					(SymbolicExpression) args[2]);
+			return tupleWrite((SymbolicExpression) args[0],
+					(IntObject) args[1], (SymbolicExpression) args[2]);
 		case UNION_EXTRACT: {
 			SymbolicExpression expression = (SymbolicExpression) args[1];
 
@@ -906,8 +921,7 @@ public class CommonPreUniverse implements PreUniverse {
 		Iterator<? extends NumericExpression> iter = args.iterator();
 
 		if (!iter.hasNext())
-			throw err(
-					"Iterable argument to add was empty but should have at least one element");
+			throw err("Iterable argument to add was empty but should have at least one element");
 		else {
 			NumericExpression result = iter.next();
 
@@ -935,8 +949,8 @@ public class CommonPreUniverse implements PreUniverse {
 		int n = args.length;
 
 		if (n == 0)
-			return type.isInteger() ? numericFactory.zeroInt()
-					: numericFactory.zeroReal();
+			return type.isInteger() ? numericFactory.zeroInt() : numericFactory
+					.zeroReal();
 		else {
 			NumericExpression result = (NumericExpression) args[0];
 
@@ -1014,8 +1028,7 @@ public class CommonPreUniverse implements PreUniverse {
 	 * </pre>
 	 */
 	@Override
-	public BooleanExpression and(BooleanExpression arg0,
-			BooleanExpression arg1) {
+	public BooleanExpression and(BooleanExpression arg0, BooleanExpression arg1) {
 		return booleanFactory.and(arg0, arg1);
 	}
 
@@ -1112,8 +1125,7 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public SymbolicFunctionType functionType(
-			Iterable<? extends SymbolicType> inputTypes,
-			SymbolicType outputType) {
+			Iterable<? extends SymbolicType> inputTypes, SymbolicType outputType) {
 		return typeFactory.functionType(typeSequence(inputTypes), outputType);
 	}
 
@@ -1195,16 +1207,14 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public NumericExpression rational(double value) {
-		return number(
-				numberObject(numberFactory.rational(Double.toString(value))));
+		return number(numberObject(numberFactory.rational(Double
+				.toString(value))));
 	}
 
 	@Override
 	public NumericExpression rational(int numerator, int denominator) {
-		return number(
-				numberObject(numberFactory.divide(
-						numberFactory.rational(
-								numberFactory.integer(numerator)),
+		return number(numberObject(numberFactory.divide(
+				numberFactory.rational(numberFactory.integer(numerator)),
 				numberFactory.rational(numberFactory.integer(denominator)))));
 	}
 
@@ -1254,8 +1264,8 @@ public class CommonPreUniverse implements PreUniverse {
 		return array(typeFactory.characterType(), charExprList);
 	}
 
-	private void checkSameType(SymbolicExpression arg0, SymbolicExpression arg1,
-			String message) {
+	private void checkSameType(SymbolicExpression arg0,
+			SymbolicExpression arg1, String message) {
 		if (!arg0.type().equals(arg1.type()))
 			throw err(message + ".\narg0: " + arg0 + "\narg0 type: "
 					+ arg0.type() + "\narg1: " + arg1 + "\narg1 type: "
@@ -1263,8 +1273,7 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	@Override
-	public NumericExpression add(NumericExpression arg0,
-			NumericExpression arg1) {
+	public NumericExpression add(NumericExpression arg0, NumericExpression arg1) {
 		checkSameType(arg0, arg1, "Arguments to add had different types");
 		return numericFactory.add(arg0, arg1);
 	}
@@ -1284,9 +1293,9 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	/**
-	 * Multiplies a sequence of elements by applying binary multiplication
-	 * (@link {@link #multiply(NumericExpression, NumericExpression)}) from left
-	 * to right.
+	 * Multiplies a sequence of elements by applying binary multiplication (@link
+	 * {@link #multiply(NumericExpression, NumericExpression)}) from left to
+	 * right.
 	 * 
 	 * @param type
 	 *            the type of the arguments and the result
@@ -1295,13 +1304,12 @@ public class CommonPreUniverse implements PreUniverse {
 	 *            of {@link NumericExpression}
 	 * @return the product of the elements of <code>args</code>
 	 */
-	private NumericExpression multiply(SymbolicType type,
-			SymbolicObject[] args) {
+	private NumericExpression multiply(SymbolicType type, SymbolicObject[] args) {
 		int n = args.length;
 
 		if (n == 0)
-			return type.isInteger() ? numericFactory.oneInt()
-					: numericFactory.oneReal();
+			return type.isInteger() ? numericFactory.oneInt() : numericFactory
+					.oneReal();
 		else {
 			NumericExpression result = (NumericExpression) args[0];
 
@@ -1315,8 +1323,7 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	@Override
-	public NumericExpression multiply(
-			Iterable<? extends NumericExpression> args) {
+	public NumericExpression multiply(Iterable<? extends NumericExpression> args) {
 		Iterator<? extends NumericExpression> iter = args.iterator();
 
 		if (!iter.hasNext())
@@ -1425,8 +1432,7 @@ public class CommonPreUniverse implements PreUniverse {
 	 * expressions.
 	 */
 	@Override
-	public BooleanExpression or(BooleanExpression arg0,
-			BooleanExpression arg1) {
+	public BooleanExpression or(BooleanExpression arg0, BooleanExpression arg1) {
 		return booleanFactory.or(arg0, arg1);
 	}
 
@@ -1512,14 +1518,16 @@ public class CommonPreUniverse implements PreUniverse {
 		if (lowNumber != null) {
 			IntegerNumber highNumber = (IntegerNumber) extractNumber(high);
 
-			if (highNumber != null && numberFactory.compare(
-					numberFactory.subtract(highNumber, lowNumber),
-					quantifierExpandBound) <= 0) {
+			if (highNumber != null
+					&& numberFactory.compare(
+							numberFactory.subtract(highNumber, lowNumber),
+							quantifierExpandBound) <= 0) {
 				return forallIntConcrete(index, lowNumber, highNumber,
 						predicate);
 			}
 		}
-		return forall(index,
+		return forall(
+				index,
 				implies(and(lessThanEquals(low, index), lessThan(index, high)),
 						predicate));
 	}
@@ -1533,14 +1541,16 @@ public class CommonPreUniverse implements PreUniverse {
 		if (lowNumber != null) {
 			IntegerNumber highNumber = (IntegerNumber) extractNumber(high);
 
-			if (highNumber != null && numberFactory.compare(
-					numberFactory.subtract(highNumber, lowNumber),
-					quantifierExpandBound) <= 0) {
+			if (highNumber != null
+					&& numberFactory.compare(
+							numberFactory.subtract(highNumber, lowNumber),
+							quantifierExpandBound) <= 0) {
 				return existsIntConcrete(index, lowNumber, highNumber,
 						predicate);
 			}
 		}
-		return exists(index,
+		return exists(
+				index,
 				implies(and(lessThanEquals(low, index), lessThan(index, high)),
 						predicate));
 	}
@@ -1621,11 +1631,11 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public SymbolicExpression lambda(SymbolicConstant boundVariable,
 			SymbolicExpression expression) {
-		return expression(SymbolicOperator.LAMBDA,
+		return expression(
+				SymbolicOperator.LAMBDA,
 				functionType(
 						typeFactory.singletonSequence(boundVariable.type()),
-						expression.type()),
-				boundVariable, expression);
+						expression.type()), boundVariable, expression);
 	}
 
 	@Override
@@ -1646,10 +1656,9 @@ public class CommonPreUniverse implements PreUniverse {
 			arg = iter.next();
 			assert !iter.hasNext();
 			if (iter.hasNext())
-				throw err(
-						"Argument argumentSequence to method apply has more than one element"
-								+ " but since function is a lambda expression it should"
-								+ " have exactly one element");
+				throw err("Argument argumentSequence to method apply has more than one element"
+						+ " but since function is a lambda expression it should"
+						+ " have exactly one element");
 			// function.argument(0): bound symbolic constant : dummy variable
 			// function.argument(1): symbolic expression: body of function
 			result = simpleSubstituter((SymbolicConstant) function.argument(0),
@@ -1684,12 +1693,11 @@ public class CommonPreUniverse implements PreUniverse {
 					+ memberType + "\n.Saw: " + objectType + ": " + object);
 		// inject_i(extract_i(x))=x...
 		if (object.operator() == SymbolicOperator.UNION_EXTRACT
-				&& unionType.equals(
-						((SymbolicExpression) object.argument(1)).type())
-				&& memberIndex.equals(object.argument(0)))
+				&& unionType.equals(((SymbolicExpression) object.argument(1))
+						.type()) && memberIndex.equals(object.argument(0)))
 			return (SymbolicExpression) object.argument(1);
-		return expression(SymbolicOperator.UNION_INJECT, unionType, memberIndex,
-				object);
+		return expression(SymbolicOperator.UNION_INJECT, unionType,
+				memberIndex, object);
 	}
 
 	@Override
@@ -1708,10 +1716,10 @@ public class CommonPreUniverse implements PreUniverse {
 		if (object.operator() == SymbolicOperator.UNION_INJECT
 				&& memberIndex.equals(object.argument(0)))
 			return (SymbolicExpression) object.argument(1);
-		return expression(SymbolicOperator.UNION_EXTRACT,
-				((SymbolicUnionType) object.type()).sequence()
-						.getType(memberIndex.getInt()),
-				memberIndex, object);
+		return expression(
+				SymbolicOperator.UNION_EXTRACT,
+				((SymbolicUnionType) object.type()).sequence().getType(
+						memberIndex.getInt()), memberIndex, object);
 	}
 
 	@Override
@@ -1743,7 +1751,8 @@ public class CommonPreUniverse implements PreUniverse {
 						+ " of array elements argument has illegal value:\n"
 						+ element);
 			if (incompatible(elementType, element.type()))
-				throw err("Element " + count
+				throw err("Element "
+						+ count
 						+ " of array elements argument had incompatible type:\n"
 						+ "Expected: " + elementType + "\nSaw: "
 						+ element.type());
@@ -1766,11 +1775,10 @@ public class CommonPreUniverse implements PreUniverse {
 		SymbolicType type = concreteArray.type();
 
 		if (type.typeKind() != SymbolicTypeKind.ARRAY)
-			throw err(
-					"argument concreteArray not array type:\n" + concreteArray);
+			throw err("argument concreteArray not array type:\n"
+					+ concreteArray);
 		if (concreteArray.operator() != SymbolicOperator.ARRAY) {
-			throw err(
-					"append invoked on non-concrete array:\n" + concreteArray);
+			throw err("append invoked on non-concrete array:\n" + concreteArray);
 		} else {
 			HomogeneousExpression<?> hArray = (HomogeneousExpression<?>) concreteArray;
 			SymbolicExpression[] elements = (SymbolicExpression[]) hArray
@@ -1794,8 +1802,8 @@ public class CommonPreUniverse implements PreUniverse {
 		SymbolicType type = concreteArray.type();
 
 		if (type.typeKind() != SymbolicTypeKind.ARRAY)
-			throw err(
-					"argument concreteArray not array type:\n" + concreteArray);
+			throw err("argument concreteArray not array type:\n"
+					+ concreteArray);
 		if (concreteArray.operator() != SymbolicOperator.ARRAY) {
 			throw err("argument concreteArray is not concrete:\n"
 					+ concreteArray);
@@ -1844,9 +1852,8 @@ public class CommonPreUniverse implements PreUniverse {
 		if (array == null)
 			throw err("Argument array to method length was null");
 		if (!(array.type() instanceof SymbolicArrayType))
-			throw err(
-					"Argument array to method length does not have array type."
-							+ "\narray: " + array + "\ntype: " + array.type());
+			throw err("Argument array to method length does not have array type."
+					+ "\narray: " + array + "\ntype: " + array.type());
 		else {
 			SymbolicArrayType type = (SymbolicArrayType) array.type();
 
@@ -1867,9 +1874,8 @@ public class CommonPreUniverse implements PreUniverse {
 		if (index == null)
 			throw err("Argument index to method arrayRead is null.");
 		if (!(array.type() instanceof SymbolicArrayType))
-			throw err(
-					"Argument array to method arrayRead does not have array type."
-							+ "\narray: " + array + "\ntype: " + array.type());
+			throw err("Argument array to method arrayRead does not have array type."
+					+ "\narray: " + array + "\ntype: " + array.type());
 		else {
 			SymbolicArrayType arrayType = (SymbolicArrayType) array.type();
 			SymbolicOperator op = array.operator();
@@ -1880,26 +1886,25 @@ public class CommonPreUniverse implements PreUniverse {
 					throw err("Argument index to arrayRead is negative."
 							+ "\nindex: " + indexNumber);
 				if (arrayType.isComplete()) {
-					IntegerNumber lengthNumber = (IntegerNumber) extractNumber(
-							((SymbolicCompleteArrayType) arrayType).extent());
+					IntegerNumber lengthNumber = (IntegerNumber) extractNumber(((SymbolicCompleteArrayType) arrayType)
+							.extent());
 
-					if (lengthNumber != null && numberFactory
-							.compare(indexNumber, lengthNumber) >= 0)
-						throw err(
-								"Array index out of bounds in method arrayRead."
-										+ "\narray: " + array + "\nextent: "
-										+ lengthNumber + "\nindex: "
-										+ indexNumber);
+					if (lengthNumber != null
+							&& numberFactory.compare(indexNumber, lengthNumber) >= 0)
+						throw err("Array index out of bounds in method arrayRead."
+								+ "\narray: "
+								+ array
+								+ "\nextent: "
+								+ lengthNumber + "\nindex: " + indexNumber);
 				}
 				if (op == SymbolicOperator.ARRAY)
-					return (SymbolicExpression) array
-							.argument(indexNumber.intValue());
+					return (SymbolicExpression) array.argument(indexNumber
+							.intValue());
 				else if (op == SymbolicOperator.DENSE_ARRAY_WRITE) {
 					SymbolicExpression origin = (SymbolicExpression) array
 							.argument(0);
 
-					if (numberFactory.compare(indexNumber,
-							denseArrayMaxSize) < 0) {
+					if (numberFactory.compare(indexNumber, denseArrayMaxSize) < 0) {
 						int indexInt = indexNumber.intValue();
 						SymbolicSequence<?> values = (SymbolicSequence<?>) array
 								.argument(1);
@@ -1939,10 +1944,10 @@ public class CommonPreUniverse implements PreUniverse {
 				throw err("Argument index to arrayWrite is negative."
 						+ "\nindex: " + indexNumber);
 			if (arrayType.isComplete()) {
-				lengthNumber = (IntegerNumber) extractNumber(
-						((SymbolicCompleteArrayType) arrayType).extent());
-				if (lengthNumber != null && numberFactory.compare(indexNumber,
-						lengthNumber) >= 0)
+				lengthNumber = (IntegerNumber) extractNumber(((SymbolicCompleteArrayType) arrayType)
+						.extent());
+				if (lengthNumber != null
+						&& numberFactory.compare(indexNumber, lengthNumber) >= 0)
 					throw err("Array index out of bounds in method arrayWrite."
 							+ "\narray: " + array + "\nextent: " + lengthNumber
 							+ "\nindex: " + indexNumber);
@@ -1986,12 +1991,12 @@ public class CommonPreUniverse implements PreUniverse {
 					return expression(SymbolicOperator.ARRAY, arrayType,
 							newArray);
 				}
-				return expression(SymbolicOperator.DENSE_ARRAY_WRITE, arrayType,
-						origin, sequence);
+				return expression(SymbolicOperator.DENSE_ARRAY_WRITE,
+						arrayType, origin, sequence);
 			}
 		}
-		return expression(SymbolicOperator.ARRAY_WRITE, arrayType, array, index,
-				value);
+		return expression(SymbolicOperator.ARRAY_WRITE, arrayType, array,
+				index, value);
 	}
 
 	@Override
@@ -2004,24 +2009,23 @@ public class CommonPreUniverse implements PreUniverse {
 		if (value == null)
 			throw err("Argument value to method arrayWrite is null.");
 		if (!(array.type() instanceof SymbolicArrayType))
-			throw err(
-					"Argument array to method arrayWrite does not have array type."
-							+ "\narray: " + array + "\ntype: " + array.type());
+			throw err("Argument array to method arrayWrite does not have array type."
+					+ "\narray: " + array + "\ntype: " + array.type());
 		if (!index.type().isInteger())
-			throw err(
-					"Argument index to method arrayWrite does not have integer type."
-							+ "\nindex: " + index + "\ntype: " + index.type());
+			throw err("Argument index to method arrayWrite does not have integer type."
+					+ "\nindex: " + index + "\ntype: " + index.type());
 		if (value.isNull())
 			throw err("Argument value to method arrayWrite is NULL.");
 		else {
 			SymbolicArrayType arrayType = (SymbolicArrayType) array.type();
 
 			if (incompatible(arrayType.elementType(), value.type()))
-				throw err(
-						"Argument value to method arrayWrite has incompatible type."
-								+ "\nvalue: " + value + "\ntype: "
-								+ value.type() + "\nExpected: "
-								+ arrayType.elementType());
+				throw err("Argument value to method arrayWrite has incompatible type."
+						+ "\nvalue: "
+						+ value
+						+ "\ntype: "
+						+ value.type()
+						+ "\nExpected: " + arrayType.elementType());
 			return arrayWrite_noCheck(array, arrayType, index, value);
 		}
 	}
@@ -2102,15 +2106,16 @@ public class CommonPreUniverse implements PreUniverse {
 				if (value.isNull())
 					numNulls++;
 				else if (incompatible(elementType, value.type()))
-					throw err("Element " + count
+					throw err("Element "
+							+ count
 							+ " of values argument to denseArrayWrite has incompatible type.\n"
 							+ "Expected: " + elementType + "\nSaw: "
 							+ value.type());
 				count++;
 			}
 			if (numNulls == 0 && arrayType.isComplete()) {
-				IntegerNumber lengthNumber = (IntegerNumber) extractNumber(
-						((SymbolicCompleteArrayType) arrayType).extent());
+				IntegerNumber lengthNumber = (IntegerNumber) extractNumber(((SymbolicCompleteArrayType) arrayType)
+						.extent());
 
 				if (lengthNumber != null && count == lengthNumber.intValue()) {
 					SymbolicExpression[] elements = new SymbolicExpression[count];
@@ -2167,19 +2172,20 @@ public class CommonPreUniverse implements PreUniverse {
 		SymbolicType inputType = inputSeq.getType(0);
 
 		if (inputType.typeKind() != SymbolicTypeKind.INTEGER)
-			throw err(
-					"input type of array lambda function must be integer, not "
-							+ inputType + ": " + functionType);
+			throw err("input type of array lambda function must be integer, not "
+					+ inputType + ": " + functionType);
 
 		SymbolicType outputType = functionType.outputType();
 
 		if (compatible(outputType, arrayType.elementType()).isFalse()) {
-			throw err(
-					"Return type of array lambda function is incompatible with element type:\n"
-							+ "element type: " + arrayType.elementType() + "\n"
-							+ "lambda function type: " + functionType + "\n"
-							+ "lambda function output type: " + outputType
-							+ "\n");
+			throw err("Return type of array lambda function is incompatible with element type:\n"
+					+ "element type: "
+					+ arrayType.elementType()
+					+ "\n"
+					+ "lambda function type: "
+					+ functionType
+					+ "\n"
+					+ "lambda function output type: " + outputType + "\n");
 		}
 
 		NumericExpression lengthExpression = arrayType.extent();
@@ -2233,7 +2239,8 @@ public class CommonPreUniverse implements PreUniverse {
 			SymbolicType componentType = component.type();
 
 			if (incompatible(fieldType, componentType))
-				throw err("Element " + i
+				throw err("Element "
+						+ i
 						+ " of components argument to method tuple has incompatible type.\n"
 						+ "\nExpected: " + fieldType + "\nSaw: "
 						+ componentType);
@@ -2268,7 +2275,8 @@ public class CommonPreUniverse implements PreUniverse {
 			return tupleRead((SymbolicExpression) tuple.argument(0), index);
 
 		}
-		return expression(SymbolicOperator.TUPLE_READ,
+		return expression(
+				SymbolicOperator.TUPLE_READ,
 				((SymbolicTupleType) tuple.type()).sequence().getType(indexInt),
 				tuple, index);
 	}
@@ -2332,8 +2340,8 @@ public class CommonPreUniverse implements PreUniverse {
 			if (numComponents <= 1)
 				return tuple(tupleType, elementsArray);
 			else
-				return expression(SymbolicOperator.DENSE_TUPLE_WRITE, tupleType,
-						tuple, sequence);
+				return expression(SymbolicOperator.DENSE_TUPLE_WRITE,
+						tupleType, tuple, sequence);
 		}
 	}
 
@@ -2501,8 +2509,8 @@ public class CommonPreUniverse implements PreUniverse {
 			return dereference(value, ref.getParent());
 		}
 		default:
-			throw new SARLInternalException(
-					"Unknown reference kind: " + reference);
+			throw new SARLInternalException("Unknown reference kind: "
+					+ reference);
 		}
 	}
 
@@ -2535,8 +2543,8 @@ public class CommonPreUniverse implements PreUniverse {
 			SymbolicType parentType = referencedType(type, ref.getParent());
 
 			if (parentType instanceof SymbolicTupleType)
-				return ((SymbolicTupleType) parentType).sequence()
-						.getType(ref.getIndex().getInt());
+				return ((SymbolicTupleType) parentType).sequence().getType(
+						ref.getIndex().getInt());
 			else
 				throw new SARLException("Incompatible type and reference:\n"
 						+ type + "\n" + reference);
@@ -2546,8 +2554,8 @@ public class CommonPreUniverse implements PreUniverse {
 			SymbolicType parentType = referencedType(type, ref.getParent());
 
 			if (parentType instanceof SymbolicUnionType)
-				return ((SymbolicUnionType) parentType).sequence()
-						.getType(ref.getIndex().getInt());
+				return ((SymbolicUnionType) parentType).sequence().getType(
+						ref.getIndex().getInt());
 			else
 				throw new SARLException("Incompatible type and reference:\n"
 						+ type + "\n" + reference);
@@ -2559,8 +2567,8 @@ public class CommonPreUniverse implements PreUniverse {
 			return parentType;
 		}
 		default:
-			throw new SARLInternalException(
-					"Unknown reference kind: " + reference);// unreachable
+			throw new SARLInternalException("Unknown reference kind: "
+					+ reference);// unreachable
 		}
 	}
 
@@ -2655,8 +2663,8 @@ public class CommonPreUniverse implements PreUniverse {
 			return assign(value, ref.getParent(), subValue);
 		}
 		default: // unreachable
-			throw new SARLInternalException(
-					"Unknown reference kind: " + reference);
+			throw new SARLInternalException("Unknown reference kind: "
+					+ reference);
 		}
 	}
 
@@ -2670,8 +2678,7 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	@Override
-	public SymbolicMapType mapType(SymbolicType keyType,
-			SymbolicType valueType) {
+	public SymbolicMapType mapType(SymbolicType keyType, SymbolicType valueType) {
 		return typeFactory.mapType(keyType, valueType);
 	}
 
@@ -2686,8 +2693,8 @@ public class CommonPreUniverse implements PreUniverse {
 		SymbolicType type = concreteArray.type();
 
 		if (type.typeKind() != SymbolicTypeKind.ARRAY)
-			throw err(
-					"argument concreteArray not array type:\n" + concreteArray);
+			throw err("argument concreteArray not array type:\n"
+					+ concreteArray);
 		if (concreteArray.operator() != SymbolicOperator.ARRAY) {
 			throw err("argument concreteArray is not concrete:\n"
 					+ concreteArray);
@@ -2703,10 +2710,12 @@ public class CommonPreUniverse implements PreUniverse {
 				throw err("Index out of range:\narray: " + concreteArray
 						+ "\nlength: " + length + "\nindex: " + index);
 			if (incompatible(elementType, value.type()))
-				throw err(
-						"Argument value to method insertElementAt has incompatible type."
-								+ "\nvalue: " + value + "\ntype: "
-								+ value.type() + "\nExpected: " + elementType);
+				throw err("Argument value to method insertElementAt has incompatible type."
+						+ "\nvalue: "
+						+ value
+						+ "\ntype: "
+						+ value.type()
+						+ "\nExpected: " + elementType);
 			elements = exprSeqFactory.insert(elements, index, value);
 			return array(elementType, elements);
 		}
@@ -2774,8 +2783,7 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	@Override
-	public SymbolicExpression get(SymbolicExpression map,
-			SymbolicExpression key) {
+	public SymbolicExpression get(SymbolicExpression map, SymbolicExpression key) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -2846,6 +2854,73 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public ObjectFactory objectFactory() {
 		return objectFactory;
+	}
+
+	@Override
+	public SymbolicExpression bitand(SymbolicExpression left,
+			SymbolicExpression right) {
+		if (left == null)
+			throw err("Argument left to method bitand is null.");
+		if (right == null)
+			throw err("Argument right to method bitand is null.");
+		if (!(left.type() instanceof SymbolicArrayType))
+			throw err("Argument left to method bitand does not have array type."
+					+ "\narray: " + left + "\ntype: " + left.type());
+		else if (!(right.type() instanceof SymbolicArrayType))
+			throw err("Argument right to method bitand does not have array type."
+					+ "\narray: " + right + "\ntype: " + right.type());
+		else {
+			SymbolicArrayType leftArrayType = (SymbolicArrayType) left.type();
+			SymbolicArrayType rightArrayType = (SymbolicArrayType) right.type();
+
+			if (!leftArrayType.equals(rightArrayType)) {
+				throw err("Argument left and right to method bitand does not have the same array type."
+						+ "\nleft array: "
+						+ left
+						+ "\nleft type: "
+						+ left.type()
+						+ "\nright array: "
+						+ right
+						+ "\nright type: " + right.type());
+			}
+			if (leftArrayType.typeKind().ordinal() != TypeKind.BOOLEAN
+					.ordinal()) {
+				throw err("Elements of left or right to method bitand does not have the boolean type."
+						+ "\nelement type: " + leftArrayType.typeKind());
+			}
+
+			IntegerNumber leftLengthNumber = (IntegerNumber) extractNumber(length(left));
+			IntegerNumber rightLengthNumber = (IntegerNumber) extractNumber(length(right));
+
+			assert numberFactory.compare(leftLengthNumber, rightLengthNumber) == 0;
+
+			SymbolicExpression resultArray = emptyArray(leftArrayType);
+			int size = leftLengthNumber.intValue();
+
+			for (int i = 0; i < size; i++) {
+				BooleanExpression leftElement = (BooleanExpression) left
+						.argument(i);
+				BooleanExpression rightElement = (BooleanExpression) right
+						.argument(i);
+				BooleanExpression resultElement = and(leftElement, rightElement);
+
+				resultArray = append(resultArray, resultElement);
+			}
+			return resultArray;
+		}
+	}
+
+	@Override
+	public SymbolicExpression integer2Bitvector(SymbolicExpression integer,
+			NumericExpression length) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public SymbolicExpression bitvector2Integer(SymbolicExpression bitvector) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
