@@ -2,6 +2,7 @@ package edu.udel.cis.vsl.sarl.preuniverse.common;
 
 import java.io.PrintStream;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -179,6 +180,8 @@ public class CommonPreUniverse implements PreUniverse {
 	private boolean showProverQueries = false;
 
 	private SymbolicExpression[] emptyExprArray = new SymbolicExpression[0];
+
+	private ArrayList<SymbolicConstant> int2bvConstants = new ArrayList<SymbolicConstant>();
 
 	// Constructor...
 
@@ -2864,86 +2867,104 @@ public class CommonPreUniverse implements PreUniverse {
 		if (!(left.type() instanceof SymbolicCompleteArrayType))
 			throw err("Argument left to method bitand does not have array type."
 					+ "\narray: " + left + "\ntype: " + left.type());
-		else if (!(right.type() instanceof SymbolicCompleteArrayType))
+		if (!(right.type() instanceof SymbolicCompleteArrayType))
 			throw err("Argument right to method bitand does not have array type."
 					+ "\narray: " + right + "\ntype: " + right.type());
-		else {
-			SymbolicCompleteArrayType leftArrayType = (SymbolicCompleteArrayType) left
-					.type();
-			SymbolicCompleteArrayType rightArrayType = (SymbolicCompleteArrayType) right
-					.type();
+		SymbolicCompleteArrayType leftArrayType = (SymbolicCompleteArrayType) left
+				.type();
+		SymbolicCompleteArrayType rightArrayType = (SymbolicCompleteArrayType) right
+				.type();
 
-			if (!leftArrayType.equals(rightArrayType)) {
-				throw err("Argument left and right to method bitand does not have the same array type."
-						+ "\nleft array: "
-						+ left
-						+ "\nleft type: "
-						+ left.type()
-						+ "\nright array: "
-						+ right
-						+ "\nright type: " + right.type());
-			}
-			if (leftArrayType.typeKind().ordinal() != SymbolicTypeKind.BOOLEAN
-					.ordinal()) {
-				throw err("Elements of left or right to method bitand does not have the boolean type."
-						+ "\nelement type: " + leftArrayType.typeKind());
-			}
-
-			IntegerNumber lengthNumber = (IntegerNumber) leftArrayType.extent();
-
-			assert lengthNumber != null;
-
-			int size = lengthNumber.intValue();
-			BooleanExpression[] resultArray = new BooleanExpression[size];
-
-			for (int i = 0; i < size; i++) {
-				NumericExpression index = integer(i);
-				BooleanExpression leftElement = (BooleanExpression) arrayRead(
-						left, index);
-				BooleanExpression rightElement = (BooleanExpression) arrayRead(
-						right, index);
-				BooleanExpression resultElement = and(leftElement, rightElement);
-
-				resultArray[i] = resultElement;
-			}
-			return array(leftArrayType, resultArray);
+		if (!leftArrayType.equals(rightArrayType)) {
+			throw err("Argument left and right to method bitand does not have the same array type."
+					+ "\nleft array: "
+					+ left
+					+ "\nleft type: "
+					+ left.type()
+					+ "\nright array: "
+					+ right
+					+ "\nright type: "
+					+ right.type());
 		}
+		if (leftArrayType.elementType().isBoolean()) {
+			throw err("Elements of left or right to method bitand does not have the boolean type."
+					+ "\nelement type: " + leftArrayType.typeKind());
+		}
+
+		IntegerNumber lengthNumber = (IntegerNumber) extractNumber(leftArrayType
+				.extent());
+
+		assert lengthNumber != null;
+
+		int size = lengthNumber.intValue();
+		BooleanExpression[] resultArray = new BooleanExpression[size];
+
+		if (size < 0) {
+			throw err("Argument left and right to method bitand could not have a length less than 0."
+					+ "\nleft array: "
+					+ left
+					+ "\nleft array length: "
+					+ extractNumber(leftArrayType.extent())
+					+ "\nright array: "
+					+ right
+					+ "\nleft array length: "
+					+ extractNumber(rightArrayType.extent()));
+		}
+		for (int i = 0; i < size; i++) {
+			NumericExpression index = integer(i);
+			BooleanExpression leftElement = (BooleanExpression) arrayRead(left,
+					index);
+			BooleanExpression rightElement = (BooleanExpression) arrayRead(
+					right, index);
+			BooleanExpression resultElement = and(leftElement, rightElement);
+
+			resultArray[i] = resultElement;
+		}
+		return array(leftArrayType, resultArray);
 	}
 
 	@Override
 	public SymbolicExpression integer2Bitvector(NumericExpression integer,
-			NumericExpression length) {
-		assert integer != null && length != null;
+			SymbolicCompleteArrayType bitVectorType) {
+		assert integer != null;
 		assert integer.type() instanceof SymbolicIntegerType;
-		assert length.type() instanceof SymbolicIntegerType;
-		assert length.operator() == SymbolicOperator.CONCRETE;
 
+		IntegerNumber lenNum = (IntegerNumber) extractNumber(bitVectorType
+				.extent());
 		int intVal = -1;
-		int lenVal = ((IntegerNumber) ((NumberObject) length.argument(0))
-				.getNumber()).intValue();
-		BooleanExpression[] resultArray = new BooleanExpression[lenVal];
-		SymbolicType boolArrayType = arrayType(booleanType, length);
+		int length = lenNum.intValue();
+		BooleanExpression[] resultArray = new BooleanExpression[length];
+		IntegerNumber intNum = (IntegerNumber) extractNumber(integer);
 
-		if (integer.operator() == SymbolicOperator.CONCRETE) {
-			SymbolicObject intObject = integer.argument(0);
-
-			intVal = ((IntegerNumber) ((NumberObject) intObject).getNumber())
-					.intValue();
+		if (intNum != null) {
+			intVal = intNum.intValue();
 			assert intVal >= 0;
-			for (int i = lenVal - 1; i >= 0; i--) {
+			for (int i = length - 1; i >= 0; i--) {
 				resultArray[i] = bool(intVal % 2 == 1);
 				intVal = intVal / 2;
 			}
-			return array(boolArrayType, resultArray);
+			return array(bitVectorType, resultArray);
 		} else {
-			SymbolicFunctionType int2bvFunctionType = functionType(
-					Arrays.asList(integerType), boolArrayType);
-			SymbolicConstant int2bvConstant = symbolicConstant(
-					stringObject("int2bv"), int2bvFunctionType);
-			SymbolicExpression int2bvResult = apply(int2bvConstant,
-					Arrays.asList(integer));
+			SymbolicConstant int2bvConstant = null;
 
-			return int2bvResult;
+			for (SymbolicConstant sc : int2bvConstants) {
+				SymbolicCompleteArrayType tmpType = (SymbolicCompleteArrayType) sc
+						.type();
+				IntegerNumber tmpLenNum = (IntegerNumber) tmpType.extent();
+				int tmpLenVal = tmpLenNum.intValue();
+
+				if (tmpLenVal == length)
+					int2bvConstant = sc;
+			}
+			if (int2bvConstant == null) {
+				SymbolicFunctionType int2bvFunctionType = functionType(
+						Arrays.asList(integerType), bitVectorType);
+
+				int2bvConstant = symbolicConstant(stringObject("int2bv"),
+						int2bvFunctionType);
+				int2bvConstants.add(int2bvConstant);
+			}
+			return apply(int2bvConstant, Arrays.asList(integer));
 		}
 	}
 
@@ -2955,26 +2976,32 @@ public class CommonPreUniverse implements PreUniverse {
 				.type();
 
 		assert boolArrayType instanceof SymbolicCompleteArrayType;
-		assert boolArrayType.typeKind().ordinal() != SymbolicTypeKind.BOOLEAN
-				.ordinal();
+		assert boolArrayType.elementType().isBoolean();
 
-		IntegerNumber lenNum = (IntegerNumber) boolArrayType.extent();
+		IntegerNumber lenNum = (IntegerNumber) extractNumber(boolArrayType
+				.extent());
 
 		assert lenNum != null;
 
 		int lenVal = lenNum.intValue();
-		int intVal = 0;
-		int maxVal = Integer.MAX_VALUE;
-		// TODO: Set the max limit of intVal based on the length
+		IntegerNumber resultNum = numberFactory.integer(0);
+		IntegerNumber j = numberFactory.integer(1);
+		IntegerNumber int_two = numberFactory.integer(2);
 
-		for (int i = lenVal - 1, j = 1; i >= 0 && j <= maxVal; i--, j *= 2) {
+		for (int i = lenVal - 1; i >= 0; i--, j = numberFactory.multiply(j,
+				int_two)) {
 			NumericExpression index = integer(i);
 			BooleanExpression boolArrayElement = (BooleanExpression) arrayRead(
 					bitvector, index);
 			boolean boolVal = boolArrayElement.isTrue();
 
-			intVal = boolVal ? intVal + j : intVal;
+			resultNum = boolVal ? numberFactory.add(resultNum, j) : resultNum;
 		}
-		return integer(intVal);
+		return number(resultNum);
+	}
+
+	@Override
+	public SymbolicType bitVectorType(int length) {
+		return arrayType(booleanType, integer(length));
 	}
 }
