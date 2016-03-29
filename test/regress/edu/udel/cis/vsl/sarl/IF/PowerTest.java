@@ -14,7 +14,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 
 public class PowerTest {
 
-	public final static boolean debug = true;
+	public final static boolean debug = false;
 
 	public final static PrintStream out = System.out;
 
@@ -33,8 +33,6 @@ public class PowerTest {
 
 	public final static NumericExpression z = (NumericExpression) universe
 			.symbolicConstant(universe.stringObject("z"), real);
-
-	private NumericExpression negOne = universe.rational(-1);
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
