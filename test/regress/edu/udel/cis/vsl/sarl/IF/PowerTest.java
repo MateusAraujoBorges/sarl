@@ -58,34 +58,33 @@ public class PowerTest {
 		debug("x2^(1/2) = " + x3);
 		assertEquals(x, x3);
 	}
-	
+
 	/**
-	 * Expression = ((-x)^2)^(1/2)
-	 * Actual = Pow(Pow(-x, 2), (1/2));
-	 * Expected = x;
+	 * Expression = ((-x)^2)^(1/2) Actual = Pow(Pow(-x, 2), (1/2)); Expected =
+	 * x;
 	 */
 	@Test
-	public void squareRootOfSquare_NegBase_EvenExp(){
+	public void squareRootOfSquare_NegBase_EvenExp() {
 		NumericExpression neg_x = universe.minus(x);
 		NumericExpression pow2_neg_x = universe.power(neg_x, 2);
-		NumericExpression actualResult = sqrt(pow2_neg_x); 
+		NumericExpression actualResult = sqrt(pow2_neg_x);
 		NumericExpression expectedResult = x;
-		
+
 		debug("Actual: " + actualResult);
 		debug("Expected: " + expectedResult);
 		assertEquals(expectedResult, actualResult);
 	}
 
 	/**
-	 * Expression = ((-x)^3)^(1/3)
-	 * Actual = Pow(Pow(-x, 3), (1/3));
-	 * Expected = -x;
+	 * Expression = ((-x)^3)^(1/3) Actual = Pow(Pow(-x, 3), (1/3)); Expected =
+	 * -x;
 	 */
 	@Test
-	public void squareRootOfSquare_NegBase_OddExp(){
+	public void squareRootOfSquare_NegBase_OddExp() {
 		NumericExpression neg_x = universe.minus(x);
 		NumericExpression pow3_neg_x = universe.power(neg_x, 3);
-		NumericExpression actualResult = universe.power(pow3_neg_x, universe.rational(1, 3)); 
+		NumericExpression actualResult = universe.power(pow3_neg_x,
+				universe.rational(1, 3));
 		NumericExpression expectedResult = neg_x;
 
 		debug("Actual: " + actualResult);
@@ -292,6 +291,23 @@ public class PowerTest {
 
 		debug("left " + e1);
 		debug("right " + e2);
-		assertEquals(reasoner.simplify(e1), reasoner.simplify(e1));
+		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
+	}
+
+	/**
+	 * (x+y)^2 - (x-y)^2 = 4xy
+	 */
+	@Test
+	public void polynomialsTest() {
+		NumericExpression e1 = universe.subtract(
+				universe.power(universe.add(x, y), universe.rational(2)),
+				universe.power(universe.subtract(x, y), universe.rational(2)));
+		NumericExpression e2 = universe.multiply(universe.rational(4),
+				universe.multiply(x, y));
+
+		debug("left " + e1);
+		debug("left simplified " + reasoner.simplify(e1));
+		debug("right " + e2);
+		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
 	}
 }
