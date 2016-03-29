@@ -14,7 +14,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 
 public class PowerTest {
 
-	public final static boolean debug = true;
+	public final static boolean debug = false;
 
 	public final static PrintStream out = System.out;
 
@@ -33,6 +33,8 @@ public class PowerTest {
 
 	public final static NumericExpression z = (NumericExpression) universe
 			.symbolicConstant(universe.stringObject("z"), real);
+
+	// private NumericExpression twoRat = universe.rational(2);
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -143,4 +145,35 @@ public class PowerTest {
 		assertEquals(sqrtx, ws);
 	}
 
+	/**
+	 * Multiply powers with the same base: (x^y)*(x^z)=x^(y+z)
+	 */
+	@Test
+	public void multiplyPower() {
+		NumericExpression e1 = universe.multiply(universe.power(x, y),
+				universe.power(x, z));
+		NumericExpression e2 = universe.power(x, universe.add(y, z));
+
+		debug("left " + e1);
+		debug("left simplied " + reasoner.simplify(e1));
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * When raising a product to a power, raise each factor with a power:
+	 * 
+	 * <pre>
+	 * (xy)^z = (x^z)(y^z)
+	 * </pre>
+	 */
+	@Test
+	public void productToPower() {
+		NumericExpression e1 = universe.power(universe.multiply(x, y), z);
+		NumericExpression e2 = universe.multiply(universe.power(x, z),
+				universe.power(y, z));
+
+		debug("left " + e1);
+		debug("right" + e2);
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
 }
