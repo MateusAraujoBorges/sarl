@@ -575,6 +575,19 @@ public interface NumberFactory {
 	RationalNumber power(RationalNumber number, int exp);
 
 	/**
+	 * Calculate the nth root of the given number and n. The inputs and output
+	 * are {@link IntegerNumbers}
+	 * 
+	 * @param number
+	 *            a non-<code>null</code> {@link IntegerNumbers};
+	 * @param n
+	 *            a non-<code>null</code> {@link IntegerNumbers} representing
+	 *            the n;
+	 * @return
+	 */
+	IntegerNumber nthRootInt(IntegerNumber number, IntegerNumber n);
+
+	/**
 	 * A simple type for recording the result of attempting to take the union of
 	 * two intervals i1 and i2. There are three possibilities:
 	 * <ol>

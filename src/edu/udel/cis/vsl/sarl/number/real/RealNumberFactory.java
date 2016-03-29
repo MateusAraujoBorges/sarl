@@ -2110,4 +2110,45 @@ public class RealNumberFactory implements NumberFactory {
 
 		return result;
 	}
+
+	@Override
+	public IntegerNumber nthRootInt(IntegerNumber number, IntegerNumber n) {
+		int nVal = n.intValue();
+
+		if (nVal <= 0)
+			throw new IllegalArgumentException(
+					"The Argument 'n' to the method nthRootInt should be greater than 0."
+							+ "\nThe n is: " + nVal);
+		if (nVal == 1 || number.isZero() || number.isOne())
+			return number;
+		if (number.signum() < 0) {
+			if (nVal % 2 == 0) {
+				throw new IllegalArgumentException(
+						"When the argument 'number' to the method nthRootInt is negative, "
+								+ "\nThe argument 'n' should be greater than 0."
+								+ "\nThe n is: " + nVal);
+			}
+		}
+
+		int nMinus1 = nVal - 1;
+		IntegerNumber result = null;
+		RationalNumber numRat = rational(number);
+		RationalNumber nth = divide(oneRational, rational(n));
+		RationalNumber tmpNumber = oneRational;
+		RationalNumber diff = oneRational;
+		RationalNumber condition = subtract(rational(abs(diff)), oneRational);
+
+		while (condition.signum() > 0) {
+			diff = multiply(
+					nth,
+					subtract(divide(numRat, power(tmpNumber, nMinus1)),
+							tmpNumber));
+			tmpNumber = add(diff, tmpNumber);
+			condition = subtract(rational(abs(diff)), oneRational);
+		}
+		result = floor(tmpNumber);
+		if (subtract(power(result, nVal), number).signum() != 0)
+			return null;
+		return result;
+	}
 }
