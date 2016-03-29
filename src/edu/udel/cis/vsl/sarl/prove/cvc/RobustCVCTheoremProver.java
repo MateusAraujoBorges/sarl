@@ -124,6 +124,8 @@ public class RobustCVCTheoremProver implements TheoremProver {
 			command.add("--lang=cvc4");
 			command.add("--no-interactive");
 			command.add("--rewrite-divk");
+			// solve non_linear
+			command.add("--force-logic=AUFNIRA");
 			// also try "--use-theory=idl", which can sometimes solve non-linear
 			// queries
 		} else
@@ -210,8 +212,8 @@ public class RobustCVCTheoremProver implements TheoremProver {
 			FastList<String> predicateDecls = translator.getDeclarations();
 			FastList<String> predicateText = translator.getTranslation();
 			
-//			System.out.println("predicateDecls:"+predicateDecls);
-//			System.out.println("predicateText:"+predicateText);
+			System.out.println("predicateDecls:"+predicateDecls);
+			System.out.println("predicateText:"+predicateText);
 			
 			predicateDecls.print(stdin);
 			stdin.print("QUERY ");
