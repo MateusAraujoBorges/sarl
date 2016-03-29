@@ -14,7 +14,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 
 public class PowerTest {
 
-	public final static boolean debug = false;
+	public final static boolean debug = true;
 
 	public final static PrintStream out = System.out;
 
@@ -34,7 +34,7 @@ public class PowerTest {
 	public final static NumericExpression z = (NumericExpression) universe
 			.symbolicConstant(universe.stringObject("z"), real);
 
-	// private NumericExpression twoRat = universe.rational(2);
+	private NumericExpression negOne = universe.rational(-1);
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -160,6 +160,21 @@ public class PowerTest {
 	}
 
 	/**
+	 * Divide powers with the same base: (x^y)/(x^z) =x^(y-z).
+	 */
+	@Test
+	public void dividePower() {
+		NumericExpression e1 = universe.divide(universe.power(x, y),
+				universe.power(x, z));
+		NumericExpression e2 = universe.power(x, universe.subtract(y, z));
+
+		debug("left " + e1);
+		debug("left simplied " + reasoner.simplify(e1));
+		debug("right " + e2);
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
 	 * When raising a product to a power, raise each factor with a power:
 	 * 
 	 * <pre>
@@ -175,5 +190,76 @@ public class PowerTest {
 		debug("left " + e1);
 		debug("right" + e2);
 		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * When raising a quotient to a power, raise both the numerator and the
+	 * denominator to the power.
+	 * 
+	 * <pre>
+	 * (x/y)^z = (x^z)/(y^z)
+	 * </pre>
+	 */
+	@Test
+	public void quotientToPower() {
+		NumericExpression e1 = universe.power(universe.divide(x, y), z);
+		NumericExpression e2 = universe.divide(universe.power(x, z),
+				universe.power(y, z));
+
+		debug("left " + e1);
+		debug("right" + e2);
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * Raise any number(except 0 itself) to a zero power you'll always get 1
+	 */
+	@Test
+	public void zeroExponent() {
+		NumericExpression e1 = universe.power(universe.power(x, y),
+				universe.zeroReal());
+		NumericExpression e2 = universe.power(z, universe.zeroReal());
+
+		debug("left " + e1);
+		debug("right " + e2);
+		assertEquals(universe.oneReal(), reasoner.simplify(e1));
+		assertEquals(universe.oneReal(), reasoner.simplify(e2));
+	}
+
+	/**
+	 * 0^0 exception
+	 */
+	@Test(expected = SARLException.class)
+	public void zeroExponentZero() {
+		NumericExpression e1 = universe.power(universe.zeroReal(),
+				universe.zeroReal());
+
+		debug("left " + e1);
+		assertEquals(universe.oneReal(), reasoner.simplify(e1));
+	}
+
+	/**
+	 * x^1 = x
+	 */
+	@Test
+	public void powerOne() {
+		NumericExpression e1 = universe.power(x, universe.oneReal());
+
+		debug("left " + e1);
+		assertEquals(x, reasoner.simplify(e1));
+	}
+
+	/**
+	 * x^(-y) = 1/(x^y)
+	 */
+	@Test
+	public void negativeExponent() {
+		NumericExpression e1 = universe.power(x, universe.minus(y));
+		NumericExpression e2 = universe.divide(universe.oneReal(),
+				universe.power(x, y));
+
+		debug("left " + e1);
+		debug("right " + e2);
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e1));
 	}
 }
