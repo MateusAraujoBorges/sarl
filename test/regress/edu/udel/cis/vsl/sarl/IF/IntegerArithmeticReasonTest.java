@@ -39,9 +39,9 @@ public class IntegerArithmeticReasonTest {
 	public final static PrintStream out = System.out;
 	public final static boolean debug = false;
 	private SymbolicUniverse universe;
-	private StringObject u_obj; // "u"
+	private StringObject u_obj, x_obj, y_obj, z_obj; // "u", "x", "y", "z"
 	private SymbolicType integerType;
-	private NumericSymbolicConstant u; // integer symbolic constant
+	private NumericSymbolicConstant u, x, y, z;
 	private NumericExpression threeInt, fiveInt;
 	private BooleanExpression trueExpr, falseExpr;
 	private Reasoner reasoner;
@@ -50,8 +50,17 @@ public class IntegerArithmeticReasonTest {
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
 		u_obj = universe.stringObject("u");
+		x_obj = universe.stringObject("x");
+		y_obj = universe.stringObject("y");
+		z_obj = universe.stringObject("z");
 		integerType = universe.integerType();
 		u = (NumericSymbolicConstant) universe.symbolicConstant(u_obj,
+				integerType);
+		x = (NumericSymbolicConstant) universe.symbolicConstant(x_obj,
+				integerType);
+		y = (NumericSymbolicConstant) universe.symbolicConstant(y_obj,
+				integerType);
+		z = (NumericSymbolicConstant) universe.symbolicConstant(z_obj,
 				integerType);
 		threeInt = universe.integer(3);
 		fiveInt = universe.integer(5);
@@ -178,10 +187,32 @@ public class IntegerArithmeticReasonTest {
 		assertEquals(universe.zeroInt(), reasoner.simplify(e));
 	}
 
-	// When evaluating x%constant: if x is a Monomial c*m,
-	// (c*m)%d = ((c%d)*m)%d, and (c1*m1 + c2*m2)%d =...
-	// (x^n)%d = ((x%d)^n)%d. In short, apply %d to all
-	// constants...
-	// (a*b)%d = ((a%d)*b)%d
-	// (a+b)%d = ((a%d)+b)%d
+	/**
+	 * power test, (x^y)*(x^z)=x^(y+z)
+	 */
+	@Test
+	public void addExponentTest() {
+		NumericExpression e1 = universe.multiply(universe.power(x, y),
+				universe.power(x, z));
+		NumericExpression e2 = universe.power(x, universe.add(y, z));
+		reasoner = universe.reasoner(trueExpr);
+
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * power test. true : (x^y)^z=x^(y*z)
+	 */
+	@Test
+	public void exponentTest() {
+		NumericExpression e1 = universe.power(universe.power(x, y), z);
+		NumericExpression e2 = universe.power(x, universe.multiply(y, z));
+		reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
+	}
 }
