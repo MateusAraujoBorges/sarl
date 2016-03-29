@@ -1,7 +1,6 @@
 package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -15,7 +14,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 
 public class PowerTest {
 
-	public final static boolean debug = true;
+	public final static boolean debug = false;
 
 	public final static PrintStream out = System.out;
 
