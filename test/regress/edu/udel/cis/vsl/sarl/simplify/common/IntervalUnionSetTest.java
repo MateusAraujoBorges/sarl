@@ -32,7 +32,7 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Range;
  *
  */
 public class IntervalUnionSetTest {
-	// Declaration:
+	// Declaration..
 	private static PrintStream OUT = System.out;
 	private static boolean DEBUG = false;
 	private static boolean ASSERTION_ENABLED = false;
