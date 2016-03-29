@@ -35,6 +35,8 @@ public class IntervalUnionSetTest {
 	// Declaration:
 	private static PrintStream OUT = System.out;
 	private static boolean DEBUG = false;
+	private static boolean ASSERTION_ENABLED = false;
+
 	private static int ARR_SIZE = 15;
 	private static PreUniverse universe;
 	private static NumberFactory numberFactory = Numbers.REAL_FACTORY;
@@ -111,7 +113,7 @@ public class IntervalUnionSetTest {
 		if (isDebug) {
 			if (intervals != null) {
 				StringBuilder sb = new StringBuilder();
-				
+
 				sb.append("{");
 				for (int i = 0; i < intervals.length; i++) {
 					if (intervals[i] != null) {
@@ -134,6 +136,7 @@ public class IntervalUnionSetTest {
 	public static void setUpBeforeClass() throws Exception {
 		FactorySystem system = PreUniverses.newIdealFactorySystem2();
 
+		assert ASSERTION_ENABLED = true;
 		universe = PreUniverses.newPreUniverse(system);
 		RAT_X = (NumericSymbolicConstant) universe.symbolicConstant(
 				universe.stringObject("X"), universe.realType());
@@ -191,14 +194,22 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void constructIntervalUnionSet_Number_Int_Null() {
-		IntegerNumber nullNum = null;
-		actual = new IntervalUnionSet(nullNum);
+		if (ASSERTION_ENABLED) {
+			IntegerNumber nullNum = null;
+			actual = new IntervalUnionSet(nullNum);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void constructIntervalUnionSet_Number_Rat_Null() {
-		RationalNumber nullNum = null;
-		actual = new IntervalUnionSet(nullNum);
+		if (ASSERTION_ENABLED) {
+			RationalNumber nullNum = null;
+			actual = new IntervalUnionSet(nullNum);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -221,8 +232,12 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void constructIntervalUnionSet_Interval_Null() {
-		Interval nullInterval = null;
-		actual = new IntervalUnionSet(nullInterval);
+		if (ASSERTION_ENABLED) {
+			Interval nullInterval = null;
+			actual = new IntervalUnionSet(nullInterval);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -272,36 +287,52 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void constructIntervalUnionSet_IntervalList_NullList() {
-		Interval[] nullList = null;
-		actual = new IntervalUnionSet(nullList);
+		if (ASSERTION_ENABLED) {
+			Interval[] nullList = null;
+			actual = new IntervalUnionSet(nullList);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void constructIntervalUnionSet_IntervalList_EmptyList() {
-		Interval[] emptyList = new Interval[0];
-		actual = new IntervalUnionSet(emptyList);
+		if (ASSERTION_ENABLED) {
+			Interval[] emptyList = new Interval[0];
+			actual = new IntervalUnionSet(emptyList);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void constructIntervalUnionSet_IntervalList_Int_mismatchedType() {
-		Interval int_zeroInterval = numberFactory.newInterval(true, INT_ZERO,
-				false, INT_ZERO, false);
-		Interval rat_zeroInterval = numberFactory.newInterval(false, INT_ZERO,
-				false, INT_ZERO, false);
+		if (ASSERTION_ENABLED) {
+			Interval int_zeroInterval = numberFactory.newInterval(true,
+					INT_ZERO, false, INT_ZERO, false);
+			Interval rat_zeroInterval = numberFactory.newInterval(false,
+					INT_ZERO, false, INT_ZERO, false);
 
-		Interval[] intList = { int_zeroInterval, rat_zeroInterval };
-		actual = new IntervalUnionSet(intList);
+			Interval[] intList = { int_zeroInterval, rat_zeroInterval };
+			actual = new IntervalUnionSet(intList);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void constructIntervalUnionSet_IntervalList_Rat_mismatchedType() {
-		Interval int_zeroInterval = numberFactory.newInterval(true, INT_ZERO,
-				false, INT_ZERO, false);
-		Interval rat_zeroInterval = numberFactory.newInterval(false, INT_ZERO,
-				false, INT_ZERO, false);
+		if (ASSERTION_ENABLED) {
+			Interval int_zeroInterval = numberFactory.newInterval(true,
+					INT_ZERO, false, INT_ZERO, false);
+			Interval rat_zeroInterval = numberFactory.newInterval(false,
+					INT_ZERO, false, INT_ZERO, false);
 
-		Interval[] intList = { rat_zeroInterval, int_zeroInterval };
-		actual = new IntervalUnionSet(intList);
+			Interval[] intList = { rat_zeroInterval, int_zeroInterval };
+			actual = new IntervalUnionSet(intList);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -624,36 +655,40 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void constructIntervalUnionSet_IntervalList_AssortedType() {
-		/*
-		 * If the range set has integer type, all of the intervals are integer
-		 * intervals. If it has real type, all of the intervals are real
-		 * intervals.
-		 */
-		Interval[] expectedList = new Interval[ARR_SIZE];
-		Interval[] list = new Interval[ARR_SIZE];
+		if (ASSERTION_ENABLED) {
+			/*
+			 * If the range set has integer type, all of the intervals are
+			 * integer intervals. If it has real type, all of the intervals are
+			 * real intervals.
+			 */
+			Interval[] expectedList = new Interval[ARR_SIZE];
+			Interval[] list = new Interval[ARR_SIZE];
 
-		for (int i = 0; i < ARR_SIZE; i++) {
-			if (i % 2 == 0) {
-				IntegerNumber int_i = numberFactory.integer(i);
-				IntegerNumber int_j = numberFactory.integer(i + 1);
+			for (int i = 0; i < ARR_SIZE; i++) {
+				if (i % 2 == 0) {
+					IntegerNumber int_i = numberFactory.integer(i);
+					IntegerNumber int_j = numberFactory.integer(i + 1);
 
-				expectedList[i / 2] = numberFactory.newInterval(true, int_i,
-						false, int_j, false);
-				list[i] = numberFactory.newInterval(true, int_i, false, int_j,
-						false);
-			} else {
-				RationalNumber rat_ni = numberFactory.rational(numberFactory
-						.integer(-i));
-				RationalNumber rat_nj = numberFactory.rational(numberFactory
-						.integer(-i + 1));
+					expectedList[i / 2] = numberFactory.newInterval(true,
+							int_i, false, int_j, false);
+					list[i] = numberFactory.newInterval(true, int_i, false,
+							int_j, false);
+				} else {
+					RationalNumber rat_ni = numberFactory
+							.rational(numberFactory.integer(-i));
+					RationalNumber rat_nj = numberFactory
+							.rational(numberFactory.integer(-i + 1));
 
-				list[i] = numberFactory.newInterval(false, rat_ni, true,
-						rat_nj, true);
+					list[i] = numberFactory.newInterval(false, rat_ni, true,
+							rat_nj, true);
+				}
 			}
-		}
 
-		expected = new IntervalUnionSet(expectedList);
-		actual = new IntervalUnionSet(list);
+			expected = new IntervalUnionSet(expectedList);
+			actual = new IntervalUnionSet(list);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -1011,8 +1046,12 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void constructIntervalUnionSet_IntervalUnionSet_Null() {
-		IntervalUnionSet nullIntervalUnionSet = null;
-		actual = new IntervalUnionSet(nullIntervalUnionSet);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet nullIntervalUnionSet = null;
+			actual = new IntervalUnionSet(nullIntervalUnionSet);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -1061,16 +1100,24 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void union_IntervalUnionSet_Null() {
-		IntervalUnionSet nullIntervalUnionSet = null;
-		IntervalUnionSet original = new IntervalUnionSet(true);
-		actual = original.union(nullIntervalUnionSet);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet nullIntervalUnionSet = null;
+			IntervalUnionSet original = new IntervalUnionSet(true);
+			actual = original.union(nullIntervalUnionSet);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void union_IntervalUnionSet_Mismatched() {
-		IntervalUnionSet rational = new IntervalUnionSet(false);
-		IntervalUnionSet integral = new IntervalUnionSet(true);
-		actual = integral.union(rational);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet rational = new IntervalUnionSet(false);
+			IntervalUnionSet integral = new IntervalUnionSet(true);
+			actual = integral.union(rational);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -1408,26 +1455,38 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void containsNumber_Int_Null() {
-		IntegerNumber nullIntNum = null;
-		IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
+		if (ASSERTION_ENABLED) {
+			IntegerNumber nullIntNum = null;
+			IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
 
-		univIntSet.containsNumber(nullIntNum);
+			univIntSet.containsNumber(nullIntNum);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void containsNumber_Rat_mismatchedType() {
-		IntegerNumber intNum = INT_ZERO;
-		IntervalUnionSet univRatSet = new IntervalUnionSet(RAT_UNIV);
+		if (ASSERTION_ENABLED) {
+			IntegerNumber intNum = INT_ZERO;
+			IntervalUnionSet univRatSet = new IntervalUnionSet(RAT_UNIV);
 
-		univRatSet.containsNumber(intNum);
+			univRatSet.containsNumber(intNum);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void containsNumber_Int_mismatchedType() {
-		RationalNumber ratNum = RAT_ZERO;
-		IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
+		if (ASSERTION_ENABLED) {
+			RationalNumber ratNum = RAT_ZERO;
+			IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
 
-		univIntSet.containsNumber(ratNum);
+			univIntSet.containsNumber(ratNum);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -1696,26 +1755,38 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void addNumber_Rat_Null() {
-		RationalNumber nullRatNum = null;
-		IntervalUnionSet univRatSet = new IntervalUnionSet(RAT_UNIV);
+		if (ASSERTION_ENABLED) {
+			RationalNumber nullRatNum = null;
+			IntervalUnionSet univRatSet = new IntervalUnionSet(RAT_UNIV);
 
-		univRatSet.addNumber(nullRatNum);
+			univRatSet.addNumber(nullRatNum);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void addNumber_Rat_mismatchedType() {
-		IntegerNumber intNum = INT_ZERO;
-		IntervalUnionSet univRatSet = new IntervalUnionSet(RAT_UNIV);
+		if (ASSERTION_ENABLED) {
+			IntegerNumber intNum = INT_ZERO;
+			IntervalUnionSet univRatSet = new IntervalUnionSet(RAT_UNIV);
 
-		univRatSet.addNumber(intNum);
+			univRatSet.addNumber(intNum);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void addNumber_Int_mismatchedType() {
-		RationalNumber ratNum = RAT_ZERO;
-		IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
+		if (ASSERTION_ENABLED) {
+			RationalNumber ratNum = RAT_ZERO;
+			IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
 
-		univIntSet.addNumber(ratNum);
+			univIntSet.addNumber(ratNum);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -2001,18 +2072,26 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void contains_IntervalUnionSet_Null() {
-		IntervalUnionSet target = null;
-		IntervalUnionSet intervalSet = new IntervalUnionSet(INT_UNIV);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet target = null;
+			IntervalUnionSet intervalSet = new IntervalUnionSet(INT_UNIV);
 
-		intervalSet.contains(target);
+			intervalSet.contains(target);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void contains_IntervalUnionSet_Mismatch() {
-		IntervalUnionSet target = new IntervalUnionSet(INT_EMPTY);
-		IntervalUnionSet intervalSet = new IntervalUnionSet(RAT_UNIV);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet target = new IntervalUnionSet(INT_EMPTY);
+			IntervalUnionSet intervalSet = new IntervalUnionSet(RAT_UNIV);
 
-		intervalSet.contains(target);
+			intervalSet.contains(target);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -2545,18 +2624,26 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void intersects_Null() {
-		IntervalUnionSet target = null;
-		IntervalUnionSet intervalSet = new IntervalUnionSet(INT_UNIV);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet target = null;
+			IntervalUnionSet intervalSet = new IntervalUnionSet(INT_UNIV);
 
-		intervalSet.intersects(target);
+			intervalSet.intersects(target);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void intersects_Mismatch() {
-		IntervalUnionSet target = new IntervalUnionSet(INT_UNIV);
-		IntervalUnionSet intervalSet = new IntervalUnionSet(RAT_UNIV);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet target = new IntervalUnionSet(INT_UNIV);
+			IntervalUnionSet intervalSet = new IntervalUnionSet(RAT_UNIV);
 
-		intervalSet.intersects(target);
+			intervalSet.intersects(target);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -2798,16 +2885,25 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void intersect_IntervalUnionSet_Null() {
-		IntervalUnionSet nullSet = null;
-		IntervalUnionSet currentSet = new IntervalUnionSet(RAT_ZERO);
-		actual = currentSet.intersect(nullSet);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet nullSet = null;
+			IntervalUnionSet currentSet = new IntervalUnionSet(RAT_ZERO);
+			actual = currentSet.intersect(nullSet);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void intersect_IntervalUnionSet_MismatchedType() {
-		IntervalUnionSet intSet = new IntervalUnionSet(INT_ZERO);
-		IntervalUnionSet ratSet = new IntervalUnionSet(RAT_ZERO);
-		actual = ratSet.intersect(intSet);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet intSet = new IntervalUnionSet(INT_ZERO);
+			IntervalUnionSet ratSet = new IntervalUnionSet(RAT_ZERO);
+
+			actual = ratSet.intersect(intSet);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -3119,16 +3215,24 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void minus_IntervalUnionSet_Null() {
-		IntervalUnionSet nullSet = null;
-		IntervalUnionSet currentSet = new IntervalUnionSet(RAT_ZERO);
-		actual = currentSet.minus(nullSet);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet nullSet = null;
+			IntervalUnionSet currentSet = new IntervalUnionSet(RAT_ZERO);
+			actual = currentSet.minus(nullSet);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void minus_IntervalUnionSet_MismatchedType() {
-		IntervalUnionSet intSet = new IntervalUnionSet(INT_ZERO);
-		IntervalUnionSet ratSet = new IntervalUnionSet(RAT_ZERO);
-		actual = ratSet.minus(intSet);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet intSet = new IntervalUnionSet(INT_ZERO);
+			IntervalUnionSet ratSet = new IntervalUnionSet(RAT_ZERO);
+			actual = ratSet.minus(intSet);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -3551,34 +3655,50 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void affineTransform_IntA_Null() {
-		IntegerNumber a = null;
-		IntegerNumber b = INT_ZERO;
-		IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
-		actual = original.affineTransform(a, b);
+		if (ASSERTION_ENABLED) {
+			IntegerNumber a = null;
+			IntegerNumber b = INT_ZERO;
+			IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
+			actual = original.affineTransform(a, b);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void affineTransform_IntB_Null() {
-		IntegerNumber a = INT_ONE;
-		IntegerNumber b = null;
-		IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
-		actual = original.affineTransform(a, b);
+		if (ASSERTION_ENABLED) {
+			IntegerNumber a = INT_ONE;
+			IntegerNumber b = null;
+			IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
+			actual = original.affineTransform(a, b);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void affineTransform_RatA_Mismatched() {
-		RationalNumber a = RAT_ONE;
-		IntegerNumber b = INT_ONE;
-		IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
-		actual = original.affineTransform(a, b);
+		if (ASSERTION_ENABLED) {
+			RationalNumber a = RAT_ONE;
+			IntegerNumber b = INT_ONE;
+			IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
+			actual = original.affineTransform(a, b);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void affineTransform_IntB_Mismatched() {
-		RationalNumber a = RAT_ONE;
-		IntegerNumber b = INT_ONE;
-		IntervalUnionSet original = new IntervalUnionSet(RAT_ONE);
-		actual = original.affineTransform(a, b);
+		if (ASSERTION_ENABLED) {
+			RationalNumber a = RAT_ONE;
+			IntegerNumber b = INT_ONE;
+			IntervalUnionSet original = new IntervalUnionSet(RAT_ONE);
+			actual = original.affineTransform(a, b);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
@@ -3684,24 +3804,33 @@ public class IntervalUnionSetTest {
 
 	@Test(expected = AssertionError.class)
 	public void symbolicRepresentation_NullUniverse() {
-		IntervalUnionSet set = new IntervalUnionSet(false);
-		SymbolicExpression expected = universe.falseExpression();
-		SymbolicExpression actual = set.symbolicRepresentation(RAT_X, null);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet set = new IntervalUnionSet(false);
+			SymbolicExpression expected = universe.falseExpression();
+			SymbolicExpression actual = set.symbolicRepresentation(RAT_X, null);
 
-		p(DEBUG, expected.toString());
-		p(DEBUG, actual.toString());
-		assertEquals(expected, actual);
+			p(DEBUG, expected.toString());
+			p(DEBUG, actual.toString());
+			assertEquals(expected, actual);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test(expected = AssertionError.class)
 	public void symbolicRepresentation_NullX() {
-		IntervalUnionSet set = new IntervalUnionSet(false);
-		SymbolicExpression expected = universe.falseExpression();
-		SymbolicExpression actual = set.symbolicRepresentation(null, universe);
+		if (ASSERTION_ENABLED) {
+			IntervalUnionSet set = new IntervalUnionSet(false);
+			SymbolicExpression expected = universe.falseExpression();
+			SymbolicExpression actual = set.symbolicRepresentation(null,
+					universe);
 
-		p(DEBUG, expected.toString());
-		p(DEBUG, actual.toString());
-		assertEquals(expected, actual);
+			p(DEBUG, expected.toString());
+			p(DEBUG, actual.toString());
+			assertEquals(expected, actual);
+		}else{
+			throw new AssertionError();
+		}
 	}
 
 	@Test
