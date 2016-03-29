@@ -118,5 +118,21 @@ public class SimplifyTest {
 
 		assertEquals(concreteArray, simplifiedArrayLambda);
 	}
-
+	
+	@Test
+	public void divideTest(){
+			NumericExpression a = (NumericExpression) universe.symbolicConstant(
+					universe.stringObject("a"), intType);
+			NumericExpression b = (NumericExpression) universe.symbolicConstant(
+					universe.stringObject("a"), intType);
+			BooleanExpression precon = universe.equals(universe.integer(3)
+					, universe.divide(a, b));
+			BooleanExpression predicate = universe.equals(a, 
+					universe.multiply(b, universe.integer(3)));
+			BooleanExpression e = universe.forall((SymbolicConstant)a, 
+					universe.implies(precon, predicate));
+			Reasoner r = universe.reasoner(universe.bool(true));
+			r.isValid(e);
+	}
+	
 }
