@@ -14,7 +14,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 
 public class PowerTest {
 
-	public final static boolean debug = false;
+	public final static boolean debug = true;
 
 	public final static PrintStream out = System.out;
 
@@ -57,6 +57,20 @@ public class PowerTest {
 		debug("x2 = " + x2);
 		debug("x2^(1/2) = " + x3);
 		assertEquals(x, x3);
+	}
+
+	/**
+	 * sqrt(xy) = sqrt(x)sqrt(y)
+	 */
+	@Test
+	public void sqaureRootOfProduct() {
+		NumericExpression x1 = universe.multiply(x, y);
+		NumericExpression e1 = sqrt(x1);
+		NumericExpression e2 = universe.multiply(sqrt(x), sqrt(y));
+
+		debug("e1 = " + e1);
+		debug("e2 = " + e2);
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
 	}
 
 	/**
