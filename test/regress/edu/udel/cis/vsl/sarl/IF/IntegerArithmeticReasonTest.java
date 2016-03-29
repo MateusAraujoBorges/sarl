@@ -188,10 +188,10 @@ public class IntegerArithmeticReasonTest {
 	}
 
 	/**
-	 * power test, (x^y)*(x^z)=x^(y+z)
+	 * Multiply powers with the same base: (x^y)*(x^z)=x^(y+z)
 	 */
 	@Test
-	public void addExponentTest() {
+	public void multiplyPowerTest() {
 		NumericExpression e1 = universe.multiply(universe.power(x, y),
 				universe.power(x, z));
 		NumericExpression e2 = universe.power(x, universe.add(y, z));
@@ -201,10 +201,10 @@ public class IntegerArithmeticReasonTest {
 	}
 
 	/**
-	 * power test. true : (x^y)^z=x^(y*z)
+	 * Raise a power to a power: (x^y)^z=x^(y*z)
 	 */
 	@Test
-	public void exponentTest() {
+	public void PowerToPowerTest() {
 		NumericExpression e1 = universe.power(universe.power(x, y), z);
 		NumericExpression e2 = universe.power(x, universe.multiply(y, z));
 		reasoner = universe.reasoner(trueExpr);
