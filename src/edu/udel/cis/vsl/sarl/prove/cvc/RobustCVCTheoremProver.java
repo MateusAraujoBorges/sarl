@@ -112,7 +112,9 @@ public class RobustCVCTheoremProver implements TheoremProver {
 		// The following is apparently necessary since the same bound symbolic
 		// constant can be used in different scopes in the context; CVC*
 		// requires that these map to distinct variables.
-		// context = (BooleanExpression) universe.cleanBoundVariables(context);
+		// The CVC translator will screw up if there is a bound variable and a
+		// free variable with the same name because it is caching translation
+		context = (BooleanExpression) universe.cleanBoundVariables(context);
 		this.assumptionTranslator = new CVCTranslator(universe, context, true);
 		command.add(info.getPath().getAbsolutePath());
 		command.addAll(info.getOptions());
@@ -211,10 +213,10 @@ public class RobustCVCTheoremProver implements TheoremProver {
 					predicate);
 			FastList<String> predicateDecls = translator.getDeclarations();
 			FastList<String> predicateText = translator.getTranslation();
-			
-//			System.out.println("predicateDecls:"+predicateDecls);
-//			System.out.println("predicateText:"+predicateText);
-			
+
+			// System.out.println("predicateDecls:"+predicateDecls);
+			// System.out.println("predicateText:"+predicateText);
+
 			predicateDecls.print(stdin);
 			stdin.print("QUERY ");
 			predicateText.print(stdin);
