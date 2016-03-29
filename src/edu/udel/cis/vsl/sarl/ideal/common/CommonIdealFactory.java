@@ -1335,18 +1335,8 @@ public class CommonIdealFactory implements IdealFactory {
 		return isNonZero(rational.numerator(this));
 	}
 
-	/**
-	 * Given a rational expression <code>rational</code> returns an expression
-	 * equivalent to 0&lt;<code>rational</code>. This method will perform basic
-	 * simplifications; for example, if <code>rational</code> is concrete, this
-	 * method will return a concrete boolean expression (either "true" or
-	 * "false").
-	 * 
-	 * @param rational
-	 *            a non-<code>null</code> instance of {@link RationalExpression}
-	 * @return an expression equivalent to 0&lt;<code>rational</code>
-	 */
-	private BooleanExpression isPositive(RationalExpression rational) {
+	@Override
+	public BooleanExpression isPositive(RationalExpression rational) {
 		Number number = extractNumber(rational);
 
 		if (number == null) {
@@ -1362,18 +1352,8 @@ public class CommonIdealFactory implements IdealFactory {
 		return number.signum() > 0 ? trueExpr : falseExpr;
 	}
 
-	/**
-	 * Given a rational expression <code>rational</code> returns an expression
-	 * equivalent to 0&le;<code>rational</code>. This method will perform basic
-	 * simplifications; for example, if <code>rational</code> is concrete, this
-	 * method will return a concrete boolean expression (either "true" or
-	 * "false").
-	 * 
-	 * @param rational
-	 *            a non-<code>null</code> instance of {@link RationalExpression}
-	 * @return an expression equivalent to 0&le;<code>rational</code>
-	 */
-	private BooleanExpression isNonnegative(RationalExpression rational) {
+	@Override
+	public BooleanExpression isNonnegative(RationalExpression rational) {
 		Number number = extractNumber(rational);
 
 		if (number == null) {
@@ -2073,7 +2053,7 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public Monic monic(SymbolicType type, PrimitivePower[] factorSet) {
 		int n = factorSet.length;
-	
+
 		if (n == 0)
 			return one(type);
 		if (n == 1)
@@ -2354,7 +2334,7 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	// Rational expressions...
-	
+
 	@Override
 	public NTRationalExpression ntRationalExpression(Monomial numerator,
 			Monomial denominator) {

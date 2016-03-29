@@ -634,6 +634,32 @@ public interface IdealFactory extends NumericExpressionFactory {
 	RationalExpression ntRationalExpression(Monomial numerator,
 			Monomial denominator);
 
+	/**
+	 * Given a rational expression <code>rational</code> returns an expression
+	 * equivalent to 0&lt;<code>rational</code>. This method will perform basic
+	 * simplifications; for example, if <code>rational</code> is concrete, this
+	 * method will return a concrete boolean expression (either "true" or
+	 * "false").
+	 * 
+	 * @param rational
+	 *            a non-<code>null</code> instance of {@link RationalExpression}
+	 * @return an expression equivalent to 0&lt;<code>rational</code>
+	 */
+	BooleanExpression isPositive(RationalExpression rational);
+
+	/**
+	 * Given a rational expression <code>rational</code> returns an expression
+	 * equivalent to 0&le;<code>rational</code>. This method will perform basic
+	 * simplifications; for example, if <code>rational</code> is concrete, this
+	 * method will return a concrete boolean expression (either "true" or
+	 * "false").
+	 * 
+	 * @param rational
+	 *            a non-<code>null</code> instance of {@link RationalExpression}
+	 * @return an expression equivalent to 0&le;<code>rational</code>
+	 */
+	BooleanExpression isNonnegative(RationalExpression rational);
+
 	// General
 
 	@Override
