@@ -321,7 +321,7 @@ public class IntegerArithmeticReasonDevTest {
 	// }
 
 	/**
-	 * Symbolic Integer modulus. true : (x^y)*(x^z)=x^(y+z)
+	 * Symbolic Integer power. true : (x^y)*(x^z)=x^(y+z)
 	 */
 	@Test
 	public void addExponentTest() {
@@ -331,5 +331,29 @@ public class IntegerArithmeticReasonDevTest {
 		reasoner = universe.reasoner(trueExpr);
 
 		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+	
+	/**
+	 * Symbolic Integer modulus. true : (x^y)^z=x^(y*z)
+	 */
+	@Test
+	public void exponentTest() {
+		NumericExpression e1 = universe.power(universe.power(x, y), z);
+		NumericExpression e2 = universe.power(x, universe.multiply(y, z));
+		reasoner = universe.reasoner(trueExpr);
+
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+	
+	/**
+	 * Symbolic Integer modulus. true : x^0=0
+	 */
+	@Test
+	public void exponentTest1() {
+		//NumericExpression e1 = universe.power(universe.power(x, y), z);
+		NumericExpression e2 = universe.power(x, universe.zeroInt());
+		reasoner = universe.reasoner(trueExpr);
+
+		assertEquals(universe.oneInt(), reasoner.simplify(e2));
 	}
 }
