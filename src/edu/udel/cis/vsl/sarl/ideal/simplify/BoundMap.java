@@ -42,68 +42,9 @@ public class BoundMap {
 		set(key, info.numberFactory.singletonInterval(value));
 	}
 
-	// /**
-	// * Experimental: returns implicit bounds on certain expressions. Currently
-	// * uses some facts about POWER expressions.
-	// *
-	// * @param monic
-	// * a {@link Monic} for which you would like some bounds
-	// * @return an {@link Interval} bounding the monic or <code>null</code> if
-	// no
-	// * non-trivial bound could be found
-	// */
-	// private Interval getImplicitBound(Monic monic) {
-	// if (monic.operator() == SymbolicOperator.POWER) {
-	// RationalExpression base = (RationalExpression) monic.argument(0);
-	//
-	// if (monic.argument(1) instanceof IntObject)
-	// return null;
-	//
-	// RationalExpression exponent = (RationalExpression) monic
-	// .argument(1);
-	//
-	// // if exponent is not an integer or is an even integer, result is
-	// // ge0. if base is positive, result is positive
-	// NumberFactory nf = info.numberFactory;
-	// Number exponentNumber = info.idealFactory.extractNumber(exponent);
-	// boolean ge0 = false;
-	//
-	// if (exponentNumber != null) {
-	// if (exponentNumber instanceof RationalNumber) {
-	// if (!nf.isIntegral((RationalNumber) exponentNumber))
-	// ge0 = true;
-	// else {
-	// IntegerNumber exponentInteger = nf
-	// .integerValue((RationalNumber) exponentNumber);
-	//
-	// if (nf.mod(exponentInteger, nf.integer(2)).isZero())
-	// ge0 = true;
-	// }
-	// } else { //
-	// IntegerNumber exponentInteger = (IntegerNumber) exponentNumber;
-	//
-	// if (nf.mod(exponentInteger, info.numberFactory.integer(2))
-	// .isZero()) {
-	// ge0 = true;
-	// }
-	// }
-	// }
-	// if (ge0) {
-	// boolean isIntegral = base.type().isInteger()
-	// && exponent.type().isInteger();
-	// Number zero = isIntegral ? nf.zeroInteger() : nf.zeroRational();
-	//
-	// return nf.newInterval(isIntegral, zero, false, null, true);
-	// }
-	// }
-	// return null;
-	// }
-
 	public Interval get(Monic key) {
 		Interval result = map.get(key);
 
-		// if (result == null)
-		// result = getImplicitBound(key);
 		return result;
 	}
 
