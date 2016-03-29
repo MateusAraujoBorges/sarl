@@ -1,6 +1,7 @@
 package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -295,15 +296,16 @@ public class PowerTest {
 	}
 
 	/**
-	 * (x+y)^2 - (x-y)^2 = 4xy
+	 * (x+y)^z / (x-y)^z = ((x+y)/(x-y))^z
 	 */
 	@Test
-	public void polynomialsTest() {
-		NumericExpression e1 = universe.subtract(
-				universe.power(universe.add(x, y), universe.rational(2)),
-				universe.power(universe.subtract(x, y), universe.rational(2)));
-		NumericExpression e2 = universe.multiply(universe.rational(4),
-				universe.multiply(x, y));
+	public void polynomialsBaseTest1() {
+		NumericExpression e1 = universe.divide(
+				universe.power(universe.add(x, y), z),
+				universe.power(universe.subtract(x, y), z));
+		NumericExpression e2 = universe.power(
+				universe.divide(universe.add(x, y), universe.subtract(x, y)),
+				z);
 
 		debug("left " + e1);
 		debug("left simplified " + reasoner.simplify(e1));
@@ -312,16 +314,14 @@ public class PowerTest {
 	}
 
 	/**
-	 * (x+y)^z / (x-y)^z = ((x+y)/(x-y))^z
+	 * (x+y)^(y+z) / (x+y)^z = (x+y)^y
 	 */
 	@Test
 	public void polynomialsBaseTest2() {
 		NumericExpression e1 = universe.divide(
-				universe.power(universe.add(x, y), z),
-				universe.power(universe.subtract(x, y), z));
-		NumericExpression e2 = universe.power(
-				universe.divide(universe.add(x, y), universe.subtract(x, y)),
-				z);
+				universe.power(universe.add(x, y), universe.add(y, z)),
+				universe.power(universe.add(x, y), z));
+		NumericExpression e2 = universe.power(universe.add(x, y), y);
 
 		debug("left " + e1);
 		debug("left simplified " + reasoner.simplify(e1));
