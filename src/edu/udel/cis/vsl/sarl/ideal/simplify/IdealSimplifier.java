@@ -937,8 +937,8 @@ public class IdealSimplifier extends CommonSimplifier {
 				base = (Primitive) primitive.argument(0);
 				newExponent = idf.multiply(realSignedOuterExponent,
 						(RationalExpression) primitive.argument(1));
-				change = change || outerExponent != idf
-						.getConcreteExponent(newExponent).intValue();
+				change = change || outerExponent != Math
+						.abs(idf.getConcreteExponent(newExponent).intValue());
 			} else {
 				base = primitive;
 				newExponent = realSignedOuterExponent;
@@ -1612,44 +1612,20 @@ public class IdealSimplifier extends CommonSimplifier {
 	 */
 	private BooleanExpression simplifyIneq0(Monic monic, boolean gt,
 			boolean strict) {
-		// see if there is a bound on this monic...
 		SymbolicType type = monic.type();
 		BooleanExpression result = null;
-
 		BoundType boundType = getBoundTypeMonic(monic);
 
 		if (boundType != null) {
 			result = ineqFromBoundType(monic, boundType, gt, strict);
 			return result;
 		}
-
-		// Interval bound = boundMap.get(monic);
-		// BooleanExpression result2;
-		//
-		// if (bound != null) {
-		// result2 = ineqFromBound(monic, bound, gt, strict);
-		// if (result2 != null) {
-		// if (result != null && !result.equals(result2)) {
-		// out.println("simplifyIneq0: bound : " + bound);
-		// out.println("simplifyIneq0: boundType : " + boundType);
-		// out.println("simplifyIneq0: monic : " + monic);
-		// out.println("simplifyIneq0: gt : " + gt);
-		// out.println("simplifyIneq0: strict : " + strict);
-		// out.println("simplifyIneq0: result : " + result);
-		// out.println("simplifyIneq0: result2: " + result2);
-		// out.flush();
-		// }
-		// return result2;
-		// }
-		// }
-
 		if (monic instanceof Polynomial)
 			return simplifyIneq0Poly((Polynomial) monic, gt, strict);
 		if (monic instanceof Primitive)
 			return null;
 
 		// look for bounds on the primitive factors...
-
 		PrimitivePower[] factorMap = monic.monicFactors(info.idealFactory);
 		int numFactors = factorMap.length;
 		boolean[] mask = new boolean[numFactors]; // unconstrained primitives
@@ -1799,8 +1775,11 @@ public class IdealSimplifier extends CommonSimplifier {
 		// the following is a bound on poly
 		Interval polyBound = info.numberFactory.affineTransform(pseudoBound,
 				affine.coefficient(), affine.offset());
-
-		BooleanExpression result = ineqFromBound(poly, polyBound, gt, strict);
+		BoundType boundType = boundType(polyBound);
+		BooleanExpression result = ineqFromBoundType(poly, boundType, gt, strict);
+		
+		// BooleanExpression result = ineqFromBound(poly, polyBound, gt,
+		// strict);
 
 		if (result != null)
 			return result;
@@ -1938,8 +1917,7 @@ public class IdealSimplifier extends CommonSimplifier {
 
 	private RationalExpression simplifyRationalExpression(
 			RationalExpression expression) {
-
-		if (expression instanceof Constant) // optimization
+		if (expression instanceof Constant)
 			return expression;
 
 		RationalExpression result1;
@@ -1951,19 +1929,12 @@ public class IdealSimplifier extends CommonSimplifier {
 		else
 			result1 = (RationalExpression) simplifyGenericExpression(
 					expression);
-
 		if (result1 instanceof Primitive || result1 instanceof Constant)
 			return result1;
 
 		RationalExpression result2 = simplifyPowersRational(result1);
 
-		/*
-		 * TODO: When the expression is '1/(x^y)', strings of both result1 and
-		 * result2 are same, but they have different id values. Thus, by
-		 * comparing "result1 == result2", it will return false and lead into an
-		 * infinite loop causing a stack over flow.
-		 */
-		if (result2.toString().compareTo(result1.toString()) == 0)
+		if (result1 == result2)
 			return result1;
 		return (RationalExpression) apply(result2);
 	}

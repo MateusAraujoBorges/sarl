@@ -352,12 +352,23 @@ public interface IdealFactory extends NumericExpressionFactory {
 	PrimitivePower primitivePower(Primitive primitive, IntObject exponent);
 
 	/**
+	 * <p>
 	 * Given the exponent in a potential power expression, this method computes
-	 * a concrete positive integer that can be factored out of that exponent to
-	 * be used as a {@link PrimitivePower} exponent. The exponent can be safely
-	 * divided by the integer returned by this method. If this method is given e
-	 * and returns n, then the power expression can be rewritten as a
-	 * {@link PrimitivePower} with primitive POWER(x,e/n) and exponent n.
+	 * a concrete integer that can be factored out of that exponent so that the
+	 * exponent is in canonical form. Specifically, if the exponent has form
+	 * p/q, and p=c*m, where p and q are {@link Monomial}s and c is a
+	 * {@link Constant}, and c=n/d, where n and d are {@link IntegerNumber}s,
+	 * this method returns n. Note that n may be positive or negative. It will
+	 * only be 0 if <code>exponent</code> is 1.
+	 * </p>
+	 * 
+	 * <p>
+	 * The <code>exponent</code> can be safely divided by the integer returned
+	 * by this method. If this method is given e and returns n, then the power
+	 * expression can be rewritten as a {@link PrimitivePower} with primitive
+	 * POWER(x,e/n) and exponent n, if n is positive, or as the rational
+	 * expression 1/PrimitivePower[POWER(x,e/n), -n], if n is negative.
+	 * </p>
 	 * 
 	 * @param exponent
 	 *            a non-<code>null</code> rational expression of integer or real
