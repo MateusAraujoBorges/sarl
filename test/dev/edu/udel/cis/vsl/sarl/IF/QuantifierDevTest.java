@@ -18,6 +18,7 @@ public class QuantifierDevTest {
 	@Before
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
+		universe.setShowProverQueries(true);
 	}
 	
 	/**
@@ -36,7 +37,7 @@ public class QuantifierDevTest {
 				.symbolicConstant(universe.stringObject("i"), integerType);
 		NumericExpression zero = universe.integer(0);
 		NumericExpression two = universe.integer(2);
-		BooleanExpression predicate = universe.equals(universe.modulo(A, (NumericExpression)i), zero);
+		BooleanExpression predicate = universe.neq(universe.modulo(A, (NumericExpression)i), zero);
 		BooleanExpression preCondition1 = universe.and(universe.lessThanEquals(two, (NumericExpression)i), 
 				universe.lessThan((NumericExpression)i, B));
 		BooleanExpression query = universe.implies(preCondition1, predicate);
@@ -102,4 +103,39 @@ public class QuantifierDevTest {
 		ValidityResult result = r.valid(forall);
 		assertEquals(ResultType.NO, result.getResultType());
 	}
+	
+	/**
+	 * for bug #618
+	 * 
+	 * $assert(
+             ($forall {int i | i > 0 && i < n1} X1[i] == X2[i])
+              && ($forall {int i | i > 0 && i < n1} X1[i] == X2[i])
+    );
+	 */
+	@Test
+	public void quantifierTest(){
+		NumericExpression zero = universe.integer(0);
+		BooleanExpression t = universe.trueExpression();
+		SymbolicType integerType = universe.integerType();
+		NumericExpression n1 = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("n1"), integerType);//n1
+		SymbolicType arrayType = universe.arrayType(integerType, n1); 
+		SymbolicConstant X1 = universe
+				.symbolicConstant(universe.stringObject("X1"), arrayType); //X1[n1]
+		SymbolicConstant X2 =  universe
+				.symbolicConstant(universe.stringObject("X2"), arrayType); //X2[n1]
+		NumericExpression i = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("i"), integerType);
+		BooleanExpression precon = universe.and(universe.lessThan(zero, i), 
+				universe.lessThan(i, n1)); // 0 < i < n1
+		BooleanExpression predicate = universe.equals(universe.arrayRead(X1, i), 
+				universe.arrayRead(X2, i));  //X1[i] = X2[i];
+		BooleanExpression forall = universe.forall((SymbolicConstant)i, 
+				universe.implies(precon, predicate)); // forall i : 0 < i < n1 ==> X[n1] = X[n2]
+		BooleanExpression expression = universe.and(forall, forall); // forall and forall
+		Reasoner r = universe.reasoner(t);
+		
+		r.isValid(expression);
+	}
+	
 }
