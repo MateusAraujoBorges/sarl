@@ -310,4 +310,21 @@ public class PowerTest {
 		debug("right " + e2);
 		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
 	}
+
+	/**
+	 * (x+y)^z / (x-y)^z = (x+y)/(x-y)
+	 */
+	@Test
+	public void polynomialsBaseTest2() {
+		NumericExpression e1 = universe.divide(
+				universe.power(universe.add(x, y), z),
+				universe.power(universe.subtract(x, y), z));
+		NumericExpression e2 = universe.divide(universe.add(x, y),
+				universe.subtract(x, y));
+
+		debug("left " + e1);
+		debug("left simplified " + reasoner.simplify(e1));
+		debug("right " + e2);
+		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
+	}
 }
