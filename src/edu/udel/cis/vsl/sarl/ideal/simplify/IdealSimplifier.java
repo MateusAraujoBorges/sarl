@@ -1413,76 +1413,6 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	/**
-	 * Does every x in the bound interval satisfy x OP 0, where OP is one of
-	 * <, <=, >, >=.
-	 * 
-	 * @param bound
-	 *            an interval (non-<code>null</code>)
-	 * @param gt
-	 *            if <code>true</code> the condition to check is either x&gt;0
-	 *            or &ge;0 for all x in <code>bound</code>; if
-	 *            <code>false</code>, the condition is either x&lt;0 or x&le;0
-	 * @param strict
-	 *            if <code>true</code>, the condition to check is a strict
-	 *            inequality, i.e., either <code>x&gt;0</code> or
-	 *            <code>x&lt;0</code>
-	 * @return <code>null</code> if no expression of the constraint beyond the
-	 *         obvious one is possible; otherwise, a simplified expression which
-	 *         is equivalent to the constraint under the assumption that the
-	 *         context holds
-	 */
-	private BooleanExpression ineqFromBound(Monic monic, Interval bound,
-			boolean gt, boolean strict) {
-		Number l = bound.lower(), r = bound.upper();
-
-		if (strict) { // bound>0 or bound<0
-			if (l != null) {
-				int lsign = l.signum();
-
-				if (lsign > 0 || (lsign == 0 && bound.strictLower()))
-					return gt ? info.trueExpr : info.falseExpr;
-				if (lsign == 0 && !bound.strictLower())
-					return gt ? simplifiedNEQ0Monic(monic) : info.falseExpr;
-			}
-			if (r != null) {
-				int rsign = r.signum();
-
-				if (rsign < 0 || (rsign == 0 && bound.strictUpper()))
-					return gt ? info.falseExpr : info.trueExpr;
-				if (rsign == 0 && !bound.strictUpper())
-					return gt ? info.falseExpr : simplifiedNEQ0Monic(monic);
-			}
-		} else { // bound>=0 or bound<=0
-			if (gt) { // bound>=0
-				if (l != null && l.signum() >= 0)
-					return info.trueExpr;
-				if (r != null) {
-					int rsign = r.signum();
-
-					if (rsign < 0)
-						return info.falseExpr;
-					if (rsign == 0)
-						return bound.strictUpper() ? info.falseExpr
-								: simplifiedEQ0Monic(monic);
-				}
-			} else {// bound<=0
-				if (r != null && r.signum() <= 0)
-					return info.trueExpr;
-				if (l != null) {
-					int lsign = l.signum();
-
-					if (lsign > 0)
-						return info.falseExpr;
-					if (lsign == 0)
-						return bound.strictLower() ? info.falseExpr
-								: simplifiedEQ0Monic(monic);
-				}
-			}
-		}
-		return null;
-	}
-
-	/**
 	 * Given the fact that x is in the set specified by the {@link BoundType}
 	 * <code>bt</code>, attempts to compute a simplified version of the
 	 * expression "monic OP 0", where OP is one of le, lt, gt, or ge. Returns
@@ -1521,23 +1451,6 @@ public class IdealSimplifier extends CommonSimplifier {
 			return null;
 		}
 	}
-
-	// private Interval getBound(NumericExpression expr) {
-	// RationalExpression rat = (RationalExpression) expr;
-	// Monomial num = rat.numerator(info.idealFactory),
-	// den = rat.denominator(info.idealFactory);
-	// Interval i1 = getBoundMonomial(num), i2 = getBoundMonomial(den);
-	//
-	// return info.numberFactory.divide(i1, i2);
-	// }
-	//
-	// private Interval getBoundMonomial(Monomial monomial) {
-	// Number coefficient = monomial.monomialConstant(info.idealFactory)
-	// .number();
-	// Interval monicBound = getBoundMonic(monomial.monic(info.idealFactory));
-	//
-	// return info.numberFactory.multiply(coefficient, monicBound);
-	// }
 
 	private BoundType getBoundTypePower(Primitive powerExpr) {
 		IdealFactory idf = info.idealFactory;
@@ -1776,15 +1689,10 @@ public class IdealSimplifier extends CommonSimplifier {
 		Interval polyBound = info.numberFactory.affineTransform(pseudoBound,
 				affine.coefficient(), affine.offset());
 		BoundType boundType = boundType(polyBound);
-		BooleanExpression result = ineqFromBoundType(poly, boundType, gt, strict);
-		
-		// BooleanExpression result = ineqFromBound(poly, polyBound, gt,
-		// strict);
+		BooleanExpression result = ineqFromBoundType(poly, boundType, gt,
+				strict);
 
-		if (result != null)
-			return result;
-
-		return null;
+		return result;
 	}
 
 	/**
