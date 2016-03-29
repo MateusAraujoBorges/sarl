@@ -14,7 +14,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 
 public class PowerTest {
 
-	public final static boolean debug = false;
+	public final static boolean debug = true;
 
 	public final static PrintStream out = System.out;
 
@@ -57,6 +57,40 @@ public class PowerTest {
 		debug("x2 = " + x2);
 		debug("x2^(1/2) = " + x3);
 		assertEquals(x, x3);
+	}
+	
+	/**
+	 * Expression = ((-x)^2)^(1/2)
+	 * Actual = Pow(Pow(-x, 2), (1/2));
+	 * Expected = x;
+	 */
+	@Test
+	public void squareRootOfSquare_NegBase_EvenExp(){
+		NumericExpression neg_x = universe.minus(x);
+		NumericExpression pow2_neg_x = universe.power(neg_x, 2);
+		NumericExpression actualResult = sqrt(pow2_neg_x); 
+		NumericExpression expectedResult = x;
+		
+		debug("Actual: " + actualResult);
+		debug("Expected: " + expectedResult);
+		assertEquals(expectedResult, actualResult);
+	}
+
+	/**
+	 * Expression = ((-x)^3)^(1/3)
+	 * Actual = Pow(Pow(-x, 3), (1/3));
+	 * Expected = -x;
+	 */
+	@Test
+	public void squareRootOfSquare_NegBase_OddExp(){
+		NumericExpression neg_x = universe.minus(x);
+		NumericExpression pow3_neg_x = universe.power(neg_x, 3);
+		NumericExpression actualResult = universe.power(pow3_neg_x, universe.rational(1, 3)); 
+		NumericExpression expectedResult = neg_x;
+
+		debug("Actual: " + actualResult);
+		debug("Expected: " + expectedResult);
+		assertEquals(expectedResult, actualResult);
 	}
 
 	@Test
