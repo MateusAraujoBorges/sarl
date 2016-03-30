@@ -150,17 +150,6 @@ public class PowerTest {
 	}
 
 	@Test
-	public void powerOfPower2() {
-		NumericExpression e1 = universe.power(universe.power(x, 8),
-				universe.rational(1, 3));
-		NumericExpression e2 = universe.power(x, 2);
-
-		debug("x^8 = " + e1);
-		debug("(x^8)^(1/3) = " + e2);
-		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
-	}
-
-	@Test
 	public void neg1Exp() {
 		NumericExpression xToNeg1 = universe.power(x, universe.integer(-1));
 		NumericExpression expected = universe.divide(universe.rational(1), x);
