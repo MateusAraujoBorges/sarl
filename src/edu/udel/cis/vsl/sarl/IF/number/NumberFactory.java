@@ -575,6 +575,20 @@ public interface NumberFactory {
 	RationalNumber power(RationalNumber number, int exp);
 
 	/**
+	 * Calculate the given {@link IntegerNumber} base powering a given
+	 * {@link IntegerNumber} exponent and returns result. The exponent must be a
+	 * natural number.
+	 * 
+	 * @param number
+	 *            a non-<code>null</code> {@link IntegerNumber}
+	 * @param exp
+	 *            a non-<code>null</code> {@link IntegerNumber} representing an
+	 *            natural number which is greater or equal to zero.
+	 * @return
+	 */
+	IntegerNumber power(IntegerNumber number, IntegerNumber exp);
+
+	/**
 	 * Calculate the nth root of the given number and n. The inputs and output
 	 * are {@link IntegerNumbers}
 	 * 

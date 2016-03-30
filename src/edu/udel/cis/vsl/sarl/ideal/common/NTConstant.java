@@ -18,8 +18,10 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
@@ -38,8 +40,8 @@ import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
  * @author siegel
  * 
  */
-public class NTConstant extends HomogeneousExpression<SymbolicObject>
-		implements Constant {
+public class NTConstant extends HomogeneousExpression<SymbolicObject> implements
+		Constant {
 
 	/**
 	 * Constructs new {@link NTConstant} of given type, wrapping given numeric
@@ -131,8 +133,42 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 	@Override
 	public RationalExpression powerRational(IdealFactory factory,
 			RationalExpression exponent) {
-		return factory.expression(SymbolicOperator.POWER, type(), this,
-				exponent);
+		NumberFactory numFactory = factory.numberFactory();
+		RationalNumber exp = (RationalNumber) factory.extractNumber(exponent);
+		RationalNumber base = (RationalNumber) number();
+		IntegerNumber exp_num = numFactory.integer(exp.numerator());
+		IntegerNumber exp_den = numFactory.integer(exp.denominator());
+		IntegerNumber base_num = numFactory.integer(base.numerator());
+		IntegerNumber base_den = numFactory.integer(base.denominator());
+		IntegerNumber result_num = null;
+		IntegerNumber result_den = null;
+		IntegerNumber tmp_num = null;
+		IntegerNumber tmp_den = null;
+
+		if (exp_num.signum() < 0) {
+			IntegerNumber tmp = base_den;
+
+			exp_num = numFactory.negate(exp_num);
+			if (base_num.signum() < 0) {
+				base_den = numFactory.negate(base_num);
+				base_num = numFactory.negate(tmp);
+			} else {
+				base_den = base_num;
+				base_num = tmp;
+			}
+
+		}
+		assert exp_num.signum() >= 0;
+		result_num = numFactory.power(base_num, exp_num);
+		result_den = numFactory.power(base_den, exp_num);
+		tmp_num = numFactory.nthRootInt(result_num, exp_den);
+		tmp_den = numFactory.nthRootInt(result_den, exp_den);
+		if (tmp_num == null || tmp_den == null) {
+			return factory.expression(SymbolicOperator.POWER, type(), this,
+					exponent);
+		} else {
+			return factory.constant(numFactory.fraction(tmp_num, tmp_den));
+		}
 	}
 
 	@Override

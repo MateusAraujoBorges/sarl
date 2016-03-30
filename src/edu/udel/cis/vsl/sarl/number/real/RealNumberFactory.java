@@ -2119,7 +2119,8 @@ public class RealNumberFactory implements NumberFactory {
 			throw new IllegalArgumentException(
 					"The Argument 'n' to the method nthRootInt should be greater than 0."
 							+ "\nThe n is: " + nVal);
-		if (nVal == 1 || number.isZero() || number.isOne())
+		if (nVal == 1 || number.isZero() || number.isOne()
+				|| negate(number).isOne())
 			return number;
 		if (number.signum() < 0) {
 			if (nVal % 2 == 0) {
@@ -2132,23 +2133,56 @@ public class RealNumberFactory implements NumberFactory {
 
 		int nMinus1 = nVal - 1;
 		IntegerNumber result = null;
-		RationalNumber numRat = rational(number);
+		RationalNumber inputNumber = rational(number);
 		RationalNumber nth = divide(oneRational, rational(n));
+		RationalNumber threshold = fraction(oneInteger, integer(100));
 		RationalNumber tmpNumber = oneRational;
-		RationalNumber diff = oneRational;
-		RationalNumber condition = subtract(rational(abs(diff)), oneRational);
+		RationalNumber diff = multiply(
+				nth,
+				subtract(divide(inputNumber, power(tmpNumber, nMinus1)),
+						tmpNumber));
+		RationalNumber condition = oneRational;
 
-		while (condition.signum() > 0) {
+		while (condition.signum() > 0 && !floor(diff).isZero()) {
 			diff = multiply(
 					nth,
-					subtract(divide(numRat, power(tmpNumber, nMinus1)),
+					subtract(divide(inputNumber, power(tmpNumber, nMinus1)),
 							tmpNumber));
-			tmpNumber = add(diff, tmpNumber);
-			condition = subtract(rational(abs(diff)), oneRational);
+			tmpNumber = rational(floor(add(diff, tmpNumber)));
+			condition = subtract(multiply(diff, diff), threshold);
 		}
 		result = floor(tmpNumber);
-		if (subtract(power(result, nVal), number).signum() != 0)
+		if (!subtract(power(result, nVal), number).isZero())
 			return null;
 		return result;
+	}
+
+	@Override
+	public IntegerNumber power(IntegerNumber number, IntegerNumber exp) {
+		assert number != null && exp != null;
+		assert exp.signum() >= 0;
+		if (exp.isZero()) {
+			if (number.isZero())
+				throw new IllegalArgumentException("0 could not power with 0.");
+			else
+				return zeroInteger;
+		} else {
+			IntegerNumber result = oneInteger;
+			IntegerNumber base = number;
+			IntegerNumber e = exp;
+			IntegerNumber twoInt = integer(2);
+
+			while (true) {
+				if (!mod(e, twoInt).isZero()) {
+					result = multiply(result, base);
+					e = subtract(e, oneInteger);
+					if (e.isZero())
+						break;
+				}
+				base = multiply(base, base);
+				e = divide(e, twoInt);
+			}
+			return result;
+		}
 	}
 }
