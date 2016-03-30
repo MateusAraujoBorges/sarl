@@ -74,6 +74,35 @@ public class PowerTest {
 	}
 
 	/**
+	 * sqrt(x/y) = sqrt(x)/sqrt(y)
+	 */
+	@Test
+	public void sqaureRootOfDivide() {
+		NumericExpression x1 = universe.divide(x, y);
+		NumericExpression e1 = sqrt(x1);
+		NumericExpression e2 = universe.divide(sqrt(x), sqrt(y));
+
+		debug("e1 = " + e1);
+		debug("e2 = " + e2);
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * sqrt((x^2)y) = xsqrt(y)
+	 */
+	@Test
+	public void sqaureRootOfSquare2() {
+		NumericExpression x1 = universe
+				.multiply(universe.power(x, universe.rational(2)), y);
+		NumericExpression e1 = sqrt(x1);
+		NumericExpression e2 = universe.multiply(x, sqrt(y));
+
+		debug("e1 = " + e1);
+		debug("e2 = " + e2);
+		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
+	}
+
+	/**
 	 * Expression = ((-x)^2)^(1/2) Actual = Pow(Pow(-x, 2), (1/2)); Expected =
 	 * x;
 	 */
