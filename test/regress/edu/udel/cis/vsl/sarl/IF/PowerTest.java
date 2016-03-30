@@ -150,6 +150,17 @@ public class PowerTest {
 	}
 
 	@Test
+	public void powerOfPower2() {
+		NumericExpression e1 = universe.power(universe.power(x, 8),
+				universe.rational(1, 3));
+		NumericExpression e2 = universe.power(x, 2);
+
+		debug("x^8 = " + e1);
+		debug("(x^8)^(1/3) = " + e2);
+		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
+	}
+
+	@Test
 	public void neg1Exp() {
 		NumericExpression xToNeg1 = universe.power(x, universe.integer(-1));
 		NumericExpression expected = universe.divide(universe.rational(1), x);
@@ -231,6 +242,20 @@ public class PowerTest {
 		debug("left " + e1);
 		debug("left simplied " + reasoner.simplify(e1));
 		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * Multiply powers with the same base: (x^2)*(x^0.5)=x^2.5
+	 */
+	@Test
+	public void multiplyPower2() {
+		NumericExpression e1 = universe.multiply(universe.power(x, 2),
+				universe.power(x, universe.rational(1, 2)));
+		NumericExpression e2 = universe.power(x, universe.rational(5, 2));
+
+		debug("left " + e1);
+		debug("left simplied " + reasoner.simplify(e1));
+		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
 	}
 
 	/**
@@ -370,4 +395,5 @@ public class PowerTest {
 		debug("right " + e2);
 		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
 	}
+
 }
