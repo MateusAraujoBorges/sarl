@@ -616,8 +616,8 @@ public interface IdealFactory extends NumericExpressionFactory {
 	 * {@link Polynomial}.
 	 * 
 	 * @param type
-	 *            the type of <code>termMap</code> (needed in case
-	 *            <code>termMap</code> is empty)
+	 *            the type of <code>terms</code> (needed in case
+	 *            <code>terms</code> is empty)
 	 * @param terms
 	 *            a non-<code>null</code> term map
 	 * @return the result of summing the terms in the term map
