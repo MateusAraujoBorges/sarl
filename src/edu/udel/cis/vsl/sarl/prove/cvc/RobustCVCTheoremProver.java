@@ -22,6 +22,8 @@ import static edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind.CVC3;
 import static edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind.CVC4;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -57,6 +59,11 @@ public class RobustCVCTheoremProver implements TheoremProver {
 	 */
 	public final static PrintStream err = System.err;
 
+	/**
+	 * Another {@link PrintStream} for directing CVC unexpected error message to
+	 * a file.
+	 */
+	private static PrintStream err2File;
 	// ****************************** Fields ****************************** //
 
 	/**
@@ -133,6 +140,19 @@ public class RobustCVCTheoremProver implements TheoremProver {
 		} else
 			throw new SARLInternalException("unreachable");
 		this.processBuilder = new ProcessBuilder(command);
+
+		// Create a new file for saving CVC unexpected errors:
+		File file = new File("CVCErr.txt");
+
+		try {
+			if (!file.exists())
+				file.createNewFile();
+			err2File = new PrintStream(new FileOutputStream(file));
+		} catch (IOException e) {
+			err.println("I/O error reading " + file + " output: "
+					+ e.getMessage());
+			err2File = err;
+		}
 	}
 
 	@Override
@@ -149,9 +169,11 @@ public class RobustCVCTheoremProver implements TheoremProver {
 				if (info.getShowErrors() || info.getShowInconclusives()) {
 					for (String errline = cvcErr.readLine(); errline != null; errline = cvcErr
 							.readLine()) {
-						err.println(errline);
+						// err.println(errline);
+						err2File.println(errline);
 					}
-					err.flush();
+					// err.flush();
+					err2File.flush();
 				}
 				return Prove.RESULT_MAYBE;
 			}
