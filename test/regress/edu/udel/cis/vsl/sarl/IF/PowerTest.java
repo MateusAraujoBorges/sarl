@@ -20,8 +20,8 @@ public class PowerTest {
 
 	public final static SymbolicUniverse universe = SARL.newStandardUniverse();
 
-	public final static Reasoner reasoner = universe
-			.reasoner(universe.trueExpression());
+	public final static Reasoner reasoner = universe.reasoner(universe
+			.trueExpression());
 
 	public final static SymbolicRealType real = universe.realType();
 
@@ -92,8 +92,8 @@ public class PowerTest {
 	 */
 	@Test
 	public void sqaureRootOfSquare2() {
-		NumericExpression x1 = universe
-				.multiply(universe.power(x, universe.rational(2)), y);
+		NumericExpression x1 = universe.multiply(
+				universe.power(x, universe.rational(2)), y);
 		NumericExpression e1 = sqrt(x1);
 		NumericExpression e2 = universe.multiply(x, sqrt(y));
 
@@ -103,8 +103,9 @@ public class PowerTest {
 	}
 
 	/**
-	 * Expression = ((-x)^2)^(1/2) Actual = Pow(Pow(-x, 2), (1/2)); Expected =
-	 * x;
+	 * Expression = ((-x)^2)^(1/2); <br>
+	 * Actual = Pow(Pow(-x, 2), (1/2)); <br>
+	 * Expected = x;
 	 */
 	@Test
 	public void squareRootOfSquare_NegBase_EvenExp() {
@@ -119,8 +120,9 @@ public class PowerTest {
 	}
 
 	/**
-	 * Expression = ((-x)^3)^(1/3) Actual = Pow(Pow(-x, 3), (1/3)); Expected =
-	 * -x;
+	 * Expression = ((-x)^3)^(1/3) <br>
+	 * Actual = Pow(Pow(-x, 3), (1/3)); <br>
+	 * Expected = -x;
 	 */
 	@Test
 	public void squareRootOfSquare_NegBase_OddExp() {
@@ -359,9 +361,9 @@ public class PowerTest {
 		NumericExpression e1 = universe.divide(
 				universe.power(universe.add(x, y), z),
 				universe.power(universe.subtract(x, y), z));
-		NumericExpression e2 = universe.power(
-				universe.divide(universe.add(x, y), universe.subtract(x, y)),
-				z);
+		NumericExpression e2 = universe
+				.power(universe.divide(universe.add(x, y),
+						universe.subtract(x, y)), z);
 
 		debug("left " + e1);
 		debug("left simplified " + reasoner.simplify(e1));
@@ -385,4 +387,55 @@ public class PowerTest {
 		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
 	}
 
+	/**
+	 * ((2/3)*x)^(2/7) + ((2/3)*x)^(3/7) = ((2/3)*x)^(5/7)
+	 */
+	@Test
+	public void exponentSimplificationTest1() {
+		NumericExpression i2 = universe.rational(2);
+		NumericExpression i3 = universe.rational(3);
+		NumericExpression i5 = universe.rational(5);
+		NumericExpression i7 = universe.rational(7);
+		NumericExpression i2div3 = universe.divide(i2, i3);
+		NumericExpression e1 = universe.power(universe.multiply(i2div3, x),
+				universe.divide(i2, i7));
+		NumericExpression e2 = universe.power(universe.multiply(i2div3, x),
+				universe.divide(i3, i7));
+		NumericExpression actual = universe.multiply(e1, e2);
+		NumericExpression expected = universe.power(
+				universe.multiply(i2div3, x), universe.divide(i5, i7));
+
+		debug("Actual: " + actual);
+		debug("Expected: " + expected);
+
+		// NumericExpression sActual = reasoner.simplify(actual);
+		// NumericExpression sExpected = reasoner.simplify(expected);
+
+		// debug("Simplified Actual: " + sActual);
+		// debug("Simplified Expected: " + sExpected);
+		assertEquals(expected, actual);
+	}
+
+	/**
+	 * ((2/3)^7)^(2/7) + ((2/3)^7)^(3/7) = 32/243
+	 */
+	@Test
+	public void exponentSimplificationTest2() {
+		NumericExpression i2 = universe.rational(2);
+		NumericExpression i3 = universe.rational(3);
+		NumericExpression i5 = universe.rational(5);
+		NumericExpression i7 = universe.rational(7);
+		NumericExpression i2div3 = universe.divide(i2, i3);
+		NumericExpression e1 = universe.power(universe.power(i2div3, i7),
+				universe.divide(i2, i7));
+		NumericExpression e2 = universe.power(universe.power(i2div3, i7),
+				universe.divide(i3, i7));
+		NumericExpression actual = universe.multiply(e1, e2);
+		NumericExpression expected = universe.power(i2div3, i5);
+
+		debug("Actual: " + actual);
+		debug("Expected: " + expected);
+
+		assertEquals(expected, actual);
+	}
 }
