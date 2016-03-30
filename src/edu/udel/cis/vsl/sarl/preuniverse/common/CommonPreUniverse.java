@@ -183,6 +183,8 @@ public class CommonPreUniverse implements PreUniverse {
 
 	private ArrayList<SymbolicConstant> int2bvConstants = new ArrayList<SymbolicConstant>();
 
+	private String errFileName = "ProverOutput.txt";
+
 	// Constructor...
 
 	/**
@@ -3003,5 +3005,15 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public SymbolicType bitVectorType(int length) {
 		return arrayType(booleanType, integer(length));
+	}
+
+	@Override
+	public void setErrFile(String errFile) {
+		this.errFileName = errFile;
+	}
+
+	@Override
+	public String getErrFile() {
+		return errFileName;
 	}
 }

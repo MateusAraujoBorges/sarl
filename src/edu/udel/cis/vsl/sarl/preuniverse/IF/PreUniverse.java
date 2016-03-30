@@ -65,5 +65,4 @@ public interface PreUniverse extends CoreUniverse {
 	 *         the bound variables possibly changed to be unique
 	 */
 	SymbolicExpression cleanBoundVariables(SymbolicExpression expr);
-
 }

@@ -2074,4 +2074,17 @@ public interface CoreUniverse {
 	 *         an integer.
 	 */
 	NumericExpression bitvector2Integer(SymbolicExpression bitvector);
+
+	/**
+	 * Set error filename
+	 * 
+	 * @param errFile
+	 *            Error file name
+	 */
+	void setErrFile(String errFile);
+
+	/**
+	 * Get error filename
+	 */
+	String getErrFile();
 }

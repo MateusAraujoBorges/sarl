@@ -19,6 +19,7 @@
 package edu.udel.cis.vsl.sarl.prove.z3;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -77,7 +78,7 @@ public class RobustZ3TheoremProver implements TheoremProver {
 	 * Nick-name for <code>stderr</code>, where warnings and error messages will
 	 * be sent.
 	 */
-	public final static PrintStream err = System.err;
+	public static PrintStream err;
 
 	// ****************************** Fields ****************************** //
 
@@ -134,6 +135,13 @@ public class RobustZ3TheoremProver implements TheoremProver {
 		command.add("-smt2");
 		command.add("-in");
 		this.processBuilder = new ProcessBuilder(command);
+		try {
+			err = new PrintStream(new File(universe.getErrFile()));
+		} catch (IOException e) {
+			err = System.err;
+			err.println("I/O exception reading " + info.getFirstAlias()
+					+ " output: " + e.getMessage());
+		}
 	}
 
 	@Override
