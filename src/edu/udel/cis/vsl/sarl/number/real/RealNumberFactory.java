@@ -1883,7 +1883,7 @@ public class RealNumberFactory implements NumberFactory {
 			if (number.isZero())
 				throw new IllegalArgumentException("0 could not power with 0.");
 			else
-				return zeroInteger;
+				return oneInteger;
 		}
 		IntegerNumber result = oneInteger;
 		IntegerNumber base = number;
@@ -1915,7 +1915,7 @@ public class RealNumberFactory implements NumberFactory {
 				throw new IllegalArgumentException(
 						"0.0 could not power with 0.");
 			else
-				return zeroRational;
+				return oneRational;
 		}
 		if (exp == 0) {
 			resultNum = oneInteger;
