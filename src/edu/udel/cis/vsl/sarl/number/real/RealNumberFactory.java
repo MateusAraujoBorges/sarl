@@ -1877,39 +1877,57 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	public IntegerNumber power(IntegerNumber number, int exp) {
-		RealInteger base = (RealInteger) number;
-		int baseValue = base.value().intValue();
-		int result = baseValue;
-
-		assert exp > 0 || baseValue != 0;
+		assert number != null;
+		assert exp >= 0;
 		if (exp == 0) {
-			result = 1;
-		} else {
-			result = (int) Math.pow(baseValue, exp);
+			if (number.isZero())
+				throw new IllegalArgumentException("0 could not power with 0.");
+			else
+				return zeroInteger;
 		}
-		return integer(result);
+		IntegerNumber result = oneInteger;
+		IntegerNumber base = number;
+		IntegerNumber e = integer(exp);
+		IntegerNumber twoInt = integer(2);
+
+		while (true) {
+			if (!mod(e, twoInt).isZero()) {
+				result = multiply(result, base);
+				e = subtract(e, oneInteger);
+				if (e.isZero())
+					break;
+			}
+			base = multiply(base, base);
+			e = divide(e, twoInt);
+		}
+		return result;
 	}
 
 	@Override
 	public RationalNumber power(RationalNumber number, int exp) {
-		RealRational base = (RealRational) number;
-		int baseNumerator = base.numerator().intValue();
-		int baseDenominator = base.denominator().intValue();
-		int resultNumerator = baseNumerator;
-		int resultDenominator = baseDenominator;
+		IntegerNumber baseNum = integer(number.numerator());
+		IntegerNumber baseDen = integer(number.denominator());
+		IntegerNumber resultNum = null;
+		IntegerNumber resultDen = null;
 
-		assert exp > 0 || resultNumerator != 0;
 		if (exp == 0) {
-			resultNumerator = 1;
-			resultDenominator = 1;
-		} else if (exp > 0) {
-			resultNumerator = (int) Math.pow(baseNumerator, exp);
-			resultDenominator = (int) Math.pow(baseDenominator, exp);
-		} else {
-			resultNumerator = (int) Math.pow(baseDenominator, -exp);
-			resultDenominator = (int) Math.pow(baseNumerator, -exp);
+			if (number.isZero())
+				throw new IllegalArgumentException(
+						"0.0 could not power with 0.");
+			else
+				return zeroRational;
 		}
-		return fraction(integer(resultNumerator), integer(resultDenominator));
+		if (exp == 0) {
+			resultNum = oneInteger;
+			resultDen = oneInteger;
+		} else if (exp > 0) {
+			resultNum = power(baseNum, integer(exp));
+			resultDen = power(baseDen, integer(exp));
+		} else {
+			resultNum = power(baseDen, integer(-exp));
+			resultDen = power(baseNum, integer(-exp));
+		}
+		return fraction(resultNum, resultDen);
 	}
 
 	@Override
@@ -2132,28 +2150,30 @@ public class RealNumberFactory implements NumberFactory {
 		}
 
 		int nMinus1 = nVal - 1;
-		IntegerNumber result = null;
-		RationalNumber inputNumber = rational(number);
+		RationalNumber nM1 = rational(integer(nMinus1));
 		RationalNumber nth = divide(oneRational, rational(n));
-		RationalNumber threshold = fraction(oneInteger, integer(100));
-		RationalNumber tmpNumber = oneRational;
-		RationalNumber diff = multiply(
-				nth,
-				subtract(divide(inputNumber, power(tmpNumber, nMinus1)),
-						tmpNumber));
-		RationalNumber condition = oneRational;
+		RationalNumber pow = rational(number);
+		RationalNumber oldB = oneRational;
+		RationalNumber limit = fraction(oneInteger, integer(10));
+		RationalNumber newB = multiply(nth,
+				add(multiply(nM1, oldB), divide(pow, power(oldB, nMinus1))));
+		RationalNumber cond1 = subtract(power(subtract(newB, oldB), 2), limit);
+		RationalNumber cond2 = subtract(newB, oldB);
+		IntegerNumber result = null;
 
-		while (condition.signum() > 0 && !floor(diff).isZero()) {
-			diff = multiply(
-					nth,
-					subtract(divide(inputNumber, power(tmpNumber, nMinus1)),
-							tmpNumber));
-			tmpNumber = rational(floor(add(diff, tmpNumber)));
-			condition = subtract(multiply(diff, diff), threshold);
+		while (cond1.signum() > 0 && !cond2.isZero()) {
+			oldB = rational(floor(add(newB, fraction(oneInteger, integer(100)))));
+			newB = multiply(nth,
+					add(multiply(nM1, oldB), divide(pow, power(oldB, nMinus1))));
+			newB = rational(floor(add(newB, fraction(oneInteger, integer(100)))));
+			cond1 = subtract(power(subtract(newB, oldB), 2), limit);
+			cond2 = subtract(newB, oldB);
 		}
-		result = floor(tmpNumber);
-		if (!subtract(power(result, nVal), number).isZero())
+		newB = add(newB, fraction(oneInteger, integer(2)));
+		result = floor(newB);
+		if (!subtract(power(result, nVal), number).isZero()) {
 			return null;
+		}
 		return result;
 	}
 
