@@ -552,6 +552,11 @@ public interface NumberFactory {
 	 * Calculate the given number powering a given exponent and returns result.
 	 * The exponent must be a natural number.
 	 * 
+	 * @param number
+	 *            a non-<code>null</code> {@link IntegerNumber}
+	 * @param exp
+	 *            a non-<code>null</code> {@link IntegerNumber} representing an
+	 *            natural number which is greater or equal to zero.
 	 * @return the power result of the {@link Number} with the given integer
 	 */
 	Number power(Number number, int exp);
@@ -560,6 +565,11 @@ public interface NumberFactory {
 	 * Calculate the given integer number powering a given exponent and returns
 	 * result. The exponent must be a natural number.
 	 * 
+	 * @param number
+	 *            a non-<code>null</code> {@link IntegerNumber}
+	 * @param exp
+	 *            a non-<code>null</code> {@link IntegerNumber} representing an
+	 *            natural number which is greater or equal to zero.
 	 * @return the power result of the {@link IntegerNumber} with the given
 	 *         integer
 	 */
