@@ -135,13 +135,6 @@ public class RobustZ3TheoremProver implements TheoremProver {
 		command.add("-smt2");
 		command.add("-in");
 		this.processBuilder = new ProcessBuilder(command);
-		try {
-			err = new PrintStream(new File(universe.getErrFile()));
-		} catch (IOException e) {
-			err = System.err;
-			err.println("I/O exception reading " + info.getFirstAlias()
-					+ " output: " + e.getMessage());
-		}
 	}
 
 	@Override
@@ -159,9 +152,20 @@ public class RobustZ3TheoremProver implements TheoremProver {
 				if (info.getShowErrors() || info.getShowInconclusives()) {
 					for (String errline = z3Err.readLine(); errline != null; errline = z3Err
 							.readLine()) {
+						if (err == null)
+							try {
+								err = new PrintStream(new File(
+										universe.getErrFile()));
+							} catch (IOException e) {
+								err = System.err;
+								err.println("I/O exception reading "
+										+ info.getFirstAlias() + " output: "
+										+ e.getMessage());
+							}
 						err.println(errline);
 					}
-					err.flush();
+					if (err != null)
+						err.flush();
 				}
 				return Prove.RESULT_MAYBE;
 			}

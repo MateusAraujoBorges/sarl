@@ -133,13 +133,6 @@ public class RobustCVCTheoremProver implements TheoremProver {
 		} else
 			throw new SARLInternalException("unreachable");
 		this.processBuilder = new ProcessBuilder(command);
-		try {
-			err = new PrintStream(new File(universe.getErrFile()));
-		} catch (IOException e) {
-			err = System.err;
-			err.println("I/O exception reading " + info.getFirstAlias()
-					+ " output: " + e.getMessage());
-		}
 	}
 
 	@Override
@@ -156,9 +149,21 @@ public class RobustCVCTheoremProver implements TheoremProver {
 				if (info.getShowErrors() || info.getShowInconclusives()) {
 					for (String errline = cvcErr.readLine(); errline != null; errline = cvcErr
 							.readLine()) {
+						if (err == null) {
+							try {
+								err = new PrintStream(new File(
+										universe.getErrFile()));
+							} catch (IOException e) {
+								err = System.err;
+								err.println("I/O exception reading "
+										+ info.getFirstAlias() + " output: "
+										+ e.getMessage());
+							}
+						}
 						err.println(errline);
 					}
-					err.flush();
+					if (err != null)
+						err.flush();
 				}
 				return Prove.RESULT_MAYBE;
 			}
