@@ -16,6 +16,7 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory.IntervalUnion;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
+import edu.udel.cis.vsl.sarl.number.real.RealNumberFactory;
 import edu.udel.cis.vsl.sarl.number.real.RealRational;
 
 public class NumberFactoryTest {
@@ -344,7 +345,7 @@ public class NumberFactoryTest {
 		IntegerNumber a = factory.integer(bigTen);
 		IntegerNumber b = factory.integer(bigNegativeOne);
 		IntegerNumber actual = factory.mod(a, b);
-		
+
 		assertEquals(factory.integer(bigZero), actual);
 	}
 
@@ -1812,7 +1813,7 @@ public class NumberFactoryTest {
 		factory.compare(null_interval1, null_interval2);
 	}
 
-	@Test(expected=AssertionError.class)
+	@Test(expected = AssertionError.class)
 	public void compareIntervalMismatchInputType() {
 		Interval rat_interval1 = factory.newInterval(false, RAT_ONE, true,
 				RAT_THREE, true);
@@ -2329,6 +2330,36 @@ public class NumberFactoryTest {
 		assertEquals(3, result2);
 		assertEquals(3, result3);
 		assertEquals(3, result4);
+	}
+
+	@Test
+	public void nthRootInt_Temp() {
+		int max = 20;
+		int min = 20;
+		int eMax = 20;
+		int eMin = 20;
+
+		for (int e = eMin; e <= eMax; e++) {
+			IntegerNumber exp = factory.integer(e);
+
+			for (int i = min; i <= max; i++) {
+				if (i == 0 && e == 0)
+					continue;
+
+				IntegerNumber base = factory.integer(i);
+				IntegerNumber pow = factory.power(base, exp);
+				IntegerNumber root = ((RealNumberFactory) factory).nthRootInt(
+						pow, exp);
+
+				if (root == null) {
+					System.out.println("B: " + base + ", E: " + exp + ", P: "
+							+ pow + ", R:" + root);
+					assertTrue(false);
+				}
+			}
+			System.out.println(e);
+
+		}
 	}
 	// TODO:
 }
