@@ -2036,6 +2036,50 @@ public interface CoreUniverse {
 	SymbolicExpression bitand(SymbolicExpression left, SymbolicExpression right);
 
 	/**
+	 * Returns the result of bit-or operation for two given bit vectors, those
+	 * two vectors are in the form of {@link SymbolicExpression}.
+	 * 
+	 * @param left
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans. The length of this array
+	 *            should be concrete.
+	 * @param right
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans with the same type of the
+	 *            left array. And the length of this array should be concrete.
+	 * @return a {@link SymbolicExpression} representing the result array.
+	 */
+	SymbolicExpression bitor(SymbolicExpression left, SymbolicExpression right);
+
+	/**
+	 * Returns the result of bit-xor operation for two given bit vectors, those
+	 * two vectors are in the form of {@link SymbolicExpression}.
+	 * 
+	 * @param left
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans. The length of this array
+	 *            should be concrete.
+	 * @param right
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans with the same type of the
+	 *            left array. And the length of this array should be concrete.
+	 * @return a {@link SymbolicExpression} representing the result array.
+	 */
+	SymbolicExpression bitxor(SymbolicExpression left, SymbolicExpression right);
+
+	/**
+	 * Returns the result of bit-not operation for the given bit vectors, the
+	 * given vector is in the form of {@link SymbolicExpression}.
+	 * 
+	 * @param left
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans. The length of this array
+	 *            should be concrete.
+	 * @return a {@link SymbolicExpression} representing the result array.
+	 */
+	SymbolicExpression bitnot(SymbolicExpression expression);
+
+	/**
 	 * Returns the {@link SymbolicType} representing a bitVectorType, which is
 	 * an array of booleans.
 	 * 

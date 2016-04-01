@@ -2918,7 +2918,8 @@ public class CommonPreUniverse implements PreUniverse {
 					index);
 			BooleanExpression rightElement = (BooleanExpression) arrayRead(
 					right, index);
-			BooleanExpression resultElement = and(leftElement, rightElement);
+			BooleanExpression resultElement = booleanFactory.and(leftElement,
+					rightElement);
 
 			resultArray[i] = resultElement;
 		}
@@ -3015,5 +3016,185 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public String getErrFile() {
 		return errFileName;
+	}
+
+	@Override
+	public SymbolicExpression bitor(SymbolicExpression left,
+			SymbolicExpression right) {
+		if (left == null)
+			throw err("Argument left to method bitor is null.");
+		if (right == null)
+			throw err("Argument right to method bitor is null.");
+		if (!(left.type() instanceof SymbolicCompleteArrayType))
+			throw err("Argument left to method bitor does not have array type."
+					+ "\narray: " + left + "\ntype: " + left.type());
+		if (!(right.type() instanceof SymbolicCompleteArrayType))
+			throw err("Argument right to method bitor does not have array type."
+					+ "\narray: " + right + "\ntype: " + right.type());
+		SymbolicCompleteArrayType leftArrayType = (SymbolicCompleteArrayType) left
+				.type();
+		SymbolicCompleteArrayType rightArrayType = (SymbolicCompleteArrayType) right
+				.type();
+
+		if (!leftArrayType.equals(rightArrayType)) {
+			throw err("Argument left and right to method bitor does not have the same array type."
+					+ "\nleft array: "
+					+ left
+					+ "\nleft type: "
+					+ left.type()
+					+ "\nright array: "
+					+ right
+					+ "\nright type: "
+					+ right.type());
+		}
+		if (leftArrayType.elementType().isBoolean()) {
+			throw err("Elements of left or right to method bitor does not have the boolean type."
+					+ "\nelement type: " + leftArrayType.typeKind());
+		}
+
+		IntegerNumber lengthNumber = (IntegerNumber) extractNumber(leftArrayType
+				.extent());
+
+		assert lengthNumber != null;
+
+		int size = lengthNumber.intValue();
+		BooleanExpression[] resultArray = new BooleanExpression[size];
+
+		if (size < 0) {
+			throw err("Argument left and right to method bitor could not have a length less than 0."
+					+ "\nleft array: "
+					+ left
+					+ "\nleft array length: "
+					+ extractNumber(leftArrayType.extent())
+					+ "\nright array: "
+					+ right
+					+ "\nleft array length: "
+					+ extractNumber(rightArrayType.extent()));
+		}
+		for (int i = 0; i < size; i++) {
+			NumericExpression index = integer(i);
+			BooleanExpression leftElement = (BooleanExpression) arrayRead(left,
+					index);
+			BooleanExpression rightElement = (BooleanExpression) arrayRead(
+					right, index);
+			BooleanExpression resultElement = booleanFactory.or(leftElement,
+					rightElement);
+
+			resultArray[i] = resultElement;
+		}
+		return array(leftArrayType, resultArray);
+	}
+
+	@Override
+	public SymbolicExpression bitxor(SymbolicExpression left,
+			SymbolicExpression right) {
+		if (left == null)
+			throw err("Argument left to method bitxor is null.");
+		if (right == null)
+			throw err("Argument right to method bitxor is null.");
+		if (!(left.type() instanceof SymbolicCompleteArrayType))
+			throw err("Argument left to method bitxor does not have array type."
+					+ "\narray: " + left + "\ntype: " + left.type());
+		if (!(right.type() instanceof SymbolicCompleteArrayType))
+			throw err("Argument right to method bitxor does not have array type."
+					+ "\narray: " + right + "\ntype: " + right.type());
+		SymbolicCompleteArrayType leftArrayType = (SymbolicCompleteArrayType) left
+				.type();
+		SymbolicCompleteArrayType rightArrayType = (SymbolicCompleteArrayType) right
+				.type();
+
+		if (!leftArrayType.equals(rightArrayType)) {
+			throw err("Argument left and right to method bitxor does not have the same array type."
+					+ "\nleft array: "
+					+ left
+					+ "\nleft type: "
+					+ left.type()
+					+ "\nright array: "
+					+ right
+					+ "\nright type: "
+					+ right.type());
+		}
+		if (leftArrayType.elementType().isBoolean()) {
+			throw err("Elements of left or right to method bitxor does not have the boolean type."
+					+ "\nelement type: " + leftArrayType.typeKind());
+		}
+
+		IntegerNumber lengthNumber = (IntegerNumber) extractNumber(leftArrayType
+				.extent());
+
+		assert lengthNumber != null;
+
+		int size = lengthNumber.intValue();
+		BooleanExpression[] resultArray = new BooleanExpression[size];
+
+		if (size < 0) {
+			throw err("Argument left and right to method bitxor could not have a length less than 0."
+					+ "\nleft array: "
+					+ left
+					+ "\nleft array length: "
+					+ extractNumber(leftArrayType.extent())
+					+ "\nright array: "
+					+ right
+					+ "\nleft array length: "
+					+ extractNumber(rightArrayType.extent()));
+		}
+		for (int i = 0; i < size; i++) {
+			NumericExpression index = integer(i);
+			BooleanExpression leftElement = (BooleanExpression) arrayRead(left,
+					index);
+			BooleanExpression rightElement = (BooleanExpression) arrayRead(
+					right, index);
+			BooleanExpression resultElement1 = booleanFactory.and(
+					booleanFactory.not(leftElement), rightElement);
+			BooleanExpression resultElement2 = booleanFactory.and(
+					booleanFactory.not(rightElement), leftElement);
+
+			resultArray[i] = booleanFactory.or(resultElement1, resultElement2);
+		}
+		return array(leftArrayType, resultArray);
+	}
+
+	@Override
+	public SymbolicExpression bitnot(SymbolicExpression expression) {
+		if (expression == null)
+			throw err("Argument expression to method bitnot is null.");
+		if (!(expression.type() instanceof SymbolicCompleteArrayType))
+			throw err("Argument expression to method bitnot does not have array type."
+					+ "\n array: "
+					+ expression
+					+ "\ntype: "
+					+ expression.type());
+		SymbolicCompleteArrayType exprArrayType = (SymbolicCompleteArrayType) expression
+				.type();
+
+		if (exprArrayType.elementType().isBoolean()) {
+			throw err("Elements of expression to method bitnot does not have the boolean type."
+					+ "\n element type: " + exprArrayType.typeKind());
+		}
+
+		IntegerNumber lengthNumber = (IntegerNumber) extractNumber(exprArrayType
+				.extent());
+
+		assert lengthNumber != null;
+
+		int size = lengthNumber.intValue();
+		BooleanExpression[] resultArray = new BooleanExpression[size];
+
+		if (size < 0) {
+			throw err("Argument expression to method bitnot could not have a length less than 0."
+					+ "\n array: "
+					+ expression
+					+ "\n array length: "
+					+ extractNumber(exprArrayType.extent()));
+		}
+		for (int i = 0; i < size; i++) {
+			NumericExpression index = integer(i);
+			BooleanExpression exprElement = (BooleanExpression) arrayRead(
+					expression, index);
+			BooleanExpression resultElement = booleanFactory.not(exprElement);
+
+			resultArray[i] = resultElement;
+		}
+		return array(exprArrayType, resultArray);
 	}
 }
