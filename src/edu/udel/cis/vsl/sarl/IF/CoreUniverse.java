@@ -2105,7 +2105,7 @@ public interface CoreUniverse {
 	 *         bit vector.
 	 */
 	SymbolicExpression integer2Bitvector(NumericExpression integer,
-			SymbolicCompleteArrayType bitVectorType);
+			SymbolicType bitVectorType);
 
 	/**
 	 * Returns the conversion of an integer from a bit vector.
