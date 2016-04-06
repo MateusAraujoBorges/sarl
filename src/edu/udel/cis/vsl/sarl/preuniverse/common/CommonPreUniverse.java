@@ -2888,7 +2888,7 @@ public class CommonPreUniverse implements PreUniverse {
 					+ "\nright type: "
 					+ right.type());
 		}
-		if (leftArrayType.elementType().isBoolean()) {
+		if (!leftArrayType.elementType().isBoolean()) {
 			throw err("Elements of left or right to method bitand does not have the boolean type."
 					+ "\nelement type: " + leftArrayType.typeKind());
 		}
@@ -2923,7 +2923,7 @@ public class CommonPreUniverse implements PreUniverse {
 
 			resultArray[i] = resultElement;
 		}
-		return array(leftArrayType, resultArray);
+		return array(leftArrayType.elementType(), resultArray);
 	}
 
 	@Override
@@ -2932,12 +2932,14 @@ public class CommonPreUniverse implements PreUniverse {
 		assert integer != null;
 		assert integer.type() instanceof SymbolicIntegerType;
 
-		IntegerNumber lenNum = (IntegerNumber) extractNumber(((SymbolicCompleteArrayType)bitVectorType
-				).extent());
+		IntegerNumber lenNum = (IntegerNumber) extractNumber(((SymbolicCompleteArrayType) bitVectorType)
+				.extent());
 		int intVal = -1;
 		int length = lenNum.intValue();
 		BooleanExpression[] resultArray = new BooleanExpression[length];
 		IntegerNumber intNum = (IntegerNumber) extractNumber(integer);
+		SymbolicType elementType = ((SymbolicCompleteArrayType) bitVectorType)
+				.elementType();
 
 		if (intNum != null) {
 			intVal = intNum.intValue();
@@ -2946,7 +2948,7 @@ public class CommonPreUniverse implements PreUniverse {
 				resultArray[i] = bool(intVal % 2 == 1);
 				intVal = intVal / 2;
 			}
-			return array(bitVectorType, resultArray);
+			return array(elementType, resultArray);
 		} else {
 			SymbolicConstant int2bvConstant = null;
 
@@ -3082,7 +3084,7 @@ public class CommonPreUniverse implements PreUniverse {
 
 			resultArray[i] = resultElement;
 		}
-		return array(leftArrayType, resultArray);
+		return array(leftArrayType.elementType(), resultArray);
 	}
 
 	@Override
@@ -3151,7 +3153,7 @@ public class CommonPreUniverse implements PreUniverse {
 
 			resultArray[i] = booleanFactory.or(resultElement1, resultElement2);
 		}
-		return array(leftArrayType, resultArray);
+		return array(leftArrayType.elementType(), resultArray);
 	}
 
 	@Override
@@ -3195,6 +3197,6 @@ public class CommonPreUniverse implements PreUniverse {
 
 			resultArray[i] = resultElement;
 		}
-		return array(exprArrayType, resultArray);
+		return array(exprArrayType.elementType(), resultArray);
 	}
 }

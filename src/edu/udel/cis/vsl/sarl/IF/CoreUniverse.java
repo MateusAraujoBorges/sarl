@@ -2098,7 +2098,7 @@ public interface CoreUniverse {
 	 *            a non-<code>null</code> {@link SymbolicExpression}
 	 *            representing an integer.
 	 * @param bitVectorType
-	 *            a non-<code>null</code> {@link SymbolicCompleteArrayType}
+	 *            a non-<code>null</code> {@link SymbolicType}
 	 *            representing the type of bit vector with a type of boolean and
 	 *            a <strong>concrete</strong> length.
 	 * @return a non-<code>null</code> {@link SymbolicExpression} representing a
