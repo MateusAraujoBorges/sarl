@@ -2943,10 +2943,31 @@ public class CommonPreUniverse implements PreUniverse {
 
 		if (intNum != null) {
 			intVal = intNum.intValue();
-			assert intVal >= 0;
-			for (int i = length - 1; i >= 0; i--) {
-				resultArray[i] = bool(intVal % 2 == 1);
-				intVal = intVal / 2;
+			if (intVal >= 0) {
+				for (int i = length - 1; i >= 0; i--) {
+					resultArray[i] = bool(intVal % 2 == 1);
+					intVal = intVal / 2;
+				}
+			} else {
+				// For negative value using 2's complement.
+				// For v > 0. -v is (~v) + 1
+				intVal = -intVal;
+				boolean flag = true;
+
+				for (int i = length - 1; i >= 0; i--) {
+					boolean bVal = intVal % 2 == 0;
+
+					if (flag) {
+						if (bVal) {
+							bVal = false;
+						} else {
+							bVal = true;
+							flag = false;
+						}
+					}
+					resultArray[i] = bool(bVal);
+					intVal = intVal / 2;
+				}
 			}
 			return array(elementType, resultArray);
 		} else {
@@ -2988,20 +3009,26 @@ public class CommonPreUniverse implements PreUniverse {
 
 		assert lenNum != null;
 
-		int lenVal = lenNum.intValue();
+		int length = lenNum.intValue();
 		IntegerNumber resultNum = numberFactory.integer(0);
 		IntegerNumber j = numberFactory.integer(1);
 		IntegerNumber int_two = numberFactory.integer(2);
+		NumericExpression index = null;
+		BooleanExpression boolArrayElement = null;
 
-		for (int i = lenVal - 1; i >= 0; i--, j = numberFactory.multiply(j,
-				int_two)) {
-			NumericExpression index = integer(i);
-			BooleanExpression boolArrayElement = (BooleanExpression) arrayRead(
-					bitvector, index);
-			boolean boolVal = boolArrayElement.isTrue();
+		for (int i = length - 1; i >= 1; i--) {
+			index = integer(i);
+			boolArrayElement = (BooleanExpression) arrayRead(bitvector, index);
 
-			resultNum = boolVal ? numberFactory.add(resultNum, j) : resultNum;
+			resultNum = boolArrayElement.isTrue() ? numberFactory.add(
+					resultNum, j) : resultNum;
+			j = numberFactory.multiply(j, int_two);
 		}
+		index = integer(0);
+		boolArrayElement = (BooleanExpression) arrayRead(bitvector, index);
+
+		resultNum = boolArrayElement.isTrue() ? numberFactory.subtract(
+				resultNum, j) : resultNum;
 		return number(resultNum);
 	}
 
@@ -3049,7 +3076,7 @@ public class CommonPreUniverse implements PreUniverse {
 					+ "\nright type: "
 					+ right.type());
 		}
-		if (leftArrayType.elementType().isBoolean()) {
+		if (!leftArrayType.elementType().isBoolean()) {
 			throw err("Elements of left or right to method bitor does not have the boolean type."
 					+ "\nelement type: " + leftArrayType.typeKind());
 		}
@@ -3116,7 +3143,7 @@ public class CommonPreUniverse implements PreUniverse {
 					+ "\nright type: "
 					+ right.type());
 		}
-		if (leftArrayType.elementType().isBoolean()) {
+		if (!leftArrayType.elementType().isBoolean()) {
 			throw err("Elements of left or right to method bitxor does not have the boolean type."
 					+ "\nelement type: " + leftArrayType.typeKind());
 		}
@@ -3169,7 +3196,7 @@ public class CommonPreUniverse implements PreUniverse {
 		SymbolicCompleteArrayType exprArrayType = (SymbolicCompleteArrayType) expression
 				.type();
 
-		if (exprArrayType.elementType().isBoolean()) {
+		if (!exprArrayType.elementType().isBoolean()) {
 			throw err("Elements of expression to method bitnot does not have the boolean type."
 					+ "\n element type: " + exprArrayType.typeKind());
 		}
