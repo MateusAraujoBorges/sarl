@@ -78,7 +78,7 @@ public class RobustZ3TheoremProver implements TheoremProver {
 	 * Nick-name for <code>stderr</code>, where warnings and error messages will
 	 * be sent.
 	 */
-	public static PrintStream err;
+	public static final PrintStream err = System.err;
 
 	// ****************************** Fields ****************************** //
 
@@ -150,22 +150,17 @@ public class RobustZ3TheoremProver implements TheoremProver {
 
 			if (line == null) {
 				if (info.getShowErrors() || info.getShowInconclusives()) {
-					for (String errline = z3Err.readLine(); errline != null; errline = z3Err
-							.readLine()) {
-						if (err == null)
-							try {
-								err = new PrintStream(new File(
-										universe.getErrFile()));
-							} catch (IOException e) {
-								err = System.err;
-								err.println("I/O exception reading "
-										+ info.getFirstAlias() + " output: "
-										+ e.getMessage());
-							}
-						err.println(errline);
+					try {
+						if (z3Err.ready()) {
+							PrintStream exp = new PrintStream(new File(
+									universe.getErrFile()));
+
+							printProverUnexpectedException(z3Err, exp);
+							exp.close();
+						}
+					} catch (IOException e) {
+						printProverUnexpectedException(z3Err, err);
 					}
-					if (err != null)
-						err.flush();
 				}
 				return Prove.RESULT_MAYBE;
 			}
@@ -303,5 +298,17 @@ public class RobustZ3TheoremProver implements TheoremProver {
 	@Override
 	public String toString() {
 		return "RobustZ3TheoremProver[" + info.getFirstAlias() + "]";
+	}
+
+	void printProverUnexpectedException(BufferedReader proverErr,
+			PrintStream exp) throws IOException {
+		String errline;
+
+		do {
+			errline = proverErr.readLine();
+			if (errline == null)
+				break;
+			exp.append(errline + "\n");
+		} while (errline != null);
 	}
 }

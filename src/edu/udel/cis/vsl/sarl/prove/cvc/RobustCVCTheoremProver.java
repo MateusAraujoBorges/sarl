@@ -56,7 +56,7 @@ public class RobustCVCTheoremProver implements TheoremProver {
 	 * Nick-name for <code>stderr</code>, where warnings and error messages will
 	 * be sent.
 	 */
-	public static PrintStream err;
+	public static final PrintStream err = System.err;
 	// ****************************** Fields ****************************** //
 
 	/**
@@ -147,23 +147,17 @@ public class RobustCVCTheoremProver implements TheoremProver {
 
 			if (line == null) {
 				if (info.getShowErrors() || info.getShowInconclusives()) {
-					for (String errline = cvcErr.readLine(); errline != null; errline = cvcErr
-							.readLine()) {
-						if (err == null) {
-							try {
-								err = new PrintStream(new File(
-										universe.getErrFile()));
-							} catch (IOException e) {
-								err = System.err;
-								err.println("I/O exception reading "
-										+ info.getFirstAlias() + " output: "
-										+ e.getMessage());
-							}
+					try {
+						if (cvcErr.ready()) {
+							PrintStream exp = new PrintStream(new File(
+									universe.getErrFile()));
+
+							printProverUnexpectedException(cvcErr, exp);
+							exp.close();
 						}
-						err.println(errline);
+					} catch (IOException e) {
+						printProverUnexpectedException(cvcErr, err);
 					}
-					if (err != null)
-						err.flush();
 				}
 				return Prove.RESULT_MAYBE;
 			}
@@ -304,5 +298,17 @@ public class RobustCVCTheoremProver implements TheoremProver {
 	@Override
 	public String toString() {
 		return "RobustCVCTheoremProver[" + info.getFirstAlias() + "]";
+	}
+
+	void printProverUnexpectedException(BufferedReader proverErr,
+			PrintStream exp) throws IOException {
+		String errline;
+
+		do {
+			errline = proverErr.readLine();
+			if (errline == null)
+				break;
+			exp.append(errline);
+		} while (errline != null);
 	}
 }
