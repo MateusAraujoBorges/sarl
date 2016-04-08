@@ -2081,7 +2081,7 @@ public interface CoreUniverse {
 
 	/**
 	 * Returns the {@link SymbolicType} representing a bitVectorType, which is
-	 * an array of booleans.
+	 * an array of booleans with concrete length.
 	 * 
 	 * @param length
 	 *            an integer representing the length of the bits of the integer
@@ -2089,7 +2089,7 @@ public interface CoreUniverse {
 	 * @return a {@link SymbolicType} with the base-type of boolean and the
 	 *         given length.
 	 */
-	SymbolicType bitVectorType(int length);
+	SymbolicCompleteArrayType bitVectorType(int length);
 
 	/**
 	 * Returns the conversion of a bit vector from an integer.
@@ -2098,14 +2098,14 @@ public interface CoreUniverse {
 	 *            a non-<code>null</code> {@link SymbolicExpression}
 	 *            representing an integer.
 	 * @param bitVectorType
-	 *            a non-<code>null</code> {@link SymbolicType}
+	 *            a non-<code>null</code> {@link SymbolicCompleteArrayType}
 	 *            representing the type of bit vector with a type of boolean and
 	 *            a <strong>concrete</strong> length.
 	 * @return a non-<code>null</code> {@link SymbolicExpression} representing a
 	 *         bit vector.
 	 */
 	SymbolicExpression integer2Bitvector(NumericExpression integer,
-			SymbolicType bitVectorType);
+			SymbolicCompleteArrayType bitVectorType);
 
 	/**
 	 * Returns the conversion of an integer from a bit vector.

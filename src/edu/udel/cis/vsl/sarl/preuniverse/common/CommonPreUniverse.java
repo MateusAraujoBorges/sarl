@@ -2928,11 +2928,11 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public SymbolicExpression integer2Bitvector(NumericExpression integer,
-			SymbolicType bitVectorType) {
+			SymbolicCompleteArrayType bitVectorType) {
 		assert integer != null;
 		assert integer.type() instanceof SymbolicIntegerType;
 
-		IntegerNumber lenNum = (IntegerNumber) extractNumber(((SymbolicCompleteArrayType) bitVectorType)
+		IntegerNumber lenNum = (IntegerNumber) extractNumber(bitVectorType
 				.extent());
 		int intVal = -1;
 		int length = lenNum.intValue();
@@ -3033,7 +3033,7 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	@Override
-	public SymbolicType bitVectorType(int length) {
+	public SymbolicCompleteArrayType bitVectorType(int length) {
 		return arrayType(booleanType, integer(length));
 	}
 
