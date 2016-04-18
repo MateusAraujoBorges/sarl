@@ -2957,9 +2957,8 @@ public class CommonPreUniverse implements PreUniverse {
 					stringObject("BIT"), bitFunctionType);
 
 			for (int i = 0; i < length; i++) {
-				NumericExpression index = integer(length - 1 - i);
 				resultArray[i] = (BooleanExpression) apply(bitConstant,
-						Arrays.asList(integer, index));
+						Arrays.asList(integer, integer(length - 1 - i)));
 			}
 			return array(elementType, resultArray);
 		}
@@ -2976,27 +2975,21 @@ public class CommonPreUniverse implements PreUniverse {
 		assert boolArrayType.elementType().isBoolean();
 
 		NumericExpression lengthExpr = boolArrayType.extent();
-		NumericExpression result = integer(0);
+		NumericExpression result = zeroInt();
 		NumericExpression j = integer(1);
 		NumericExpression intTwo = integer(2);
-		NumericExpression index = null;
 		BooleanExpression boolArrayElement = null;
 		int len = ((IntegerNumber) extractNumber(lengthExpr)).intValue();
 
 		for (int i = len - 1; i >= 0; i--) {
-			index = integer(i);
-			boolArrayElement = (BooleanExpression) arrayRead(bitvector, index);
+			boolArrayElement = (BooleanExpression) arrayRead(bitvector,
+					integer(i));
 			if (boolArrayElement.operator().equals(SymbolicOperator.CONCRETE)) {
 				result = boolArrayElement.isTrue() ? add(result, j) : result;
 			} else {
-				SymbolicFunctionType isTrueFunctionType = functionType(
-						Arrays.asList(booleanType), integerType);
-				SymbolicConstant isTrueConstant = symbolicConstant(
-						stringObject("isTrue"), isTrueFunctionType);
-				NumericExpression isTrue = (NumericExpression) apply(
-						isTrueConstant, Arrays.asList(boolArrayElement));
-
-				result = add(result, multiply(j, isTrue));
+				result = add(
+						result,
+						(NumericExpression) cond(boolArrayElement, j, zeroInt()));
 			}
 			j = multiply(j, intTwo);
 		}
