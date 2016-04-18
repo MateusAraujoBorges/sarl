@@ -17,7 +17,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class IntegerBitwiseOperationTest {
 	private final static PrintStream OUT = System.out;
-	private final static boolean DEBUG = true;
+	private final static boolean DEBUG = false;
 	private final static int INTEGER_BIT_LENGTH = 32;
 
 	private SymbolicUniverse universe;
