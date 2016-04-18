@@ -11,44 +11,36 @@ import org.junit.Test;
 import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class IntegerBitwiseOperationTest {
 	private final static PrintStream OUT = System.out;
-	private final static boolean DEBUG = false;
+	private final static boolean DEBUG = true;
 	private final static int INTEGER_BIT_LENGTH = 32;
 
 	private SymbolicUniverse universe;
-	// private SymbolicType intType;
+	private SymbolicType intType;
 	private SymbolicCompleteArrayType bitVectorType;
-	private NumericExpression intMin; // integer -4
-	private NumericExpression intNegFour; // integer -4
-	private NumericExpression intNegOne; // integer -1
 	private NumericExpression intZero; // integer 0
-	private NumericExpression intPosOne; // integer 1
+	private NumericExpression intOne; // integer 1
 	private NumericExpression intMax; // integer -4
-
-	// private NumericExpression x, y, z;
-	// private StringObject x_obj, y_obj, z_obj; // "x", "y", "z"
+	private StringObject obj_x, obj_y;
+	private NumericExpression x, y;
 
 	@Before
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
-		// intType = universe.integerType();
+		intType = universe.integerType();
 		bitVectorType = universe.bitVectorType(INTEGER_BIT_LENGTH);
-		intMin = universe.integer(Integer.MIN_VALUE);
-		intNegFour = universe.integer(-4);
-		intNegOne = universe.integer(-1);
 		intZero = universe.integer(0);
-		intPosOne = universe.integer(1);
+		intOne = universe.integer(1);
 		intMax = universe.integer(Integer.MAX_VALUE);
-
-		// x_obj = universe.stringObject("x");
-		// y_obj = universe.stringObject("y");
-		// z_obj = universe.stringObject("z");
-		// x = (NumericExpression) universe.symbolicConstant(x_obj, intType);
-		// y = (NumericExpression) universe.symbolicConstant(y_obj, intType);
-		// z = (NumericExpression) universe.symbolicConstant(z_obj, intType);
+		obj_x = universe.stringObject("x");
+		obj_y = universe.stringObject("y");
+		x = (NumericExpression) universe.symbolicConstant(obj_x, intType);
+		y = (NumericExpression) universe.symbolicConstant(obj_y, intType);
 	}
 
 	@After
@@ -68,112 +60,375 @@ public class IntegerBitwiseOperationTest {
 	}
 
 	/**
-	 * Expression: 1 & 0; <br>
-	 * Expected: 0;
+	 * Expression: 0 & 1; [0x00000000] & [0x00000001] <br>
+	 * Expected: 0; [0x00000000]
 	 */
 	@Test
-	public void bitand_concreteNumbers_intPosOne_intZero() {
+	public void bitand_ConcreteNumbers_intZero_intOne() {
 		SymbolicExpression bv_intZero = universe.integer2Bitvector(intZero,
 				bitVectorType);
-		SymbolicExpression bv_intPosOne = universe.integer2Bitvector(intPosOne,
+		SymbolicExpression bv_intOne = universe.integer2Bitvector(intOne,
 				bitVectorType);
-		SymbolicExpression bitandResult = universe.bitand(bv_intZero,
-				bv_intPosOne);
+		SymbolicExpression bitandResult = universe
+				.bitand(bv_intZero, bv_intOne);
 		NumericExpression actualResult = universe
 				.bitvector2Integer(bitandResult);
 		NumericExpression expectedResult = universe.integer(0);
 
-		p("Expresiion: 0 & 1");
+		p("Expression: 0 & 1");
 		p("ExpectedResult: " + expectedResult.atomString());
-		p("ActualResult: " + actualResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
 		assertEquals(expectedResult, actualResult);
 	}
 
-	/**
-	 * Expression: -1 & 1; <br>
-	 * Expected: 1;
-	 */
 	@Test
-	public void bitand_concreteNumbers_intNegOne_intPosOne() {
-		SymbolicExpression bv_intPosOne = universe.integer2Bitvector(intPosOne,
-				bitVectorType);
-		SymbolicExpression bv_intNegOne = universe.integer2Bitvector(intNegOne,
-				bitVectorType);
-		SymbolicExpression bitandResult = universe.bitand(bv_intPosOne,
-				bv_intNegOne);
+	public void bitand_SymbolicExpression_x_y() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_y = universe.integer2Bitvector(y, bitVectorType);
+		SymbolicExpression bitandResult = universe.bitand(bv_x, bv_y);
 		NumericExpression actualResult = universe
 				.bitvector2Integer(bitandResult);
-		NumericExpression expectedResult = universe.integer(1);
+		// NumericExpression expectedResult = universe.integer(0);
 
-		p("Expresiion: -1 & 1");
-		p("ExpectedResult: " + expectedResult.atomString());
-		p("ActualResult: " + actualResult.atomString());
-		assertEquals(expectedResult, actualResult);
+		p("Expression: x & y");
+		// p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
 	}
 
 	/**
-	 * Expression: -4 & 1; <br>
-	 * Expected: -3;
+	 * Expression: x & 0; [x] & [0x00000000] <br>
+	 * Expected: 0; [0x00000000]
 	 */
 	@Test
-	public void bitor_concreteNumbers_intNegFour_intPosOne() {
-		SymbolicExpression bv_intNegFour = universe.integer2Bitvector(
-				intNegFour, bitVectorType);
-		SymbolicExpression bv_intPosOne = universe.integer2Bitvector(intPosOne,
+	public void bitand_Mixed_x_intZero() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intZero = universe.integer2Bitvector(intZero,
 				bitVectorType);
-		SymbolicExpression bitorResult = universe.bitor(bv_intNegFour,
-				bv_intPosOne);
+		SymbolicExpression bitandResult = universe.bitand(bv_x, bv_intZero);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitandResult);
+		NumericExpression expectedResult = universe.integer(0);
+
+		p("Expression: x & 0");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	@Test
+	public void bitand_Mixed_x_intOne() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intOne = universe.integer2Bitvector(intOne,
+				bitVectorType);
+		SymbolicExpression bitandResult = universe.bitand(bv_x, bv_intOne);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitandResult);
+		// NumericExpression expectedResult = universe.integer(0);
+
+		p("Expression: x & 1");
+		// p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+	}
+
+	/**
+	 * Expression: x & ~0; [x] & ~[0x00000000] <br>
+	 * Expected: x; [x]
+	 */
+	@Test
+	public void bitand_Mixed_x_NotintZero() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intZero = universe.integer2Bitvector(intZero,
+				bitVectorType);
+		SymbolicExpression bitandResult = universe.bitand(bv_x,
+				universe.bitnot(bv_intZero));
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitandResult);
+		NumericExpression expectedResult = universe.bitvector2Integer(bv_x);
+
+		p("Expression: x & ~0");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	@Test
+	public void bitand_Mixed_x_NotintOne() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intOne = universe.integer2Bitvector(intOne,
+				bitVectorType);
+		SymbolicExpression bitandResult = universe.bitand(bv_x,
+				universe.bitnot(bv_intOne));
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitandResult);
+		// NumericExpression expectedResult = universe.integer(0);
+
+		p("Expression: x & ~1");
+		// p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+	}
+
+	/**
+	 * Expression: 0 | 1; [0x00000000] | [0x00000001] <br>
+	 * Expected: 1; [0x00000001]
+	 */
+	@Test
+	public void bitor_ConcreteNumbers_intZero_intOne() {
+		SymbolicExpression bv_intZero = universe.integer2Bitvector(intZero,
+				bitVectorType);
+		SymbolicExpression bv_intOne = universe.integer2Bitvector(intOne,
+				bitVectorType);
+		SymbolicExpression bitorResult = universe.bitor(bv_intZero, bv_intOne);
 		NumericExpression actualResult = universe
 				.bitvector2Integer(bitorResult);
-		NumericExpression expectedResult = universe.integer(-3);
+		NumericExpression expectedResult = universe.integer(1);
 
-		p("Expresiion: -4 & 1");
+		p("Expression: 0 | 1");
 		p("ExpectedResult: " + expectedResult.atomString());
-		p("ActualResult: " + actualResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	@Test
+	public void bitor_SymbolicExpression_x_y() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_y = universe.integer2Bitvector(y, bitVectorType);
+		SymbolicExpression bitorResult = universe.bitor(bv_x, bv_y);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitorResult);
+		// NumericExpression expectedResult = universe.integer(0);
+
+		p("Expression: x | y");
+		// p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+	}
+
+	/**
+	 * Expression: x | 0; [x] & [0x00000000] <br>
+	 * Expected: x; [x]
+	 */
+	@Test
+	public void bitor_Mixed_x_intZero() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intZero = universe.integer2Bitvector(intZero,
+				bitVectorType);
+		SymbolicExpression bitorResult = universe.bitor(bv_x, bv_intZero);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitorResult);
+		NumericExpression expectedResult = universe.bitvector2Integer(bv_x);
+
+		p("Expression: x | 0");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	@Test
+	public void bitor_Mixed_x_intOne() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intOne = universe.integer2Bitvector(intOne,
+				bitVectorType);
+		SymbolicExpression bitorResult = universe.bitor(bv_x, bv_intOne);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitorResult);
+		// NumericExpression expectedResult = universe.integer(0);
+
+		p("Expression: x | 1");
+		// p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+	}
+
+	/**
+	 * Expression: x | ~0; [x] & ~[0x00000000] <br>
+	 * Expected: ~0 = 4294967295 ; [0xffffffff]
+	 */
+	@Test
+	public void bitor_Mixed_x_NotintZero() {
+		long resLong = ((long) Integer.MAX_VALUE) * 2 + 1;
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intZero = universe.integer2Bitvector(intZero,
+				bitVectorType);
+		SymbolicExpression bitorResult = universe.bitor(bv_x,
+				universe.bitnot(bv_intZero));
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitorResult);
+		NumericExpression expectedResult = universe.integer(resLong);
+
+		p("Expression: x | ~0");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	@Test
+	public void bitor_Mixed_x_NotintOne() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intOne = universe.integer2Bitvector(intOne,
+				bitVectorType);
+		SymbolicExpression bitorResult = universe.bitor(bv_x,
+				universe.bitnot(bv_intOne));
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitorResult);
+		// NumericExpression expectedResult = universe.integer(0);
+
+		p("Expression: x | ~1");
+		// p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+	}
+
+	/**
+	 * Expression: 0 ^ 1; [0x00000000] & [0x00000001] <br>
+	 * Expected: 1; [0x00000001]
+	 */
+	@Test
+	public void bitxor_ConcreteNumbers_intZero_intOne() {
+		SymbolicExpression bv_intZero = universe.integer2Bitvector(intZero,
+				bitVectorType);
+		SymbolicExpression bv_intOne = universe.integer2Bitvector(intOne,
+				bitVectorType);
+		SymbolicExpression bitxorResult = universe
+				.bitxor(bv_intZero, bv_intOne);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitxorResult);
+		NumericExpression expectedResult = universe.integer(1);
+
+		p("Expression: 0 ^ 1");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
 		assertEquals(expectedResult, actualResult);
 	}
 
 	/**
-	 * Expression: ~0; <br>
-	 * Expected: -1;
+	 * Expression: 858993459 ^ 1431655765; [0x33333333] & [0x55555555] <br>
+	 * Expected: 1717986918; [0x66666666]
+	 */
+	@Test
+	public void bitxor_ConcreteNumbers_Extra() {
+		SymbolicExpression bv_intZero = universe.integer2Bitvector(
+				universe.integer(858993459), bitVectorType);
+		SymbolicExpression bv_intOne = universe.integer2Bitvector(
+				universe.integer(1431655765), bitVectorType);
+		SymbolicExpression bitxorResult = universe
+				.bitxor(bv_intZero, bv_intOne);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitxorResult);
+		NumericExpression expectedResult = universe.integer(1717986918);
+
+		p("Expression: 858993459 ^ 1431655765");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	@Test
+	public void bitxor_SymbolicExpression_x_y() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_y = universe.integer2Bitvector(y, bitVectorType);
+		SymbolicExpression bitxorResult = universe.bitxor(bv_x, bv_y);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitxorResult);
+		// NumericExpression expectedResult = universe.integer(0);
+
+		p("Expression: x ^ y");
+		// p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+	}
+
+	/**
+	 * Expression: x ^ 0; [x] & [0x00000000] <br>
+	 * Expected: x; [x]
+	 */
+	@Test
+	public void bitxor_Mixed_x_intZero() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intZero = universe.integer2Bitvector(intZero,
+				bitVectorType);
+		SymbolicExpression bitxorResult = universe.bitxor(bv_x, bv_intZero);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitxorResult);
+		NumericExpression expectedResult = universe.bitvector2Integer(bv_x);
+
+		p("Expression: x ^ 0");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	@Test
+	public void bitxor_Mixed_x_intOne() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intOne = universe.integer2Bitvector(intOne,
+				bitVectorType);
+		SymbolicExpression bitxorResult = universe.bitxor(bv_x, bv_intOne);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitxorResult);
+		// NumericExpression expectedResult = universe.integer(0);
+
+		p("Expression: x ^ 1");
+		// p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+	}
+
+	/**
+	 * Expression: x ^ ~0; [x] & ~[0x00000000] <br>
+	 * Expected: ~x; ~[x]
+	 */
+	@Test
+	public void bitxor_Mixed_x_NotintZero() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intZero = universe.integer2Bitvector(intZero,
+				bitVectorType);
+		SymbolicExpression bitxorResult = universe.bitxor(bv_x,
+				universe.bitnot(bv_intZero));
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitxorResult);
+		NumericExpression expectedResult = universe.bitvector2Integer(universe
+				.bitnot(bv_x));
+
+		p("Expression: x ^ ~0");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	@Test
+	public void bitxor_Mixed_x_NotintOne() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_intOne = universe.integer2Bitvector(intOne,
+				bitVectorType);
+		SymbolicExpression bitxorResult = universe.bitxor(bv_x,
+				universe.bitnot(bv_intOne));
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitxorResult);
+		// NumericExpression expectedResult = universe.integer(0);
+
+		p("Expression: x ^ ~1");
+		// p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+	}
+
+	/**
+	 * Expression: ~0; ~[0x00000000]<br>
+	 * Expected: 2^32-1 = 4294967295; [0xffffffff]
 	 */
 	@Test
 	public void bitnot_intZero() {
+		long resLong = ((long) Integer.MAX_VALUE) * 2 + 1;
 		SymbolicExpression bv_intZero = universe.integer2Bitvector(intZero,
 				bitVectorType);
 		SymbolicExpression bitnotResult = universe.bitnot(bv_intZero);
 		NumericExpression actualResult = universe
 				.bitvector2Integer(bitnotResult);
-		NumericExpression expectedResult = universe.integer(-1);
+		NumericExpression expectedResult = universe.integer(resLong);
 
-		p("Expresiion: ~0");
+		p("Expression: ~0");
 		p("ExpectedResult: " + expectedResult.atomString());
-		p("ActualResult: " + actualResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
 		assertEquals(expectedResult, actualResult);
 	}
 
 	/**
-	 * Expression: ~(-2147483648); Integer.MIN_VALUE<br>
-	 * Expected: 2147483647; Integer.MAX_VALUE
-	 */
-	@Test
-	public void bitnot_intMin() {
-		SymbolicExpression bv_intMin = universe.integer2Bitvector(intMin,
-				bitVectorType);
-		SymbolicExpression bitnotResult = universe.bitnot(bv_intMin);
-		NumericExpression actualResult = universe
-				.bitvector2Integer(bitnotResult);
-		NumericExpression expectedResult = intMax;
-
-		p("Expresiion: ~(-2147483648)");
-		p("ExpectedResult: " + expectedResult.atomString());
-		p("ActualResult: " + actualResult.atomString());
-		assertEquals(expectedResult, actualResult);
-	}
-
-	/**
-	 * Expression: ~2147483647; Integer.MAX_VALUE<br>
-	 * Expected: -2147483648; Integer.MIN_VALUE
+	 * Expression: ~2147483647; ~[0x7fffffff]<br>
+	 * Expected: 2147483648; [0x80000000]
 	 */
 	@Test
 	public void bitnot_intMax() {
@@ -182,11 +437,108 @@ public class IntegerBitwiseOperationTest {
 		SymbolicExpression bitnotResult = universe.bitnot(bv_intMax);
 		NumericExpression actualResult = universe
 				.bitvector2Integer(bitnotResult);
-		NumericExpression expectedResult = intMin;
+		NumericExpression expectedResult = universe
+				.integer(((long) Integer.MAX_VALUE) + 1);
 
-		p("Expresiion: ~0");
+		p("Expression: ~2147483647");
 		p("ExpectedResult: " + expectedResult.atomString());
-		p("ActualResult: " + actualResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	@Test
+	public void bitnot_x() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bitnotResult = universe.bitnot(bv_x);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitnotResult);
+		// NumericExpression expectedResult = universe
+		// .integer(((long) Integer.MAX_VALUE) + 1);
+
+		p("Expression: ~x");
+		// p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+	}
+
+	/**
+	 * Expression: ~(~x); ~(~[x])<br>
+	 * Expected: x; [x]
+	 */
+	@Test
+	public void bitnot_Notx() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bitnotResult = universe
+				.bitnot(universe.bitnot(bv_x));
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitnotResult);
+		NumericExpression expectedResult = universe.bitvector2Integer(bv_x);
+
+		p("Expression: ~(~x)");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	/**
+	 * Expression: ~ (x & y);<br>
+	 * Expected: (~x | ~y);
+	 */
+	@Test
+	public void bitnot_xBITANDy() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_y = universe.integer2Bitvector(y, bitVectorType);
+		SymbolicExpression bitwiseResult1 = universe.bitnot(universe.bitand(
+				bv_x, bv_y));
+		SymbolicExpression bitwiseResult2 = universe.bitor(
+				universe.bitnot(bv_x), universe.bitnot(bv_y));
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitwiseResult1);
+		NumericExpression expectedResult = universe
+				.bitvector2Integer(bitwiseResult2);
+
+		p("Expression: ~ (x & y)");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	/**
+	 * Expression: ~ (x | y);<br>
+	 * Expected: (~x & ~y);
+	 */
+	@Test
+	public void bitnot_xBITORy() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_y = universe.integer2Bitvector(y, bitVectorType);
+		SymbolicExpression bitwiseResult1 = universe.bitnot(universe.bitor(
+				bv_x, bv_y));
+		SymbolicExpression bitwiseResult2 = universe.bitand(
+				universe.bitnot(bv_x), universe.bitnot(bv_y));
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitwiseResult1);
+		NumericExpression expectedResult = universe
+				.bitvector2Integer(bitwiseResult2);
+
+		p("Expression: ~ (x | y)");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	@Test
+	public void bitnot_xBITANDyBITORy() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_y = universe.integer2Bitvector(y, bitVectorType);
+		SymbolicExpression bitwiseResult1 = universe.bitor(
+				universe.bitand(bv_x, bv_y), bv_y);
+		NumericExpression actualResult = universe
+				.bitvector2Integer(bitwiseResult1);
+		NumericExpression expectedResult = universe
+				.bitvector2Integer(bv_y);
+
+		p("Expression: ~ (x | y)");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
 		assertEquals(expectedResult, actualResult);
 	}
 }

@@ -2,7 +2,6 @@ package edu.udel.cis.vsl.sarl.preuniverse.common;
 
 import java.io.PrintStream;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -180,8 +179,6 @@ public class CommonPreUniverse implements PreUniverse {
 	private boolean showProverQueries = false;
 
 	private SymbolicExpression[] emptyExprArray = new SymbolicExpression[0];
-
-	private ArrayList<SymbolicConstant> int2bvConstants = new ArrayList<SymbolicConstant>();
 
 	private String errFileName = "ProverOutput.txt";
 
@@ -2937,9 +2934,9 @@ public class CommonPreUniverse implements PreUniverse {
 		int intVal = -1;
 		int length = lenNum.intValue();
 		BooleanExpression[] resultArray = new BooleanExpression[length];
-		IntegerNumber intNum = (IntegerNumber) extractNumber(integer);
 		SymbolicType elementType = ((SymbolicCompleteArrayType) bitVectorType)
 				.elementType();
+		IntegerNumber intNum = (IntegerNumber) extractNumber(integer);
 
 		if (intNum != null) {
 			intVal = intNum.intValue();
@@ -2949,48 +2946,22 @@ public class CommonPreUniverse implements PreUniverse {
 					intVal = intVal / 2;
 				}
 			} else {
-				// For negative value using 2's complement.
-				// For v > 0. -v is (~v) + 1
-				intVal = -intVal;
-				boolean flag = true;
-
-				for (int i = length - 1; i >= 0; i--) {
-					boolean bVal = intVal % 2 == 0;
-
-					if (flag) {
-						if (bVal) {
-							bVal = false;
-						} else {
-							bVal = true;
-							flag = false;
-						}
-					}
-					resultArray[i] = bool(bVal);
-					intVal = intVal / 2;
-				}
+				throw err("Argument integer to method integer2Bitvector should not be negative."
+						+ "\ninteger: " + intVal);
 			}
 			return array(elementType, resultArray);
 		} else {
-			SymbolicConstant int2bvConstant = null;
+			SymbolicFunctionType bitFunctionType = functionType(
+					Arrays.asList(integerType, integerType), booleanType);
+			SymbolicConstant bitConstant = symbolicConstant(
+					stringObject("BIT"), bitFunctionType);
 
-			for (SymbolicConstant sc : int2bvConstants) {
-				SymbolicCompleteArrayType tmpType = (SymbolicCompleteArrayType) sc
-						.type();
-				IntegerNumber tmpLenNum = (IntegerNumber) tmpType.extent();
-				int tmpLenVal = tmpLenNum.intValue();
-
-				if (tmpLenVal == length)
-					int2bvConstant = sc;
+			for (int i = 0; i < length; i++) {
+				NumericExpression index = integer(length - 1 - i);
+				resultArray[i] = (BooleanExpression) apply(bitConstant,
+						Arrays.asList(integer, index));
 			}
-			if (int2bvConstant == null) {
-				SymbolicFunctionType int2bvFunctionType = functionType(
-						Arrays.asList(integerType), bitVectorType);
-
-				int2bvConstant = symbolicConstant(stringObject("int2bv"),
-						int2bvFunctionType);
-				int2bvConstants.add(int2bvConstant);
-			}
-			return apply(int2bvConstant, Arrays.asList(integer));
+			return array(elementType, resultArray);
 		}
 	}
 
@@ -3004,32 +2975,32 @@ public class CommonPreUniverse implements PreUniverse {
 		assert boolArrayType instanceof SymbolicCompleteArrayType;
 		assert boolArrayType.elementType().isBoolean();
 
-		IntegerNumber lenNum = (IntegerNumber) extractNumber(boolArrayType
-				.extent());
-
-		assert lenNum != null;
-
-		int length = lenNum.intValue();
-		IntegerNumber resultNum = numberFactory.integer(0);
-		IntegerNumber j = numberFactory.integer(1);
-		IntegerNumber int_two = numberFactory.integer(2);
+		NumericExpression lengthExpr = boolArrayType.extent();
+		NumericExpression result = integer(0);
+		NumericExpression j = integer(1);
+		NumericExpression intTwo = integer(2);
 		NumericExpression index = null;
 		BooleanExpression boolArrayElement = null;
+		int len = ((IntegerNumber) extractNumber(lengthExpr)).intValue();
 
-		for (int i = length - 1; i >= 1; i--) {
+		for (int i = len - 1; i >= 0; i--) {
 			index = integer(i);
 			boolArrayElement = (BooleanExpression) arrayRead(bitvector, index);
+			if (boolArrayElement.operator().equals(SymbolicOperator.CONCRETE)) {
+				result = boolArrayElement.isTrue() ? add(result, j) : result;
+			} else {
+				SymbolicFunctionType isTrueFunctionType = functionType(
+						Arrays.asList(booleanType), integerType);
+				SymbolicConstant isTrueConstant = symbolicConstant(
+						stringObject("isTrue"), isTrueFunctionType);
+				NumericExpression isTrue = (NumericExpression) apply(
+						isTrueConstant, Arrays.asList(boolArrayElement));
 
-			resultNum = boolArrayElement.isTrue() ? numberFactory.add(
-					resultNum, j) : resultNum;
-			j = numberFactory.multiply(j, int_two);
+				result = add(result, multiply(j, isTrue));
+			}
+			j = multiply(j, intTwo);
 		}
-		index = integer(0);
-		boolArrayElement = (BooleanExpression) arrayRead(bitvector, index);
-
-		resultNum = boolArrayElement.isTrue() ? numberFactory.subtract(
-				resultNum, j) : resultNum;
-		return number(resultNum);
+		return result;
 	}
 
 	@Override
