@@ -33,18 +33,7 @@ public class Translation {
 	 * will be conjunct as a single fast list:
 	 * e.g.
 	 * the side effects of x%y will be:
-	 * (y*t__0 + t__1 = x) && (sign(x) = sign(t__1) || t__1=0) && (|t__1| < |y|)
-	 * 
-	 * sign(t__1) = sign(x) ==>
-	 * (t__1>0 && x>0) || (t__1<0 && x<0)
-	 * 
-	 *|t__1| < |y| ==>
-	 *(
-	 *(t__1 >0 && y>0 && y>t__1) ||
-	 *(t__1 >0 && y<0 && 0 - y > t__1) ||
-	 *(t__1 <0 && y<0 && t__1 > y) ||
-	 *(t__1<0 && y>0 && 0 - y < t__1)
-	 *)
+	 * (y*t__0 + t__1 = x) && (t__1 >= 0 && t__1 < y)
 	 * 
 	 */
 	private FastList<String> auxConstraints;
