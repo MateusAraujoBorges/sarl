@@ -173,4 +173,11 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 		return factory.primitivePower(this,
 				factory.objectFactory().intObject(exponent));
 	}
+
+	@Override
+	public int maxDegreeOf(Primitive primitive) {
+		if (this.equals(primitive))
+			return 1;
+		return 0;
+	}
 }

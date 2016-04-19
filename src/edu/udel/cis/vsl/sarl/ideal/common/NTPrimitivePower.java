@@ -280,4 +280,9 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 		return factory.primitivePower(primitive(), factory.objectFactory()
 				.intObject(exponent().getInt() * exponent));
 	}
+
+	@Override
+	public int maxDegreeOf(Primitive primitive) {
+		return exponent().getInt() * primitive().maxDegreeOf(primitive);
+	}
 }

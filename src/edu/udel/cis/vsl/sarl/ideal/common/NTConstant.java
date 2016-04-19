@@ -32,6 +32,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
+import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 
 /**
@@ -40,8 +41,8 @@ import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
  * @author siegel
  * 
  */
-public class NTConstant extends HomogeneousExpression<SymbolicObject> implements
-		Constant {
+public class NTConstant extends HomogeneousExpression<SymbolicObject>
+		implements Constant {
 
 	/**
 	 * Constructs new {@link NTConstant} of given type, wrapping given numeric
@@ -192,5 +193,10 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject> implements
 			}
 		}
 		return factory.constant(result);
+	}
+
+	@Override
+	public int maxDegreeOf(Primitive primitive) {
+		return 0;
 	}
 }

@@ -154,4 +154,17 @@ public interface Monomial extends RationalExpression {
 
 	@Override
 	Monomial powerInt(IdealFactory factory, int exponent);
+
+	/**
+	 * Computes the maximum degree to which <code>primitive</code> occurs in
+	 * this {@link Monomial}. For example the primitive X occurs with max degree
+	 * 11 in XY(X+Z)^10.
+	 * 
+	 * @param primitive
+	 *            the {@link Primitive} which must have same type as this; it is
+	 *            possible the primitive does not occur at all in this, in which
+	 *            case the result is 0
+	 * @return the maximum degree to which <code>primitive</code> occurs in this
+	 */
+	int maxDegreeOf(Primitive primitive);
 }

@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 
 import edu.udel.cis.vsl.sarl.IF.CoreUniverse;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
+import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
@@ -57,6 +58,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifier;
+import edu.udel.cis.vsl.sarl.util.SingletonMap;
 
 /**
  * <p>
@@ -1807,6 +1809,15 @@ public class IdealSimplifier extends CommonSimplifier {
 			if (rightSign < 0 || (rightSign == 0 && interval.strictUpper()))
 				return info.falseExpr;
 		}
+
+		// if (is0byEvaluation(poly))
+		// return info.trueExpr;
+
+		// if (new FastEvaluator(info.numberFactory, poly).isZero())
+		// return info.trueExpr;
+		//
+		// return null;
+
 		if (poly.hasNontrivialExpansion(id)) {
 			Monomial[] termMap = poly.expand(id);
 
@@ -1821,6 +1832,92 @@ public class IdealSimplifier extends CommonSimplifier {
 				return result;
 		}
 		return null;
+	}
+
+	/**
+	 * Searches for a "true" primitive (i.e., an instance of {@link Primitive}
+	 * which is not a {@link Polynomial}) in the expression <code>expr</code>.
+	 * The search is recursive on the structure but backtracks as soon as a node
+	 * which is not a {@link RationalExpression} is encountered.
+	 * 
+	 * @param expr
+	 * @return
+	 */
+	Primitive findATruePrimitive(Monomial m) {
+		if (m instanceof Primitive && !(m instanceof Polynomial))
+			return (Primitive) m;
+		switch (m.operator()) {
+		case ADD:
+		case MULTIPLY:
+			int n = m.numArguments();
+
+			for (int i = 0; i < n; i++) {
+				SymbolicObject arg = m.argument(i);
+				Primitive p = findATruePrimitive((Monomial) arg);
+
+				if (p != null)
+					return p;
+			}
+			return null;
+		case POWER:
+			return findATruePrimitive((Monomial) m.argument(0));
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * This one attempts to simplify an expression of the form poly=0 by
+	 * evaluating the primitives at each point on a discrete finite grid.
+	 * Specifically, let P be the set of primitives that occur in poly. Let
+	 * deg(p) be the maximum degree for which p occurs. In the grid, p takes on
+	 * all integer values from 0 to deg(p) (inclusive). The number of points in
+	 * the grid is therefore the product over all p in P of (1+deg(p)).
+	 * 
+	 * Approach: pick a primitive, find its max degree. Take conjunction over
+	 * i=0,...,deg(p), of the result of simplifying poly[p/i]=0. Here poly[p/i]
+	 * is the expression that results from substituting i for p in poly.
+	 * 
+	 * Currently not used --- slower than expansion for most cases.
+	 * 
+	 * @param poly
+	 * @return
+	 */
+	@SuppressWarnings("unused")
+	private boolean is0byEvaluation(Polynomial poly) {
+		Primitive primitive = findATruePrimitive(poly);
+
+		assert primitive != null;
+
+		int deg = poly.maxDegreeOf(primitive);
+
+		if (debugSimps) {
+			out.println("Max degree of " + primitive + " is " + deg);
+			out.flush();
+		}
+
+		BooleanExpression result = info.trueExpr;
+		SymbolicType type = poly.type();
+		boolean isInteger = type.isInteger();
+		IdealFactory id = info.idealFactory;
+
+		for (int i = 0; i <= deg; i++) {
+			SymbolicExpression point = isInteger ? info.universe.integer(i)
+					: info.universe.rational(i);
+			Map<SymbolicExpression, SymbolicExpression> map = new SingletonMap<>(
+					primitive, point);
+			UnaryOperator<SymbolicExpression> substituter = info.universe
+					.mapSubstituter(map);
+			Monomial newExpr = ((RationalExpression) substituter.apply(poly))
+					.numerator(id);
+			BooleanExpression clause = id.isZero(newExpr);
+
+			clause = (BooleanExpression) apply(clause);
+			result = info.universe.and(result, clause);
+			if (result.isFalse())
+				break;
+		}
+		return result.isTrue();
 	}
 
 	private RationalExpression simplifyRationalExpression(

@@ -323,4 +323,17 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 		return factory.primitivePower(this,
 				factory.objectFactory().intObject(exponent));
 	}
+
+	@Override
+	public int maxDegreeOf(Primitive primitive) {
+		int result = 0;
+
+		for (Monomial term : termMap()) {
+			int d = term.maxDegreeOf(primitive);
+
+			if (d > result)
+				result = d;
+		}
+		return result;
+	}
 }

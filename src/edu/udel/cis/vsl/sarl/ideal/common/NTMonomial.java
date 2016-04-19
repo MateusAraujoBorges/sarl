@@ -202,4 +202,9 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 				monic().powerInt(factory, exponent));
 	}
 
+	@Override
+	public int maxDegreeOf(Primitive primitive) {
+		return monic().maxDegreeOf(primitive);
+	}
+
 }

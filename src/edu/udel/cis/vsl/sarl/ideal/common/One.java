@@ -29,6 +29,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
+import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
@@ -173,6 +174,11 @@ public class One extends HomogeneousExpression<SymbolicObject>
 	@Override
 	public One powerInt(IdealFactory factory, int exponent) {
 		return this;
+	}
+
+	@Override
+	public int maxDegreeOf(Primitive primitive) {
+		return 0;
 	}
 
 }

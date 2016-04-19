@@ -280,4 +280,14 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 		}
 		return factory.monic(type(), newFactors);
 	}
+
+	@Override
+	public int maxDegreeOf(Primitive primitive) {
+		int result = 0;
+
+		for (PrimitivePower pp : monicFactors()) {
+			result += pp.maxDegreeOf(primitive);
+		}
+		return result;
+	}
 }
