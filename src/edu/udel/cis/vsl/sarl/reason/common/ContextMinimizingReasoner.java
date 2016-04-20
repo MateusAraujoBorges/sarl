@@ -550,4 +550,9 @@ public class ContextMinimizingReasoner implements Reasoner {
 		return getReducedReasonerFor(expression)
 				.extractNumberNoReduce(expression);
 	}
+
+	@Override
+	public Interval intervalApproximation(NumericExpression expr) {
+		return getSimplifier().intervalApproximation(expr);
+	}
 }

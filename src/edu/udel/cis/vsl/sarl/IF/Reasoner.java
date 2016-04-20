@@ -103,6 +103,19 @@ public interface Reasoner {
 	Interval assumptionAsInterval(SymbolicConstant symbolicConstant);
 
 	/**
+	 * Returns an interval over-approximation of the given expression. It is
+	 * guaranteed that under this reasoner's context, any value taken on by the
+	 * expression must be contained in the interval returned. The interval
+	 * returned will have the same type as the expression.
+	 * 
+	 * @param expr
+	 *            the numeric expression (either integer or real type)
+	 * @return an interval which contains all possible values the expression may
+	 *         assume under the context of this reasoner
+	 */
+	Interval intervalApproximation(NumericExpression expr);
+
+	/**
 	 * <p>
 	 * Simplify the given expression under the context. The simplified
 	 * expression is guaranteed to be equivalent to the given one under the

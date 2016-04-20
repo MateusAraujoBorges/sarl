@@ -23,6 +23,7 @@ import java.util.Map;
 import edu.udel.cis.vsl.sarl.IF.Transform;
 import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
@@ -143,4 +144,17 @@ public interface Simplifier extends UnaryOperator<SymbolicExpression> {
 	 *         context does not have interval form
 	 */
 	Interval assumptionAsInterval(SymbolicConstant symbolicConstant);
+
+	/**
+	 * Returns an interval over-approximation of the given expression. It is
+	 * guaranteed that under this simplifier's context, any value taken on by
+	 * the expression must be contained in the interval returned. The interval
+	 * returned will have the same type as the expression.
+	 * 
+	 * @param expr
+	 *            the numeric expression (either integer or real type)
+	 * @return an interval which contains all possible values the expression may
+	 *         assume under the context of this simplifier
+	 */
+	Interval intervalApproximation(NumericExpression expr);
 }

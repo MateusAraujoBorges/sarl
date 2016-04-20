@@ -153,22 +153,6 @@ public class IdealSimplifier extends CommonSimplifier {
 	 */
 	private Map<SymbolicExpression, SymbolicExpression> otherConstantMap = new HashMap<>();
 
-	/**
-	 * Has the interval interpretation of this context been computed?
-	 */
-	private boolean intervalComputed = false;
-
-	/**
-	 * The interpretation of the context as an Interval, or <code>null</code> if
-	 * it cannot be so interpreted.
-	 */
-	private Interval theInterval = null;
-
-	/**
-	 * The variable bound by the interval.
-	 */
-	private SymbolicConstant intervalVariable = null;
-
 	// Constructors...
 
 	/**
@@ -2008,43 +1992,27 @@ public class IdealSimplifier extends CommonSimplifier {
 
 	@Override
 	public Interval assumptionAsInterval(SymbolicConstant symbolicConstant) {
-		if (intervalComputed) {
-			if (theInterval != null
-					&& intervalVariable.equals(symbolicConstant))
-				return theInterval;
+		if (!booleanMap.isEmpty() || !otherConstantMap.isEmpty()
+				|| !rawAssumption.isTrue())
 			return null;
-		}
-		intervalComputed = true;
-		if (!booleanMap.isEmpty() || !rawAssumption.isTrue()) {
-			return null;
-		}
 		if (!constantMap.isEmpty()) {
-			if (!boundMap.isEmpty() || constantMap.size() != 1) {
+			if (!boundMap.isEmpty() || constantMap.size() != 1)
 				return null;
-			}
+
 			Entry<Monic, Number> entry = constantMap.entrySet().iterator()
 					.next();
-			Monic fp1 = entry.getKey();
-			Number value = entry.getValue();
 
-			if (!fp1.equals(symbolicConstant)) {
+			if (!entry.getKey().equals(symbolicConstant))
 				return null;
-			}
-			theInterval = info.numberFactory.singletonInterval(value);
-			intervalVariable = symbolicConstant;
-			return theInterval;
+			return info.numberFactory.singletonInterval(entry.getValue());
 		}
 		if (boundMap.size() == 1) {
 			Entry<Monic, Interval> entry = boundMap.entrySet().iterator()
 					.next();
-			Monic fp1 = entry.getKey();
 
-			if (!fp1.equals(symbolicConstant)) {
+			if (!entry.getKey().equals(symbolicConstant))
 				return null;
-			}
-			theInterval = entry.getValue();
-			intervalVariable = symbolicConstant;
-			return theInterval;
+			return entry.getValue();
 		}
 		return null;
 	}
@@ -2101,5 +2069,77 @@ public class IdealSimplifier extends CommonSimplifier {
 			}
 		}
 		return fullContext;
+	}
+
+	private Interval intervalOfBoundType(BoundType type, boolean isInteger) {
+		NumberFactory nf = info.numberFactory;
+
+		switch (type) {
+		case ALL:
+			return nf.newInterval(isInteger, null, true, null, true);
+		case EMPTY:
+			return isInteger ? nf.emptyIntegerInterval()
+					: nf.emptyRealInterval();
+		case EQ0:
+			return nf.singletonInterval(
+					isInteger ? nf.zeroInteger() : nf.zeroRational());
+		case GE0:
+			return nf.newInterval(isInteger,
+					isInteger ? nf.zeroInteger() : nf.zeroRational(), false,
+					null, true);
+		case GT0:
+			return nf.newInterval(isInteger,
+					isInteger ? nf.zeroInteger() : nf.zeroRational(), true,
+					null, true);
+		case LE0:
+			return nf.newInterval(isInteger, null, true,
+					isInteger ? nf.zeroInteger() : nf.zeroRational(), false);
+		case LT0:
+			return nf.newInterval(isInteger, null, true,
+					isInteger ? nf.zeroInteger() : nf.zeroRational(), true);
+		}
+		throw new SARLInternalException("unreachable");
+	}
+
+	private Interval intervalMonic(Monic monic) {
+		Interval result = boundMap.get(monic);
+
+		if (result == null) {
+			BoundType type = getBoundTypeMonic(monic);
+
+			result = intervalOfBoundType(type, monic.type().isInteger());
+		}
+		return result;
+	}
+
+	private Interval intervalMonomial(Monomial monomial) {
+		// TODO: add method in numberFactory to multiply Number
+		// and interval
+		Interval singleton = info.numberFactory.singletonInterval(
+				monomial.monomialConstant(info.idealFactory).number());
+
+		return info.numberFactory.multiply(singleton,
+				intervalMonic(monomial.monic(info.idealFactory)));
+	}
+
+	@Override
+	public Interval intervalApproximation(NumericExpression expr) {
+		if (expr instanceof Monic) {
+			return intervalMonic((Monic) expr);
+		}
+		if (expr instanceof Monomial) {
+			return intervalMonomial((Monomial) expr);
+		}
+
+		Monomial numerator = ((RationalExpression) expr)
+				.numerator(info.idealFactory);
+		Monomial denominator = ((RationalExpression) expr)
+				.denominator(info.idealFactory);
+		Interval i1 = intervalMonomial(numerator),
+				i2 = intervalMonomial(denominator);
+
+		// TODO: make this interval division ...
+		return info.numberFactory.newInterval(expr.type().isInteger(), null,
+				true, null, true);
 	}
 }

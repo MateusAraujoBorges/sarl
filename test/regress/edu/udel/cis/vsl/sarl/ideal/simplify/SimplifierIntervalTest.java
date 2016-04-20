@@ -21,6 +21,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import edu.udel.cis.vsl.sarl.IF.number.Interval;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+
 // private static SymbolicConstant t;
 
 /**
@@ -90,16 +93,10 @@ public class SimplifierIntervalTest {
 	}
 
 	/**
-	 * This is a severe bug which makes the method "assumptionAsInterval" barely
-	 * useful.
 	 * <p>
 	 * Assumption 0 <= xInt && xInt < 3 && yInt < 9
 	 * 
-	 * Call assumptionAsInterval( xInt ): get null while expecting [0,2]
-	 * </p>
-	 * It seems that the simplifier only accepts the case whose assumption has
-	 * only one free symbolic constant. see
-	 * {@link #getSimpleIntervalFromContext1Free()}
+	 * Call assumptionAsInterval( xInt ).
 	 */
 	@Test
 	public void getSimpleIntervalFromContext2Free() {
@@ -109,8 +106,13 @@ public class SimplifierIntervalTest {
 		assumption = preUniv.and(assumption,
 				preUniv.lessThan(yInt, preUniv.integer(9)));
 		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		Interval interval = idealSimplifier.intervalApproximation(xInt);
 
-		assertNotNull(idealSimplifier.assumptionAsInterval(xInt));
+		NumberFactory nf = preUniv.numberFactory();
+
+		Interval expected = nf.newInterval(true, nf.zeroInteger(), false,
+				nf.integer(3), true);
+		assertEquals(expected, interval);
 	}
 
 	/**
@@ -119,7 +121,7 @@ public class SimplifierIntervalTest {
 	 * 
 	 * Call assumptionAsInterval( xInt ): get [0,2]
 	 * </p>
-	 * */
+	 */
 	@Test
 	public void getSimpleIntervalFromContext1Free() {
 		assumption = preUniv.lessThanEquals(int0, xInt);

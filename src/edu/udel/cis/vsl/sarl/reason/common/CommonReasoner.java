@@ -204,4 +204,9 @@ public class CommonReasoner implements Reasoner {
 		return universe().extractNumber(simple);
 	}
 
+	@Override
+	public Interval intervalApproximation(NumericExpression expr) {
+		return simplifier.intervalApproximation(expr);
+	}
+
 }
