@@ -5,13 +5,13 @@ import java.util.List;
 import edu.udel.cis.vsl.sarl.util.FastList;
 
 /**
- * 
+ * <p>
  * This class is used to deal with div or modulo during the cvc translation
  * Since cvc4 currently can not deal with div or modulo, div or modulo is 
  * translated into the form : value && constraints. value is the actual value of
  * the division or modulo operation (e.g., the value of the division is the quotient).
  * The format of the constraints can be read below.
- * 
+ * </p>
  * 
  * @author yanyihao
  * 
