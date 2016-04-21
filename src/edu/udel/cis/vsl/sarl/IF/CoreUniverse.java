@@ -2108,9 +2108,13 @@ public interface CoreUniverse {
 			SymbolicCompleteArrayType bitVectorType);
 
 	/**
-	 * Returns the conversion of an integer from a bit vector.
+	 * Converts a bit vector to an integer.
 	 * 
-	 * @param integer
+	 * Pre-conditions: The type of <code>bitvector</code> should be a
+	 * {@link SymbolicCompleteArrayType} whose element type is Boolean with a
+	 * <strong>concrete</strong> length.
+	 * 
+	 * @param bitvector
 	 *            a non-<code>null</code> {@link SymbolicExpression}
 	 *            representing a bit vector.
 	 * 
