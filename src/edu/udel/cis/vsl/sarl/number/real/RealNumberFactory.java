@@ -2154,18 +2154,18 @@ public class RealNumberFactory implements NumberFactory {
 		RationalNumber nth = divide(oneRational, rational(n));
 		RationalNumber pow = rational(number);
 		RationalNumber oldB = oneRational;
-		RationalNumber limit = fraction(oneInteger, integer(10));
+		RationalNumber limit = fraction(oneInteger, integer(100));
 		RationalNumber newB = multiply(nth,
 				add(multiply(nM1, oldB), divide(pow, power(oldB, nMinus1))));
 		RationalNumber cond1 = subtract(power(subtract(newB, oldB), 2), limit);
 		RationalNumber cond2 = subtract(newB, oldB);
 		IntegerNumber result = null;
 
-		while (cond1.signum() > 0 && !cond2.isZero()) {
-			oldB = rational(floor(add(newB, fraction(oneInteger, integer(100)))));
+		while (cond1.signum() > 0 && !cond2.isZero() && (oldB.isOne() || cond2.signum() < 0)) {
+			oldB = rational(floor(add(newB, limit)));
 			newB = multiply(nth,
 					add(multiply(nM1, oldB), divide(pow, power(oldB, nMinus1))));
-			newB = rational(floor(add(newB, fraction(oneInteger, integer(100)))));
+			newB = rational(floor(add(newB, limit)));
 			cond1 = subtract(power(subtract(newB, oldB), 2), limit);
 			cond2 = subtract(newB, oldB);
 		}
