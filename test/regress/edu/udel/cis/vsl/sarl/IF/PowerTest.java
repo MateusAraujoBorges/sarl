@@ -20,8 +20,8 @@ public class PowerTest {
 
 	public final static SymbolicUniverse universe = SARL.newStandardUniverse();
 
-	public final static Reasoner reasoner = universe.reasoner(universe
-			.trueExpression());
+	public final static Reasoner reasoner = universe
+			.reasoner(universe.trueExpression());
 
 	public final static SymbolicRealType real = universe.realType();
 
@@ -60,6 +60,18 @@ public class PowerTest {
 	}
 
 	/**
+	 * pow(sqrt(0.02), 0.5)
+	 */
+	@Test
+	public void powerOfSqaureRoot() {
+
+		NumericExpression e1 = sqrt(universe.rational(1, 50));
+		NumericExpression e2 = sqrt(e1);
+
+		debug("pow(sqrt(x), 0.5) = " + e2);
+	}
+
+	/**
 	 * sqrt(xy) = sqrt(x)sqrt(y)
 	 */
 	@Test
@@ -92,8 +104,8 @@ public class PowerTest {
 	 */
 	@Test
 	public void sqaureRootOfSquare2() {
-		NumericExpression x1 = universe.multiply(
-				universe.power(x, universe.rational(2)), y);
+		NumericExpression x1 = universe
+				.multiply(universe.power(x, universe.rational(2)), y);
 		NumericExpression e1 = sqrt(x1);
 		NumericExpression e2 = universe.multiply(x, sqrt(y));
 
@@ -361,9 +373,9 @@ public class PowerTest {
 		NumericExpression e1 = universe.divide(
 				universe.power(universe.add(x, y), z),
 				universe.power(universe.subtract(x, y), z));
-		NumericExpression e2 = universe
-				.power(universe.divide(universe.add(x, y),
-						universe.subtract(x, y)), z);
+		NumericExpression e2 = universe.power(
+				universe.divide(universe.add(x, y), universe.subtract(x, y)),
+				z);
 
 		debug("left " + e1);
 		debug("left simplified " + reasoner.simplify(e1));
@@ -402,8 +414,8 @@ public class PowerTest {
 		NumericExpression e2 = universe.power(universe.multiply(i2div3, x),
 				universe.divide(i3, i7));
 		NumericExpression actual = universe.multiply(e1, e2);
-		NumericExpression expected = universe.power(
-				universe.multiply(i2div3, x), universe.divide(i5, i7));
+		NumericExpression expected = universe
+				.power(universe.multiply(i2div3, x), universe.divide(i5, i7));
 
 		debug("Actual: " + actual);
 		debug("Expected: " + expected);
