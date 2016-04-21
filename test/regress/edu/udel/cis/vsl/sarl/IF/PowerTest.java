@@ -60,10 +60,24 @@ public class PowerTest {
 	}
 
 	/**
-	 * pow(sqrt(0.02), 0.5)
+	 * x = power(sqrt(x), 2)
 	 */
 	@Test
 	public void powerOfSqaureRoot() {
+		NumericExpression x2 = sqrt(x);
+		NumericExpression x3 = universe.power(x2, 2);
+
+		debug("x2 = " + x2);
+		debug("x2^(2) = " + x3);
+		assertEquals(x, reasoner.simplify(x3));
+		debug("simpilied x3 is " + reasoner.simplify(x3));
+	}
+
+	/**
+	 * pow(sqrt(0.02), 0.5)
+	 */
+	@Test
+	public void powerHalfOfSqaureRoot() {
 
 		NumericExpression e1 = sqrt(universe.rational(1, 50));
 		NumericExpression e2 = sqrt(e1);
