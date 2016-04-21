@@ -74,6 +74,20 @@ public class PowerTest {
 	}
 
 	/**
+	 * x = power(sqrt(0.02), 2)
+	 */
+	@Test
+	public void powerOfSqaureRootConcrete() {
+		NumericExpression x2 = sqrt(universe.rational(1, 50));
+		NumericExpression x3 = universe.power(x2, 2);
+
+		debug("x2 = " + x2);
+		debug("x2^(2) = " + x3);
+		assertEquals(x, reasoner.simplify(x3));
+		debug("simpilied x3 is " + reasoner.simplify(x3));
+	}
+
+	/**
 	 * pow(sqrt(0.02), 0.5)
 	 */
 	@Test
@@ -83,6 +97,21 @@ public class PowerTest {
 		NumericExpression e2 = sqrt(e1);
 
 		debug("pow(sqrt(x), 0.5) = " + e2);
+	}
+
+	/**
+	 * [ x^(1/4) ]^2 = x^(1/2)
+	 */
+	@Test
+	public void powerOfSqaureRoot2() {
+
+		NumericExpression e1 = sqrt(universe.rational(1, 50));
+		NumericExpression e2 = sqrt(e1);
+		NumericExpression e3 = universe.power(e2, 2);
+
+		debug("pow(sqrt(x), 0.5) = " + e2);
+		debug("[ x^(1/4) ]^2 = " + e3);
+		assertEquals(e1, reasoner.simplify(e3));
 	}
 
 	/**
