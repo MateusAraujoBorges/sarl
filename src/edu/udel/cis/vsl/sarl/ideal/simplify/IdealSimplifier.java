@@ -1928,6 +1928,57 @@ public class IdealSimplifier extends CommonSimplifier {
 		return (RationalExpression) apply(result2);
 	}
 
+	private Interval intervalOfBoundType(BoundType type, boolean isInteger) {
+		NumberFactory nf = info.numberFactory;
+
+		switch (type) {
+		case ALL:
+			return nf.newInterval(isInteger, null, true, null, true);
+		case EMPTY:
+			return isInteger ? nf.emptyIntegerInterval()
+					: nf.emptyRealInterval();
+		case EQ0:
+			return nf.singletonInterval(
+					isInteger ? nf.zeroInteger() : nf.zeroRational());
+		case GE0:
+			return nf.newInterval(isInteger,
+					isInteger ? nf.zeroInteger() : nf.zeroRational(), false,
+					null, true);
+		case GT0:
+			return nf.newInterval(isInteger,
+					isInteger ? nf.zeroInteger() : nf.zeroRational(), true,
+					null, true);
+		case LE0:
+			return nf.newInterval(isInteger, null, true,
+					isInteger ? nf.zeroInteger() : nf.zeroRational(), false);
+		case LT0:
+			return nf.newInterval(isInteger, null, true,
+					isInteger ? nf.zeroInteger() : nf.zeroRational(), true);
+		}
+		throw new SARLInternalException("unreachable");
+	}
+
+	private Interval intervalMonic(Monic monic) {
+		Interval result = boundMap.get(monic);
+
+		if (result == null) {
+			BoundType type = getBoundTypeMonic(monic);
+
+			result = intervalOfBoundType(type, monic.type().isInteger());
+		}
+		return result;
+	}
+
+	private Interval intervalMonomial(Monomial monomial) {
+		// TODO: add method in numberFactory to multiply Number
+		// and interval
+		Interval singleton = info.numberFactory.singletonInterval(
+				monomial.monomialConstant(info.idealFactory).number());
+
+		return info.numberFactory.multiply(singleton,
+				intervalMonic(monomial.monic(info.idealFactory)));
+	}
+
 	// Exported methods.............................................
 
 	/**
@@ -2071,65 +2122,12 @@ public class IdealSimplifier extends CommonSimplifier {
 		return fullContext;
 	}
 
-	private Interval intervalOfBoundType(BoundType type, boolean isInteger) {
-		NumberFactory nf = info.numberFactory;
-
-		switch (type) {
-		case ALL:
-			return nf.newInterval(isInteger, null, true, null, true);
-		case EMPTY:
-			return isInteger ? nf.emptyIntegerInterval()
-					: nf.emptyRealInterval();
-		case EQ0:
-			return nf.singletonInterval(
-					isInteger ? nf.zeroInteger() : nf.zeroRational());
-		case GE0:
-			return nf.newInterval(isInteger,
-					isInteger ? nf.zeroInteger() : nf.zeroRational(), false,
-					null, true);
-		case GT0:
-			return nf.newInterval(isInteger,
-					isInteger ? nf.zeroInteger() : nf.zeroRational(), true,
-					null, true);
-		case LE0:
-			return nf.newInterval(isInteger, null, true,
-					isInteger ? nf.zeroInteger() : nf.zeroRational(), false);
-		case LT0:
-			return nf.newInterval(isInteger, null, true,
-					isInteger ? nf.zeroInteger() : nf.zeroRational(), true);
-		}
-		throw new SARLInternalException("unreachable");
-	}
-
-	private Interval intervalMonic(Monic monic) {
-		Interval result = boundMap.get(monic);
-
-		if (result == null) {
-			BoundType type = getBoundTypeMonic(monic);
-
-			result = intervalOfBoundType(type, monic.type().isInteger());
-		}
-		return result;
-	}
-
-	private Interval intervalMonomial(Monomial monomial) {
-		// TODO: add method in numberFactory to multiply Number
-		// and interval
-		Interval singleton = info.numberFactory.singletonInterval(
-				monomial.monomialConstant(info.idealFactory).number());
-
-		return info.numberFactory.multiply(singleton,
-				intervalMonic(monomial.monic(info.idealFactory)));
-	}
-
 	@Override
 	public Interval intervalApproximation(NumericExpression expr) {
-		if (expr instanceof Monic) {
+		if (expr instanceof Monic)
 			return intervalMonic((Monic) expr);
-		}
-		if (expr instanceof Monomial) {
+		if (expr instanceof Monomial)
 			return intervalMonomial((Monomial) expr);
-		}
 
 		Monomial numerator = ((RationalExpression) expr)
 				.numerator(info.idealFactory);
