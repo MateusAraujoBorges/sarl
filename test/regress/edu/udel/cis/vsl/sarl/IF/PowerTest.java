@@ -74,7 +74,7 @@ public class PowerTest {
 	}
 
 	/**
-	 * x = power(sqrt(0.02), 2)
+	 * 0.02 = power(sqrt(0.02), 2)
 	 */
 	@Test
 	public void powerOfSqaureRootConcrete() {
@@ -100,10 +100,10 @@ public class PowerTest {
 	}
 
 	/**
-	 * [ x^(1/4) ]^2 = x^(1/2)
+	 * [ 0.02^(1/4) ]^2 = 0.02^(1/2)
 	 */
 	@Test
-	public void powerOfSqaureRoot2() {
+	public void powerOfSqaureRootConcrete2() {
 
 		NumericExpression e1 = sqrt(universe.rational(1, 50));
 		NumericExpression e2 = sqrt(e1);
