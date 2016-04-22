@@ -2150,6 +2150,7 @@ public class RealNumberFactory implements NumberFactory {
 		}
 
 		int nMinus1 = nVal - 1;
+		boolean flag = true;
 		RationalNumber nM1 = rational(integer(nMinus1));
 		RationalNumber nth = divide(oneRational, rational(n));
 		RationalNumber pow = rational(number);
@@ -2162,13 +2163,14 @@ public class RealNumberFactory implements NumberFactory {
 		IntegerNumber result = null;
 
 		while (cond1.signum() > 0 && !cond2.isZero()
-				&& (oldB.isOne() || cond2.signum() < 0)) {
+				&& (flag || cond2.signum() < 0)) {
 			oldB = rational(floor(add(newB, limit)));
 			newB = multiply(nth,
 					add(multiply(nM1, oldB), divide(pow, power(oldB, nMinus1))));
 			newB = rational(floor(add(newB, limit)));
 			cond1 = subtract(power(subtract(newB, oldB), 2), limit);
 			cond2 = subtract(newB, oldB);
+			flag = false;
 		}
 		newB = add(newB, fraction(oneInteger, integer(2)));
 		result = floor(newB);
