@@ -613,24 +613,31 @@ public interface NumberFactory {
 
 	/**
 	 * Divides the given {@link Interval} with a given {@link Number} and
-	 * returns result. The numbers must be of same type (integer or real), which
-	 * is also the type of the result.
-	 */
-
-	/**
-	 * Divides the given {@link Interval} with a given {@link Number} and
-	 * returns result. The numbers must be of same type (integer or real), which
-	 * is also the type of the result.
+	 * returns result. They must be of same type (integer or real), which is
+	 * also the type of the result.
 	 * 
 	 * @param interval
 	 *            A non-<code>null</code> {@link Interval}
 	 * @param num
-	 *            A non-<code>null</code> {@Number} (which means it is
-	 *            a finite number) with the same type of the given
+	 *            A non-<code>null</code> {@link Number} (which means it is a
+	 *            finite number) with the same type of the given
 	 *            {@link Interval} <code>interval</code>.
 	 * @return the result
 	 */
 	Interval divide(Interval interval, Number num);
+
+	/**
+	 * Divides two given {@link Interval}s and returns result. They must be of
+	 * same type (integer or real), which is also the type of the result.
+	 * 
+	 * @param i1
+	 *            A non-<code>null</code> {@link Interval}
+	 * @param i2
+	 *            A non-<code>null</code> {@link Interval} with the same type of
+	 *            the given {@link Interval} <code>interval</code>.
+	 * @return the result
+	 */
+	Interval divide(Interval i1, Interval i2);
 
 	/**
 	 * Multiply the given {@link Interval} with a given {@link Number} and
@@ -640,7 +647,7 @@ public interface NumberFactory {
 	 * @param interval
 	 *            A non-<code>null</code> {@link Interval}
 	 * @param num
-	 *            A {@Number} with the same type of the given
+	 *            A {@link Number} with the same type of the given
 	 *            {@link Interval} <code>interval</code>.
 	 * @return the result
 	 */

@@ -2263,4 +2263,68 @@ public class RealNumberFactory implements NumberFactory {
 		else
 			return new CommonInterval(isInt, lo, sl, up, su);
 	}
+
+	@Override
+	public Interval divide(Interval i1, Interval i2) {
+		assert i1 != null && i2 != null;
+
+		Boolean isInt = i1.isIntegral();
+
+		assert isInt == i2.isIntegral();
+
+		Number zeroNum = isInt ? zeroInteger : zeroRational;
+		Number oneNum = isInt ? oneInteger : oneRational;
+
+		if (i2.contains(zeroNum))
+			throw new ArithmeticException(
+					"The Interval used as denominator contains 0!");
+		if (i1.isUniversal() || i1.isZero())
+			return i1;
+
+		Number lo1 = i1.lower();
+		Number up1 = i1.upper();
+		Number lo2 = i2.lower();
+		Number up2 = i2.upper();
+		boolean sl = i1.strictLower() || i2.strictLower();
+		boolean su = i1.strictUpper() || i2.strictUpper();
+		Number tempLo, tempUp;
+
+		if (lo2 == null)
+			tempUp = zeroNum;
+		else if (lo2.isZero())
+			tempUp = null;
+		else
+			tempUp = divide(oneNum, lo2);
+
+		if (up2 == null)
+			tempLo = zeroNum;
+		else if (up2.isZero())
+			tempLo = null;
+		else
+			tempLo = divide(oneNum, lo2);
+
+		Number num1 = multiply(lo1, tempLo);
+		Number num2 = multiply(up1, tempLo);
+		Number num3 = multiply(lo1, tempUp);
+		Number num4 = multiply(up1, tempUp);
+		int compareN1N2 = subtract(num1, num2).signum();
+		int compareN3N4 = subtract(num3, num4).signum();
+		Number lo, up;
+
+		if (compareN1N2 >= 0 && compareN3N4 >= 0) {
+			up = subtract(num1, num3).signum() >= 0 ? num1 : num3;
+			lo = subtract(num2, num4).signum() >= 0 ? num4 : num2;
+		} else if (compareN1N2 < 0 && compareN3N4 >= 0) {
+			up = subtract(num2, num3).signum() >= 0 ? num2 : num3;
+			lo = subtract(num1, num4).signum() >= 0 ? num4 : num1;
+		} else if (compareN1N2 >= 0 && compareN3N4 < 0) {
+			up = subtract(num1, num4).signum() >= 0 ? num1 : num4;
+			lo = subtract(num2, num3).signum() >= 0 ? num3 : num2;
+		} else {
+			up = subtract(num2, num4).signum() >= 0 ? num2 : num4;
+			lo = subtract(num1, num3).signum() >= 0 ? num3 : num1;
+		}
+
+		return new CommonInterval(isInt, lo, sl, up, su);
+	}
 }
