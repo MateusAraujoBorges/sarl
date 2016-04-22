@@ -14,14 +14,14 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 
 public class PowerTest {
 
-	public final static boolean debug = true;
+	public final static boolean debug = false;
 
 	public final static PrintStream out = System.out;
 
 	public final static SymbolicUniverse universe = SARL.newStandardUniverse();
 
-	public final static Reasoner reasoner = universe
-			.reasoner(universe.trueExpression());
+	public final static Reasoner reasoner = universe.reasoner(universe
+			.trueExpression());
 
 	public final static SymbolicRealType real = universe.realType();
 
@@ -83,7 +83,7 @@ public class PowerTest {
 
 		debug("x2 = " + x2);
 		debug("x2^(2) = " + x3);
-		assertEquals(x, reasoner.simplify(x3));
+		assertEquals(universe.rational(1, 50), reasoner.simplify(x3));
 		debug("simpilied x3 is " + reasoner.simplify(x3));
 	}
 
@@ -112,6 +112,41 @@ public class PowerTest {
 		debug("pow(sqrt(x), 0.5) = " + e2);
 		debug("[ x^(1/4) ]^2 = " + e3);
 		assertEquals(e1, reasoner.simplify(e3));
+	}
+
+	@Test
+	public void complicated1() {
+		NumericExpression e0 = universe.rational(1, 13);
+		NumericExpression e1 = universe.power(e0, universe.rational(2, 3));
+		NumericExpression e2 = universe.power(e1, universe.rational(3, 2));
+		NumericExpression e3 = universe.power(e2, universe.rational(4, 1));
+		NumericExpression e = universe.power(e0, universe.rational(4, 1));
+		debug("" + e3);
+		NumericExpression e0b = universe.rational(1, 11);
+		NumericExpression e1b = universe.power(e0b, universe.rational(-5, 7));
+		NumericExpression e2b = universe.power(e1b, universe.rational(7, 5));
+		NumericExpression e3b = universe.power(e2b, universe.rational(1, 4));
+		NumericExpression eb = universe.power(e0b, universe.rational(-1, 4));
+		debug("" + e3b);
+
+		NumericExpression ex = universe.power(x, 1);
+		NumericExpression ex1 = universe.power(ex, universe.rational(2, 3));
+		NumericExpression ex2 = universe.power(ex1, universe.rational(3, 2));
+		debug("" + ex2);
+		NumericExpression ny = universe.divide(universe.rational(1, 1), y);
+		NumericExpression ey = universe.power(ny, 1);
+		NumericExpression ey1 = universe.power(ey, universe.rational(5, 7));
+		NumericExpression ey2 = universe.power(ey1, universe.rational(7, 5));
+		debug("" + ey2);
+
+		NumericExpression ea = universe.multiply(universe.multiply(ex2, ey2),
+				universe.multiply(e3, e3b));
+		debug("" + ea);
+		NumericExpression ee = universe.multiply(universe.multiply(e, eb),
+				universe.multiply(ex, ey));
+		debug("" + ee);
+
+		assertEquals(ee, reasoner.simplify(ea));
 	}
 
 	/**
@@ -147,8 +182,8 @@ public class PowerTest {
 	 */
 	@Test
 	public void sqaureRootOfSquare2() {
-		NumericExpression x1 = universe
-				.multiply(universe.power(x, universe.rational(2)), y);
+		NumericExpression x1 = universe.multiply(
+				universe.power(x, universe.rational(2)), y);
 		NumericExpression e1 = sqrt(x1);
 		NumericExpression e2 = universe.multiply(x, sqrt(y));
 
@@ -416,9 +451,9 @@ public class PowerTest {
 		NumericExpression e1 = universe.divide(
 				universe.power(universe.add(x, y), z),
 				universe.power(universe.subtract(x, y), z));
-		NumericExpression e2 = universe.power(
-				universe.divide(universe.add(x, y), universe.subtract(x, y)),
-				z);
+		NumericExpression e2 = universe
+				.power(universe.divide(universe.add(x, y),
+						universe.subtract(x, y)), z);
 
 		debug("left " + e1);
 		debug("left simplified " + reasoner.simplify(e1));
@@ -457,8 +492,8 @@ public class PowerTest {
 		NumericExpression e2 = universe.power(universe.multiply(i2div3, x),
 				universe.divide(i3, i7));
 		NumericExpression actual = universe.multiply(e1, e2);
-		NumericExpression expected = universe
-				.power(universe.multiply(i2div3, x), universe.divide(i5, i7));
+		NumericExpression expected = universe.power(
+				universe.multiply(i2div3, x), universe.divide(i5, i7));
 
 		debug("Actual: " + actual);
 		debug("Expected: " + expected);
