@@ -2161,7 +2161,8 @@ public class RealNumberFactory implements NumberFactory {
 		RationalNumber cond2 = subtract(newB, oldB);
 		IntegerNumber result = null;
 
-		while (cond1.signum() > 0 && !cond2.isZero() && (oldB.isOne() || cond2.signum() < 0)) {
+		while (cond1.signum() > 0 && !cond2.isZero()
+				&& (oldB.isOne() || cond2.signum() < 0)) {
 			oldB = rational(floor(add(newB, limit)));
 			newB = multiply(nth,
 					add(multiply(nM1, oldB), divide(pow, power(oldB, nMinus1))));
@@ -2204,5 +2205,62 @@ public class RealNumberFactory implements NumberFactory {
 			}
 			return result;
 		}
+	}
+
+	@Override
+	public Interval divide(Interval interval, Number num) {
+		assert interval != null && num != null;
+
+		Boolean isInt = interval.isIntegral();
+
+		if (interval.isEmpty())
+			return isInt ? emptyIntegerInterval : emptyRationalInterval;
+		assert isInt == num instanceof IntegerNumber;
+
+		Number lo = interval.lower();
+		Number up = interval.upper();
+		boolean sl = interval.strictLower();
+		boolean su = interval.strictUpper();
+		int sign = num.signum();
+
+		if (sign == 0)
+			throw new ArithmeticException("Interval divide by zero");
+
+		lo = lo == null ? null : divide(lo, num);
+		up = up == null ? null : divide(up, num);
+		if (sign > 0)
+			return new CommonInterval(isInt, up, sl, lo, su);
+		else
+			return new CommonInterval(isInt, lo, sl, up, su);
+	}
+
+	@Override
+	public Interval multiply(Interval interval, Number num) {
+		assert interval != null;
+
+		Boolean isInt = interval.isIntegral();
+
+		if (num == null)
+			return new CommonInterval(isInt, null, true, null, true);
+		if (interval.isEmpty())
+			return isInt ? emptyIntegerInterval : emptyRationalInterval;
+		assert isInt == num instanceof IntegerNumber;
+
+		Number lo = interval.lower();
+		Number up = interval.upper();
+		boolean sl = interval.strictLower();
+		boolean su = interval.strictUpper();
+		int sign = num.signum();
+
+		if (sign == 0) {
+			Number zeroNum = isInt ? zeroInteger : zeroRational;
+			return new CommonInterval(isInt, zeroNum, false, zeroNum, false);
+		}
+		lo = lo == null ? null : multiply(lo, num);
+		up = up == null ? null : multiply(up, num);
+		if (sign > 0)
+			return new CommonInterval(isInt, up, sl, lo, su);
+		else
+			return new CommonInterval(isInt, lo, sl, up, su);
 	}
 }

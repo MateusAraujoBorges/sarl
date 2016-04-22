@@ -612,6 +612,41 @@ public interface NumberFactory {
 	IntegerNumber nthRootInt(IntegerNumber number, IntegerNumber n);
 
 	/**
+	 * Divides the given {@link Interval} with a given {@link Number} and
+	 * returns result. The numbers must be of same type (integer or real), which
+	 * is also the type of the result.
+	 */
+
+	/**
+	 * Divides the given {@link Interval} with a given {@link Number} and
+	 * returns result. The numbers must be of same type (integer or real), which
+	 * is also the type of the result.
+	 * 
+	 * @param interval
+	 *            A non-<code>null</code> {@link Interval}
+	 * @param num
+	 *            A non-<code>null</code> {@Number} (which means it is
+	 *            a finite number) with the same type of the given
+	 *            {@link Interval} <code>interval</code>.
+	 * @return the result
+	 */
+	Interval divide(Interval interval, Number num);
+
+	/**
+	 * Multiply the given {@link Interval} with a given {@link Number} and
+	 * returns result. The numbers must be of same type (integer or real), which
+	 * is also the type of the result.
+	 * 
+	 * @param interval
+	 *            A non-<code>null</code> {@link Interval}
+	 * @param num
+	 *            A {@Number} with the same type of the given
+	 *            {@link Interval} <code>interval</code>.
+	 * @return the result
+	 */
+	Interval multiply(Interval interval, Number num);
+
+	/**
 	 * A simple type for recording the result of attempting to take the union of
 	 * two intervals i1 and i2. There are three possibilities:
 	 * <ol>
