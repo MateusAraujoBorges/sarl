@@ -64,8 +64,8 @@ public class UnionTest {
 
 	@Before
 	public void setUp() throws Exception {
-		universe = Universes.newIdealUniverse2();
-		FactorySystem system = PreUniverses.newIdealFactorySystem2();
+		universe = Universes.newIdealUniverse();
+		FactorySystem system = PreUniverses.newIdealFactorySystem();
 
 		typeFactory = system.typeFactory();
 		intType = universe.integerType();

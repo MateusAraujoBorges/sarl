@@ -48,7 +48,7 @@ public class TupleTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem2();
+		FactorySystem system = PreUniverses.newIdealFactorySystem();
 
 		universe = PreUniverses.newPreUniverse(system);
 		integerType = universe.integerType();

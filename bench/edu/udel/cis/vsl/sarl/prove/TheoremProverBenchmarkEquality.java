@@ -21,7 +21,7 @@ public class TheoremProverBenchmarkEquality {
 	public final static int N = 1000;
 
 	public final static FactorySystem factorySystem = PreUniverses
-			.newIdealFactorySystem2();
+			.newIdealFactorySystem();
 
 	public final static PreUniverse universe = PreUniverses
 			.newPreUniverse(factorySystem);

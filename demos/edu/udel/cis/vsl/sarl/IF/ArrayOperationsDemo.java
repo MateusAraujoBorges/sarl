@@ -69,7 +69,7 @@ public class ArrayOperationsDemo {
 
 	@Before
 	public void setUp() throws Exception {
-		myUniverse = Universes.newIdealUniverse2();
+		myUniverse = Universes.newIdealUniverse();
 		integerType = myUniverse.integerType();
 		zero = myUniverse.integer(0);
 		one = myUniverse.integer(1);

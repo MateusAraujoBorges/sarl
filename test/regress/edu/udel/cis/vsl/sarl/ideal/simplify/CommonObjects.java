@@ -127,14 +127,14 @@ public class CommonObjects {
 	 * @see CommonObjects
 	 */
 	static void setUp() {
-		system = PreUniverses.newIdealFactorySystem2();
+		system = PreUniverses.newIdealFactorySystem();
 		preUniv = PreUniverses.newPreUniverse(system);
 		out = System.out;
 		idealFactory = (IdealFactory) system.expressionFactory()
 				.numericFactory();
 		idealSimplifierFactory = (IdealSimplifierFactory) Ideal
 				.newIdealSimplifierFactory(idealFactory, preUniv);
-		boolExprFact = PreUniverses.newIdealFactorySystem2().booleanFactory();
+		boolExprFact = PreUniverses.newIdealFactorySystem().booleanFactory();
 		ratNeg1 = preUniv.rational(-1);
 		ratNeg2 = preUniv.rational(-2);
 		ratNeg3 = preUniv.rational(-3);

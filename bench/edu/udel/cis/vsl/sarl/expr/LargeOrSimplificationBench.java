@@ -54,7 +54,7 @@ import edu.udel.cis.vsl.sarl.universe.IF.Universes;
 			BooleanExpression s1, s3, d1, d2;
 			Collection<BooleanExpression> col1;
 		numexpr = 7000;
-			sUniverse = Universes.newIdealUniverse2();
+			sUniverse = Universes.newIdealUniverse();
 			booleanType = sUniverse.booleanType();
 			BooleanExpression[] ExpressionList1 = {};
 			

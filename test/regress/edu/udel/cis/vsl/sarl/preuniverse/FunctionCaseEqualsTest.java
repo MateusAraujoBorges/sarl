@@ -47,7 +47,7 @@ public class FunctionCaseEqualsTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		FactorySystem test = PreUniverses.newIdealFactorySystem2();
+		FactorySystem test = PreUniverses.newIdealFactorySystem();
 		universe = new CommonPreUniverse(test);
 
 		// initializing symbolic types

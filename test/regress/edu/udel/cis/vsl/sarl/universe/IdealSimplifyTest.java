@@ -53,7 +53,7 @@ public class IdealSimplifyTest {
 
 	@Before
 	public void setUp() throws Exception {
-		universe = Universes.newIdealUniverse2();
+		universe = Universes.newIdealUniverse();
 		// numberFactory = universe.numberFactory();
 		Xobj = universe.stringObject("X");
 		Yobj = universe.stringObject("Y");

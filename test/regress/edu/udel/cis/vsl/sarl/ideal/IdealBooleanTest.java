@@ -93,7 +93,7 @@ public class IdealBooleanTest {
 
 	@Before
 	public void setUp() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem2();
+		FactorySystem system = PreUniverses.newIdealFactorySystem();
 		objectFactory = system.objectFactory();
 		typeFactory = system.typeFactory();
 		idealFactory = (IdealFactory) system.numericFactory();

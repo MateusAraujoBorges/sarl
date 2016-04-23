@@ -134,7 +134,7 @@ public class IntervalUnionSetTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem2();
+		FactorySystem system = PreUniverses.newIdealFactorySystem();
 
 		assert ASSERTION_ENABLED = true;
 		universe = PreUniverses.newPreUniverse(system);

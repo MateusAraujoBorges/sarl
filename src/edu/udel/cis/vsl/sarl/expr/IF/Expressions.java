@@ -98,7 +98,7 @@ public class Expressions {
 	 *            factory used to produce {@link SymbolicCollection}s
 	 * @return the new ideal expression factory
 	 */
-	public static ExpressionFactory newIdealExpressionFactory2(
+	public static ExpressionFactory newIdealExpressionFactory(
 			NumberFactory numberFactory, ObjectFactory objectFactory,
 			SymbolicTypeFactory typeFactory) {
 		BooleanExpressionFactory booleanFactory = new CnfFactory(typeFactory,
@@ -153,7 +153,7 @@ public class Expressions {
 	 *            factory used to produce {@link SymbolicCollection}s
 	 * @return the new standard (Herbrand-Ideal composite) expression factory
 	 */
-	public static ExpressionFactory newStandardExpressionFactory2(
+	public static ExpressionFactory newStandardExpressionFactory(
 			NumberFactory numberFactory, ObjectFactory objectFactory,
 			SymbolicTypeFactory typeFactory) {
 		BooleanExpressionFactory booleanFactory = new CnfFactory(typeFactory,
@@ -179,7 +179,7 @@ public class Expressions {
 	 *            the pre-universe used to make symbolic expressions
 	 * @return the new simplifier factory
 	 */
-	public static SimplifierFactory standardSimplifierFactory2(
+	public static SimplifierFactory standardSimplifierFactory(
 			ExpressionFactory standardExpressionFactory, PreUniverse universe) {
 		NumericExpressionFactory numericFactory = standardExpressionFactory
 				.numericFactory();

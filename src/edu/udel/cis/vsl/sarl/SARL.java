@@ -61,8 +61,7 @@ public class SARL {
 	public static SymbolicUniverse newStandardUniverse(SARLConfig config,
 			ProverInfo prover) {
 
-		// TODO: 1 to get old Ideal Universe, 2 for the new one:
-		return Universes.newStandardUniverse2(config, prover);
+		return Universes.newStandardUniverse(config, prover);
 	}
 
 	/**
@@ -86,8 +85,7 @@ public class SARL {
 	 */
 	public static SymbolicUniverse newIdealUniverse(SARLConfig config,
 			ProverInfo prover) {
-		// TODO: 1 to get old Ideal Universe, 2 for the new one:
-		return Universes.newIdealUniverse2(config, prover);
+		return Universes.newIdealUniverse(config, prover);
 	}
 
 	/**
@@ -115,9 +113,7 @@ public class SARL {
 	public static SymbolicUniverse newStandardUniverse() {
 		SARLConfig config = Configurations.getDefaultConfiguration();
 
-		// TODO: 1 to get old Ideal Universe, 2 for the new one:
-		return Universes.newStandardUniverse2(config, null);
-
+		return Universes.newStandardUniverse(config, null);
 	}
 
 	/**
@@ -145,7 +141,6 @@ public class SARL {
 	public static SymbolicUniverse newIdealUniverse() {
 		SARLConfig config = Configurations.getDefaultConfiguration();
 
-		// TODO: 1 to get old Ideal Universe, 2 for the new one:
-		return Universes.newIdealUniverse2(config, null);
+		return Universes.newIdealUniverse(config, null);
 	}
 }

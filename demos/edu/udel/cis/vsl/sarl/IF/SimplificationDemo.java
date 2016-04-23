@@ -58,7 +58,7 @@ public class SimplificationDemo {
 
 	@Before
 	public void setUp() throws Exception {
-		myUniverse = Universes.newIdealUniverse2();
+		myUniverse = Universes.newIdealUniverse();
 		xObject = myUniverse.stringObject("X");
 		yObject = myUniverse.stringObject("Y");
 		booleanType = myUniverse.booleanType();

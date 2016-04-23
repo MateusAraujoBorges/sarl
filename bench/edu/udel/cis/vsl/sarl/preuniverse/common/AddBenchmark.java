@@ -12,7 +12,7 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 public class AddBenchmark {
 	
 	public final static SymbolicUniverse universe = SARL.newIdealUniverse();
-	public final static FactorySystem system = PreUniverses.newIdealFactorySystem2();
+	public final static FactorySystem system = PreUniverses.newIdealFactorySystem();
 	public final static NumericExpressionFactory numericExpressionFactory = system.numericFactory();
 	
 	public static void main(String[] args) {

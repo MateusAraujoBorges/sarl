@@ -19,12 +19,12 @@ public class PreUniverses {
 				expressionFactory);
 	}
 
-	public static FactorySystem newIdealFactorySystem2() {
+	public static FactorySystem newIdealFactorySystem() {
 		NumberFactory numberFactory = Numbers.REAL_FACTORY;
 		ObjectFactory objectFactory = Objects.newObjectFactory(numberFactory);
 		SymbolicTypeFactory typeFactory = Types.newTypeFactory(objectFactory);
 		ExpressionFactory expressionFactory = Expressions
-				.newIdealExpressionFactory2(numberFactory, objectFactory,
+				.newIdealExpressionFactory(numberFactory, objectFactory,
 						typeFactory);
 
 		return newFactorySystem(objectFactory, typeFactory, expressionFactory);

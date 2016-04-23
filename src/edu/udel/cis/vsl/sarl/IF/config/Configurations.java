@@ -72,9 +72,8 @@ public class Configurations {
 		try {
 			return ConfigFactory.fromFile(configFile);
 		} catch (IOException e) {
-			throw new SARLException(
-					"I/O error reading SARL configuration file " + configFile
-							+ ": " + e.getMessage());
+			throw new SARLException("I/O error reading SARL configuration file "
+					+ configFile + ": " + e.getMessage());
 		}
 	}
 
@@ -109,6 +108,11 @@ public class Configurations {
 			} else {
 				ConfigFactory.checkConfig(DEFAULT_CONFIG);
 			}
+			if (DEFAULT_CONFIG.getNumProvers() == 0) {
+				System.err.println(
+						"Warning: using SARL with no theorem provers. Consider putting provers in your PATH.");
+				System.err.flush();
+			}
 		} catch (Exception e) {
 			System.err.println("SARL configuration error: " + e.getMessage());
 			System.err.flush();
@@ -130,8 +134,8 @@ public class Configurations {
 		try {
 			ConfigFactory.makeConfigFile();
 		} catch (Exception e) {
-			System.err.println("Unable to create SARL config file: "
-					+ e.getMessage());
+			System.err.println(
+					"Unable to create SARL config file: " + e.getMessage());
 			System.err.flush();
 			System.exit(2);
 		}

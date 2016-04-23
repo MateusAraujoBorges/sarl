@@ -103,7 +103,7 @@ public class IdealEqualityTest {
 
 	@Before
 	public void setUp() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem2();
+		FactorySystem system = PreUniverses.newIdealFactorySystem();
 		numberFactory = system.numberFactory();
 		objectFactory = system.objectFactory();
 		typeFactory = system.typeFactory();

@@ -35,7 +35,7 @@ public class AndTest {
 	// Static fields: instantiated once and used for all tests...
 
 	private static FactorySystem factorySystem = PreUniverses
-			.newIdealFactorySystem2();
+			.newIdealFactorySystem();
 
 	private static PreUniverse universe = PreUniverses
 			.newPreUniverse(factorySystem);

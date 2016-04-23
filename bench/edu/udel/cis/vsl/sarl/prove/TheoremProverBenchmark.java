@@ -24,7 +24,7 @@ public class TheoremProverBenchmark {
 	public static List<String> benchmarkResults = new ArrayList<String>();
 
 	public final static FactorySystem factorySystem = PreUniverses
-			.newIdealFactorySystem2();
+			.newIdealFactorySystem();
 
 	public final static PreUniverse universe = PreUniverses
 			.newPreUniverse(factorySystem);

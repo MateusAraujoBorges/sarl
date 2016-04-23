@@ -21,7 +21,7 @@ public class CljBenchWithSymbolicExpr {
 
 	public final static SymbolicUniverse universe = SARL.newIdealUniverse();
 	public final static FactorySystem system = PreUniverses
-			.newIdealFactorySystem2();
+			.newIdealFactorySystem();
 
 	public final static SymbolicType integerType = universe.integerType();
 

@@ -39,7 +39,7 @@ public class FunctionTypeTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		FactorySystem test = PreUniverses.newIdealFactorySystem2();
+		FactorySystem test = PreUniverses.newIdealFactorySystem();
 		universe = new CommonPreUniverse(test);
 		integerType = universe.integerType();
 		realType = universe.realType();

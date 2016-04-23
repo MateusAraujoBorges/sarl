@@ -14,7 +14,7 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
  */
 
 public class ObjectBenchmark {
-	static FactorySystem system = PreUniverses.newIdealFactorySystem2();
+	static FactorySystem system = PreUniverses.newIdealFactorySystem();
 	private static PreUniverse universe = PreUniverses.newPreUniverse(system);
 	
 	
