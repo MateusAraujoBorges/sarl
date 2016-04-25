@@ -17,6 +17,10 @@ public class DivOrModuloTest {
 	private NumericExpression x; 
 	private NumericExpression y;
 	private NumericExpression z;
+	private NumericExpression a; 
+	private NumericExpression b;
+	private NumericExpression c;
+	private NumericExpression d;
 	private NumericExpression two;
 	private NumericExpression zero;
 	private NumericExpression one;
@@ -32,6 +36,14 @@ public class DivOrModuloTest {
 				.symbolicConstant(universe.stringObject("y"), integerType);
 		z = (NumericExpression) universe
 				.symbolicConstant(universe.stringObject("z"), integerType);
+		a = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("a"), integerType);
+		b = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("b"), integerType);
+		c = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("c"), integerType);
+		d = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("d"), integerType);
 		two = universe.integer(2);
 		zero = universe.integer(0);
 		one = universe.integer(1);
@@ -116,6 +128,25 @@ public class DivOrModuloTest {
 		
 		ValidityResult result = r.valid(predicate);
 		assertEquals(ResultType.YES, result.getResultType());
+	}
+	
+	@Test
+	public void divisionTest4(){
+		BooleanExpression assumption1 = universe.equals(two, 
+				universe.add(universe.divide(a, b),
+						universe.divide(c, d)));
+		BooleanExpression assumption2 = universe.and(
+				universe.lessThan(zero, b), universe.lessThan(zero, d));
+		BooleanExpression assumption3 = universe.and(
+				universe.lessThanEquals(zero, a), universe.lessThanEquals(zero, c));
+		BooleanExpression assumption = universe.and(
+				universe.and(assumption1, assumption2), assumption3);
+		BooleanExpression predicate = universe.equals(two, 
+				universe.divide(a, c));
+		Reasoner r = universe.reasoner(assumption);
+		
+		ValidityResult result = r.valid(predicate);
+		assertEquals(ResultType.NO, result.getResultType());
 	}
 	
 }
