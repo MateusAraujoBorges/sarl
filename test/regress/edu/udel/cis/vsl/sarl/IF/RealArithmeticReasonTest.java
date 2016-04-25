@@ -1,6 +1,5 @@
 package edu.udel.cis.vsl.sarl.IF;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import java.io.PrintStream;
@@ -29,7 +28,7 @@ public class RealArithmeticReasonTest {
 	private NumericExpression c;
 	private NumericExpression d;
 	private SymbolicType realType;
-	private BooleanExpression t;
+//	private BooleanExpression t;
 	private BooleanExpression f;
 	
 	@Before
@@ -52,7 +51,7 @@ public class RealArithmeticReasonTest {
 				.symbolicConstant(c_obj, realType);
 		d = (NumericExpression) universe
 				.symbolicConstant(d_obj, realType);
-		t = universe.bool(true);
+//		t = universe.bool(true);
 		f = universe.bool(false);
 	}
 
@@ -97,7 +96,9 @@ public class RealArithmeticReasonTest {
 			out.println("eq: "+eq);
 		}
 		
-		assertTrue(universe.reasoner(t).isValid(eq));
+		Reasoner r = universe.reasoner(universe.bool(true));
+		ValidityResult result = r.valid(eq);
+		assertEquals(ResultType.YES, result.getResultType());
 	}
 	
 	/**
