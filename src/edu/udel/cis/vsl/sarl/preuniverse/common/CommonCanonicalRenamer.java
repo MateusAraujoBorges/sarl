@@ -5,6 +5,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.udel.cis.vsl.sarl.IF.CanonicalRenamer;
 import edu.udel.cis.vsl.sarl.IF.Predicate;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
@@ -23,7 +24,8 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * 
  * @author Stephen F. Siegel
  */
-public class CanonicalRenamer extends ExpressionSubstituter {
+public class CommonCanonicalRenamer extends ExpressionSubstituter
+		implements CanonicalRenamer {
 
 	/**
 	 * State of search: stack of pairs of symbolic constants. Left component of
@@ -106,7 +108,7 @@ public class CanonicalRenamer extends ExpressionSubstituter {
 	 *            renamed)? if <code>null</code>, none will be ignored (i.e.,
 	 *            all will be renamed)
 	 */
-	public CanonicalRenamer(PreUniverse universe,
+	public CommonCanonicalRenamer(PreUniverse universe,
 			SymbolicTypeFactory typeFactory, ObjectFactory objectFactory,
 			String root, Predicate<SymbolicConstant> ignore) {
 		super(universe, objectFactory, typeFactory);
@@ -171,5 +173,10 @@ public class CanonicalRenamer extends ExpressionSubstituter {
 		} else {
 			return super.substituteNonquantifiedExpression(expr, state);
 		}
+	}
+
+	@Override
+	public int getNumNewNames() {
+		return varCount;
 	}
 }
