@@ -99,6 +99,26 @@ public class PowerTest {
 		debug("pow(sqrt(x), 0.5) = " + e2);
 	}
 
+	@Test
+	public void complicated2() {
+		NumericExpression b = universe.rational(1, 100);
+		NumericExpression c = b;
+		NumericExpression half = universe.rational(1, 2);
+		NumericExpression two = universe.rational(2, 1);
+		int limit = 60;
+
+		for (int i = 0; i < limit; i++) {
+			c = universe.power(c, half);
+		}
+		for (int i = 0; i < limit; i++) {
+			c = universe.power(c, two);
+			c = reasoner.simplify(c);
+			debug("'" + i + "': " + c);
+		}
+		assertEquals(b, c);
+
+	}
+
 	/**
 	 * [ 0.02^(1/4) ]^2 = 0.02^(1/2)
 	 */
