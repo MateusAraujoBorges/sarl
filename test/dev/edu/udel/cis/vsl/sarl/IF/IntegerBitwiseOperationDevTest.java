@@ -66,7 +66,7 @@ public class IntegerBitwiseOperationDevTest {
 				.bitvector2Integer(bitwiseResult1);
 		NumericExpression expectedResult = universe.bitvector2Integer(bv_y);
 
-		p("Expression: ~ (x | y)");
+		p("Expression: x & y | y");
 		p("ExpectedResult: " + expectedResult.atomString());
 		p("ActualResult  : " + actualResult.atomString());
 		assertEquals(expectedResult, actualResult);

@@ -524,21 +524,4 @@ public class IntegerBitwiseOperationTest {
 		p("ActualResult  : " + actualResult.atomString());
 		assertEquals(expectedResult, actualResult);
 	}
-
-	@Test
-	public void bitnot_xBITANDyBITORy() {
-		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
-		SymbolicExpression bv_y = universe.integer2Bitvector(y, bitVectorType);
-		SymbolicExpression bitwiseResult1 = universe.bitor(
-				universe.bitand(bv_x, bv_y), bv_y);
-		NumericExpression actualResult = universe
-				.bitvector2Integer(bitwiseResult1);
-		NumericExpression expectedResult = universe
-				.bitvector2Integer(bv_y);
-
-		p("Expression: ~ (x | y)");
-		p("ExpectedResult: " + expectedResult.atomString());
-		p("ActualResult  : " + actualResult.atomString());
-		assertEquals(expectedResult, actualResult);
-	}
 }
