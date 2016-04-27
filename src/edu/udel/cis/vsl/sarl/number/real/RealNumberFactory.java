@@ -2131,33 +2131,34 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	public IntegerNumber nthRootInt(IntegerNumber number, IntegerNumber n) {
-		int nVal = n.intValue();
+		assert number != null && n != null;
 
-		if (nVal <= 0)
+		if (n.signum() < 0)
 			throw new IllegalArgumentException(
 					"The Argument 'n' to the method nthRootInt should be greater than 0."
-							+ "\nThe n is: " + nVal);
-		if (nVal == 1 || number.isZero() || number.isOne()
+							+ "\nThe n is: " + n);
+		if (n.isOne() || number.isZero() || number.isOne()
 				|| negate(number).isOne())
 			return number;
 		if (number.signum() < 0) {
-			if (nVal % 2 == 0) {
+			if (mod(n, integer(2)).isZero()) {
 				throw new IllegalArgumentException(
 						"When the argument 'number' to the method nthRootInt is negative, "
 								+ "\nThe argument 'n' should be greater than 0."
-								+ "\nThe n is: " + nVal);
+								+ "\nThe n is: " + n);
 			}
 		}
 
-		int nMinus1 = nVal - 1;
 		boolean flag = true;
-		RationalNumber nM1 = rational(integer(nMinus1));
+		IntegerNumber nM1 = subtract(n, integer(1));
 		RationalNumber nth = divide(oneRational, rational(n));
 		RationalNumber pow = rational(number);
 		RationalNumber oldB = oneRational;
 		RationalNumber limit = fraction(oneInteger, integer(100));
-		RationalNumber newB = multiply(nth,
-				add(multiply(nM1, oldB), divide(pow, power(oldB, nMinus1))));
+		RationalNumber newB = multiply(
+				nth,
+				add(multiply(rational(nM1), oldB),
+						divide(pow, power(oldB, nM1))));
 		RationalNumber cond1 = subtract(power(subtract(newB, oldB), 2), limit);
 		RationalNumber cond2 = subtract(newB, oldB);
 		IntegerNumber result = null;
@@ -2165,8 +2166,10 @@ public class RealNumberFactory implements NumberFactory {
 		while (cond1.signum() > 0 && !cond2.isZero()
 				&& (flag || cond2.signum() < 0)) {
 			oldB = rational(floor(add(newB, limit)));
-			newB = multiply(nth,
-					add(multiply(nM1, oldB), divide(pow, power(oldB, nMinus1))));
+			newB = multiply(
+					nth,
+					add(multiply(rational(nM1), oldB),
+							divide(pow, power(oldB, nM1))));
 			newB = rational(floor(add(newB, limit)));
 			cond1 = subtract(power(subtract(newB, oldB), 2), limit);
 			cond2 = subtract(newB, oldB);
@@ -2174,10 +2177,36 @@ public class RealNumberFactory implements NumberFactory {
 		}
 		newB = add(newB, fraction(oneInteger, integer(2)));
 		result = floor(newB);
-		if (!subtract(power(result, nVal), number).isZero()) {
+		if (!subtract(power(result, n), number).isZero()) {
 			return null;
 		}
 		return result;
+	}
+
+	private RationalNumber power(RationalNumber number, IntegerNumber exp) {
+		IntegerNumber baseNum = integer(number.numerator());
+		IntegerNumber baseDen = integer(number.denominator());
+		IntegerNumber resultNum = null;
+		IntegerNumber resultDen = null;
+
+		if (exp.isZero()) {
+			if (number.isZero())
+				throw new IllegalArgumentException(
+						"0.0 could not power with 0.");
+			else
+				return oneRational;
+		}
+		if (exp.isZero()) {
+			resultNum = oneInteger;
+			resultDen = oneInteger;
+		} else if (exp.signum() > 0) {
+			resultNum = power(baseNum, exp);
+			resultDen = power(baseDen, exp);
+		} else {
+			resultNum = power(baseDen, negate(exp));
+			resultDen = power(baseNum, negate(exp));
+		}
+		return fraction(resultNum, resultDen);
 	}
 
 	@Override
