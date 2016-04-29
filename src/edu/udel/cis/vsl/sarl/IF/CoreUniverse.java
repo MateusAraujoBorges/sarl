@@ -622,7 +622,7 @@ public interface CoreUniverse {
 			SymbolicObject[] arguments);
 
 	/**
-	 * Retruns the total number of calls made to methods
+	 * Returns the total number of calls made to methods
 	 * {@link Reasoner#valid(BooleanExpression)} and
 	 * {@link Reasoner#validOrModel(BooleanExpression)}.
 	 * 

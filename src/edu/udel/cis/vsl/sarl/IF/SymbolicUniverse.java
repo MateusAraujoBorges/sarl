@@ -53,15 +53,15 @@ public interface SymbolicUniverse extends CoreUniverse {
 	// These generally require use of theorem provers/simplifiers
 
 	/**
-	 * Returns a Reasoner for the given context. A Reasoner provides
-	 * simplification and reasoning services. The context is the boolean
-	 * expression assumed to hold by the reasoner. The Reasoner can be used to
-	 * determine if a boolean predicate is valid; it may use an external theorem
-	 * prover to assist in this task.
+	 * Returns a {@link Reasoner} for the given context. A {@link Reasoner}
+	 * provides simplification and reasoning services. The context is the
+	 * boolean expression assumed to hold by the reasoner. The Reasoner can be
+	 * used to determine if a boolean predicate is valid; it may use an external
+	 * theorem prover to assist in this task.
 	 * 
 	 * @param context
-	 *            the boolean expression assumed to hold by the Reasoner
-	 * @return a Reasoner with the given context
+	 *            the boolean expression assumed to hold by the {@link Reasoner}
+	 * @return a {@link Reasoner} with the given context
 	 */
 	Reasoner reasoner(BooleanExpression context);
 

@@ -1951,6 +1951,8 @@ public class CommonIdealFactory implements IdealFactory {
 			return monic;
 		if (monic.isTrivialMonic())
 			return constant;
+		// TODO: probably going to get rid of this and handle in Simplifier...
+		
 		// zirkel: A constant times big-O is just big-O
 		if (monic.operator() == SymbolicOperator.APPLY
 				&& ((SymbolicConstant) monic.argument(0)).name().toString()
