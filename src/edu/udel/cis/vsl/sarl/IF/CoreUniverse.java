@@ -2132,15 +2132,29 @@ public interface CoreUniverse {
 	NumericExpression bitvector2Integer(SymbolicExpression bitvector);
 
 	/**
-	 * Set error filename
+	 * <p>
+	 * <b>Summary:</b>Set name (path) for prover unexpected error file.
+	 * </p>
+	 * <p>
+	 * <b>Details: </b>A prover unexpected error file saves all unexpected error
+	 * messages coming from external provers (e.g. z3, cvc3 etc). Unexpected
+	 * errors are caused by bugs either in the provers or in SARL. By setting
+	 * filename including path to the file through such an interface, other
+	 * components (like CIVL) can direct the file the any favorite places.
+	 * </p>
 	 * 
 	 * @param errFile
-	 *            Error file name
+	 *            The desired prover error file name.
 	 */
 	void setErrFile(String errFile);
 
 	/**
-	 * Get error filename
+	 * <p>
+	 * <b>Summary:</b>Get the name (path) of the prover unexpected error file.
+	 * For details of the error file see {@link #setErrFile(String)}
+	 * </p>
+	 * 
+	 * @return The String type filename (including path)
 	 */
 	String getErrFile();
 }
