@@ -446,7 +446,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			result.append(" ? ");
 			result.append(arguments[1].toStringBuffer(true));
 			result.append(" : ");
-			result.append(arguments[1].toStringBuffer(true));
+			result.append(arguments[2].toStringBuffer(true));
 			if (atomize)
 				atomize(result);
 			return result;
