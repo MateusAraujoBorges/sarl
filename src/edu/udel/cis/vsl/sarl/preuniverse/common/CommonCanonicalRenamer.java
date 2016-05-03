@@ -9,6 +9,7 @@ import edu.udel.cis.vsl.sarl.IF.CanonicalRenamer;
 import edu.udel.cis.vsl.sarl.IF.Predicate;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
@@ -24,8 +25,8 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * 
  * @author Stephen F. Siegel
  */
-public class CommonCanonicalRenamer extends ExpressionSubstituter
-		implements CanonicalRenamer {
+public class CommonCanonicalRenamer extends ExpressionSubstituter implements
+		CanonicalRenamer {
 
 	/**
 	 * State of search: stack of pairs of symbolic constants. Left component of
@@ -49,8 +50,7 @@ public class CommonCanonicalRenamer extends ExpressionSubstituter
 		}
 
 		void push(SymbolicConstant key, SymbolicConstant value) {
-			stack.push(
-					new Pair<SymbolicConstant, SymbolicConstant>(key, value));
+			stack.push(new Pair<SymbolicConstant, SymbolicConstant>(key, value));
 		}
 
 		void pop() {
@@ -154,6 +154,12 @@ public class CommonCanonicalRenamer extends ExpressionSubstituter
 			SymbolicExpression expr, SubstituterState state) {
 		if (expr instanceof SymbolicConstant
 				&& (ignore == null || !ignore.apply((SymbolicConstant) expr))) {
+			// no op if the name of the symbolic constant expr doesn't start
+			// with the root of this canonical renamer
+			if (!((StringObject) ((SymbolicConstant) expr).argument(0))
+					.getString().startsWith(root))
+				return expr;
+
 			SymbolicConstant newVar = ((BoundStack) state)
 					.get((SymbolicConstant) expr);
 

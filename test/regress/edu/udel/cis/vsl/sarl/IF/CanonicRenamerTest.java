@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.IF;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -34,6 +36,10 @@ public class CanonicRenamerTest {
 				integerType);
 	}
 
+	/**
+	 * This method tests that a canonical renamer with root "Y" should never
+	 * change any symobol that does NOT start with "Y".
+	 */
 	@Test
 	public void renamerY() {
 		SymbolicExpression xa = intConstant("Xa"), Yb = intConstant("Yb"), newXa;
@@ -41,7 +47,6 @@ public class CanonicRenamerTest {
 
 		newXa = renamer.apply(xa);
 		Yb = renamer.apply(Yb);
-		assert (xa.equals(newXa));
+		assertEquals(xa, newXa);
 	}
-
 }
