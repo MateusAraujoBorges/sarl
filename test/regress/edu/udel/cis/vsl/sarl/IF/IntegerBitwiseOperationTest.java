@@ -524,4 +524,16 @@ public class IntegerBitwiseOperationTest {
 		p("ActualResult  : " + actualResult.atomString());
 		assertEquals(expectedResult, actualResult);
 	}
+
+	@Test
+	public void simplyficationTest() {
+		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
+		SymbolicExpression bv_4 = universe.integer2Bitvector(
+				universe.integer(4), bitVectorType);
+		SymbolicExpression bv_x_and_4 = universe.bitand(bv_x, bv_4);
+		SymbolicExpression x_and_4 = universe.bitvector2Integer(bv_x_and_4);
+		SymbolicExpression resExpr = universe.neq(x_and_4, intZero);
+
+		p(resExpr);
+	}
 }
