@@ -442,11 +442,13 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			return result;
 		}
 		case COND:
+			result.append("(");
 			result.append(arguments[0].toStringBuffer(true));
 			result.append(" ? ");
 			result.append(arguments[1].toStringBuffer(true));
 			result.append(" : ");
 			result.append(arguments[2].toStringBuffer(true));
+			result.append(")");
 			if (atomize)
 				atomize(result);
 			return result;
