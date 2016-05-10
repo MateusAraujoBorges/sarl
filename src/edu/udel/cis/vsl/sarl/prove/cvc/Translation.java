@@ -1,5 +1,6 @@
 package edu.udel.cis.vsl.sarl.prove.cvc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.udel.cis.vsl.sarl.util.FastList;
@@ -46,15 +47,15 @@ public class Translation {
 	public Translation(){
 		result = new FastList<String>();
 		isDivOrModulo = false;
-		auxConstraints = null;
-		auxVars = null;
+		auxConstraints = new FastList<>();
+		auxVars = new ArrayList<>();
 	}
 	
 	public Translation(FastList<String> res){
 		result = res;
 		isDivOrModulo = false;
-		auxConstraints = null;
-		auxVars = null;
+		auxConstraints = new FastList<>();
+		auxVars = new ArrayList<>();
 	}
 	
 	public Translation(FastList<String> res, Boolean isDvOrMo, 
