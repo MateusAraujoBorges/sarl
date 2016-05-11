@@ -36,7 +36,6 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
  */
 public class RealNumberFactory implements NumberFactory {
 
-	// Fields: TODO: Add java-doc for fields
 	/**
 	 * Static variable for a number representing the positive infinity.
 	 */
@@ -47,21 +46,69 @@ public class RealNumberFactory implements NumberFactory {
 	 */
 	private static Number NEG_INFINITY = null;
 
+	/**
+	 * Static variable represents the status of two {@link Interval}s <br>
+	 * <code>LEFT_DISJOINTED</code> means the first {@link Interval} is on the
+	 * left side of the second one, and they have no intersection.
+	 */
 	private static int LEFT_DISJOINTED = -3;
+
+	/**
+	 * Static variable represents the status of two {@link Interval}s <br>
+	 * <code>RIGHT_DISJOINTED</code> means the first {@link Interval} is on the
+	 * right side of the second one, and they have no intersection.
+	 */
 	private static int RIGHT_DISJOINTED = 3;
+
+	/**
+	 * Static variable represents the status of two {@link Interval}s <br>
+	 * <code>LEFT_INTERSECTED</code> means the first {@link Interval} is on the
+	 * left side of the second one, and they have a intersection.
+	 */
 	private static int LEFT_INTERSECTED = -2;
+
+	/**
+	 * Static variable represents the status of two {@link Interval}s <br>
+	 * <code>RIGHT_INTERSECTED</code> means the first {@link Interval} is on the
+	 * right side of the second one, and they have a intersection.
+	 */
 	private static int RIGHT_INTERSECTED = 2;
+
+	/**
+	 * Static variable represents the status of two {@link Interval}s <br>
+	 * <code>CONTAINED_IN_INTERVAL1</code> means the first {@link Interval}
+	 * contains the second one.
+	 */
 	private static int CONTAINED_IN_INTERVAL1 = -1;
+
+	/**
+	 * Static variable represents the status of two {@link Interval}s <br>
+	 * <code>CONTAINED_IN_INTERVAL2</code> means the second {@link Interval}
+	 * contains the first one.
+	 */
 	private static int CONTAINED_IN_INTERVAL2 = 1;
+
+	/**
+	 * Static variable represents the status of two {@link Interval}s <br>
+	 * <code>EXACTLY_SAME</code> means the first {@link Interval} is exactly
+	 * same with the second one.
+	 */
 	private static int EXACTLY_SAME = 0;
 
 	private Map<BigInteger, RealInteger> integerMap = new HashMap<BigInteger, RealInteger>();
 
 	private Map<RationalKey, RealRational> rationalMap = new HashMap<RationalKey, RealRational>();
 
-	private RealInteger zeroInteger, oneInteger, tenInteger;
+	/**
+	 * Private fields stores {@link IntegerNumber} frequently used. <br>
+	 * 
+	 */
+	private IntegerNumber zeroInteger, oneInteger, tenInteger;
 
-	private RealRational zeroRational, oneRational;
+	/**
+	 * Private fields stores {@link RationalNumber} frequently used. <br>
+	 */
+	private RationalNumber zeroRational, oneRational;
 
 	private BinaryOperator<IntegerNumber> multiplier;
 
@@ -2131,15 +2178,15 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	public IntegerNumber nthRootInt(IntegerNumber number, IntegerNumber n) {
+		// Pre-condition Checking
 		assert number != null && n != null;
 
+		// nth, n should be a positive integer
 		if (n.signum() < 0)
 			throw new IllegalArgumentException(
 					"The Argument 'n' to the method nthRootInt should be greater than 0."
 							+ "\nThe n is: " + n);
-		if (n.isOne() || number.isZero() || number.isOne()
-				|| negate(number).isOne())
-			return number;
+		// If number is negative, n could not be even.
 		if (number.signum() < 0) {
 			if (mod(n, integer(2)).isZero()) {
 				throw new IllegalArgumentException(
@@ -2148,38 +2195,53 @@ public class RealNumberFactory implements NumberFactory {
 								+ "\nThe n is: " + n);
 			}
 		}
+		// Special Cases
+		if (n.isOne() || number.isZero() || number.isOne()
+				|| negate(number).isOne())
+			return number;
 
 		boolean flag = true;
-		IntegerNumber nM1 = subtract(n, integer(1));
+		IntegerNumber nMinusOne = subtract(n, integer(1));
 		RationalNumber nth = divide(oneRational, rational(n));
 		RationalNumber pow = rational(number);
-		RationalNumber oldB = oneRational;
+		RationalNumber oldBase = oneRational;
 		RationalNumber limit = fraction(oneInteger, integer(100));
-		RationalNumber newB = multiply(
+		RationalNumber newBase = multiply(
 				nth,
-				add(multiply(rational(nM1), oldB),
-						divide(pow, power(oldB, nM1))));
-		RationalNumber cond1 = subtract(power(subtract(newB, oldB), 2), limit);
-		RationalNumber cond2 = subtract(newB, oldB);
+				add(multiply(rational(nMinusOne), oldBase),
+						divide(pow, power(oldBase, nMinusOne))));
+		RationalNumber cond1 = subtract(newBase, oldBase);
+		RationalNumber cond2 = subtract(power(cond1, 2), limit);
 		IntegerNumber result = null;
 
-		while (cond1.signum() > 0 && !cond2.isZero()
-				&& (flag || cond2.signum() < 0)) {
-			oldB = rational(floor(add(newB, limit)));
-			newB = multiply(
+		// Algorithm used are retrived from:
+		// https://en.wikipedia.org/wiki/Nth_root#nth_root_algorithm
+		// Recursive Formula:
+		// newBase=nth*(nMinusOne*OldBase + number/(oldBase^nMinusOne));
+		// Loop condition:
+		// 1. After the first loop, newBase < oldBase
+		// 2. (newBase - oldBase)^2 > 0.01
+		while ((flag || cond1.signum() < 0) && cond2.signum() > 0) {
+			oldBase = rational(floor(add(newBase, limit)));
+			newBase = multiply(
 					nth,
-					add(multiply(rational(nM1), oldB),
-							divide(pow, power(oldB, nM1))));
-			newB = rational(floor(add(newB, limit)));
-			cond1 = subtract(power(subtract(newB, oldB), 2), limit);
-			cond2 = subtract(newB, oldB);
+					add(multiply(rational(nMinusOne), oldBase),
+							divide(pow, power(oldBase, nMinusOne))));
+			newBase = rational(floor(add(newBase, limit)));
+			cond1 = subtract(newBase, oldBase);
+			cond2 = subtract(power(cond1, 2), limit);
 			flag = false;
 		}
-		newB = add(newB, fraction(oneInteger, integer(2)));
-		result = floor(newB);
-		if (!subtract(power(result, n), number).isZero()) {
+		// Ground the result
+		newBase = add(newBase, fraction(oneInteger, integer(2)));
+		result = floor(newBase);
+		if (!subtract(power(result, n), number).isZero())
+			/*
+			 * If power-result with approximated base is NOT exactly same with
+			 * the given number, then the approximated base is not correct.
+			 */
 			return null;
-		}
+		// Else, return the approximated base.
 		return result;
 	}
 
@@ -2306,56 +2368,69 @@ public class RealNumberFactory implements NumberFactory {
 		Number zeroNum = isInt ? zeroInteger : zeroRational;
 		Number oneNum = isInt ? oneInteger : oneRational;
 
-		if (i2.contains(zeroNum))
+		if (i2.isZero())
 			throw new ArithmeticException(
-					"The Interval used as denominator contains 0!");
-		if (i1.isUniversal() || i1.isZero())
-			return i1;
+					"DividedByZero: The Interval used as denominator is exactly 0");
 
-		Number lo1 = i1.lower();
-		Number up1 = i1.upper();
 		Number lo2 = i2.lower();
 		Number up2 = i2.upper();
-		boolean sl = i1.strictLower() || i2.strictLower();
-		boolean su = i1.strictUpper() || i2.strictUpper();
-		Number tempLo, tempUp;
+		boolean sl2 = i2.strictLower();
+		boolean su2 = i2.strictUpper();
+		Number tempLo = null, tempUp = null;
+		boolean tempSl = true, tempSu = true;
 
-		if (lo2 == null)
-			tempUp = zeroNum;
-		else if (lo2.isZero())
-			tempUp = null;
-		else
-			tempUp = divide(oneNum, lo2);
-
-		if (up2 == null)
-			tempLo = zeroNum;
-		else if (up2.isZero())
-			tempLo = null;
-		else
-			tempLo = divide(oneNum, lo2);
-
-		Number num1 = multiply(lo1, tempLo);
-		Number num2 = multiply(up1, tempLo);
-		Number num3 = multiply(lo1, tempUp);
-		Number num4 = multiply(up1, tempUp);
-		int compareN1N2 = subtract(num1, num2).signum();
-		int compareN3N4 = subtract(num3, num4).signum();
-		Number lo, up;
-
-		if (compareN1N2 >= 0 && compareN3N4 >= 0) {
-			up = subtract(num1, num3).signum() >= 0 ? num1 : num3;
-			lo = subtract(num2, num4).signum() >= 0 ? num4 : num2;
-		} else if (compareN1N2 < 0 && compareN3N4 >= 0) {
-			up = subtract(num2, num3).signum() >= 0 ? num2 : num3;
-			lo = subtract(num1, num4).signum() >= 0 ? num4 : num1;
-		} else if (compareN1N2 >= 0 && compareN3N4 < 0) {
-			up = subtract(num1, num4).signum() >= 0 ? num1 : num4;
-			lo = subtract(num2, num3).signum() >= 0 ? num3 : num2;
+		// Algorithm based on: Wiki's Interval_arithmetic
+		// [lo1,up1]/[lo2,up2] = [lo1, up1] * (1 / [lo2, up2]);
+		// If 0 is NOT in i2:
+		// | (1 / [lo2, up2]) = [1/up2, 1/lo2]
+		// Else if 0 is in i2:
+		// | If up2 == 0:
+		// | | (1 / [lo2, 0]) = (-infi, 1/lo2]
+		// | Else if lo2 == 0:
+		// | | (1 / [0, up2]) = [1/up2, +infi)
+		// | Else
+		// | | (1 / [lo2, up2]) = (-infi, 1/lo2] U [1/up2, +infi)
+		// | | However in single interval: (-infi, +inif)
+		if (i2.contains(zeroNum)) {
+			// 0 in i2
+			if (lo2 != null && lo2.isZero()) {
+				if (up2 == null) {
+					// i2 = [0, +infi)
+					tempLo = zeroNum;
+				} else {
+					// i2 = [0, pos)|]
+					tempLo = divide(oneNum, up2);
+					tempSl = su2;
+				}
+			} else if (up2 != null && up2.isZero()) {
+				if (lo2 == null) {
+					// i2 = (-infi, 0]
+					tempUp = zeroNum;
+				} else {
+					// i2 = [|(neg, 0]
+					tempUp = divide(oneNum, lo2);
+					tempSu = sl2;
+				}
+			}
+			// else i2 = [|(neg, pos)|] containing 0;
 		} else {
-			up = subtract(num2, num4).signum() >= 0 ? num2 : num4;
-			lo = subtract(num1, num3).signum() >= 0 ? num3 : num1;
+			// 0 not in i2
+			if (lo2 == null)
+				// i2 = (-infi, neg)|]
+				tempUp = zeroNum;
+			else if (!lo2.isZero())
+				// Either i2 < 0 or i2 > 0
+				tempUp = divide(oneNum, lo2);
+			// else i2 = (0, pos)|]
+			if (up2 == null)
+				// i2 = [|(pos, +infi)
+				tempLo = zeroNum;
+			else if (!up2.isZero())
+				// Either i2 < 0 or i2 > 0
+				tempLo = divide(oneNum, up2);
+			// else i2 = [|(neg, 0)
 		}
-
-		return new CommonInterval(isInt, lo, sl, up, su);
+		return multiply(i1, new CommonInterval(isInt, tempLo, tempSl, tempUp,
+				tempSu));
 	}
 }
