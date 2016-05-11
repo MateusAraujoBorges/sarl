@@ -1470,11 +1470,20 @@ public class RealNumberFactory implements NumberFactory {
 		boolean su = true;
 		boolean isIntegral = i1.isIntegral();
 
+		// Algorithm used is retrived from:
+		// https://en.wikipedia.org/wiki/Interval_arithmetic
+		// Formula:
+		// [lo1,up1]*[lo2,up2] = [lo,up]
+		// lo = Min(lo1*lo2, lo1*up2, up1*lo2, up1*up2)
+		// up = Max(lo1*lo2, lo1*up2, up1*lo2, up1*up2)
 		if (i1.isZero() || i2.isZero()) {
+			// If either i1 or i2 is exactly zero, then return zero.
 			Number zeroNum = isIntegral ? zeroInteger : zeroRational;
 
 			return newInterval(isIntegral, zeroNum, false, zeroNum, false);
 		} else if (i1.isUniversal() || i2.isUniversal()) {
+			// If either i1 or i2 is universal and not exactly zero
+			// then return universal.
 			return newInterval(isIntegral, lo, sl, up, su);
 		} else if (lo1 == null && lo2 == null) {
 			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
@@ -2214,7 +2223,7 @@ public class RealNumberFactory implements NumberFactory {
 		RationalNumber cond2 = subtract(power(cond1, 2), limit);
 		IntegerNumber result = null;
 
-		// Algorithm used are retrived from:
+		// Algorithm used is retrived from:
 		// https://en.wikipedia.org/wiki/Nth_root#nth_root_algorithm
 		// Recursive Formula:
 		// newBase=nth*(nMinusOne*OldBase + number/(oldBase^nMinusOne));
@@ -2379,7 +2388,9 @@ public class RealNumberFactory implements NumberFactory {
 		Number tempLo = null, tempUp = null;
 		boolean tempSl = true, tempSu = true;
 
-		// Algorithm based on: Wiki's Interval_arithmetic
+		// Algorithm used is retrived from:
+		// https://en.wikipedia.org/wiki/Interval_arithmetic
+		// Fomula:
 		// [lo1,up1]/[lo2,up2] = [lo1, up1] * (1 / [lo2, up2]);
 		// If 0 is NOT in i2:
 		// | (1 / [lo2, up2]) = [1/up2, 1/lo2]
