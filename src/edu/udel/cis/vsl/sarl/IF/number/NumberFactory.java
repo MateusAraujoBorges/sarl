@@ -524,7 +524,9 @@ public interface NumberFactory {
 
 	/**
 	 * To calculate the product of two non-<code>null</code> and not empty
-	 * {@link Interval} with same type (real/integer)
+	 * {@link Interval} with same type (real/integer) <br>
+	 * This is the smallest interval containing all x1*x2, where x1 is in i1 and
+	 * x2 is in i2.
 	 * 
 	 * @param i1
 	 *            a non-<code>null</code> {@link Interval} with same type of the
