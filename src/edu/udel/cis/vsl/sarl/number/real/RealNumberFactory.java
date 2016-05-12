@@ -115,7 +115,7 @@ public class RealNumberFactory implements NumberFactory {
 	private Exponentiator<IntegerNumber> exponentiator;
 
 	/**
-	 * The empty integer interval: (0,0).
+	 * The empty integer interval: (0, 0).
 	 */
 	private Interval emptyIntegerInterval;
 
@@ -123,6 +123,26 @@ public class RealNumberFactory implements NumberFactory {
 	 * The empty real interval: (0.0, 0.0).
 	 */
 	private Interval emptyRationalInterval;
+
+	/**
+	 * The universal integer interval: (-infi, +infi).
+	 */
+	private Interval universalIntegerInterval;
+
+	/**
+	 * The universal real interval: (-infi, +infi).
+	 */
+	private Interval universalRationalInterval;
+
+	/**
+	 * The integer interval represents exactly zero: [0, 0].
+	 */
+	private Interval zeroIntegerInterval;
+
+	/**
+	 * The real interval interval represents exactly zero: [0.0, 0.0].
+	 */
+	private Interval zeroRationalInterval;
 
 	/**
 	 * Uses a new factory to multiply two integer arguments.
@@ -152,6 +172,14 @@ public class RealNumberFactory implements NumberFactory {
 				zeroInteger, true);
 		emptyRationalInterval = new CommonInterval(false, zeroRational, true,
 				zeroRational, true);
+		zeroIntegerInterval = new CommonInterval(true, zeroInteger, false,
+				zeroInteger, false);
+		zeroRationalInterval = new CommonInterval(false, zeroRational, false,
+				zeroRational, false);
+		universalIntegerInterval = new CommonInterval(true, null, true, null,
+				true);
+		universalRationalInterval = new CommonInterval(false, null, true, null,
+				true);
 	}
 
 	@Override
@@ -1453,39 +1481,33 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	public Interval multiply(Interval i1, Interval i2) {
+		assert i1 != null && i2 != null;
 		assert !i1.isEmpty() && !i2.isEmpty();
 		assert i1.isIntegral() == i2.isIntegral();
 
-		Number lo1 = i1.lower();
-		Number up1 = i1.upper();
-		Number lo2 = i2.lower();
-		Number up2 = i2.upper();
-		Number lo = null;
-		Number up = null;
-		boolean sl1 = i1.strictLower();
-		boolean su1 = i1.strictUpper();
-		boolean sl2 = i2.strictLower();
-		boolean su2 = i2.strictUpper();
-		boolean sl = true;
-		boolean su = true;
+		Number lo1 = i1.lower(), up1 = i1.upper();
+		Number lo2 = i2.lower(), up2 = i2.upper();
+		Number lo = null, up = null;
+		boolean sl1 = i1.strictLower(), su1 = i1.strictUpper();
+		boolean sl2 = i2.strictLower(), su2 = i2.strictUpper();
+		boolean sl = true, su = true;
 		boolean isIntegral = i1.isIntegral();
 
-		// Algorithm used is retrived from:
+		// Algorithm used is retrieved from:
 		// https://en.wikipedia.org/wiki/Interval_arithmetic
 		// Formula:
 		// [lo1,up1]*[lo2,up2] = [lo,up]
 		// lo = Min(lo1*lo2, lo1*up2, up1*lo2, up1*up2)
 		// up = Max(lo1*lo2, lo1*up2, up1*lo2, up1*up2)
-		if (i1.isZero() || i2.isZero()) {
+		if (i1.isZero() || i2.isZero())
 			// If either i1 or i2 is exactly zero, then return zero.
-			Number zeroNum = isIntegral ? zeroInteger : zeroRational;
-
-			return newInterval(isIntegral, zeroNum, false, zeroNum, false);
-		} else if (i1.isUniversal() || i2.isUniversal()) {
+			return isIntegral ? zeroIntegerInterval : zeroRationalInterval;
+		else if (i1.isUniversal() || i2.isUniversal())
 			// If either i1 or i2 is universal and not exactly zero
 			// then return universal.
-			return newInterval(isIntegral, lo, sl, up, su);
-		} else if (lo1 == null && lo2 == null) {
+			return isIntegral ? universalIntegerInterval
+					: universalRationalInterval;
+		else if (lo1 == null && lo2 == null) {
 			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
 			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
 
@@ -2191,7 +2213,7 @@ public class RealNumberFactory implements NumberFactory {
 		assert number != null && n != null;
 
 		// nth, n should be a positive integer
-		if (n.signum() < 0)
+		if (n.signum() <= 0)
 			throw new IllegalArgumentException(
 					"The Argument 'n' to the method nthRootInt should be greater than 0."
 							+ "\nThe n is: " + n);
@@ -2250,7 +2272,7 @@ public class RealNumberFactory implements NumberFactory {
 			 * the given number, then the approximated base is not correct.
 			 */
 			return null;
-		// Else, return the approximated base.
+		// Else, return the result.
 		return result;
 	}
 
