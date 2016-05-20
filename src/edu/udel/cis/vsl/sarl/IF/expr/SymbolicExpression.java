@@ -136,6 +136,30 @@ public interface SymbolicExpression extends SymbolicObject {
 		 */
 		ARRAY_WRITE,
 		/**
+		 * Operator for an expression representing the result of applying
+		 * bit-wise and operation on two given unsigned integers. 2 arguments:
+		 * Both Arg0 and Arg1 are unsigned integers.
+		 */
+		BIT_AND,
+		/**
+		 * Operator for an expression representing the result of applying
+		 * bit-wise not operation on the given unsigned integers. a arguments:
+		 * Arg0 is an unsigned integer.
+		 */
+		BIT_NOT,
+		/**
+		 * Operator for an expression representing the result of applying
+		 * bit-wise or operation on two given unsigned integers. 2 arguments:
+		 * Both Arg0 and Arg1 are unsigned integers.
+		 */
+		BIT_OR,
+		/**
+		 * Operator for an expression representing the result of applying
+		 * bit-wise exclusive-or operation on two given unsigned integers. 2
+		 * arguments: Both Arg0 and Arg1 are unsigned integers.
+		 */
+		BIT_XOR,
+		/**
 		 * Operator for an expression representing the result of converting a
 		 * value from one type to another. 1 argument: the value being cast. The
 		 * {@link #type()} method in this expression yields the new type to
