@@ -1042,6 +1042,18 @@ public class RealNumberFactory implements NumberFactory {
 	}
 
 	@Override
+	public Interval universalIntegerInterval() {
+		return universalIntegerInterval;
+	}
+
+	@Override
+	public Interval universalRealInterval() {
+		return universalRationalInterval;
+	}
+	
+	
+
+	@Override
 	public Interval newInterval(boolean isIntegral, Number lower,
 			boolean strictLower, Number upper, boolean strictUpper) {
 		assert lower == null || (isIntegral == lower instanceof IntegerNumber);

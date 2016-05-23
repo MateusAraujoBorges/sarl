@@ -305,6 +305,20 @@ public interface NumberFactory {
 	Interval emptyRealInterval();
 
 	/**
+	 * Returns the universal integer interval: (-infi, +infi).
+	 * 
+	 * @return universal integer interval
+	 */
+	Interval universalIntegerInterval();
+
+	/**
+	 * Returns the universal real interval: (-infi, +infi).
+	 * 
+	 * @return universal real interval
+	 */
+	Interval universalRealInterval();
+
+	/**
 	 * Returns the interval consisting of the single number x: [x,x].
 	 * 
 	 * @param x
@@ -676,5 +690,5 @@ public interface NumberFactory {
 	public class IntervalUnion {
 		public int status;
 		public Interval union;
-	};
+	}
 }
