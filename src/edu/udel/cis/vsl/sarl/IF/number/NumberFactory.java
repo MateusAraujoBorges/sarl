@@ -667,7 +667,7 @@ public interface NumberFactory {
 	 *            {@link Interval} <code>interval</code>.
 	 * @return the result
 	 */
-	Interval multiply(Interval interval, Number num);
+	Interval multiply(Number num, Interval interval);
 
 	/**
 	 * A simple type for recording the result of attempting to take the union of

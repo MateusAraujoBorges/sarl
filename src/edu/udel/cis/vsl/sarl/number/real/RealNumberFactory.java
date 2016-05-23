@@ -2371,7 +2371,7 @@ public class RealNumberFactory implements NumberFactory {
 	}
 
 	@Override
-	public Interval multiply(Interval interval, Number num) {
+	public Interval multiply(Number num, Interval interval) {
 		assert interval != null;
 
 		Boolean isInt = interval.isIntegral();
