@@ -2174,8 +2174,6 @@ public class IdealSimplifier extends CommonSimplifier {
 		Interval i1 = intervalMonomial(numerator),
 				i2 = intervalMonomial(denominator);
 
-		// TODO: make this interval division ...
-		return info.numberFactory.newInterval(expr.type().isInteger(), null,
-				true, null, true);
+		return info.numberFactory.divide(i1, i2);
 	}
 }
