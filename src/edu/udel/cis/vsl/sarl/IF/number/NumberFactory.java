@@ -660,11 +660,11 @@ public interface NumberFactory {
 	 * returns result. The numbers must be of same type (integer or real), which
 	 * is also the type of the result.
 	 * 
-	 * @param interval
-	 *            A non-<code>null</code> {@link Interval}
 	 * @param num
 	 *            A {@link Number} with the same type of the given
 	 *            {@link Interval} <code>interval</code>.
+	 * @param interval
+	 *            A non-<code>null</code> {@link Interval}
 	 * @return the result
 	 */
 	Interval multiply(Number num, Interval interval);
