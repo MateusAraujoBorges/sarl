@@ -1,5 +1,7 @@
 package edu.udel.cis.vsl.sarl.simplify;
 
+import static org.junit.Assert.assertTrue;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -14,6 +16,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class SimplifyArrayTest {
@@ -62,4 +65,40 @@ public class SimplifyArrayTest {
 		System.out.println(x3.toStringBufferLong());
 	}
 
+	/**
+	 * define an array of type int[n] and initialize it as A: int[n] array=A
+	 * 
+	 * then define my array and use array lambda to initialize it:
+	 * myArray=lambda i. A[i]
+	 * 
+	 * specify quantified expression: forall j: 0 .. n-1. myArray[j]== array[j]
+	 */
+	@Test
+	public void arrayLambda() {
+		SymbolicConstant i = universe.symbolicConstant(
+				universe.stringObject("i"), integerType);
+		NumericExpression n = (NumericExpression) universe.symbolicConstant(
+				universe.stringObject("n"), integerType);
+		SymbolicCompleteArrayType arrayType = universe
+				.arrayType(integerType, n);
+		SymbolicExpression array = universe.symbolicConstant(
+				universe.stringObject("A"), arrayType);
+		SymbolicExpression lambda = universe.lambda(i,
+				universe.arrayRead(array, (NumericExpression) i));
+		SymbolicExpression myArray = universe.arrayLambda(arrayType, lambda);
+		NumericSymbolicConstant j = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("j"), integerType);
+		SymbolicExpression quantified = universe.forallInt(
+				j,
+				zero,
+				universe.subtract(n, one),
+				universe.equals(universe.arrayRead(myArray, j),
+						universe.arrayRead(array, j))), simplified;
+		Reasoner reasoner = universe.reasoner(universe.trueExpression());
+
+		// System.out.println(quantified);
+		simplified = reasoner.simplify(quantified);
+		// System.out.println(simplified);
+		assertTrue(simplified.isTrue());
+	}
 }
