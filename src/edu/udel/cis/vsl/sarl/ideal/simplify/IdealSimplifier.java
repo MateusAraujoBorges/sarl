@@ -545,8 +545,8 @@ public class IdealSimplifier extends CommonSimplifier {
 					}
 					for (BooleanExpression primitive : booleanRemoveList)
 						aBooleanMap.remove(primitive);
-				}
-			}
+				} // end if newSatisfiable
+			} // end while (clauses.hasNext())
 			return satisfiable;
 		} else { // 1 clause
 			// if this is of the form EQ x,y where y is a constant and
@@ -580,8 +580,12 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	/**
-	 * A basic expression is either a boolean constant (true/false), a
-	 * LiteralExpression (p or !p) or QuantifierExpression
+	 * Extracts information from a "basic expression", updating
+	 * <code>aBoundMap</code> and <code>aBooleanMap</code> in the process. A
+	 * basic expression is either a concrete boolean (true/false), a relational
+	 * expression (0=Primitive, 0<Monic, 0<=Monic, Monic<0, Monic<=0, or
+	 * 0!=Primitive), a quantified expression, or a "not" expression (!
+	 * Primitive).
 	 */
 	private boolean extractBoundsBasic(BooleanExpression basic,
 			BoundMap aBoundMap, Map<BooleanExpression, Boolean> aBooleanMap) {
@@ -590,13 +594,12 @@ public class IdealSimplifier extends CommonSimplifier {
 		if (operator == SymbolicOperator.CONCRETE)
 			return ((BooleanObject) basic.argument(0)).getBoolean();
 		if (isRelational(operator)) {
-
 			// Cases: 0=Primitive, 0<Monic, 0<=Monic, Monic<0, Monic<=0,
 			// 0!=Primitive.
-
 			SymbolicExpression arg0 = (SymbolicExpression) basic.argument(0);
 			SymbolicExpression arg1 = (SymbolicExpression) basic.argument(1);
 
+			// could be a scope argument, ignore those
 			if (arg0.type().isNumeric()) {
 				switch (operator) {
 				case EQUALS: // 0==x
@@ -653,10 +656,18 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		NumberFactory nf = info.numberFactory;
 		Interval bound = aBoundMap.get(primitive);
-		Number zero = primitive.type().isInteger() ? nf.zeroInteger()
-				: nf.zeroRational();
+		SymbolicType type = primitive.type();
+		Number zero = type.isInteger() ? nf.zeroInteger() : nf.zeroRational();
 
 		if (bound != null && !bound.contains(zero))
+			return false;
+
+		BooleanExpression neq0 = info.booleanFactory.booleanExpression(
+				SymbolicOperator.NEQ, info.idealFactory.zero(primitive.type()),
+				primitive);
+		Boolean neq0Truth = aBooleanMap.get(neq0);
+
+		if (neq0Truth != null && neq0Truth.booleanValue())
 			return false;
 		aBoundMap.set(primitive, zero);
 		return true;
@@ -1965,8 +1976,8 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		switch (type) {
 		case ALL:
-			// TODO: don't create new one every time
-			return nf.newInterval(isInteger, null, true, null, true);
+			return isInteger ? nf.universalIntegerInterval()
+					: nf.universalRealInterval();
 		case EMPTY:
 			return isInteger ? nf.emptyIntegerInterval()
 					: nf.emptyRealInterval();
@@ -1991,29 +2002,38 @@ public class IdealSimplifier extends CommonSimplifier {
 		throw new SARLInternalException("unreachable");
 	}
 
+	/**
+	 * Given a {@link Monic}, returns an interval over-approximation of the
+	 * values that can be assumed by that monic under the assumptions of this
+	 * simplifier.
+	 * 
+	 * @param monic
+	 *            a non-<code>null</code> {@link Monic}
+	 * @return a non-<code>null</code> {@link Interval} of same type as
+	 *         <code>monic</code> containing all values that can be assumed by
+	 *         <code>monic</code>
+	 */
 	private Interval intervalMonic(Monic monic) {
 		Interval result = boundMap.get(monic);
 
 		if (result == null) {
 			BoundType type = getBoundTypeMonic(monic);
 
-			if (type == null)
-				// TODO: don't create new one
-				result = info.numberFactory.newInterval(
-						monic.type().isInteger(), null, true, null, true);
-			else
+			if (type == null) {
+				NumberFactory nf = info.numberFactory;
+
+				result = monic.type().isInteger()
+						? nf.universalIntegerInterval()
+						: nf.universalRealInterval();
+			} else
 				result = intervalOfBoundType(type, monic.type().isInteger());
 		}
 		return result;
 	}
 
 	private Interval intervalMonomial(Monomial monomial) {
-		// TODO: add method in numberFactory to multiply Number
-		// and interval
-		Interval singleton = info.numberFactory.singletonInterval(
-				monomial.monomialConstant(info.idealFactory).number());
-
-		return info.numberFactory.multiply(singleton,
+		return info.numberFactory.multiply(
+				monomial.monomialConstant(info.idealFactory).number(),
 				intervalMonic(monomial.monic(info.idealFactory)));
 	}
 

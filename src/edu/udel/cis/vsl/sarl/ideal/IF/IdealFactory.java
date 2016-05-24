@@ -420,8 +420,6 @@ public interface IdealFactory extends NumericExpressionFactory {
 	 */
 	Monic monicMask(Monic monic, boolean[] mask);
 
-	BooleanExpression isZero(Monomial monomial);
-
 	// Monomials...
 
 	/**
@@ -497,6 +495,24 @@ public interface IdealFactory extends NumericExpressionFactory {
 	 * @return a {@link Monomial} representing the product
 	 */
 	Monomial multiplyConstantMonomial(Constant constant, Monomial monomial);
+
+	/**
+	 * Computes boolean expression equivalent to m=0.
+	 * 
+	 * @param monomial
+	 *            a non-<code>null</code> {@link Monomial}
+	 * @return a boolean expression equivalent to <code>monomial</code>=0.
+	 */
+	BooleanExpression isZero(Monomial monomial);
+
+	/**
+	 * Computes an expression equivalent to "monomial != 0".
+	 * 
+	 * @param monomial
+	 *            any non-<code>null</code> {@link Monomial}
+	 * @return an expression equivalent to <code>monomial</code> != 0
+	 */
+	BooleanExpression isNonZero(Monomial monomial);
 
 	// Term maps...
 

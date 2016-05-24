@@ -1026,33 +1026,6 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	/**
-	 * Computes an expression equivalent to "monomial != 0".
-	 * 
-	 * @param monomial
-	 *            any non-<code>null</code> {@link Monomial}
-	 * @return an expression equivalent to <code>monomial</code> != 0
-	 */
-	private BooleanExpression isNonZero(Monomial monomial) {
-		// X1^n1...Xn^nr !=0 iff X1!=0 && ... && Xn!=0
-		Number number = extractNumber(monomial);
-
-		if (number != null)
-			return number.isZero() ? falseExpr : trueExpr;
-
-		SymbolicType type = monomial.type();
-		Constant zero = zero(type);
-		Monic monic = monomial.monic(this);
-		BooleanExpression result = trueExpr;
-
-		for (Primitive p : monicFactory.getKeys(monic.monicFactors(this))) {
-			// consider expanding p
-			result = booleanFactory.and(result, booleanFactory
-					.booleanExpression(SymbolicOperator.NEQ, zero, p));
-		}
-		return result;
-	}
-
-	/**
 	 * Given two monomials <code>p1</code> and <code>p2</code>, returns an
 	 * expression equivalent to <code>p1&gt;0 && p2&gt;0</code>.
 	 * 
@@ -1563,7 +1536,7 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            <code>c1</code>
 	 * @return the sum of the two constants
 	 */
-	 Constant add(Constant c1, Constant c2) {
+	Constant add(Constant c1, Constant c2) {
 		return constant(objectFactory
 				.numberObject(numberFactory.add(c1.number(), c2.number())));
 	}
@@ -1634,6 +1607,27 @@ public class CommonIdealFactory implements IdealFactory {
 			// consider expanding p
 			result = booleanFactory.or(result, booleanFactory
 					.booleanExpression(SymbolicOperator.EQUALS, zero, p));
+		}
+		return result;
+	}
+
+	@Override
+	public BooleanExpression isNonZero(Monomial monomial) {
+		// X1^n1...Xn^nr !=0 iff X1!=0 && ... && Xn!=0
+		Number number = extractNumber(monomial);
+
+		if (number != null)
+			return number.isZero() ? falseExpr : trueExpr;
+
+		SymbolicType type = monomial.type();
+		Constant zero = zero(type);
+		Monic monic = monomial.monic(this);
+		BooleanExpression result = trueExpr;
+
+		for (Primitive p : monicFactory.getKeys(monic.monicFactors(this))) {
+			// consider expanding p
+			result = booleanFactory.and(result, booleanFactory
+					.booleanExpression(SymbolicOperator.NEQ, zero, p));
 		}
 		return result;
 	}
@@ -1952,7 +1946,7 @@ public class CommonIdealFactory implements IdealFactory {
 		if (monic.isTrivialMonic())
 			return constant;
 		// TODO: probably going to get rid of this and handle in Simplifier...
-		
+
 		// zirkel: A constant times big-O is just big-O
 		if (monic.operator() == SymbolicOperator.APPLY
 				&& ((SymbolicConstant) monic.argument(0)).name().toString()
@@ -2109,12 +2103,12 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public BooleanExpression isPositive(RationalExpression rational) {
 		Number number = extractNumber(rational);
-	
+
 		if (number == null) {
 			Monomial numerator = rational.numerator(this);
 			Monomial denominator = rational.denominator(this);
 			BooleanExpression result = arePositive(numerator, denominator);
-	
+
 			if (result.isTrue())
 				return result;
 			return booleanFactory.or(result,
@@ -2126,13 +2120,13 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public BooleanExpression isNonnegative(RationalExpression rational) {
 		Number number = extractNumber(rational);
-	
+
 		if (number == null) {
 			Monomial numerator = rational.numerator(this);
 			Monomial denominator = rational.denominator(this);
 			BooleanExpression result = booleanFactory
 					.and(isNonnegative(numerator), isPositive(denominator));
-	
+
 			if (result.isTrue())
 				return result;
 			return booleanFactory.or(result, booleanFactory.and(
