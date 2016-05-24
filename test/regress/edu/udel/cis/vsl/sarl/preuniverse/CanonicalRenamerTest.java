@@ -100,16 +100,15 @@ public class CanonicalRenamerTest {
 	@Test
 	public void canonic1() {
 		UnaryOperator<SymbolicExpression> renamer = universe
-				.canonicalRenamer("X");
+				.canonicalRenamer("x");
 		NumericExpression x_expected = (NumericExpression) universe
-				.symbolicConstant(universe.stringObject("X0"), realType);
+				.symbolicConstant(universe.stringObject("x0"), realType);
 		SymbolicExpression x_new = renamer.apply(x);
 
 		out.println(x + " -> " + x_new);
 		assertEquals(x_expected, x_new);
 
-		NumericExpression y_expected = (NumericExpression) universe
-				.symbolicConstant(universe.stringObject("X1"), realType);
+		NumericExpression y_expected = y;
 		SymbolicExpression y_new = renamer.apply(y);
 
 		out.println(y + " -> " + y_new);
