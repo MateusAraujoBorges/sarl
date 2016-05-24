@@ -126,6 +126,11 @@ public class CommonCanonicalRenamer extends ExpressionSubstituter implements
 			SymbolicExpression expression, SubstituterState state) {
 		SymbolicConstant oldBoundVariable = (SymbolicConstant) expression
 				.argument(0);
+
+		if (!((StringObject) ((SymbolicConstant) oldBoundVariable).argument(0))
+				.getString().startsWith(root))
+			return expression;
+
 		SymbolicType newType = substituteType(expression.type(), state);
 		String newName = root + varCount;
 
