@@ -32,13 +32,13 @@ for your application.  See file INSTALL in this directory.
 In order for SARL to find CVC3 and CVC4, the executables (cvc3 and
 cvc4) must be in your PATH the first time you use SARL.
 
-You will also need a Java 7 SDK.
+You will also need a Java 8 SDK.
 
 If you want to install from source (e.g., because you want to develop
 SARL), it is a bit more complicated, because SARL requires
 all of the following:
 
- - Java SE 7 SDK
+ - Java SE 8 SDK
    http://www.oracle.com/technetwork/java/javase/downloads/index.html
  - Apache Ant (build tool):
    http://ant.apache.org 
