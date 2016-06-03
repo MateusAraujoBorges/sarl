@@ -118,4 +118,10 @@ public class AndTest {
 		check(ResultType.YES, universe.and(boolTrue, boolTrue));
 	}
 
+	@Test
+	public void translateBitPred() {
+		check(ResultType.NO, universe.lessThan(
+				(NumericExpression) universe.bitand(five, five), five));
+	}
+
 }
