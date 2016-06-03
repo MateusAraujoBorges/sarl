@@ -12,17 +12,14 @@ import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
-import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class IntegerBitwiseOperationDevTest {
 	private final static PrintStream OUT = System.out;
 	private final static boolean DEBUG = false;
-	private final static int INTEGER_BIT_LENGTH = 32;
 
 	private SymbolicUniverse universe;
 	private SymbolicType intType;
-	private SymbolicCompleteArrayType bitVectorType;
 	private StringObject obj_x, obj_y;
 	private NumericExpression x, y;
 
@@ -30,7 +27,6 @@ public class IntegerBitwiseOperationDevTest {
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
 		intType = universe.integerType();
-		bitVectorType = universe.bitVectorType(INTEGER_BIT_LENGTH);
 		obj_x = universe.stringObject("x");
 		obj_y = universe.stringObject("y");
 		x = (NumericExpression) universe.symbolicConstant(obj_x, intType);
@@ -58,13 +54,9 @@ public class IntegerBitwiseOperationDevTest {
 	 */
 	@Test
 	public void bitnot_xBITANDyBITORy() {
-		SymbolicExpression bv_x = universe.integer2Bitvector(x, bitVectorType);
-		SymbolicExpression bv_y = universe.integer2Bitvector(y, bitVectorType);
-		SymbolicExpression bitwiseResult1 = universe.bitor(
-				universe.bitand(bv_x, bv_y), bv_y);
-		NumericExpression actualResult = universe
-				.bitvector2Integer(bitwiseResult1);
-		NumericExpression expectedResult = universe.bitvector2Integer(bv_y);
+		SymbolicExpression actualResult = universe.bitor(
+				universe.bitand(x, y), y);
+		NumericExpression expectedResult = y;
 
 		p("Expression: x & y | y");
 		p("ExpectedResult: " + expectedResult.atomString());
