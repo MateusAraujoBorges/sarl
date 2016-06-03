@@ -1274,21 +1274,21 @@ public class Z3Translator {
 			result = translateArrayWrite(expression);
 			break;
 		case BIT_AND:
-			result = translateBitBinary("(_ int2bv " + BITLEN_INT + ")",
+			result = translateBitBinary("bvand",
 					(SymbolicExpression) expression.argument(0),
 					(SymbolicExpression) expression.argument(1));
 			break;
 		case BIT_NOT:
-			result = translateBitUnary("(_ int2bv " + BITLEN_INT + ")",
+			result = translateBitUnary("bvnot",
 					(SymbolicExpression) expression.argument(0));
 			break;
 		case BIT_OR:
-			result = translateBitBinary("(_ int2bv " + BITLEN_INT + ")",
+			result = translateBitBinary("bvor",
 					(SymbolicExpression) expression.argument(0),
 					(SymbolicExpression) expression.argument(1));
 			break;
 		case BIT_XOR:
-			result = translateBitBinary("(_ int2bv " + BITLEN_INT + ")",
+			result = translateBitBinary("bvxor",
 					(SymbolicExpression) expression.argument(0),
 					(SymbolicExpression) expression.argument(1));
 			break;
@@ -1402,23 +1402,24 @@ public class Z3Translator {
 
 	private FastList<String> translateBitUnary(String operator,
 			SymbolicExpression arg0) {
-		FastList<String> result = new FastList<>("(", operator, " ");
+		FastList<String> result = new FastList<>("((_ bv2int " + BITLEN_INT + ") (", operator);
 
-		result.add("((_ int2bv " + BITLEN_INT + ") ");
+		result.add(" ((_ int2bv " + BITLEN_INT + ") ");
 		result.append(translate(arg0));
-		result.add("))");
+		result.add(")))");
 		return result;
 	}
 
 	private FastList<String> translateBitBinary(String operator,
 			SymbolicExpression arg0, SymbolicExpression arg1) {
-		FastList<String> result = new FastList<>("(", operator, " ");
+		FastList<String> result = new FastList<>(
+				"((_ bv2int " + BITLEN_INT + ") (", operator);
 
-		result.add("((_ int2bv " + BITLEN_INT + ") ");
+		result.add(" ((_ int2bv " + BITLEN_INT + ") ");
 		result.append(translate(arg0));
 		result.add(") ((_ int2bv " + BITLEN_INT + ") ");
 		result.append(translate(arg1));
-		result.add("))");
+		result.add(")))");
 		return result;
 	}
 
