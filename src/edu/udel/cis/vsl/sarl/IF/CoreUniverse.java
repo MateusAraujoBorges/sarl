@@ -390,7 +390,8 @@ public interface CoreUniverse {
 	 * @return A {@link Pair} consisting of dimension (left) and base type
 	 *         (right).
 	 */
-	Pair<Integer, SymbolicType> arrayDimensionAndBaseType(SymbolicArrayType type);
+	Pair<Integer, SymbolicType> arrayDimensionAndBaseType(
+			SymbolicArrayType type);
 
 	/**
 	 * Returns the tuple type defined by the given sequence of component types.
@@ -421,7 +422,8 @@ public interface CoreUniverse {
 	 * @return the function type
 	 */
 	SymbolicFunctionType functionType(
-			Iterable<? extends SymbolicType> inputTypes, SymbolicType outputType);
+			Iterable<? extends SymbolicType> inputTypes,
+			SymbolicType outputType);
 
 	// 	@formatter:off
 
@@ -1517,7 +1519,8 @@ public interface CoreUniverse {
 	 * @return a boolean expression telling whether the object belongs to the
 	 *         specified member type
 	 */
-	BooleanExpression unionTest(IntObject memberIndex, SymbolicExpression object);
+	BooleanExpression unionTest(IntObject memberIndex,
+			SymbolicExpression object);
 
 	/**
 	 * Casts an object whose type is a union type to a representation whose type
@@ -1794,7 +1797,8 @@ public interface CoreUniverse {
 	SymbolicExpression setRemove(SymbolicExpression set,
 			SymbolicExpression value);
 
-	SymbolicExpression setUnion(SymbolicExpression set1, SymbolicExpression set2);
+	SymbolicExpression setUnion(SymbolicExpression set1,
+			SymbolicExpression set2);
 
 	SymbolicExpression setIntersection(SymbolicExpression set1,
 			SymbolicExpression set2);
@@ -1842,7 +1846,8 @@ public interface CoreUniverse {
 	 *            a symbolic expression
 	 * @return symbolic expression cast to new type
 	 */
-	SymbolicExpression cast(SymbolicType newType, SymbolicExpression expression);
+	SymbolicExpression cast(SymbolicType newType,
+			SymbolicExpression expression);
 
 	/**
 	 * "If-then-else" expression. Note that trueCase and falseCase must have the
@@ -1924,7 +1929,8 @@ public interface CoreUniverse {
 	 * @return the component of the given type which is referenced by the given
 	 *         reference
 	 */
-	SymbolicType referencedType(SymbolicType type, ReferenceExpression reference);
+	SymbolicType referencedType(SymbolicType type,
+			ReferenceExpression reference);
 
 	/**
 	 * Returns the identity (or "trivial") reference <code>I</code>. This is the
@@ -2020,74 +2026,77 @@ public interface CoreUniverse {
 	Set<SymbolicConstant> getFreeSymbolicConstants(SymbolicExpression expr);
 
 	/**
-	 * Returns the result of bit-and operation for two given bit vectors, those
-	 * two vectors are in the form of {@link SymbolicExpression}.
+	 * Returns the result of bit-and operation for two given unsigned integers,
+	 * those two unsigned integers are in the form of {@link NumericExpression}.
 	 * 
 	 * @param left
-	 *            a non-<code>null</code> {@link SymbolicExpression}
-	 *            representing an array of booleans. The length of this array
-	 *            should be concrete.
+	 *            a non-<code>null</code> {@link NumericExpression} representing
+	 *            an unsigned integer. The length of the unsigned integer should
+	 *            be defined as a concrete integer.
 	 * @param right
-	 *            a non-<code>null</code> {@link SymbolicExpression}
-	 *            representing an array of booleans with the same type of the
-	 *            left array. And the length of this array should be concrete.
-	 * @return a {@link SymbolicExpression} representing the result array.
+	 *            a non-<code>null</code> {@link NumericExpression} representing
+	 *            an unsigned integer. The length of the unsigned integer should
+	 *            be defined as a concrete integer, whose value is same to the
+	 *            left.
+	 * @return a {@link NumericExpression} representing the result.
 	 */
-	SymbolicExpression bitand(SymbolicExpression left, SymbolicExpression right);
+	NumericExpression bitand(NumericExpression left, NumericExpression right);
 
 	/**
-	 * Returns the result of bit-or operation for two given bit vectors, those
-	 * two vectors are in the form of {@link SymbolicExpression}.
+	 * Returns the result of bit-or operation for two given unsigned integers,
+	 * those two unsigned integers are in the form of {@link NumericExpression}.
 	 * 
 	 * @param left
-	 *            a non-<code>null</code> {@link SymbolicExpression}
-	 *            representing an array of booleans. The length of this array
-	 *            should be concrete.
+	 *            a non-<code>null</code> {@link NumericExpression} representing
+	 *            an unsigned integer. The length of the unsigned integer should
+	 *            be defined as a concrete integer.
 	 * @param right
-	 *            a non-<code>null</code> {@link SymbolicExpression}
-	 *            representing an array of booleans with the same type of the
-	 *            left array. And the length of this array should be concrete.
-	 * @return a {@link SymbolicExpression} representing the result array.
+	 *            a non-<code>null</code> {@link NumericExpression} representing
+	 *            an unsigned integer. The length of the unsigned integer should
+	 *            be defined as a concrete integer, whose value is same to the
+	 *            left.
+	 * @return a {@link NumericExpression} representing the result.
 	 */
-	SymbolicExpression bitor(SymbolicExpression left, SymbolicExpression right);
+	NumericExpression bitor(NumericExpression left, NumericExpression right);
 
 	/**
-	 * Returns the result of bit-xor operation for two given bit vectors, those
-	 * two vectors are in the form of {@link SymbolicExpression}.
+	 * Returns the result of bit-xor operation for two given unsigned integers,
+	 * those two unsigned integers are in the form of {@link NumericExpression}.
 	 * 
 	 * @param left
-	 *            a non-<code>null</code> {@link SymbolicExpression}
-	 *            representing an array of booleans. The length of this array
-	 *            should be concrete.
+	 *            a non-<code>null</code> {@link NumericExpression} representing
+	 *            an unsigned integer. The length of the unsigned integer should
+	 *            be defined as a concrete integer.
 	 * @param right
-	 *            a non-<code>null</code> {@link SymbolicExpression}
-	 *            representing an array of booleans with the same type of the
-	 *            left array. And the length of this array should be concrete.
-	 * @return a {@link SymbolicExpression} representing the result array.
+	 *            a non-<code>null</code> {@link NumericExpression} representing
+	 *            an unsigned integer. The length of the unsigned integer should
+	 *            be defined as a concrete integer, whose value is same to the
+	 *            left.
+	 * @return a {@link NumericExpression} representing the result.
 	 */
-	SymbolicExpression bitxor(SymbolicExpression left, SymbolicExpression right);
+	NumericExpression bitxor(NumericExpression left, NumericExpression right);
 
 	/**
-	 * Returns the result of bit-not operation for the given bit vectors, the
-	 * given vector is in the form of {@link SymbolicExpression}.
+	 * Returns the result of bit-not operation for the given unsigned integer,
+	 * the given unsigned integer is in the form of {@link NumericExpression}.
 	 * 
-	 * @param left
-	 *            a non-<code>null</code> {@link SymbolicExpression}
-	 *            representing an array of booleans. The length of this array
-	 *            should be concrete.
-	 * @return a {@link SymbolicExpression} representing the result array.
+	 * @param expression
+	 *            a non-<code>null</code> {@link NumericExpression} representing
+	 *            an unsigned integer. The length of the unsigned integer should
+	 *            be defined as a concrete integer.
+	 * @return a {@link NumericExpression} representing the result.
 	 */
-	SymbolicExpression bitnot(SymbolicExpression expression);
+	NumericExpression bitnot(NumericExpression expression);
 
 	/**
-	 * Returns the {@link SymbolicType} representing a bitVectorType, which is
-	 * an array of booleans with concrete length.
+	 * Returns the {@link SymbolicCompleteArrayType} representing a
+	 * bitVectorType, which is an array of booleans with concrete length.
 	 * 
 	 * @param length
 	 *            an integer representing the length of the bits of the integer
 	 *            type.
-	 * @return a {@link SymbolicType} with the base-type of boolean and the
-	 *         given length.
+	 * @return a {@link SymbolicCompleteArrayType} with the base-type of boolean
+	 *         and the given length.
 	 */
 	SymbolicCompleteArrayType bitVectorType(int length);
 

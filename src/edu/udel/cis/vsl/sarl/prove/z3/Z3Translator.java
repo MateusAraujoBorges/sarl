@@ -138,6 +138,11 @@ import edu.udel.cis.vsl.sarl.util.Pair;
 public class Z3Translator {
 
 	/**
+	 * The length of bit-vector represents an integer;
+	 */
+	private String BITLEN_INT = "32";
+
+	/**
 	 * The symbolic universe used to create and manipulate SARL symbolic
 	 * expressions.
 	 */
@@ -1268,6 +1273,25 @@ public class Z3Translator {
 		case ARRAY_WRITE:
 			result = translateArrayWrite(expression);
 			break;
+		case BIT_AND:
+			result = translateBitBinary("(_ int2bv " + BITLEN_INT + ")",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case BIT_NOT:
+			result = translateBitUnary("(_ int2bv " + BITLEN_INT + ")",
+					(SymbolicExpression) expression.argument(0));
+			break;
+		case BIT_OR:
+			result = translateBitBinary("(_ int2bv " + BITLEN_INT + ")",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case BIT_XOR:
+			result = translateBitBinary("(_ int2bv " + BITLEN_INT + ")",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
 		case CAST:
 			result = translateCast(expression);
 			break;
@@ -1373,6 +1397,28 @@ public class Z3Translator {
 			throw new SARLInternalException(
 					"unreachable: unknown operator: " + operator);
 		}
+		return result;
+	}
+
+	private FastList<String> translateBitUnary(String operator,
+			SymbolicExpression arg0) {
+		FastList<String> result = new FastList<>("(", operator, " ");
+
+		result.add("((_ int2bv " + BITLEN_INT + ") ");
+		result.append(translate(arg0));
+		result.add("))");
+		return result;
+	}
+
+	private FastList<String> translateBitBinary(String operator,
+			SymbolicExpression arg0, SymbolicExpression arg1) {
+		FastList<String> result = new FastList<>("(", operator, " ");
+
+		result.add("((_ int2bv " + BITLEN_INT + ") ");
+		result.append(translate(arg0));
+		result.add(") ((_ int2bv " + BITLEN_INT + ") ");
+		result.append(translate(arg1));
+		result.add("))");
 		return result;
 	}
 

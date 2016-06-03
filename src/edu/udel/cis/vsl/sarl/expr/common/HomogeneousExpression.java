@@ -412,6 +412,18 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			result.append(arguments[2].toStringBuffer(false));
 			result.append("]");
 			return result;
+		case BIT_AND:
+			processBitAnd(result, atomize);
+			return result;
+		case BIT_OR:
+			processBitOr(result, atomize);
+			return result;
+		case BIT_XOR:
+			processBitXOr(result, atomize);
+			return result;
+		case BIT_NOT:
+			processBitNot(result, atomize);
+			return result;
 		case CAST:
 			result.append('(');
 			result.append(type.toStringBuffer(false));
@@ -664,6 +676,76 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			return result;
 		default:
 			return toStringBufferLong();
+		}
+	}
+
+	private void processBitNot(StringBuffer buffer, boolean atomizeResult) {
+		atomizeResult = (((NumericExpression)arguments[0]).numArguments() > 1) || atomizeResult;
+		buffer.append('~');
+		buffer.append(arguments[0].toStringBuffer(false));
+		if (atomizeResult){
+			buffer.insert(1, '(');
+			buffer.append(')');
+		}
+	}
+
+	private void processBitXOr(StringBuffer buffer, boolean atomizeResult) {
+		int n = arguments.length;
+
+		assert n > 0;
+		if (n == 1) {
+			buffer.append(arguments[0].toStringBuffer(atomizeResult));
+		} else {
+			buffer.append(arguments[0].toStringBuffer(false));
+
+			for (int i = 1; i < n; i++) {
+				buffer.append(" ^ ");
+				buffer.append(arguments[i].toStringBuffer(false));
+			}
+			if (atomizeResult) {
+				buffer.insert(0, '(');
+				buffer.append(')');
+			}
+		}
+	}
+
+	private void processBitOr(StringBuffer buffer, boolean atomizeResult) {
+		int n = arguments.length;
+
+		assert n > 0;
+		if (n == 1) {
+			buffer.append(arguments[0].toStringBuffer(atomizeResult));
+		} else {
+			buffer.append(arguments[0].toStringBuffer(false));
+
+			for (int i = 1; i < n; i++) {
+				buffer.append(" | ");
+				buffer.append(arguments[i].toStringBuffer(false));
+			}
+			if (atomizeResult) {
+				buffer.insert(0, '(');
+				buffer.append(')');
+			}
+		}
+	}
+
+	private void processBitAnd(StringBuffer buffer, boolean atomizeResult) {
+		int n = arguments.length;
+
+		assert n > 0;
+		if (n == 1) {
+			buffer.append(arguments[0].toStringBuffer(atomizeResult));
+		} else {
+			buffer.append(arguments[0].toStringBuffer(false));
+
+			for (int i = 1; i < n; i++) {
+				buffer.append(" & ");
+				buffer.append(arguments[i].toStringBuffer(false));
+			}
+			if (atomizeResult) {
+				buffer.insert(0, '(');
+				buffer.append(')');
+			}
 		}
 	}
 

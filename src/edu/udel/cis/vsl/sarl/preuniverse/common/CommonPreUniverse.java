@@ -81,6 +81,8 @@ public class CommonPreUniverse implements PreUniverse {
 	 */
 	public final static int QUANTIFIER_EXPAND_BOUND = 1000;
 
+	private static final int INTEGER_BIT_LENGTH = 32;
+
 	/**
 	 * IntegerNumber versions of the corresponding static int fields.
 	 */
@@ -1210,10 +1212,8 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public NumericExpression rational(int numerator, int denominator) {
-		return number(
-				numberObject(numberFactory.divide(
-						numberFactory.rational(
-								numberFactory.integer(numerator)),
+		return number(numberObject(numberFactory.divide(
+				numberFactory.rational(numberFactory.integer(numerator)),
 				numberFactory.rational(numberFactory.integer(denominator)))));
 	}
 
@@ -2854,8 +2854,21 @@ public class CommonPreUniverse implements PreUniverse {
 		return objectFactory;
 	}
 
-	@Override
-	public SymbolicExpression bitand(SymbolicExpression left,
+	/**
+	 * Returns the result of bit-and operation for two given bit vectors, those
+	 * two vectors are in the form of {@link SymbolicExpression}.
+	 * 
+	 * @param left
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans. The length of this array
+	 *            should be concrete.
+	 * @param right
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans with the same type of the
+	 *            left array. And the length of this array should be concrete.
+	 * @return a {@link SymbolicExpression} representing the result array.
+	 */
+	private SymbolicExpression bitand(SymbolicExpression left,
 			SymbolicExpression right) {
 		if (left == null)
 			throw err("Argument left to method bitand is null.");
@@ -3031,8 +3044,21 @@ public class CommonPreUniverse implements PreUniverse {
 		return errFileName;
 	}
 
-	@Override
-	public SymbolicExpression bitor(SymbolicExpression left,
+	/**
+	 * Returns the result of bit-or operation for two given bit vectors, those
+	 * two vectors are in the form of {@link SymbolicExpression}.
+	 * 
+	 * @param left
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans. The length of this array
+	 *            should be concrete.
+	 * @param right
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans with the same type of the
+	 *            left array. And the length of this array should be concrete.
+	 * @return a {@link SymbolicExpression} representing the result array.
+	 */
+	private SymbolicExpression bitor(SymbolicExpression left,
 			SymbolicExpression right) {
 		if (left == null)
 			throw err("Argument left to method bitor is null.");
@@ -3097,8 +3123,21 @@ public class CommonPreUniverse implements PreUniverse {
 		return array(leftArrayType.elementType(), resultArray);
 	}
 
-	@Override
-	public SymbolicExpression bitxor(SymbolicExpression left,
+	/**
+	 * Returns the result of bit-xor operation for two given bit vectors, those
+	 * two vectors are in the form of {@link SymbolicExpression}.
+	 * 
+	 * @param left
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans. The length of this array
+	 *            should be concrete.
+	 * @param right
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans with the same type of the
+	 *            left array. And the length of this array should be concrete.
+	 * @return a {@link SymbolicExpression} representing the result array.
+	 */
+	private SymbolicExpression bitxor(SymbolicExpression left,
 			SymbolicExpression right) {
 		if (left == null)
 			throw err("Argument left to method bitxor is null.");
@@ -3162,8 +3201,17 @@ public class CommonPreUniverse implements PreUniverse {
 		return array(leftArrayType.elementType(), resultArray);
 	}
 
-	@Override
-	public SymbolicExpression bitnot(SymbolicExpression expression) {
+	/**
+	 * Returns the result of bit-not operation for the given bit vector, the bit
+	 * vectors is in the form of {@link SymbolicExpression}.
+	 * 
+	 * @param expression
+	 *            a non-<code>null</code> {@link SymbolicExpression}
+	 *            representing an array of booleans. The length of this array
+	 *            should be concrete.
+	 * @return a {@link SymbolicExpression} representing the result array.
+	 */
+	private SymbolicExpression bitnot(SymbolicExpression expression) {
 		if (expression == null)
 			throw err("Argument expression to method bitnot is null.");
 		if (!(expression.type() instanceof SymbolicCompleteArrayType))
@@ -3203,5 +3251,164 @@ public class CommonPreUniverse implements PreUniverse {
 			resultArray[i] = resultElement;
 		}
 		return array(exprArrayType.elementType(), resultArray);
+	}
+
+	@Override
+	public NumericExpression bitand(NumericExpression left,
+			NumericExpression right) {
+		assert left != null && right != null;
+
+		SymbolicCompleteArrayType bitVectorType = bitVectorType(
+				INTEGER_BIT_LENGTH);
+		SymbolicObject leftObj = left.argument(0);
+		SymbolicObject rightObj = right.argument(0);
+		boolean isLeftConcrete = leftObj instanceof NumberObject;
+		boolean isRightConcrete = rightObj instanceof NumberObject;
+
+		if (isLeftConcrete && isRightConcrete) {
+			SymbolicExpression leftBitVector = integer2Bitvector(left,
+					bitVectorType);
+			SymbolicExpression rightBitVector = integer2Bitvector(right,
+					bitVectorType);
+			SymbolicExpression resBitVector = bitand(leftBitVector,
+					rightBitVector);
+
+			return bitvector2Integer(resBitVector);
+		} else if (isLeftConcrete) {
+			NumericExpression limit = power(integer(2),
+					integer(INTEGER_BIT_LENGTH));
+
+			if (((NumberObject) leftObj).isZero())
+				return numericFactory.zeroInt();
+			else if (subtract(limit, left).isOne())
+				return right;
+		} else if (isRightConcrete) {
+			NumericExpression limit = power(integer(2),
+					integer(INTEGER_BIT_LENGTH));
+
+			if (((NumberObject) rightObj).isZero())
+				return numericFactory.zeroInt();
+			else if (subtract(limit, right).isOne())
+				return left;
+		}
+		return numericFactory.expression(SymbolicOperator.BIT_AND, integerType,
+				left, right);
+	}
+
+	@Override
+	public NumericExpression bitor(NumericExpression left,
+			NumericExpression right) {
+		assert left != null && right != null;
+
+		SymbolicCompleteArrayType bitVectorType = bitVectorType(
+				INTEGER_BIT_LENGTH);
+		SymbolicObject leftObj = left.argument(0);
+		SymbolicObject rightObj = right.argument(0);
+		boolean isLeftConcrete = leftObj instanceof NumberObject;
+		boolean isRightConcrete = rightObj instanceof NumberObject;
+
+		if (isLeftConcrete && isRightConcrete) {
+			SymbolicExpression leftBitVector = integer2Bitvector(left,
+					bitVectorType);
+			SymbolicExpression rightBitVector = integer2Bitvector(right,
+					bitVectorType);
+			SymbolicExpression resBitVector = bitor(leftBitVector,
+					rightBitVector);
+
+			return bitvector2Integer(resBitVector);
+		} else if (isLeftConcrete) {
+			NumericExpression limit = power(integer(2),
+					integer(INTEGER_BIT_LENGTH));
+
+			if (((NumberObject) leftObj).isZero())
+				return right;
+			else if (subtract(limit, left).isOne())
+				return left;
+		} else if (isRightConcrete) {
+			NumericExpression limit = power(integer(2),
+					integer(INTEGER_BIT_LENGTH));
+
+			if (((NumberObject) rightObj).isZero())
+				return left;
+			else if (subtract(limit, right).isOne())
+				return right;
+		}
+		return numericFactory.expression(SymbolicOperator.BIT_OR, integerType,
+				left, right);
+	}
+
+	@Override
+	public NumericExpression bitxor(NumericExpression left,
+			NumericExpression right) {
+		assert left != null && right != null;
+
+		SymbolicCompleteArrayType bitVectorType = bitVectorType(
+				INTEGER_BIT_LENGTH);
+		SymbolicObject leftObj = left.argument(0);
+		SymbolicObject rightObj = right.argument(0);
+		boolean isLeftConcrete = leftObj instanceof NumberObject;
+		boolean isRightConcrete = rightObj instanceof NumberObject;
+
+		if (isLeftConcrete && isRightConcrete) {
+			SymbolicExpression leftBitVector = integer2Bitvector(left,
+					bitVectorType);
+			SymbolicExpression rightBitVector = integer2Bitvector(right,
+					bitVectorType);
+			SymbolicExpression resBitVector = bitxor(leftBitVector,
+					rightBitVector);
+
+			return bitvector2Integer(resBitVector);
+		} else if (isLeftConcrete) {
+			NumericExpression limit = power(integer(2),
+					integer(INTEGER_BIT_LENGTH));
+
+			if (((NumberObject) leftObj).isZero())
+				return right;
+			else if (subtract(limit, left).isOne())
+				return bitnot(right);
+		} else if (isRightConcrete) {
+			NumericExpression limit = power(integer(2),
+					integer(INTEGER_BIT_LENGTH));
+
+			if (((NumberObject) rightObj).isZero())
+				return left;
+			else if (subtract(limit, right).isOne())
+				return bitnot(left);
+		}
+		return numericFactory.expression(SymbolicOperator.BIT_XOR, integerType,
+				left, right);
+	}
+
+	@Override
+	public NumericExpression bitnot(NumericExpression expression) {
+		assert expression != null;
+
+		SymbolicCompleteArrayType bitVectorType = bitVectorType(
+				INTEGER_BIT_LENGTH);
+		SymbolicObject exprObj = expression.argument(0);
+		boolean isConcrete = exprObj instanceof NumberObject;
+
+		if (expression.operator().equals(SymbolicOperator.BIT_NOT)) {
+			return (NumericExpression) expression.argument(0);
+		} else if (expression.operator().equals(SymbolicOperator.BIT_AND)) {
+			return numericFactory.expression(SymbolicOperator.BIT_OR,
+					integerType,
+					bitnot((NumericExpression) expression.argument(0)),
+					bitnot((NumericExpression) expression.argument(1)));
+		} else if (expression.operator().equals(SymbolicOperator.BIT_OR)) {
+			return numericFactory.expression(SymbolicOperator.BIT_AND,
+					integerType,
+					bitnot((NumericExpression) expression.argument(0)),
+					bitnot((NumericExpression) expression.argument(1)));
+		}
+		if (isConcrete) {
+			SymbolicExpression exprBitVector = integer2Bitvector(expression,
+					bitVectorType);
+			SymbolicExpression resBitVector = bitnot(exprBitVector);
+
+			return bitvector2Integer(resBitVector);
+		} else
+			return numericFactory.expression(SymbolicOperator.BIT_NOT,
+					integerType, expression);
 	}
 }
