@@ -644,7 +644,9 @@ public interface NumberFactory {
 
 	/**
 	 * Divides two given {@link Interval}s and returns result. They must be of
-	 * same type (integer or real), which is also the type of the result.
+	 * same type (integer or real), which is also the type of the result. <br>
+	 * This is the smallest interval containing all x1/x2, where x1 is in i1 and
+	 * x2 is in i2.
 	 * 
 	 * @param i1
 	 *            A non-<code>null</code> {@link Interval}
