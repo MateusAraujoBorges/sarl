@@ -2158,4 +2158,16 @@ public interface CoreUniverse {
 	 * @return The String type filename (including path)
 	 */
 	String getErrFile();
+	
+	/**
+	 * <p>
+	 * Use this method to print large symbolic expression hierarchically.
+	 * </p>
+	 * 
+	 * @param expr
+	 *            the input symbolic expression
+	 * @param out
+	 *            the output stream
+	 */
+	void printCompressed(SymbolicExpression expr, PrintStream out);
 }
