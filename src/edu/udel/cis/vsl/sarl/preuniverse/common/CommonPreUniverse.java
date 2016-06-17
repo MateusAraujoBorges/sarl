@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -1212,8 +1213,10 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public NumericExpression rational(int numerator, int denominator) {
-		return number(numberObject(numberFactory.divide(
-				numberFactory.rational(numberFactory.integer(numerator)),
+		return number(
+				numberObject(numberFactory.divide(
+						numberFactory.rational(
+								numberFactory.integer(numerator)),
 				numberFactory.rational(numberFactory.integer(denominator)))));
 	}
 
@@ -3410,5 +3413,59 @@ public class CommonPreUniverse implements PreUniverse {
 		} else
 			return numericFactory.expression(SymbolicOperator.BIT_NOT,
 					integerType, expression);
+	}
+
+	@Override
+	public void printCompressed(SymbolicExpression expr, PrintStream out) {
+		// TODO testing
+		Set<SymbolicObject> seen = new HashSet<SymbolicObject>();
+		expr = canonic(expr);
+
+		printCompressed2("", out, seen, expr);
+	}
+
+	private void printCompressed2(String prefix, PrintStream out,
+			Set<SymbolicObject> seen, SymbolicExpression expr) {
+		prefix += " ";
+		if (seen.contains(expr)
+				&& !expr.operator().equals(SymbolicOperator.CONCRETE))
+			out.println(prefix + "e" + expr.id() + "(" + expr + ")");
+		else {
+			seen.add(expr);
+			if (!expr.operator().equals(SymbolicOperator.SYMBOLIC_CONSTANT)) {
+				if (!expr.operator().equals(SymbolicOperator.CONCRETE)) {
+					out.print(prefix);
+					processOperator(expr.operator());
+					out.println();
+					for (SymbolicObject arg : expr.getArguments()) {
+						if (arg instanceof SymbolicExpression)
+							printCompressed2(prefix + "|", out, seen,
+									(SymbolicExpression) arg);
+					}
+				} else
+					out.println(prefix + expr.argument(0));
+			} else
+				out.println(prefix + "e" + expr.id() + "(" + expr + ")");
+		}
+	}
+
+	private void processOperator(SymbolicOperator operator) {
+
+		switch (operator) {
+		case ADD:
+			out.print("+");
+			break;
+		case DIVIDE:
+			out.print("/");
+			break;
+		case MULTIPLY:
+			out.print("*");
+			break;
+		case POWER:
+			out.print("^");
+			break;
+		default:
+			out.print("unrecoginzed operator");
+		}
 	}
 }
