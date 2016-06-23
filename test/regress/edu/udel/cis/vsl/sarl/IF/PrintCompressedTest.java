@@ -2,12 +2,15 @@ package edu.udel.cis.vsl.sarl.IF;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 
 public class PrintCompressedTest {
@@ -43,6 +46,25 @@ public class PrintCompressedTest {
 				universe.multiply(e1, e1));
 
 		out.println("expr is: " + e2 + "\n");
+		out.println("====== original tree =======");
+		universe.printExprTree(e2, out);
+		out.println("====== compressed tree ======");
+		universe.printCompressed(e2, out);
+		out.println("====================");
+	}
+	
+	/**
+	 * x + y*z
+	 */
+	@Test
+	public void expressionTest11() {
+		NumericExpression e1 = universe.multiply(y, z);
+		NumericExpression e2 = universe.add(x, e1);
+
+		out.println("expr is: " + e2 + "\n");
+		out.println("====== original tree =======");
+		universe.printExprTree(e2, out);
+		out.println("====== compressed tree ======");
 		universe.printCompressed(e2, out);
 		out.println("====================");
 	}
@@ -139,7 +161,10 @@ public class PrintCompressedTest {
 				universe.multiply(y, universe.add(x, z)),
 				universe.subtract(x, y));
 
-		out.println("expr is " + e1 + "\n");
+		out.println("expr is: " + e1 + "\n");
+		out.println("====== original tree =======");
+		universe.printExprTree(e1, out);
+		out.println("====== compressed tree ======");
 		universe.printCompressed(e1, out);
 		out.println("====================");
 	}
@@ -207,5 +232,44 @@ public class PrintCompressedTest {
 		out.println("e is " + e + "\n");
 		universe.printCompressed(e, out);
 		out.println("====================");
+	}
+
+	/**
+	 * x + y + f(x+y)
+	 */
+	@Test
+	public void printTest10() {
+		SymbolicFunctionType fType = universe.functionType(Arrays.asList(real),
+				real);
+		String fName = "f";
+		SymbolicConstant r2rConst = universe
+				.symbolicConstant(universe.stringObject(fName), fType);
+		NumericExpression e1 = universe.add(x, y);
+		NumericExpression e4 = universe.add(e1, (NumericExpression) universe
+				.apply(r2rConst, Arrays.asList(e1)));
+
+		out.println("expr is: " + e4 + "\n");
+		out.println("====== original tree =======");
+		universe.printExprTree(e4, out);
+		out.println("====== compressed tree ======");
+		universe.printCompressed(e4, out);
+		out.println("====================");
+	}
+	
+	/**
+	 * f(x+y+z)
+	 */
+	@Test
+	public void printTest11() {
+		SymbolicFunctionType fType = universe.functionType(Arrays.asList(real),
+				real);
+		String fName = "f";
+		SymbolicConstant r2rConst = universe
+				.symbolicConstant(universe.stringObject(fName), fType);
+		NumericExpression e1 = universe.add(universe.add(x, y), z);
+		NumericExpression e4 = (NumericExpression) universe.apply(r2rConst,
+				Arrays.asList(e1));
+
+		out.println("expr is: " + e4 + "\n");
 	}
 }
