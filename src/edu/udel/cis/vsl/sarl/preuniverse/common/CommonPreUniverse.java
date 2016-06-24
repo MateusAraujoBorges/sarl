@@ -3425,40 +3425,51 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	private void printCompressed2(String prefix, PrintStream out,
-			Set<SymbolicObject> seen, SymbolicExpression expr) {
-		prefix += " ";
-		if (seen.contains(expr)
-				&& !expr.operator().equals(SymbolicOperator.CONCRETE))
-			out.println(prefix + "e" + expr.id());
-		// out.println(prefix + "e" + expr.id() + "(" + expr + ")");
-		else {
-			seen.add(expr);
-			if (!expr.operator().equals(SymbolicOperator.SYMBOLIC_CONSTANT)) {
-				if (!expr.operator().equals(SymbolicOperator.CONCRETE)) {
-					out.print(prefix);
-					processOperator(expr.operator());
-					out.println();
-					// out.println(" (" + "e" + expr.id() + ")");
-					// out.println(prefix + expr.operator());
-					for (SymbolicObject arg : expr.getArguments()) {
-						if (arg instanceof SymbolicExpression) {
-							printCompressed2(prefix + "|", out, seen,
-									(SymbolicExpression) arg);
-						} else if (arg instanceof SymbolicSequence) {
-							for (int i = 0; i < ((SymbolicSequence) arg)
-									.size(); i++) {
-								SymbolicObject seq = ((SymbolicSequence) arg)
-										.get(i);
-								printCompressed2(prefix + "|", out, seen,
-										(SymbolicExpression) seq);
-							}
+			Set<SymbolicObject> seen, SymbolicObject expr) {
+		if (expr instanceof SymbolicExpression) {
+			SymbolicExpression symExpr = (SymbolicExpression) expr;
+
+			prefix += " ";
+			if (seen.contains(symExpr)
+					&& !symExpr.operator().equals(SymbolicOperator.CONCRETE))
+				out.println(prefix + "e" + symExpr.id());
+			// out.println(prefix + "e" + expr.id() + "(" + expr + ")");
+			else {
+				seen.add(symExpr);
+				if (!symExpr.operator()
+						.equals(SymbolicOperator.SYMBOLIC_CONSTANT)) {
+					if (!symExpr.operator().equals(SymbolicOperator.CONCRETE)) {
+						out.print(prefix);
+						processOperator(symExpr.operator());
+						out.println();
+						// out.println(" (" + "e" + expr.id() + ")");
+						// out.println(prefix + expr.operator());
+						for (SymbolicObject arg : symExpr.getArguments()) {
+							printCompressed2(prefix + "|", out, seen, arg);
 						}
-					}
+					} else
+						out.println(prefix + symExpr.argument(0));
 				} else
-					out.println(prefix + expr.argument(0));
-			} else
-				// out.println(prefix + "e" + expr.id());
-				out.println(prefix + expr + " " + "(" + "e" + expr.id() + ")");
+					// out.println(prefix + "e" + expr.id());
+					out.println(prefix + symExpr + " " + "(" + "e"
+							+ symExpr.id() + ")");
+			}
+
+		} else if (expr instanceof SymbolicSequence) {
+			SymbolicSequence<?> symSeq = (SymbolicSequence<?>) expr;
+
+			prefix += " ";
+			for (int i = 0; i < symSeq.size(); i++) {
+				SymbolicObject seq = symSeq.get(i);
+				printCompressed2(prefix + "|", out, seen, seq);
+			}
+		}
+		else if (expr instanceof IntObject) {
+			prefix += " ";
+			out.println(prefix + ((IntObject)expr).getInt());
+		}
+		else {
+			out.println("Unkownn Symbolic Object!");
 		}
 	}
 
@@ -3508,9 +3519,9 @@ public class CommonPreUniverse implements PreUniverse {
 						printExprTree2(prefix + "|", out,
 								(SymbolicExpression) arg);
 					} else if (arg instanceof SymbolicSequence) {
-						for (int i = 0; i < ((SymbolicSequence) arg)
+						for (int i = 0; i < ((SymbolicSequence<?>) arg)
 								.size(); i++) {
-							SymbolicObject seq = ((SymbolicSequence) arg)
+							SymbolicObject seq = ((SymbolicSequence<?>) arg)
 									.get(i);
 							printExprTree2(prefix + "|", out,
 									(SymbolicExpression) seq);
