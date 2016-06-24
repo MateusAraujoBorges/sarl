@@ -2158,7 +2158,7 @@ public interface CoreUniverse {
 	 * @return The String type filename (including path)
 	 */
 	String getErrFile();
-	
+
 	/**
 	 * <p>
 	 * Use this method to print large symbolic expression hierarchically.
@@ -2170,4 +2170,16 @@ public interface CoreUniverse {
 	 *            the output stream
 	 */
 	void printCompressed(SymbolicExpression expr, PrintStream out);
+
+	/**
+	 * <p>
+	 * print symbolic expression as tree structure
+	 * </p>
+	 * 
+	 * @param expr
+	 *            the input symbolic expression
+	 * @param out
+	 *            the output stream
+	 */
+	void printExprTree(SymbolicExpression expr, PrintStream out);
 }
