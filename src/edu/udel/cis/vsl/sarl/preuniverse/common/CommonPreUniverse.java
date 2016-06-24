@@ -59,7 +59,6 @@ import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
-import edu.udel.cis.vsl.sarl.object.common.CommonIntObject;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
