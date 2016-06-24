@@ -3417,7 +3417,7 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public void printCompressed(SymbolicExpression expr, PrintStream out) {
-		// TODO testing
+		// TODO test different SymbolicObjects
 		Set<SymbolicObject> seen = new HashSet<SymbolicObject>();
 		expr = canonic(expr);
 
@@ -3450,11 +3450,9 @@ public class CommonPreUniverse implements PreUniverse {
 					} else
 						out.println(prefix + symExpr.argument(0));
 				} else
-					// out.println(prefix + "e" + expr.id());
 					out.println(prefix + symExpr + " " + "(" + "e"
 							+ symExpr.id() + ")");
 			}
-
 		} else if (expr instanceof SymbolicSequence) {
 			SymbolicSequence<?> symSeq = (SymbolicSequence<?>) expr;
 
@@ -3463,12 +3461,22 @@ public class CommonPreUniverse implements PreUniverse {
 				SymbolicObject seq = symSeq.get(i);
 				printCompressed2(prefix + "|", out, seen, seq);
 			}
-		}
-		else if (expr instanceof IntObject) {
+		} else if (expr instanceof IntObject) {
 			prefix += " ";
-			out.println(prefix + ((IntObject)expr).getInt());
-		}
-		else {
+			out.println(prefix + ((IntObject) expr).getInt());
+		} else if (expr instanceof NumberObject) {
+			prefix += " ";
+			out.println(prefix + ((NumberObject) expr).getNumber());
+		} else if (expr instanceof BooleanObject) {
+			prefix += " ";
+			out.println(prefix + ((BooleanObject) expr).getBoolean());
+		} else if (expr instanceof CharObject) {
+			prefix += " ";
+			out.println(prefix + ((CharObject) expr).getChar());
+		} else if (expr instanceof StringObject) {
+			prefix += " ";
+			out.println(prefix + ((StringObject) expr).getString());
+		} else {
 			out.println("Unkownn Symbolic Object!");
 		}
 	}
