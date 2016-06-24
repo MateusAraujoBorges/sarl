@@ -46,8 +46,6 @@ public class PrintCompressedTest {
 				universe.multiply(e1, e1));
 
 		out.println("expr is: " + e2 + "\n");
-		out.println("====== original tree =======");
-		universe.printExprTree(e2, out);
 		out.println("====== compressed tree ======");
 		universe.printCompressed(e2, out);
 		out.println("====================");
@@ -62,8 +60,6 @@ public class PrintCompressedTest {
 		NumericExpression e2 = universe.add(x, e1);
 
 		out.println("expr is: " + e2 + "\n");
-		out.println("====== original tree =======");
-		universe.printExprTree(e2, out);
 		out.println("====== compressed tree ======");
 		universe.printCompressed(e2, out);
 		out.println("====================");
@@ -162,8 +158,6 @@ public class PrintCompressedTest {
 				universe.subtract(x, y));
 
 		out.println("expr is: " + e1 + "\n");
-		out.println("====== original tree =======");
-		universe.printExprTree(e1, out);
 		out.println("====== compressed tree ======");
 		universe.printCompressed(e1, out);
 		out.println("====================");
@@ -249,8 +243,6 @@ public class PrintCompressedTest {
 				.apply(r2rConst, Arrays.asList(e1)));
 
 		out.println("expr is: " + e4 + "\n");
-		out.println("====== original tree =======");
-		universe.printExprTree(e4, out);
 		out.println("====== compressed tree ======");
 		universe.printCompressed(e4, out);
 		out.println("====================");
@@ -271,5 +263,8 @@ public class PrintCompressedTest {
 				Arrays.asList(e1));
 
 		out.println("expr is: " + e4 + "\n");
+		out.println("====== compressed tree ======");
+		universe.printCompressed(e4, out);
+		out.println("====================");
 	}
 }
