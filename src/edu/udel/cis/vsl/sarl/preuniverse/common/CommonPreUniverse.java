@@ -3433,7 +3433,7 @@ public class CommonPreUniverse implements PreUniverse {
 			if (seen.contains(symExpr)
 					&& !symExpr.operator().equals(SymbolicOperator.CONCRETE))
 				out.println(prefix + "e" + symExpr.id());
-			// out.println(prefix + "e" + expr.id() + "(" + expr + ")");
+			// out.println(prefix + "e" + symExpr.id() + "(" + symExpr + ")");
 			else {
 				seen.add(symExpr);
 				if (!symExpr.operator()
@@ -3442,8 +3442,8 @@ public class CommonPreUniverse implements PreUniverse {
 						out.print(prefix);
 						processOperator(symExpr.operator());
 						out.println();
-						// out.println(" (" + "e" + expr.id() + ")");
-						// out.println(prefix + expr.operator());
+						// out.println(" (" + "e" + symExpr.id() + ")");
+						// out.println(prefix + symExpr.operator());
 						for (SymbolicObject arg : symExpr.getArguments()) {
 							printCompressed2(prefix + "|", out, seen, arg);
 						}
