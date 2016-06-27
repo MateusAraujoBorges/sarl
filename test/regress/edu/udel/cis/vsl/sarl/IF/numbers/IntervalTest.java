@@ -17,10 +17,6 @@ import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 public class IntervalTest {
 
 	private static NumberFactory numFactory = Numbers.REAL_FACTORY;
-	// private static IntegerNumber INT_POS_INF =
-	// numFactory.infiniteInteger(true);
-	// private static IntegerNumber INT_NEG_INF = numFactory
-	// .infiniteInteger(false);
 	private static IntegerNumber INT_ZERO = numFactory.zeroInteger();
 	private static IntegerNumber INT_POS_ONE = numFactory.integer(1);
 	private static IntegerNumber INT_POS_TWO = numFactory.integer(2);
@@ -28,30 +24,26 @@ public class IntervalTest {
 	private static IntegerNumber INT_NEG_ONE = numFactory.negate(INT_POS_ONE);
 	private static IntegerNumber INT_NEG_TWO = numFactory.negate(INT_POS_TWO);
 	private static IntegerNumber INT_NEG_FOUR = numFactory.negate(INT_POS_FOUR);
-	private static RationalNumber RAT_POS_INF = numFactory
-			.infiniteRational(true);
-	private static RationalNumber RAT_NEG_INF = numFactory
-			.infiniteRational(false);
 	private static RationalNumber RAT_ZERO = numFactory.fraction(INT_ZERO,
 			INT_POS_ONE);
-	private static RationalNumber RAT_POS_ONE = numFactory.fraction(INT_POS_ONE,
-			INT_POS_ONE);
-	private static RationalNumber RAT_POS_TWO = numFactory.fraction(INT_POS_TWO,
-			INT_POS_ONE);
-	private static RationalNumber RAT_POS_FOUR = numFactory
-			.fraction(INT_POS_FOUR, INT_POS_ONE);
-	private static RationalNumber RAT_NEG_ONE = numFactory.fraction(INT_NEG_ONE,
-			INT_POS_ONE);
-	private static RationalNumber RAT_NEG_TWO = numFactory.fraction(INT_NEG_TWO,
-			INT_POS_ONE);
-	private static RationalNumber RAT_NEG_FOUR = numFactory
-			.fraction(INT_NEG_FOUR, INT_POS_ONE);
-	private static RationalNumber RAT_POS_HALF = numFactory
-			.fraction(INT_POS_ONE, INT_POS_TWO);
-	private static RationalNumber RAT_NEG_HALF = numFactory
-			.fraction(INT_NEG_ONE, INT_POS_TWO);
-	private static RationalNumber RAT_POS_QUART = numFactory
-			.fraction(INT_POS_ONE, INT_POS_FOUR);
+	private static RationalNumber RAT_POS_ONE = numFactory.fraction(
+			INT_POS_ONE, INT_POS_ONE);
+	private static RationalNumber RAT_POS_TWO = numFactory.fraction(
+			INT_POS_TWO, INT_POS_ONE);
+	private static RationalNumber RAT_POS_FOUR = numFactory.fraction(
+			INT_POS_FOUR, INT_POS_ONE);
+	private static RationalNumber RAT_NEG_ONE = numFactory.fraction(
+			INT_NEG_ONE, INT_POS_ONE);
+	private static RationalNumber RAT_NEG_TWO = numFactory.fraction(
+			INT_NEG_TWO, INT_POS_ONE);
+	private static RationalNumber RAT_NEG_FOUR = numFactory.fraction(
+			INT_NEG_FOUR, INT_POS_ONE);
+	private static RationalNumber RAT_POS_HALF = numFactory.fraction(
+			INT_POS_ONE, INT_POS_TWO);
+	private static RationalNumber RAT_NEG_HALF = numFactory.fraction(
+			INT_NEG_ONE, INT_POS_TWO);
+	private static RationalNumber RAT_POS_QUART = numFactory.fraction(
+			INT_POS_ONE, INT_POS_FOUR);
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -74,8 +66,10 @@ public class IntervalTest {
 	public void add_Univ() {
 		Interval interval_neg1_pos1 = numFactory.newInterval(true, INT_NEG_ONE,
 				false, INT_POS_ONE, false);
-		Interval univInterval1 = numFactory.universalIntegerInterval();
-		Interval univInterval2 = univInterval1;
+		Interval univInterval1 = numFactory.newInterval(true, null, true, null,
+				true);
+		Interval univInterval2 = numFactory.newInterval(true, null, true, null,
+				true);
 		Interval actualResult1 = numFactory.add(univInterval1, univInterval2);
 		Interval actualResult2 = numFactory.add(interval_neg1_pos1,
 				univInterval2);
@@ -88,10 +82,10 @@ public class IntervalTest {
 
 	@Test
 	public void add_Infi() {
-		Interval interval_left_infi = numFactory.newInterval(false, RAT_NEG_INF,
-				true, RAT_NEG_ONE, true);
+		Interval interval_left_infi = numFactory.newInterval(false, null, true,
+				RAT_NEG_ONE, true);
 		Interval interval_right_infi = numFactory.newInterval(false,
-				RAT_POS_ONE, false, RAT_POS_INF, true);
+				RAT_POS_ONE, false, null, true);
 		Interval interval_neg10_pos10 = numFactory.newInterval(false,
 				RAT_NEG_TWO, false, RAT_POS_TWO, false);
 		Interval actualResult1 = numFactory.add(interval_left_infi,
@@ -104,14 +98,14 @@ public class IntervalTest {
 				interval_neg10_pos10);
 		Interval actualResult5 = numFactory.add(interval_neg10_pos10,
 				interval_right_infi);
-		Interval expectedResult1 = numFactory.newInterval(false, RAT_NEG_INF,
-				true, RAT_NEG_TWO, true);
+		Interval expectedResult1 = numFactory.newInterval(false, null, true,
+				RAT_NEG_TWO, true);
 		Interval expectedResult2 = numFactory.newInterval(false, RAT_POS_TWO,
-				false, RAT_POS_INF, true);
-		Interval expectedResult4 = numFactory.newInterval(false, RAT_NEG_INF,
-				true, RAT_POS_ONE, true);
+				false, null, true);
+		Interval expectedResult4 = numFactory.newInterval(false, null, true,
+				RAT_POS_ONE, true);
 		Interval expectedResult5 = numFactory.newInterval(false, RAT_NEG_ONE,
-				false, RAT_POS_INF, true);
+				false, null, true);
 
 		assertEquals(expectedResult1, actualResult1);
 		assertEquals(expectedResult2, actualResult2);
@@ -122,8 +116,10 @@ public class IntervalTest {
 
 	@Test
 	public void add_Zero() {
-		Interval interval_int_zero = numFactory.singletonInterval(INT_ZERO);
-		Interval interval_rat_zero = numFactory.singletonInterval(RAT_ZERO);
+		Interval interval_int_zero = numFactory.newInterval(true, INT_ZERO,
+				false, INT_ZERO, false);
+		Interval interval_rat_zero = numFactory.newInterval(false, RAT_ZERO,
+				false, RAT_ZERO, false);
 		Interval interval_int_neg1_pos1 = numFactory.newInterval(true,
 				INT_NEG_ONE, false, INT_POS_ONE, false);
 		Interval interval_rat_neg1_pos1_1 = numFactory.newInterval(false,
@@ -166,9 +162,10 @@ public class IntervalTest {
 	public void multiply_Zero() {
 		Interval interval_zero = numFactory.newInterval(false, RAT_ZERO, false,
 				RAT_ZERO, false);
-		Interval univInterval = numFactory.universalRealInterval();
-		Interval interval_neg1_pos1 = numFactory.newInterval(false, RAT_NEG_ONE,
-				false, RAT_POS_ONE, false);
+		Interval univInterval = numFactory.newInterval(false, null, true, null,
+				true);
+		Interval interval_neg1_pos1 = numFactory.newInterval(false,
+				RAT_NEG_ONE, false, RAT_POS_ONE, false);
 		Interval actualResult1 = numFactory.multiply(interval_zero,
 				univInterval);
 		Interval actualResult2 = numFactory.multiply(interval_zero,
@@ -181,8 +178,10 @@ public class IntervalTest {
 	public void multiply_Univ() {
 		Interval interval_neg1_pos1 = numFactory.newInterval(true, INT_NEG_ONE,
 				false, INT_POS_ONE, false);
-		Interval univInterval1 = numFactory.universalIntegerInterval();
-		Interval univInterval2 = univInterval1;
+		Interval univInterval1 = numFactory.newInterval(true, null, true, null,
+				true);
+		Interval univInterval2 = numFactory.newInterval(true, null, true, null,
+				true);
 		Interval actualResult1 = numFactory.multiply(univInterval1,
 				univInterval2);
 		Interval actualResult2 = numFactory.multiply(interval_neg1_pos1,
@@ -196,19 +195,20 @@ public class IntervalTest {
 
 	@Test
 	public void multiply_Two_Infinity() {
-		Interval univInterval = numFactory.universalRealInterval();
-		Interval interval_left_infi1 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_NEG_ONE, true);
-		Interval interval_left_infi2 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_ZERO, false);
-		Interval interval_left_infi3 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_POS_ONE, true);
+		Interval univInterval = numFactory.newInterval(false, null, true, null,
+				true);
+		Interval interval_left_infi1 = numFactory.newInterval(false, null,
+				true, RAT_NEG_ONE, true);
+		Interval interval_left_infi2 = numFactory.newInterval(false, null,
+				true, RAT_ZERO, false);
+		Interval interval_left_infi3 = numFactory.newInterval(false, null,
+				true, RAT_POS_ONE, true);
 		Interval interval_right_infi1 = numFactory.newInterval(false,
-				RAT_POS_ONE, false, RAT_POS_INF, true);
+				RAT_POS_ONE, false, null, true);
 		Interval interval_right_infi2 = numFactory.newInterval(false, RAT_ZERO,
-				false, RAT_POS_INF, true);
+				false, null, true);
 		Interval interval_right_infi3 = numFactory.newInterval(false,
-				RAT_NEG_ONE, true, RAT_POS_INF, true);
+				RAT_NEG_ONE, true, null, true);
 		// L1
 		Interval actualResult_l1l1 = numFactory.multiply(interval_left_infi1,
 				interval_left_infi1);
@@ -290,9 +290,9 @@ public class IntervalTest {
 		// Expected
 		// L1
 		Interval expectedResult_l1l1 = numFactory.newInterval(false,
-				RAT_POS_ONE, true, RAT_POS_INF, true);
+				RAT_POS_ONE, true, null, true);
 		Interval expectedResult_l1l2 = numFactory.newInterval(false, RAT_ZERO,
-				false, RAT_POS_INF, true);
+				false, null, true);
 		Interval expectedResult_l1l3 = univInterval;
 		Interval expectedResult_l1r1 = interval_left_infi1;
 		Interval expectedResult_l1r2 = interval_left_infi2;
@@ -364,19 +364,20 @@ public class IntervalTest {
 
 	@Test
 	public void multiply_One_Infinity1() {
-		Interval univInterval = numFactory.universalRealInterval();
-		Interval interval_left_infi1 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_NEG_ONE, true);
-		Interval interval_left_infi2 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_ZERO, false);
-		Interval interval_left_infi3 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_POS_ONE, true);
+		Interval univInterval = numFactory.newInterval(false, null, true, null,
+				true);
+		Interval interval_left_infi1 = numFactory.newInterval(false, null,
+				true, RAT_NEG_ONE, true);
+		Interval interval_left_infi2 = numFactory.newInterval(false, null,
+				true, RAT_ZERO, false);
+		Interval interval_left_infi3 = numFactory.newInterval(false, null,
+				true, RAT_POS_ONE, true);
 		Interval interval_right_infi1 = numFactory.newInterval(false,
-				RAT_POS_ONE, false, RAT_POS_INF, true);
+				RAT_POS_ONE, false, null, true);
 		Interval interval_right_infi2 = numFactory.newInterval(false, RAT_ZERO,
-				false, RAT_POS_INF, true);
+				false, null, true);
 		Interval interval_right_infi3 = numFactory.newInterval(false,
-				RAT_NEG_ONE, true, RAT_POS_INF, true);
+				RAT_NEG_ONE, true, null, true);
 		Interval interval_neg_neg = numFactory.newInterval(false, RAT_NEG_TWO,
 				true, RAT_NEG_ONE, true);
 		Interval interval_neg_zero = numFactory.newInterval(false, RAT_NEG_TWO,
@@ -455,7 +456,7 @@ public class IntervalTest {
 				interval_pos_pos);
 		// L1
 		Interval expectedResult_l1nn = numFactory.newInterval(false,
-				RAT_POS_ONE, true, RAT_POS_INF, true);
+				RAT_POS_ONE, true, null, true);
 		Interval expectedResult_l1nz = interval_right_infi2;
 		Interval expectedResult_l1np = univInterval;
 		Interval expectedResult_l1zp = interval_left_infi2;
@@ -468,11 +469,11 @@ public class IntervalTest {
 		Interval expectedResult_l2pp = interval_left_infi2;
 		// L3
 		Interval expectedResult_l3nn = numFactory.newInterval(false,
-				RAT_NEG_TWO, true, RAT_POS_INF, true);
+				RAT_NEG_TWO, true, null, true);
 		Interval expectedResult_l3nz = expectedResult_l3nn;
 		Interval expectedResult_l3np = univInterval;
-		Interval expectedResult_l3zp = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_POS_TWO, true);
+		Interval expectedResult_l3zp = numFactory.newInterval(false, null,
+				true, RAT_POS_TWO, true);
 		Interval expectedResult_l3pp = expectedResult_l3zp;
 		// R1
 		Interval expectedResult_r1nn = interval_left_infi1;
@@ -487,12 +488,12 @@ public class IntervalTest {
 		Interval expectedResult_r2zp = interval_right_infi2;
 		Interval expectedResult_r2pp = interval_right_infi2;
 		// R3
-		Interval expectedResult_r3nn = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_POS_TWO, true);
+		Interval expectedResult_r3nn = numFactory.newInterval(false, null,
+				true, RAT_POS_TWO, true);
 		Interval expectedResult_r3nz = expectedResult_r3nn;
 		Interval expectedResult_r3np = univInterval;
 		Interval expectedResult_r3zp = numFactory.newInterval(false,
-				RAT_NEG_TWO, true, RAT_POS_INF, true);
+				RAT_NEG_TWO, true, null, true);
 		Interval expectedResult_r3pp = expectedResult_r3zp;
 
 		// L1
@@ -535,19 +536,20 @@ public class IntervalTest {
 
 	@Test
 	public void multiply_One_Infinity2() {
-		Interval univInterval = numFactory.universalRealInterval();
-		Interval interval_left_infi1 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_NEG_ONE, true);
-		Interval interval_left_infi2 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_ZERO, false);
-		Interval interval_left_infi3 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_POS_ONE, true);
+		Interval univInterval = numFactory.newInterval(false, null, true, null,
+				true);
+		Interval interval_left_infi1 = numFactory.newInterval(false, null,
+				true, RAT_NEG_ONE, true);
+		Interval interval_left_infi2 = numFactory.newInterval(false, null,
+				true, RAT_ZERO, false);
+		Interval interval_left_infi3 = numFactory.newInterval(false, null,
+				true, RAT_POS_ONE, true);
 		Interval interval_right_infi1 = numFactory.newInterval(false,
-				RAT_POS_ONE, false, RAT_POS_INF, true);
+				RAT_POS_ONE, false, null, true);
 		Interval interval_right_infi2 = numFactory.newInterval(false, RAT_ZERO,
-				false, RAT_POS_INF, true);
+				false, null, true);
 		Interval interval_right_infi3 = numFactory.newInterval(false,
-				RAT_NEG_ONE, true, RAT_POS_INF, true);
+				RAT_NEG_ONE, true, null, true);
 		Interval interval_neg_neg = numFactory.newInterval(false, RAT_NEG_TWO,
 				true, RAT_NEG_ONE, true);
 		Interval interval_neg_zero = numFactory.newInterval(false, RAT_NEG_TWO,
@@ -626,7 +628,7 @@ public class IntervalTest {
 				interval_right_infi3);
 		// L1
 		Interval expectedResult_l1nn = numFactory.newInterval(false,
-				RAT_POS_ONE, true, RAT_POS_INF, true);
+				RAT_POS_ONE, true, null, true);
 		Interval expectedResult_l1nz = interval_right_infi2;
 		Interval expectedResult_l1np = univInterval;
 		Interval expectedResult_l1zp = interval_left_infi2;
@@ -639,11 +641,11 @@ public class IntervalTest {
 		Interval expectedResult_l2pp = interval_left_infi2;
 		// L3
 		Interval expectedResult_l3nn = numFactory.newInterval(false,
-				RAT_NEG_TWO, true, RAT_POS_INF, true);
+				RAT_NEG_TWO, true, null, true);
 		Interval expectedResult_l3nz = expectedResult_l3nn;
 		Interval expectedResult_l3np = univInterval;
-		Interval expectedResult_l3zp = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_POS_TWO, true);
+		Interval expectedResult_l3zp = numFactory.newInterval(false, null,
+				true, RAT_POS_TWO, true);
 		Interval expectedResult_l3pp = expectedResult_l3zp;
 		// R1
 		Interval expectedResult_r1nn = interval_left_infi1;
@@ -658,12 +660,12 @@ public class IntervalTest {
 		Interval expectedResult_r2zp = interval_right_infi2;
 		Interval expectedResult_r2pp = interval_right_infi2;
 		// R3
-		Interval expectedResult_r3nn = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_POS_TWO, true);
+		Interval expectedResult_r3nn = numFactory.newInterval(false, null,
+				true, RAT_POS_TWO, true);
 		Interval expectedResult_r3nz = expectedResult_r3nn;
 		Interval expectedResult_r3np = univInterval;
 		Interval expectedResult_r3zp = numFactory.newInterval(false,
-				RAT_NEG_TWO, true, RAT_POS_INF, true);
+				RAT_NEG_TWO, true, null, true);
 		Interval expectedResult_r3pp = expectedResult_r3zp;
 
 		// L1
@@ -908,22 +910,22 @@ public class IntervalTest {
 				RAT_NEG_ONE, false, RAT_NEG_ONE, false);
 		Interval interval_rat_pos_one = numFactory.newInterval(false,
 				RAT_POS_ONE, false, RAT_POS_ONE, false);
-		Interval actualResult_int_neg_one1 = numFactory
-				.power(interval_int_neg_one, 1);
-		Interval actualResult_rat_neg_one1 = numFactory
-				.power(interval_rat_neg_one, 1);
-		Interval actualResult_int_pos_one1 = numFactory
-				.power(interval_int_pos_one, 1);
-		Interval actualResult_rat_pos_one1 = numFactory
-				.power(interval_rat_pos_one, 1);
-		Interval actualResult_int_neg_one2 = numFactory
-				.power(interval_int_neg_one, 2);
-		Interval actualResult_rat_neg_one2 = numFactory
-				.power(interval_rat_neg_one, 2);
-		Interval actualResult_int_pos_one2 = numFactory
-				.power(interval_int_pos_one, 2);
-		Interval actualResult_rat_pos_one2 = numFactory
-				.power(interval_rat_pos_one, 2);
+		Interval actualResult_int_neg_one1 = numFactory.power(
+				interval_int_neg_one, 1);
+		Interval actualResult_rat_neg_one1 = numFactory.power(
+				interval_rat_neg_one, 1);
+		Interval actualResult_int_pos_one1 = numFactory.power(
+				interval_int_pos_one, 1);
+		Interval actualResult_rat_pos_one1 = numFactory.power(
+				interval_rat_pos_one, 1);
+		Interval actualResult_int_neg_one2 = numFactory.power(
+				interval_int_neg_one, 2);
+		Interval actualResult_rat_neg_one2 = numFactory.power(
+				interval_rat_neg_one, 2);
+		Interval actualResult_int_pos_one2 = numFactory.power(
+				interval_int_pos_one, 2);
+		Interval actualResult_rat_pos_one2 = numFactory.power(
+				interval_rat_pos_one, 2);
 		Interval expectedResult_int_neg_one1 = interval_int_neg_one;
 		Interval expectedResult_rat_neg_one1 = interval_rat_neg_one;
 		Interval expectedResult_int_pos_one1 = interval_int_pos_one;
@@ -953,8 +955,8 @@ public class IntervalTest {
 		Interval actualResult_rat = numFactory.power(interval_rat_neg_two, 0);
 		Interval expectedResult_int = numFactory.newInterval(true, INT_POS_ONE,
 				false, INT_POS_ONE, false);
-		Interval expectedResult_rat = numFactory.newInterval(false, RAT_POS_ONE,
-				false, RAT_POS_ONE, false);
+		Interval expectedResult_rat = numFactory.newInterval(false,
+				RAT_POS_ONE, false, RAT_POS_ONE, false);
 
 		assertEquals(expectedResult_int, actualResult_int);
 		assertEquals(expectedResult_rat, actualResult_rat);
@@ -980,8 +982,10 @@ public class IntervalTest {
 
 	@Test
 	public void power_Univ() {
-		Interval interval_int_univ = numFactory.universalIntegerInterval();
-		Interval interval_rat_univ = numFactory.universalRealInterval();
+		Interval interval_int_univ = numFactory.newInterval(true, null, true,
+				null, true);
+		Interval interval_rat_univ = numFactory.newInterval(false, null, true,
+				null, true);
 		Interval actualResult_int = numFactory.power(interval_int_univ, 1);
 		Interval actualResult_rat = numFactory.power(interval_rat_univ, 2);
 
@@ -991,50 +995,50 @@ public class IntervalTest {
 
 	@Test
 	public void power_One_Infinity() {
-		Interval interval_left_infi1 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_NEG_ONE, true);
-		Interval interval_left_infi2 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_ZERO, false);
-		Interval interval_left_infi3 = numFactory.newInterval(false,
-				RAT_NEG_INF, true, RAT_POS_ONE, true);
+		Interval interval_left_infi1 = numFactory.newInterval(false, null,
+				true, RAT_NEG_ONE, true);
+		Interval interval_left_infi2 = numFactory.newInterval(false, null,
+				true, RAT_ZERO, false);
+		Interval interval_left_infi3 = numFactory.newInterval(false, null,
+				true, RAT_POS_ONE, true);
 		Interval interval_right_infi1 = numFactory.newInterval(false,
-				RAT_POS_ONE, false, RAT_POS_INF, true);
+				RAT_POS_ONE, false, null, true);
 		Interval interval_right_infi2 = numFactory.newInterval(false, RAT_ZERO,
-				false, RAT_POS_INF, true);
+				false, null, true);
 		Interval interval_right_infi3 = numFactory.newInterval(false,
-				RAT_NEG_ONE, true, RAT_POS_INF, true);
-		Interval actualResult_l1_pow_neg1 = numFactory
-				.power(interval_left_infi1, -1);
-		Interval actualResult_l1_pow_neg2 = numFactory
-				.power(interval_left_infi1, -2);
-		Interval actualResult_l1_pow_pos1 = numFactory
-				.power(interval_left_infi1, 1);
-		Interval actualResult_l1_pow_pos2 = numFactory
-				.power(interval_left_infi1, 2);
-		Interval actualResult_l2_pow_pos1 = numFactory
-				.power(interval_left_infi2, 1);
-		Interval actualResult_l2_pow_pos2 = numFactory
-				.power(interval_left_infi2, 2);
-		Interval actualResult_l3_pow_pos1 = numFactory
-				.power(interval_left_infi3, 1);
-		Interval actualResult_l3_pow_pos2 = numFactory
-				.power(interval_left_infi3, 2);
-		Interval actualResult_r1_pow_neg1 = numFactory
-				.power(interval_right_infi1, -1);
-		Interval actualResult_r1_pow_neg2 = numFactory
-				.power(interval_right_infi1, -2);
-		Interval actualResult_r1_pow_pos1 = numFactory
-				.power(interval_right_infi1, 1);
-		Interval actualResult_r1_pow_pos2 = numFactory
-				.power(interval_right_infi1, 2);
-		Interval actualResult_r2_pow_pos1 = numFactory
-				.power(interval_right_infi2, 1);
-		Interval actualResult_r2_pow_pos2 = numFactory
-				.power(interval_right_infi2, 2);
-		Interval actualResult_r3_pow_pos1 = numFactory
-				.power(interval_right_infi3, 1);
-		Interval actualResult_r3_pow_pos2 = numFactory
-				.power(interval_right_infi3, 2);
+				RAT_NEG_ONE, true, null, true);
+		Interval actualResult_l1_pow_neg1 = numFactory.power(
+				interval_left_infi1, -1);
+		Interval actualResult_l1_pow_neg2 = numFactory.power(
+				interval_left_infi1, -2);
+		Interval actualResult_l1_pow_pos1 = numFactory.power(
+				interval_left_infi1, 1);
+		Interval actualResult_l1_pow_pos2 = numFactory.power(
+				interval_left_infi1, 2);
+		Interval actualResult_l2_pow_pos1 = numFactory.power(
+				interval_left_infi2, 1);
+		Interval actualResult_l2_pow_pos2 = numFactory.power(
+				interval_left_infi2, 2);
+		Interval actualResult_l3_pow_pos1 = numFactory.power(
+				interval_left_infi3, 1);
+		Interval actualResult_l3_pow_pos2 = numFactory.power(
+				interval_left_infi3, 2);
+		Interval actualResult_r1_pow_neg1 = numFactory.power(
+				interval_right_infi1, -1);
+		Interval actualResult_r1_pow_neg2 = numFactory.power(
+				interval_right_infi1, -2);
+		Interval actualResult_r1_pow_pos1 = numFactory.power(
+				interval_right_infi1, 1);
+		Interval actualResult_r1_pow_pos2 = numFactory.power(
+				interval_right_infi1, 2);
+		Interval actualResult_r2_pow_pos1 = numFactory.power(
+				interval_right_infi2, 1);
+		Interval actualResult_r2_pow_pos2 = numFactory.power(
+				interval_right_infi2, 2);
+		Interval actualResult_r3_pow_pos1 = numFactory.power(
+				interval_right_infi3, 1);
+		Interval actualResult_r3_pow_pos2 = numFactory.power(
+				interval_right_infi3, 2);
 		//
 		Interval expectedResult_l1_pow_neg1 = numFactory.newInterval(false,
 				RAT_NEG_ONE, true, RAT_ZERO, true);
@@ -1042,7 +1046,7 @@ public class IntervalTest {
 				RAT_ZERO, true, RAT_POS_ONE, true);
 		Interval expectedResult_l1_pow_pos1 = interval_left_infi1;
 		Interval expectedResult_l1_pow_pos2 = numFactory.newInterval(false,
-				RAT_POS_ONE, true, RAT_POS_INF, true);
+				RAT_POS_ONE, true, null, true);
 		Interval expectedResult_l2_pow_pos1 = interval_left_infi2;
 		Interval expectedResult_l2_pow_pos2 = interval_right_infi2;
 		Interval expectedResult_l3_pow_pos1 = interval_left_infi3;
