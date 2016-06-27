@@ -52,7 +52,7 @@ public class PrintCompressedTest {
 		universe.printCompressed(e2, out);
 		out.println("====================");
 	}
-	
+
 	/**
 	 * x + y*z
 	 */
@@ -79,6 +79,9 @@ public class PrintCompressedTest {
 				universe.multiply(e1, e1));
 
 		out.println("expr is " + e2 + "\n");
+		out.println("====== original tree =======");
+		universe.printExprTree(e2, out);
+		out.println("====== compressed tree ======");
 		universe.printCompressed(e2, out);
 		out.println("====================");
 	}
@@ -97,6 +100,9 @@ public class PrintCompressedTest {
 		NumericExpression e7 = universe.add(universe.add(e4, e5), e6);
 
 		out.println("expr is " + e7 + "\n");
+		out.println("====== original tree =======");
+		universe.printExprTree(e7, out);
+		out.println("====== compressed tree ======");
 		universe.printCompressed(e7, out);
 		out.println("====================");
 	}
@@ -180,6 +186,7 @@ public class PrintCompressedTest {
 		NumericExpression e4 = universe.add(universe.add(e1, e2), e3);
 
 		out.println("expr is " + e4 + "\n");
+		out.println("====== compressed tree ======");
 		universe.printCompressed(e4, out);
 		out.println("====================");
 	}
@@ -255,7 +262,7 @@ public class PrintCompressedTest {
 		universe.printCompressed(e4, out);
 		out.println("====================");
 	}
-	
+
 	/**
 	 * f(x+y+z)
 	 */
