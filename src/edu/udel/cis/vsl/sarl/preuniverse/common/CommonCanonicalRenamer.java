@@ -161,9 +161,13 @@ public class CommonCanonicalRenamer extends ExpressionSubstituter implements
 				&& (ignore == null || !ignore.apply((SymbolicConstant) expr))) {
 			// no op if the name of the symbolic constant expr doesn't start
 			// with the root of this canonical renamer
+			SymbolicType oldType = expr.type();
+			SymbolicType newType = this.substituteType(oldType, state);
+
 			if (!((StringObject) ((SymbolicConstant) expr).argument(0))
 					.getString().startsWith(root))
-				return expr;
+				return newType == oldType ? expr : universe.symbolicConstant(
+						((SymbolicConstant) expr).name(), newType);
 
 			SymbolicConstant newVar = ((BoundStack) state)
 					.get((SymbolicConstant) expr);
@@ -171,9 +175,6 @@ public class CommonCanonicalRenamer extends ExpressionSubstituter implements
 			if (newVar == null) {
 				newVar = freeMap.get((SymbolicConstant) expr);
 				if (newVar == null) {
-					SymbolicType oldType = expr.type();
-					SymbolicType newType = substituteType(oldType, state);
-
 					newVar = universe.symbolicConstant(
 							universe.stringObject(root + varCount), newType);
 					varCount++;
