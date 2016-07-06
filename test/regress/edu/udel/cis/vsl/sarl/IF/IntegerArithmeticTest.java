@@ -12,8 +12,10 @@ import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
+import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 
 public class IntegerArithmeticTest {
 	public final static PrintStream out = System.out;
@@ -339,6 +341,33 @@ public class IntegerArithmeticTest {
 		if (debug) {
 			out.println(e);
 		}
+	}
+
+	/**
+	 * conditional operator:
+	 * 
+	 * <pre>
+	 * (x>0 ? x+y : y+z) + y
+	 * x>0 ? x+y : y*z
+	 * </pre>
+	 */
+	@Test
+	public void condOperator() {
+		SymbolicExpression predicate = universe.lessThan(universe.zeroInt(), x);
+		SymbolicExpression trueCase = universe.add(x, y);
+		SymbolicExpression falseCase1 = universe.add(y, z);
+		SymbolicExpression falseCase2 = universe.multiply(y, z);
+		SymbolicExpression e1 = universe.cond((BooleanExpression) predicate,
+				trueCase, falseCase1);
+		SymbolicExpression e2 = universe.cond((BooleanExpression) predicate,
+				trueCase, falseCase2);
+		SymbolicExpression e3 = universe.add((NumericExpression) e1, y);
+
+		e3.toString();
+
+		out.println("e1: " + predicate);
+		out.println("e2: " + e2);
+		out.println("e3: " + e3);
 	}
 
 	/**
