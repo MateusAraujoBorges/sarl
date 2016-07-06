@@ -3457,6 +3457,7 @@ public class CommonPreUniverse implements PreUniverse {
 			SymbolicSequence<?> symSeq = (SymbolicSequence<?>) expr;
 
 			prefix += " ";
+			out.println(prefix + "SEQ");
 			for (int i = 0; i < symSeq.size(); i++) {
 				SymbolicObject seq = symSeq.get(i);
 				printCompressed2(prefix + "|", out, seen, seq);
