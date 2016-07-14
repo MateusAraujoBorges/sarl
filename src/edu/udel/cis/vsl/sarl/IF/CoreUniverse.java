@@ -2168,8 +2168,9 @@ public interface CoreUniverse {
 	 *            the input symbolic expression
 	 * @param out
 	 *            the output stream
+	 * 
 	 */
-	void printCompressed(SymbolicExpression expr, PrintStream out);
+	void printCompressedTree(SymbolicExpression expr, PrintStream out);
 
 	/**
 	 * <p>
