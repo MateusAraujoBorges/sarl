@@ -20,13 +20,13 @@ public class PrintCompressedTest {
 	public final static SymbolicUniverse universe = SARL.newStandardUniverse();
 
 	// using idealFactory
-//	public final static SymbolicRealType real = universe.realType();
+	public final static SymbolicRealType real = universe.realType();
 
 	// using herbrandFactory
-	public final static SymbolicRealType real = universe.herbrandRealType();
-
-	public final static NumericExpression one = (NumericExpression) universe
-			.cast(real, universe.oneReal());
+	// public final static SymbolicRealType real = universe.herbrandRealType();
+	//
+	// public final static NumericExpression one = (NumericExpression) universe
+	// .cast(real, universe.oneReal());
 
 	public final static NumericExpression x = (NumericExpression) universe
 			.symbolicConstant(universe.stringObject("x"), real);
@@ -56,7 +56,7 @@ public class PrintCompressedTest {
 		// out.println("====== original tree =======");
 		// universe.printExprTree(e2, out);
 		out.println("====== compressed tree ======");
-		universe.printCompressed(e2, out);
+		universe.printCompressedTree(e2, out);
 		out.println("==================== \n");
 	}
 
@@ -72,7 +72,7 @@ public class PrintCompressedTest {
 		// out.println("====== original tree =======");
 		// universe.printExprTree(e2, out);
 		out.println("====== compressed tree ======");
-		universe.printCompressed(e2, out);
+		universe.printCompressedTree(e2, out);
 		out.println("====================");
 	}
 
@@ -81,15 +81,15 @@ public class PrintCompressedTest {
 	 */
 	@Test
 	public void expressionTest2() {
-		NumericExpression e1 = universe.add(x, one);
+		NumericExpression e1 = universe.add(x, universe.oneReal());
 		NumericExpression e2 = universe.add(universe.multiply(e1, z),
 				universe.multiply(e1, e1));
 
 		out.println("expr is " + e2);
-//		out.println("====== original tree =======");
-//		universe.printExprTree(e2, out);
+		// out.println("====== original tree =======");
+		// universe.printExprTree(e2, out);
 		out.println("====== compressed tree ======");
-		universe.printCompressed(e2, out);
+		universe.printCompressedTree(e2, out);
 		out.println("====================\n");
 	}
 
@@ -106,11 +106,11 @@ public class PrintCompressedTest {
 		NumericExpression e6 = universe.multiply(e1, e3);
 		NumericExpression e7 = universe.add(universe.add(e4, e5), e6);
 
-		out.println("expr is " + e7 );
-//		out.println("====== original tree =======");
-//		universe.printExprTree(e7, out);
+		out.println("expr is " + e7);
+		// out.println("====== original tree =======");
+		// universe.printExprTree(e7, out);
 		out.println("====== compressed tree ======");
-		universe.printCompressed(e7, out);
+		universe.printCompressedTree(e7, out);
 		out.println("====================\n");
 	}
 
@@ -133,7 +133,7 @@ public class PrintCompressedTest {
 		e2 = universe.add(numList2);
 		e3 = universe.multiply(e1, e2);
 		out.println("expr is " + e3 + "\n");
-		universe.printCompressed(e3, out);
+		universe.printCompressedTree(e3, out);
 		out.println("====================");
 	}
 
@@ -147,7 +147,9 @@ public class PrintCompressedTest {
 				y);
 
 		out.println("expr is " + e1 + "\n");
-		universe.printCompressed(e1, out);
+		// out.println("====== original tree =======");
+		// universe.printExprTree(e1, out);
+		universe.printCompressedTree(e1, out);
 		out.println("====================");
 	}
 
@@ -164,7 +166,7 @@ public class PrintCompressedTest {
 		// out.println("====== original tree =======");
 		// universe.printExprTree(e1, out);
 		out.println("====== compressed tree ======");
-		universe.printCompressed(e1, out);
+		universe.printCompressedTree(e1, out);
 		out.println("====================");
 	}
 
@@ -178,11 +180,11 @@ public class PrintCompressedTest {
 		NumericExpression e3 = universe.multiply(e1, e2);
 		NumericExpression e4 = universe.add(universe.add(e1, e2), e3);
 
-		out.println("expr is " + e4 );
-//		out.println("====== original tree =======");
-//		universe.printExprTree(e4, out);
+		out.println("expr is " + e4);
+		// out.println("====== original tree =======");
+		// universe.printExprTree(e4, out);
 		out.println("====== compressed tree ======");
-		universe.printCompressed(e4, out);
+		universe.printCompressedTree(e4, out);
 		out.println("====================\n");
 	}
 
@@ -232,32 +234,37 @@ public class PrintCompressedTest {
 		out.println("e1 is " + e1 + "\n");
 		out.println("e2 is " + e2 + "\n");
 		out.println("e is " + e + "\n");
-//		out.println("====== original tree =======");
-//		universe.printExprTree(e, out);
+		// out.println("====== original tree =======");
+		// universe.printExprTree(e, out);
 		out.println("====== compressed tree ======");
-		universe.printCompressed(e, out);
+		universe.printCompressedTree(e, out);
 		out.println("====================\n");
 	}
 
 	/**
-	 * x + y + f(x+y)
+	 * x + y + f(x+y) + g(x+y)
 	 */
 	@Test
 	public void printTest10() {
 		SymbolicFunctionType fType = universe.functionType(Arrays.asList(real),
 				real);
 		String fName = "f";
+		String gName = "g";
 		SymbolicConstant r2rConst = universe
 				.symbolicConstant(universe.stringObject(fName), fType);
+		SymbolicConstant r2rConst1 = universe
+				.symbolicConstant(universe.stringObject(gName), fType);
 		NumericExpression e1 = universe.add(x, y);
 		NumericExpression e4 = universe.add(e1, (NumericExpression) universe
 				.apply(r2rConst, Arrays.asList(e1)));
+		NumericExpression e5 = universe.add(e4, (NumericExpression) universe
+				.apply(r2rConst1, Arrays.asList(e1)));
 
-		out.println("expr is: " + e4);
+		out.println("expr is: " + e5);
 		// out.println("====== original tree =======");
-		// universe.printExprTree(e4, out);
+		// universe.printExprTree(e5, out);
 		out.println("====== compressed tree ======");
-		universe.printCompressed(e4, out);
+		universe.printCompressedTree(e5, out);
 		out.println("==================== \n");
 	}
 
@@ -276,10 +283,10 @@ public class PrintCompressedTest {
 				Arrays.asList(e1));
 
 		out.println("expr is: " + e4);
-//		out.println("====== original tree =======");
-//		universe.printExprTree(e4, out);
+		// out.println("====== original tree =======");
+		// universe.printExprTree(e4, out);
 		out.println("====== compressed tree ======");
-		universe.printCompressed(e4, out);
+		universe.printCompressedTree(e4, out);
 		out.println("====================\n");
 	}
 }
