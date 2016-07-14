@@ -3416,161 +3416,121 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	@Override
-	public void printCompressed(SymbolicExpression expr, PrintStream out) {
+	public void printCompressedTree(SymbolicExpression expr, PrintStream out) {
 		Set<SymbolicObject> seen = new HashSet<SymbolicObject>();
-		expr = canonic(expr);
 
-		printCompressed2("", out, seen, expr);
+		expr = canonic(expr);
+		printCompressedTreeWorker("", out, seen, expr);
 	}
 
-	private void printCompressed2(String prefix, PrintStream out,
+	private void printCompressedTreeWorker(String prefix, PrintStream out,
 			Set<SymbolicObject> seen, SymbolicObject expr) {
-		if (expr instanceof SymbolicExpression) {
+		switch (expr.symbolicObjectKind()) {
+		case EXPRESSION: {
 			SymbolicExpression symExpr = (SymbolicExpression) expr;
-			prefix += " ";
 
-			if (seen.contains(symExpr)
-					&& !symExpr.operator().equals(SymbolicOperator.CONCRETE))
-				if (symExpr.numArguments() == 1)
+			prefix += " ";
+			/*
+			 * logic: first check if the expr is CONCRETE type, then check if
+			 * the expr is in set, if it's in the set, do some handling; else,
+			 * add it to set.
+			 */
+			if (symExpr.operator() == SymbolicOperator.CONCRETE)
+				out.println(prefix + symExpr);
+			else if (seen.contains(symExpr))
+				if (symExpr.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
 					out.println(prefix + symExpr + " " + "(" + "e"
 							+ symExpr.id() + ")");
 				else
 					out.println(prefix + "e" + symExpr.id());
 			else {
 				seen.add(symExpr);
-				if (!symExpr.operator()
-						.equals(SymbolicOperator.SYMBOLIC_CONSTANT)) {
-					if (!symExpr.operator().equals(SymbolicOperator.CONCRETE)) {
-						out.print(prefix);
-						processOperator(symExpr.operator());
-						out.println(" (" + "e" + symExpr.id() + ")");
-						for (SymbolicObject arg : symExpr.getArguments()) {
-							printCompressed2(prefix + "|", out, seen, arg);
-						}
-					} else
-						out.println(prefix + symExpr.argument(0));
-				} else
+				if (symExpr.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
 					out.println(prefix + symExpr + " " + "(" + "e"
 							+ symExpr.id() + ")");
+				else {
+					out.print(prefix);
+					out.print(symExpr.operator());
+					out.println(" (" + "e" + symExpr.id() + ")");
+					for (SymbolicObject arg : symExpr.getArguments())
+						printCompressedTreeWorker(prefix + "|", out, seen, arg);
+				}
 			}
-		} else if (expr instanceof SymbolicSequence) {
+			break;
+		}
+		case SEQUENCE: {
 			SymbolicSequence<?> symSeq = (SymbolicSequence<?>) expr;
-			prefix += " ";
 
-			out.println(prefix + "SEQ");
+			out.println(prefix + " SEQ");
 			for (int i = 0; i < symSeq.size(); i++) {
 				SymbolicObject seq = symSeq.get(i);
 
-				printCompressed2(prefix + "|", out, seen, seq);
+				printCompressedTreeWorker(prefix + " |", out, seen, seq);
 			}
-		} else if (expr instanceof IntObject) {
-			prefix += " ";
-
-			out.println(prefix + ((IntObject) expr).getInt());
-		} else if (expr instanceof NumberObject) {
-			prefix += " ";
-
-			out.println(prefix + ((NumberObject) expr).getNumber());
-		} else if (expr instanceof BooleanObject) {
-			prefix += " ";
-
-			out.println(prefix + ((BooleanObject) expr).getBoolean());
-		} else if (expr instanceof CharObject) {
-			prefix += " ";
-
-			out.println(prefix + ((CharObject) expr).getChar());
-		} else if (expr instanceof StringObject) {
-			prefix += " ";
-
-			out.println(prefix + ((StringObject) expr).getString());
-		} else {
-			out.println("Unkownn Symbolic Object!");
+			break;
 		}
-	}
-
-	private void processOperator(SymbolicOperator operator) {
-
-		switch (operator) {
-		case ADD:
-			out.print("+");
+		case INT:
+		case CHAR:
+		case BOOLEAN:
+		case STRING:
+		case NUMBER:
+			out.println(prefix + " " + expr);
 			break;
-		case DIVIDE:
-			out.print("/");
-			break;
-		case MULTIPLY:
-			out.print("*");
-			break;
-		case POWER:
-			out.print("^");
-			break;
-		case APPLY:
-			out.print("APPLY");
-			break;
+		case TYPE:
+		case TYPE_SEQUENCE:
 		default:
-			out.print("unrecoginzed operator");
+			out.println(
+					"Unkownn Symbolic Object: " + expr.symbolicObjectKind());
 		}
 	}
 
 	@Override
 	public void printExprTree(SymbolicExpression expr, PrintStream out) {
 		expr = canonic(expr);
-
-		printExprTree2("", out, expr);
+		printExprTreeWorker("", out, expr);
 	}
 
-	private void printExprTree2(String prefix, PrintStream out,
+	private void printExprTreeWorker(String prefix, PrintStream out,
 			SymbolicObject expr) {
-		if (expr instanceof SymbolicExpression) {
+		switch (expr.symbolicObjectKind()) {
+		case EXPRESSION: {
 			SymbolicExpression symExpr = (SymbolicExpression) expr;
+
 			prefix += " ";
-
-			if (!symExpr.operator()
-					.equals(SymbolicOperator.SYMBOLIC_CONSTANT)) {
-				if (!symExpr.operator().equals(SymbolicOperator.CONCRETE)) {
-					out.print(prefix);
-					processOperator(symExpr.operator());
-					out.println(" (" + "e" + symExpr.id() + ")");
-					for (SymbolicObject arg : symExpr.getArguments()) {
-						printExprTree2(prefix + "|", out, arg);
-					}
-				} else
-					out.println(prefix + symExpr.argument(0));
-			} else
-				out.println(prefix + symExpr + " " + "(" + "e" + symExpr.id()
-						+ ")");
-
-		} else if (expr instanceof SymbolicSequence) {
+			if (symExpr.operator() == SymbolicOperator.CONCRETE
+					|| symExpr.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
+				out.println(prefix + symExpr);
+			else {
+				out.print(prefix);
+				out.println(symExpr.operator());
+				for (SymbolicObject arg : symExpr.getArguments())
+					printExprTreeWorker(prefix + "|", out, arg);
+			}
+		}
+			break;
+		case SEQUENCE: {
 			SymbolicSequence<?> symSeq = (SymbolicSequence<?>) expr;
-			prefix += " ";
 
-			out.println(prefix + "SEQ");
+			out.println(prefix + " SEQ");
 			for (int i = 0; i < symSeq.size(); i++) {
 				SymbolicObject seq = symSeq.get(i);
 
-				printExprTree2(prefix + "|", out, seq);
+				printExprTreeWorker(prefix + " |", out, seq);
 			}
-		} else if (expr instanceof IntObject) {
-			prefix += " ";
-
-			out.println(prefix + ((IntObject) expr).getInt());
-		} else if (expr instanceof NumberObject) {
-			prefix += " ";
-
-			out.println(prefix + ((NumberObject) expr).getNumber());
-		} else if (expr instanceof BooleanObject) {
-			prefix += " ";
-
-			out.println(prefix + ((BooleanObject) expr).getBoolean());
-		} else if (expr instanceof CharObject) {
-			prefix += " ";
-
-			out.println(prefix + ((CharObject) expr).getChar());
-		} else if (expr instanceof StringObject) {
-			prefix += " ";
-
-			out.println(prefix + ((StringObject) expr).getString());
-		} else {
-			out.println("Unkownn Symbolic Object!");
+			break;
+		}
+		case INT:
+		case CHAR:
+		case BOOLEAN:
+		case STRING:
+		case NUMBER:
+			out.println(prefix + " " + expr);
+			break;
+		case TYPE:
+		case TYPE_SEQUENCE:
+		default:
+			out.println(
+					"Unkownn Symbolic Object: " + expr.symbolicObjectKind());
 		}
 	}
 }
