@@ -15,8 +15,7 @@ public class LargeMinusIntervalUnionSetBench {
 		int tempInt2;
 		int numexpr;
 		NumberFactory numberFactory = Numbers.REAL_FACTORY;
-		Interval int_univ = numberFactory.newInterval(true, null, true, null,
-				true);
+		Interval int_univ = numberFactory.universalIntegerInterval();
 		Range[] intervalUnionSets;
 		Range intervalUnionSet;
 

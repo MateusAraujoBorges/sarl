@@ -30,12 +30,27 @@ public abstract class RealNumber implements Number {
 	public int compareTo(Number o) {
 		if (this instanceof RealInteger) {
 			if (o instanceof RealInteger) {
-				return ((RealInteger) this).value().compareTo(
-						((RealInteger) o).value());
+				if (this.isInfinite()) {
+					if (o.isInfinite())
+						return (this.signum() - o.signum()) / 2;
+					else
+						return this.signum();
+				} else if (o.isInfinite())
+					return o.signum();
+				return ((RealInteger) this).value()
+						.compareTo(((RealInteger) o).value());
 			}
 			return -1;
 		} else if (this instanceof RealRational) {
 			if (o instanceof RealRational) {
+				if (this.isInfinite()) {
+					if (o.isInfinite())
+						return (this.signum() - o.signum()) / 2;
+					else
+						return this.signum();
+				} else if (o.isInfinite())
+					return o.signum();
+
 				RealRational me = (RealRational) this;
 				RealRational you = (RealRational) o;
 				int result = me.numerator().compareTo(you.numerator());

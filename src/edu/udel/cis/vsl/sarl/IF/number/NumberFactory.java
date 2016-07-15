@@ -40,6 +40,16 @@ public interface NumberFactory {
 	IntegerNumber integer(int value);
 
 	/**
+	 * Returns an infinite {@link IntegerNumber}, its signum is determined by
+	 * the given boolean value.
+	 * 
+	 * @param isPositiveInfinity
+	 *            A boolean value determines whether this number is positive or
+	 *            negative.
+	 */
+	IntegerNumber infiniteInteger(boolean isPositiveInfinity);
+
+	/**
 	 * Returns the rational number specified by the given string, where the
 	 * string is a decimal representation of the number. The string may be an
 	 * integer string, such as "394" or "-1" or "0". Or it may contain a decimal
@@ -49,8 +59,33 @@ public interface NumberFactory {
 	 */
 	RationalNumber rational(String string);
 
+	/**
+	 * Returns an infinite {@link RationalNumber}, its signum is determined by
+	 * the given boolean value.
+	 * 
+	 * @param isPositiveInfinity
+	 *            A boolean value determines whether this number is positive or
+	 *            negative.
+	 */
+	RationalNumber infiniteRational(boolean isPositiveInfinity);
+
 	/** Makes best guest on type of number based on string. */
 	Number number(String string);
+
+	/**
+	 * Returns an infinite {@link Number}, its type is determined by the first
+	 * boolean argument <code>isIntegeral</code> and its signum is determined by
+	 * the second boolean argument <code>isPositiveInfinity</code>.
+	 * 
+	 * @param isIntegeral
+	 *            A boolean value determines whether this number is an integer
+	 *            number or a rational one.
+	 * @param isPositiveInfinity
+	 *            A boolean value determines whether this number is positive or
+	 *            negative.
+	 * @return
+	 */
+	Number infiniteNumber(boolean isIntegeral, boolean isPositiveInfinity);
 
 	/** Returns absolute value of number, preserving type. */
 	Number abs(Number number);
@@ -81,6 +116,34 @@ public interface NumberFactory {
 
 	/** The integer number zero. */
 	IntegerNumber oneInteger();
+
+	/**
+	 * Return a {@link RationalNumber} representing the positive infinity.
+	 * 
+	 * @return
+	 */
+	RationalNumber positiveInfinityRational();
+
+	/**
+	 * Return a {@link IntegerNumber} representing the positive infinity.
+	 * 
+	 * @return
+	 */
+	IntegerNumber positiveInfinityInteger();
+
+	/**
+	 * Return a {@link RationalNumber} representing the negative infinity.
+	 * 
+	 * @return
+	 */
+	RationalNumber negativeInfinityRational();
+
+	/**
+	 * Return a {@link IntegerNumber} representing the negative infinity.
+	 * 
+	 * @return
+	 */
+	IntegerNumber negativeInfinityInteger();
 
 	/**
 	 * Adds two numbers and returns result. The numbers must be of same type
@@ -319,7 +382,7 @@ public interface NumberFactory {
 	Interval universalRealInterval();
 
 	/**
-	 * Returns the interval consisting of the single number x: [x,x].
+	 * Returns the interval consisting of the single finite number x: [x,x].
 	 * 
 	 * @param x
 	 *            a non-<code>null</code> {@link Number}
@@ -480,37 +543,37 @@ public interface NumberFactory {
 	 * @param interval
 	 *            an non-<code>null</code> {@link Interval}
 	 * @param a
-	 *            a non-<code>null</code> {@link Number} used to multiply with
-	 *            both <code>upper</code> and <code>lower</code> of "interval"
+	 *            a non-<code>null</code> finite {@link Number} used to multiply
+	 *            with both <code>upper</code> and <code>lower</code> of
+	 *            "interval"
 	 * @param b
-	 *            a non-<code>null</code> {@link Number} used to add to both
-	 *            <code>upper</code> and <code>lower</code> of "interval", after
-	 *            multiplying "a".
+	 *            a non-<code>null</code> finite {@link Number} used to add to
+	 *            both <code>upper</code> and <code>lower</code> of "interval",
+	 *            after multiplying "a".
 	 * @return an {@link Interval} which is an affineTransform of "interval"
 	 */
 	Interval affineTransform(Interval interval, Number a, Number b);
 
 	/**
 	 * Computes the relationships of two {@link Interval}s. <br>
-	 * <li>
-	 * Return -3, if the first {@link Interval} is on the <strong>left</strong>
-	 * side and <strong>disjointed</strong> with the second {@link Interval}</li>
-	 * <li>
-	 * Return -2, if the first {@link Interval} is on the <strong>left</strong>
-	 * side and <strong>intersected</strong> with the second {@link Interval}</li>
-	 * <li>
-	 * Return -1, if the first {@link Interval} <strong>contains</strong> the
-	 * second {@link Interval}</li> <li>
-	 * Return 0, if the first {@link Interval} is exactly <strong>same</strong>
-	 * with the second {@link Interval}</li> <li>
-	 * Return 1, if the first {@link Interval} <strong>is contained in</strong>
-	 * the second {@link Interval}</li> <li>
-	 * Return 2, if the first {@link Interval} is on the <strong>right</strong>
-	 * side and <strong>intersected</strong> with the second {@link Interval}</li>
-	 * <li>
-	 * Return 3, if the first {@link Interval} is on the <strong>right</strong>
-	 * side and <strong>disjointed</strong> with the second {@link Interval}</li>
-	 * </br>
+	 * <li>Return -3, if the first {@link Interval} is on the
+	 * <strong>left</strong> side and <strong>disjointed</strong> with the
+	 * second {@link Interval}</li>
+	 * <li>Return -2, if the first {@link Interval} is on the
+	 * <strong>left</strong> side and <strong>intersected</strong> with the
+	 * second {@link Interval}</li>
+	 * <li>Return -1, if the first {@link Interval} <strong>contains</strong>
+	 * the second {@link Interval}</li>
+	 * <li>Return 0, if the first {@link Interval} is exactly
+	 * <strong>same</strong> with the second {@link Interval}</li>
+	 * <li>Return 1, if the first {@link Interval} <strong>is contained
+	 * in</strong> the second {@link Interval}</li>
+	 * <li>Return 2, if the first {@link Interval} is on the
+	 * <strong>right</strong> side and <strong>intersected</strong> with the
+	 * second {@link Interval}</li>
+	 * <li>Return 3, if the first {@link Interval} is on the
+	 * <strong>right</strong> side and <strong>disjointed</strong> with the
+	 * second {@link Interval}</li> </br>
 	 * 
 	 * @param i1
 	 *            a non-<code>null</code> {@link Interval}
@@ -619,10 +682,10 @@ public interface NumberFactory {
 	 * are {@link IntegerNumbers}
 	 * 
 	 * @param number
-	 *            a non-<code>null</code> {@link IntegerNumbers};
+	 *            a non-<code>null</code> finite {@link IntegerNumbers};
 	 * @param n
-	 *            a non-<code>null</code> {@link IntegerNumbers} representing
-	 *            the n;
+	 *            a non-<code>null</code> positive finite {@link IntegerNumbers}
+	 *            representing the n;
 	 * @return
 	 */
 	IntegerNumber nthRootInt(IntegerNumber number, IntegerNumber n);
@@ -663,10 +726,10 @@ public interface NumberFactory {
 	 * is also the type of the result.
 	 * 
 	 * @param num
-	 *            A {@link Number} with the same type of the given
-	 *            {@link Interval} <code>interval</code>.
+	 *            A non-<code>null</code> finite {@link Number}
 	 * @param interval
-	 *            A non-<code>null</code> {@link Interval}
+	 *            A non-<code>null</code> {@link Interval} with the same type of
+	 *            the given {@link Number} <code>num</code>.
 	 * @return the result
 	 */
 	Interval multiply(Number num, Interval interval);

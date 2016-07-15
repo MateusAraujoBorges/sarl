@@ -232,7 +232,7 @@ public class IdealSimplifier extends CommonSimplifier {
 				Number lo = interval.lower(), hi = interval.upper();
 
 				// if this is a constant no need to add this constraint...
-				if (lo != null && hi != null && lo.equals(hi)
+				if (!lo.isInfinite() && !hi.isInfinite() && lo.equals(hi)
 						&& !interval.strictLower() && !interval.strictUpper())
 					continue;
 
@@ -350,7 +350,7 @@ public class IdealSimplifier extends CommonSimplifier {
 		BooleanExpression result = null;
 		Monomial ideal = (Monomial) apply(monic);
 
-		if (lower != null) {
+		if (!lower.isInfinite()) {
 			if (interval.strictLower())
 				result = info.idealFactory
 						.lessThan(info.idealFactory.constant(lower), ideal);
@@ -358,7 +358,7 @@ public class IdealSimplifier extends CommonSimplifier {
 				result = info.idealFactory.lessThanEquals(
 						info.idealFactory.constant(lower), ideal);
 		}
-		if (upper != null) {
+		if (!upper.isInfinite()) {
 			BooleanExpression upperResult;
 
 			if (interval.strictUpper())

@@ -97,8 +97,11 @@ public class BoundMap {
 		boolean isIntegral = key.type().isInteger();
 
 		if (original == null) {
+			Number posInfinity = info.numberFactory.infiniteNumber(isIntegral,
+					true);
+
 			result = info.numberFactory.newInterval(isIntegral, value, strict,
-					null, true);
+					posInfinity, true);
 			map.put(key, result);
 		} else {
 			result = info.numberFactory.restrictLower(original, value, strict);
@@ -114,8 +117,11 @@ public class BoundMap {
 
 		if (original == null) {
 			// TODO: if integer type, correct
-			result = info.numberFactory.newInterval(isIntegral, null, true,
-					value, strict);
+			Number negInfinity = info.numberFactory.infiniteNumber(isIntegral,
+					false);
+
+			result = info.numberFactory.newInterval(isIntegral, negInfinity,
+					true, value, strict);
 			map.put(key, result);
 		} else {
 			result = info.numberFactory.restrictUpper(original, value, strict);

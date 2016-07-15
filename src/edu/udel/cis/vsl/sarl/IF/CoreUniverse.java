@@ -2079,6 +2079,7 @@ public interface CoreUniverse {
 	/**
 	 * Returns the result of bit-not operation for the given unsigned integer,
 	 * the given unsigned integer is in the form of {@link NumericExpression}.
+	 * TODO: Not independent with Length, and for shifts
 	 * 
 	 * @param expression
 	 *            a non-<code>null</code> {@link NumericExpression} representing
@@ -2131,7 +2132,7 @@ public interface CoreUniverse {
 	 *         an integer.
 	 */
 	NumericExpression bitvector2Integer(SymbolicExpression bitvector);
-
+	
 	/**
 	 * <p>
 	 * <b>Summary:</b>Set name (path) for prover unexpected error file.

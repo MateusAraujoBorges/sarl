@@ -16,30 +16,46 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with SARL. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package edu.udel.cis.vsl.sarl.IF.number;
+package edu.udel.cis.vsl.sarl.number.real;
 
 import java.math.BigInteger;
 
-/** An instance of this class represents a rational number. */
-public interface RationalNumber extends Number {
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+
+/**
+ * A representation of the integral infinity, it could be either postive or
+ * negative.
+ * 
+ * @author Wenhao Wu
+ *
+ */
+public class RealIntegerInfinity extends RealInfinity implements IntegerNumber {
+
+	// Constructor...
 
 	/**
-	 * Returns the numerator from a representation of this rational number as
-	 * the quotient of two Java {@link BigInteger}s. <br>
-	 * If this number is <strong>infinite</strong>, it will return <strong>
-	 * <code>null</code></strong>;
+	 * Creates an <strong>infinite</strong> integer. <br>
+	 * Its signum is determined by the given <code>boolean</code> value.
 	 * 
-	 * @return the numerator as a {@link BigInteger}
+	 * @param isPositive
+	 *            If <code>true</code>, this {@link RealIntegerInfinity} is the
+	 *            positive infinity, else this {@link RealIntegerInfinity} is
+	 *            the negative infinity.
 	 */
-	BigInteger numerator();
+	RealIntegerInfinity(boolean isPositive) {
+		super(isPositive);
+	}
 
-	/**
-	 * Returns the denominator from a representation of this rational number as
-	 * the quotient of two Java {@link BigInteger}s. <br>
-	 * If this number is <strong>infinite</strong>, it will return <strong>
-	 * <code>null</code></strong>;
-	 * 
-	 * @return the denominator as a {@link BigInteger}
-	 */
-	BigInteger denominator();
+	// Override Methods...
+
+	@Override
+	public int intValue() {
+		return Integer.MAX_VALUE;
+	}
+
+	@Override
+	public BigInteger bigIntegerValue() {
+		return null;
+	}
+
 }

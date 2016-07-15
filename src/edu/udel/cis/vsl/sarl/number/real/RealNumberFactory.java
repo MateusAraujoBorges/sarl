@@ -23,6 +23,7 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
@@ -37,14 +38,28 @@ import edu.udel.cis.vsl.sarl.util.BinaryOperator;
 public class RealNumberFactory implements NumberFactory {
 
 	/**
-	 * Static variable for a number representing the positive infinity.
+	 * Static variable for the positive integer number
 	 */
-	private static Number POS_INFINITY = null;
+	private static IntegerNumber INT_POS_INFINITY = new RealIntegerInfinity(
+			true);
 
 	/**
-	 * Static variable for a number representing the negative infinity.
+	 * Static variable for the negative integer number
 	 */
-	private static Number NEG_INFINITY = null;
+	private static IntegerNumber INT_NEG_INFINITY = new RealIntegerInfinity(
+			false);
+
+	/**
+	 * Static variable for the positive rational number
+	 */
+	private static RationalNumber RAT_POS_INFINITY = new RealRationalInfinity(
+			true);
+
+	/**
+	 * Static variable for the negative rational number
+	 */
+	private static RationalNumber RAT_NEG_INFINITY = new RealRationalInfinity(
+			false);
 
 	/**
 	 * Static variable represents the status of two {@link Interval}s <br>
@@ -176,10 +191,10 @@ public class RealNumberFactory implements NumberFactory {
 				zeroInteger, false);
 		zeroRationalInterval = new CommonInterval(false, zeroRational, false,
 				zeroRational, false);
-		universalIntegerInterval = new CommonInterval(true, null, true, null,
-				true);
-		universalRationalInterval = new CommonInterval(false, null, true, null,
-				true);
+		universalIntegerInterval = new CommonInterval(true, INT_NEG_INFINITY,
+				true, INT_POS_INFINITY, true);
+		universalRationalInterval = new CommonInterval(false, RAT_NEG_INFINITY,
+				true, RAT_POS_INFINITY, true);
 	}
 
 	@Override
@@ -265,21 +280,25 @@ public class RealNumberFactory implements NumberFactory {
 		}
 	}
 
-	/**
-	 * Returns true when a RealRational's denominator is equal to one.
-	 * 
-	 * @param arg0
-	 * @return
-	 */
-	public boolean isIntegral(RealRational arg0) {
-		return arg0.denominator().equals(BigInteger.ONE);
-	}
-
 	@Override
 	/**
 	 * An efficient way of adding two RationalNumbers.
 	 */
 	public RationalNumber add(RationalNumber arg0, RationalNumber arg1) {
+		if (arg0.isInfinite()) {
+			if (arg1.isInfinite()) {
+				if (arg0.signum() == arg1.signum())
+					return arg0;
+				else
+					throw new ArithmeticException(
+							"The sum of the positive infinity and the negative infinity is indeterminate.");
+			} else {
+				return arg0;
+			}
+		} else if (arg1.isInfinite()) {
+			return arg1;
+		}
+
 		RealRational x = (RealRational) arg0;
 		RealRational y = (RealRational) arg1;
 
@@ -294,6 +313,21 @@ public class RealNumberFactory implements NumberFactory {
 	 * An override of the add function to add two integers with precision
 	 */
 	public IntegerNumber add(IntegerNumber arg0, IntegerNumber arg1) {
+		if (arg0.isInfinite()) {
+			if (arg1.isInfinite()) {
+				if (arg0.signum() == arg1.signum())
+					return arg0;
+				else
+					// TODO: use the SARLException to replace others.
+					throw new SARLException(
+							"The sum of the positive infinity and the negative infinity is indeterminate.");
+			} else {
+				return arg0;
+			}
+		} else if (arg1.isInfinite()) {
+			return arg1;
+		}
+
 		RealInteger x = (RealInteger) arg0;
 		RealInteger y = (RealInteger) arg1;
 
@@ -305,6 +339,12 @@ public class RealNumberFactory implements NumberFactory {
 	 * returns an Integer of the quotient of numerator and denominator
 	 */
 	public IntegerNumber ceil(RationalNumber arg0) {
+		if (arg0.isInfinite())
+			if (arg0.signum() > 0)
+				return INT_POS_INFINITY;
+			else
+				return INT_NEG_INFINITY;
+
 		RealRational x = (RealRational) arg0;
 		BigInteger numerator = x.numerator();
 		BigInteger denominator = x.denominator();
@@ -372,6 +412,17 @@ public class RealNumberFactory implements NumberFactory {
 	 * An override of the divide method to accommodate rationals
 	 */
 	public RationalNumber divide(RationalNumber arg0, RationalNumber arg1) {
+		if (arg0.isInfinite() && arg1.isInfinite())
+			throw new ArithmeticException(
+					"The division of two infinite numbers is indeterminate.");
+		if (arg0.isInfinite())
+			if (arg1.isZero())
+				throw new ArithmeticException("Divided by Zero");
+			else
+				return infiniteRational(arg0.signum() == arg1.signum());
+		if (arg1.isInfinite())
+			return zeroRational;
+
 		RealRational x = (RealRational) arg0;
 		RealRational y = (RealRational) arg1;
 
@@ -384,6 +435,17 @@ public class RealNumberFactory implements NumberFactory {
 	 * An override of the divide method to maintain precision
 	 */
 	public IntegerNumber divide(IntegerNumber arg0, IntegerNumber arg1) {
+		if (arg0.isInfinite() && arg1.isInfinite())
+			throw new ArithmeticException(
+					"The division of two infinite numbers is indeterminate.");
+		if (arg0.isInfinite())
+			if (arg1.isZero())
+				throw new ArithmeticException("Divided by Zero");
+			else
+				return infiniteInteger(arg0.signum() == arg1.signum());
+		if (arg1.isInfinite())
+			return zeroInteger;
+
 		RealInteger x = (RealInteger) arg0;
 		RealInteger y = (RealInteger) arg1;
 
@@ -398,6 +460,9 @@ public class RealNumberFactory implements NumberFactory {
 		RealInteger x = (RealInteger) arg0;
 		RealInteger y = (RealInteger) arg1;
 
+		if (arg0.isInfinite() || arg1.isInfinite())
+			throw new IllegalArgumentException(
+					"Arguments of the Modulus operation is infinite.");
 		if (y.signum() == 0)
 			throw new IllegalArgumentException("Modulus divisor is zero");
 		if (y.signum() < 0)
@@ -415,6 +480,12 @@ public class RealNumberFactory implements NumberFactory {
 	 * Calculates the mathematical floor of a rational number
 	 */
 	public IntegerNumber floor(RationalNumber arg0) {
+		if (arg0.isInfinite())
+			if (arg0.signum() > 0)
+				return INT_POS_INFINITY;
+			else
+				return INT_NEG_INFINITY;
+
 		RealRational x = (RealRational) arg0;
 		BigInteger numerator = x.numerator();
 		BigInteger denominator = x.denominator();
@@ -437,8 +508,20 @@ public class RealNumberFactory implements NumberFactory {
 	/**
 	 * Creates and returns rationals from two integers
 	 */
-	public RealRational fraction(IntegerNumber numerator,
+	public RationalNumber fraction(IntegerNumber numerator,
 			IntegerNumber denominator) {
+		if (numerator.isInfinite() && denominator.isInfinite())
+			throw new ArithmeticException(
+					"The division of two infinite numbers is indeterminate.");
+		if (numerator.isInfinite())
+			if (denominator.isZero())
+				throw new ArithmeticException("Divided by Zero");
+			else
+				return numerator.signum() == denominator.signum()
+						? RAT_POS_INFINITY : RAT_NEG_INFINITY;
+		if (denominator.isInfinite())
+			return zeroRational;
+
 		RealInteger x = (RealInteger) numerator;
 		RealInteger y = (RealInteger) denominator;
 
@@ -459,6 +542,9 @@ public class RealNumberFactory implements NumberFactory {
 	 * denominator
 	 */
 	public RationalNumber integerToRational(IntegerNumber integer) {
+		if (integer.isInfinite())
+			return integer.signum() > 0 ? RAT_POS_INFINITY : RAT_NEG_INFINITY;
+
 		RealInteger x = (RealInteger) integer;
 
 		return rational(x.value(), BigInteger.ONE);
@@ -482,6 +568,13 @@ public class RealNumberFactory implements NumberFactory {
 	 * Overrides the multiply class to deal with rationals
 	 */
 	public RationalNumber multiply(RationalNumber arg0, RationalNumber arg1) {
+		if (arg0.isInfinite() || arg1.isInfinite())
+			if (arg0.isZero() || arg1.isZero())
+				throw new ArithmeticException(
+						"The multiplication of a infinity and a zero is indeterminate.");
+			else
+				return infiniteRational(arg0.signum() == arg1.signum());
+
 		RealRational x = (RealRational) arg0;
 		RealRational y = (RealRational) arg1;
 
@@ -494,6 +587,13 @@ public class RealNumberFactory implements NumberFactory {
 	 * Overrides the multiply class to maintain precision
 	 */
 	public IntegerNumber multiply(IntegerNumber arg0, IntegerNumber arg1) {
+		if (arg0.isInfinite() || arg1.isInfinite())
+			if (arg0.isZero() || arg1.isZero())
+				throw new ArithmeticException(
+						"The multiplication of a infinity and a zero is indeterminate.");
+			else
+				return infiniteInteger(arg0.signum() == arg1.signum());
+
 		RealInteger x = (RealInteger) arg0;
 		RealInteger y = (RealInteger) arg1;
 
@@ -507,6 +607,8 @@ public class RealNumberFactory implements NumberFactory {
 	public RationalNumber negate(RationalNumber arg0) {
 		RealRational x = (RealRational) arg0;
 
+		if (arg0.isInfinite())
+			return infiniteRational(arg0.signum() < 0);
 		return rational(x.numerator().negate(), x.denominator());
 	}
 
@@ -541,6 +643,11 @@ public class RealNumberFactory implements NumberFactory {
 	 * Returns an integer from a rational number
 	 */
 	public IntegerNumber numerator(RationalNumber arg0) {
+		if (arg0.isInfinite())
+			if (arg0.signum() > 0)
+				return INT_POS_INFINITY;
+			else
+				return INT_NEG_INFINITY;
 		return integer(((RealRational) arg0).numerator());
 	}
 
@@ -650,6 +757,20 @@ public class RealNumberFactory implements NumberFactory {
 	 * An override of the subtract method to deal with RationalNumbers
 	 */
 	public RationalNumber subtract(RationalNumber arg0, RationalNumber arg1) {
+		if (arg0.isInfinite()) {
+			if (arg1.isInfinite()) {
+				if (arg0.signum() != arg1.signum())
+					return arg0;
+				else
+					throw new ArithmeticException(
+							"The sum of the positive infinity and the negative infinity is indeterminate.");
+			} else {
+				return arg0;
+			}
+		} else if (arg1.isInfinite()) {
+			return infiniteRational(arg1.signum() < 0);
+		}
+
 		return add(arg0, negate(arg1));
 	}
 
@@ -658,6 +779,20 @@ public class RealNumberFactory implements NumberFactory {
 	 * An override of the subtract method to maintain precision
 	 */
 	public IntegerNumber subtract(IntegerNumber arg0, IntegerNumber arg1) {
+		if (arg0.isInfinite()) {
+			if (arg1.isInfinite()) {
+				if (arg0.signum() != arg1.signum())
+					return arg0;
+				else
+					throw new ArithmeticException(
+							"The sum of the positive infinity and the negative infinity is indeterminate.");
+			} else {
+				return arg0;
+			}
+		} else if (arg1.isInfinite()) {
+			return infiniteInteger(arg1.signum() < 0);
+		}
+
 		RealInteger x = (RealInteger) arg0;
 		RealInteger y = (RealInteger) arg1;
 
@@ -686,9 +821,7 @@ public class RealNumberFactory implements NumberFactory {
 	 * to one
 	 */
 	public boolean isIntegral(RationalNumber arg0) {
-		RealRational x = (RealRational) arg0;
-
-		return x.denominator().equals(BigInteger.ONE);
+		return !arg0.isInfinite() && arg0.denominator().equals(BigInteger.ONE);
 	}
 
 	@Override
@@ -867,6 +1000,10 @@ public class RealNumberFactory implements NumberFactory {
 	 * function
 	 */
 	public IntegerNumber gcd(IntegerNumber arg0, IntegerNumber arg1) {
+		if (arg0.isInfinite() || arg1.isInfinite())
+			throw new IllegalArgumentException(
+					"Arguments of the gcd method cannot be a infinite number!");
+
 		BigInteger value0 = ((RealInteger) arg0).value();
 		BigInteger value1 = ((RealInteger) arg1).value();
 
@@ -879,6 +1016,9 @@ public class RealNumberFactory implements NumberFactory {
 	 * product by their gcd
 	 */
 	public IntegerNumber lcm(IntegerNumber arg0, IntegerNumber arg1) {
+		if (arg0.isInfinite() || arg1.isInfinite())
+			throw new IllegalArgumentException(
+					"Arguments of the lcm method cannot be a infinite number!");
 		return divide(multiply(arg0, arg1), gcd(arg0, arg1));
 	}
 
@@ -896,7 +1036,16 @@ public class RealNumberFactory implements NumberFactory {
 			RationalNumber[] row = matrix[i];
 
 			for (int j = 0; j < row.length; j++) {
-				out.print(row[j] + "  ");
+				RationalNumber element = row[j];
+
+				if (element.isInfinite())
+					if (element.signum() > 0)
+						out.print("+inf");
+					else
+						out.print("-inf");
+				else
+					out.print(element);
+				out.print("  ");
 			}
 			out.println();
 		}
@@ -1054,31 +1203,47 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	public Interval newInterval(boolean isIntegral, Number lower,
 			boolean strictLower, Number upper, boolean strictUpper) {
-		assert lower == null || (isIntegral == lower instanceof IntegerNumber);
-		assert upper == null || (isIntegral == upper instanceof IntegerNumber);
+		assert (isIntegral == lower instanceof IntegerNumber);
+		assert (isIntegral == upper instanceof IntegerNumber);
 		if (isIntegral) {
 			// Adjust the strict and bound for integral intervals
-			if (lower != null && strictLower) {
+			if (strictLower && !lower.isInfinite()) {
 				lower = add(lower, oneInteger);
 				strictLower = false;
 			}
-			if (upper != null && strictUpper) {
+			if (strictUpper && !upper.isInfinite()) {
 				upper = subtract(upper, oneInteger);
 				strictUpper = false;
 			}
 		}
-		if (lower != null && upper != null) {
-			// Check the illegal interval arguments.
-			int compareUpperLower = upper.numericalCompareTo(lower);
 
-			if ((compareUpperLower < 0) || (compareUpperLower == 0
-					&& (strictLower || strictUpper))) {
-				return isIntegral ? emptyIntegerInterval
-						: emptyRationalInterval;
+		boolean isValid = true;
+
+		if (lower.isInfinite()) {
+			if (upper.isInfinite())
+				isValid = isValid && upper.signum() > 0;
+			isValid = isValid && lower.signum() < 0;
+		} else {
+			if (upper.isInfinite())
+				isValid = isValid && upper.signum() > 0;
+			else {
+				int compareUpperLower = upper.numericalCompareTo(lower);
+
+				isValid = isValid && (compareUpperLower >= 0)
+						&& (compareUpperLower != 0
+								|| (!strictLower && !strictUpper));
 			}
 		}
-		return new CommonInterval(isIntegral, lower, strictLower, upper,
-				strictUpper);
+
+		if (isValid)
+			if (lower.isInfinite() && upper.isInfinite())
+				return isIntegral ? universalIntegerInterval
+						: universalRationalInterval;
+			else
+				return new CommonInterval(isIntegral, lower, strictLower, upper,
+						strictUpper);
+		else
+			return isIntegral ? emptyIntegerInterval : emptyRationalInterval;
 	}
 
 	@Override
@@ -1099,61 +1264,32 @@ public class RealNumberFactory implements NumberFactory {
 		boolean su1 = i1.strictUpper();
 		boolean su2 = i2.strictUpper();
 		boolean sl, su;
+		int compareLo = lo1.numericalCompareTo(lo2);
+		int compareUp = up1.numericalCompareTo(up2);
 
-		if (lo1 == NEG_INFINITY) {
+		// Get the greater lower bound
+		if (compareLo < 0) {
 			lo = lo2;
 			sl = sl2;
-		} else if (lo2 == NEG_INFINITY) {
+		} else if (compareLo == 0) {
+			lo = lo1;
+			sl = sl1 || sl2;
+		} else {
 			lo = lo1;
 			sl = sl1;
-		} else {
-			int compare = lo1.numericalCompareTo(lo2);
-
-			if (compare < 0) {
-				lo = lo2;
-				sl = sl2;
-			} else if (compare == 0) {
-				lo = lo1;
-				sl = sl1 || sl2;
-			} else {
-				lo = lo1;
-				sl = sl1;
-			}
 		}
-		if (up1 == POS_INFINITY) {
+		// Get the lesser upper bound
+		if (compareUp > 0) {
 			up = up2;
 			su = su2;
-		} else if (up2 == POS_INFINITY) {
+		} else if (compareUp == 0) {
+			up = up1;
+			su = su1 || su2;
+		} else {
 			up = up1;
 			su = su1;
-		} else {
-			int compare = up1.numericalCompareTo(up2);
-
-			if (compare > 0) {
-				up = up2;
-				su = su2;
-			} else if (compare == 0) {
-				up = up1;
-				su = su1 || su2;
-			} else {
-				up = up1;
-				su = su1;
-			}
 		}
-		if (lo != NEG_INFINITY && up != POS_INFINITY) {
-			int compare = up.numericalCompareTo(lo);
-
-			if (compare < 0) {
-				return isIntegral ? emptyIntegerInterval
-						: emptyRationalInterval;
-			} else if (compare == 0) {
-				if (sl || su) {
-					return isIntegral ? emptyIntegerInterval
-							: emptyRationalInterval;
-				}
-			}
-		}
-		return new CommonInterval(isIntegral, lo, sl, up, su);
+		return newInterval(isIntegral, lo, sl, up, su);
 	}
 
 	@Override
@@ -1180,26 +1316,23 @@ public class RealNumberFactory implements NumberFactory {
 			boolean sl2 = i2.strictLower();
 			boolean su1 = i1.strictUpper();
 			boolean su2 = i2.strictUpper();
-			int compareUp1Lo2 = (up1 == POS_INFINITY || lo2 == NEG_INFINITY) ? 1
-					: up1.numericalCompareTo(lo2);
+			int compareUp1Lo2 = up1.numericalCompareTo(lo2);
 
 			if (compareUp1Lo2 > 0) {
 				Number lo1 = i1.lower();
 				Number up2 = i2.upper();
 				boolean sl1 = i1.strictLower();
-				int compareLo1Up2 = (lo1 == NEG_INFINITY || up2 == POS_INFINITY)
-						? -1 : lo1.numericalCompareTo(up2);
+				int compareLo1Up2 = lo1.numericalCompareTo(up2);
 
 				if (compareLo1Up2 < 0) {
 					// Intersected
-					Number lo = NEG_INFINITY, up = POS_INFINITY;
+					Number lo = isIntegral ? INT_NEG_INFINITY
+							: RAT_NEG_INFINITY;
+					Number up = isIntegral ? INT_POS_INFINITY
+							: RAT_POS_INFINITY;
 					boolean sl = false, su = false;
-					int compareLo1Lo2 = lo1 == NEG_INFINITY ? -1
-							: lo2 == NEG_INFINITY ? 1
-									: lo1.numericalCompareTo(lo2);
-					int compareUp1Up2 = up1 == POS_INFINITY ? 1
-							: up2 == POS_INFINITY ? -1
-									: up1.numericalCompareTo(up2);
+					int compareLo1Lo2 = lo1.numericalCompareTo(lo2);
+					int compareUp1Up2 = up1.numericalCompareTo(up2);
 
 					if (compareLo1Lo2 < 0) { // lo1<lo2
 						lo = lo1;
@@ -1222,14 +1355,12 @@ public class RealNumberFactory implements NumberFactory {
 						su = su1;
 					}
 					result.status = 0;
-					result.union = new CommonInterval(isIntegral, lo, sl, up,
-							su);
+					result.union = newInterval(isIntegral, lo, sl, up, su);
 					return;
 				} else if (compareLo1Up2 == 0 && (!sl1 || !su2)) {
 					// Connected
 					result.status = 0;
-					result.union = new CommonInterval(isIntegral, lo2, sl2, up1,
-							su1);
+					result.union = newInterval(isIntegral, lo2, sl2, up1, su1);
 					return;
 				} else {
 					// Disjoint
@@ -1239,13 +1370,9 @@ public class RealNumberFactory implements NumberFactory {
 				}
 			} else if (compareUp1Lo2 == 0 && (!su1 || !su2)) {
 				// Connected
-				Number lo1 = i1.lower();
-				Number up2 = i2.upper();
-				boolean sl1 = i1.strictLower();
-
 				result.status = 0;
-				result.union = new CommonInterval(isIntegral, lo1, sl1, up2,
-						su2);
+				result.union = newInterval(isIntegral, i1.lower(),
+						i1.strictLower(), i2.upper(), su2);
 				return;
 			} else {
 				// Disjoint
@@ -1259,6 +1386,7 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	public Interval affineTransform(Interval itv, Number a, Number b) {
 		assert itv != null && a != null && b != null;
+		assert !a.isInfinite() && !b.isInfinite();
 
 		boolean isIntegral = itv.isIntegral();
 
@@ -1274,14 +1402,14 @@ public class RealNumberFactory implements NumberFactory {
 		boolean su = itv.strictUpper();
 
 		// New upper and lower of result.union.
-		lo = lo == null ? null : add(multiply(lo, a), b);
-		up = up == null ? null : add(multiply(up, a), b);
+		if (a.signum() == 0)
+			return singletonInterval(b);
+		lo = add(multiply(lo, a), b);
+		up = add(multiply(up, a), b);
 		if (a.signum() < 0)
-			return new CommonInterval(isIntegral, up, su, lo, sl);
-		else if (a.signum() == 0)
-			return new CommonInterval(isIntegral, b, false, b, false);
+			return newInterval(isIntegral, up, su, lo, sl);
 		else
-			return new CommonInterval(isIntegral, lo, sl, up, su);
+			return newInterval(isIntegral, lo, sl, up, su);
 	}
 
 	@Override
@@ -1292,13 +1420,12 @@ public class RealNumberFactory implements NumberFactory {
 
 		assert isIntegral == i2.isIntegral();
 
-		// int contains1 = 1; // i2 contains i1
-		int cmpL1L2 = 0, cmpL1U2 = 0;
-		int cmpU1L2 = 0, cmpU1U2 = 0;
 		Number lo1 = i1.lower(), lo2 = i2.lower();
 		Number up1 = i1.upper(), up2 = i2.upper();
 		boolean sl1 = i1.strictLower(), sl2 = i2.strictLower();
 		boolean su1 = i1.strictUpper(), su2 = i2.strictUpper();
+		int compareL1L2 = lo1.numericalCompareTo(lo2);
+		int compareU1U2 = up1.numericalCompareTo(up2);
 
 		if (i1.isEmpty() && i2.isEmpty()) {
 			return EXACTLY_SAME;
@@ -1307,31 +1434,13 @@ public class RealNumberFactory implements NumberFactory {
 		} else if (i2.isEmpty()) {
 			return CONTAINED_IN_INTERVAL1;
 		}
+		if (compareL1L2 < 0) {
+			if (compareU1U2 < 0) {
+				int compareU1L2 = up1.numericalCompareTo(lo2);
 
-		if (lo1 == null && lo2 == null) {
-			cmpL1L2 = 0;
-		} else if (lo1 == null) {
-			cmpL1L2 = -1;
-		} else if (lo2 == null) {
-			cmpL1L2 = 1;
-		} else {
-			cmpL1L2 = compare(lo1, lo2);
-		}
-		if (up1 == null && up2 == null) {
-			cmpU1U2 = 0;
-		} else if (up1 == null) {
-			cmpU1U2 = 1;
-		} else if (up2 == null) {
-			cmpU1U2 = -1;
-		} else {
-			cmpU1U2 = compare(up1, up2);
-		}
-		if (cmpL1L2 < 0) {
-			if (cmpU1U2 < 0) {
-				cmpU1L2 = compare(up1, lo2);
-				if (cmpU1L2 < 0) {
+				if (compareU1L2 < 0) {
 					return LEFT_DISJOINTED;
-				} else if (cmpU1L2 > 0) {
+				} else if (compareU1L2 > 0) {
 					return LEFT_INTERSECTED;
 				} else {
 					if (!su1 && !sl2) {
@@ -1340,30 +1449,28 @@ public class RealNumberFactory implements NumberFactory {
 						return LEFT_DISJOINTED;
 					}
 				}
-			} else if (cmpU1U2 > 0) {
+			} else if (compareU1U2 > 0) {
 				return CONTAINED_IN_INTERVAL1;
 			} else {
-				if (up1 == null || lo2 == null) {
-					cmpU1L2 = 1;
-				} else {
-					cmpU1L2 = compare(up1, lo2);
-				}
-				if (su1 && cmpU1L2 == 0) {
+				int compareU1L2 = up1.numericalCompareTo(lo2);
+
+				if (su1 && compareU1L2 == 0) {
 					return LEFT_DISJOINTED;
-				} else if (su1 && !su2 && cmpU1L2 > 0) {
+				} else if (su1 && !su2 && compareU1L2 > 0) {
 					return LEFT_INTERSECTED;
 				} else {
 					return CONTAINED_IN_INTERVAL1;
 				}
 			}
-		} else if (cmpL1L2 > 0) {
-			if (cmpU1U2 < 0) {
+		} else if (compareL1L2 > 0) {
+			if (compareU1U2 < 0) {
 				return CONTAINED_IN_INTERVAL2;
-			} else if (cmpU1U2 > 0) {
-				cmpL1U2 = compare(lo1, up2);
-				if (cmpL1U2 < 0) {
+			} else if (compareU1U2 > 0) {
+				int compareL1U2 = lo1.numericalCompareTo(up2);
+
+				if (compareL1U2 < 0) {
 					return RIGHT_INTERSECTED;
-				} else if (cmpL1U2 > 0) {
+				} else if (compareL1U2 > 0) {
 					return RIGHT_DISJOINTED;
 				} else {
 					if (!sl1 && !su2) {
@@ -1373,52 +1480,43 @@ public class RealNumberFactory implements NumberFactory {
 					}
 				}
 			} else {
-				if (lo1 == null || up2 == null) {
-					cmpL1U2 = -1;
-				} else {
-					cmpL1U2 = compare(lo1, up2);
-				}
-				if (su2 && cmpL1U2 == 0) {
+				int compareL1U2 = lo1.numericalCompareTo(up2);
+
+				if (su2 && compareL1U2 == 0) {
 					return RIGHT_DISJOINTED;
-				} else if (!su1 && su2 && cmpL1U2 < 0) {
+				} else if (!su1 && su2 && compareL1U2 < 0) {
 					return RIGHT_INTERSECTED;
 				} else {
 					return CONTAINED_IN_INTERVAL2;
 				}
 			}
 		} else {
-			if (cmpU1U2 < 0) {
-				if (up1 == null || lo2 == null) {
-					cmpU1L2 = 1;
-				} else {
-					cmpU1L2 = compare(up1, lo2);
-				}
-				if (cmpU1L2 == 0) {
+			if (compareU1U2 < 0) {
+				int compareU1L2 = up1.numericalCompareTo(lo2);
+
+				if (compareU1L2 == 0) {
 					if (sl2) {
 						return LEFT_DISJOINTED;
 					} else {
 						return CONTAINED_IN_INTERVAL2;
 					}
-				} else if (cmpU1L2 > 0) {
+				} else if (compareU1L2 > 0) {
 					if (!sl1 && sl2) {
 						return LEFT_INTERSECTED;
 					} else {
 						return CONTAINED_IN_INTERVAL2;
 					}
 				}
-			} else if (cmpU1U2 > 0) {
-				if (lo1 == null || up2 == null) {
-					cmpL1U2 = -1;
-				} else {
-					cmpL1U2 = compare(lo1, up2);
-				}
-				if (cmpL1U2 == 0) {
+			} else if (compareU1U2 > 0) {
+				int compareL1U2 = lo1.numericalCompareTo(up2);
+
+				if (compareL1U2 == 0) {
 					if (sl1) {
 						return RIGHT_DISJOINTED;
 					} else {
 						return CONTAINED_IN_INTERVAL1;
 					}
-				} else if (cmpL1U2 < 0) {
+				} else if (compareL1U2 < 0) {
 					if (sl1 && !sl2) {
 						return RIGHT_INTERSECTED;
 					} else {
@@ -1452,56 +1550,39 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	public Interval add(Interval i1, Interval i2) {
+		assert i1 != null && i2 != null;
 		assert !i1.isEmpty() && !i2.isEmpty();
-		assert i1.isIntegral() == i2.isIntegral();
 
-		Number lo1 = i1.lower();
-		Number up1 = i1.upper();
-		Number lo2 = i2.lower();
-		Number up2 = i2.upper();
-		boolean sl1 = i1.strictLower();
-		boolean su1 = i1.strictUpper();
-		boolean sl2 = i2.strictLower();
-		boolean su2 = i2.strictUpper();
 		boolean isIntegral = i1.isIntegral();
 
-		if (i1.isUniversal() || i2.isUniversal()) {
-			return newInterval(isIntegral, null, true, null, true);
-		} else {
-			Number lo = null;
-			Number up = null;
-			boolean sl = true;
-			boolean su = true;
-
-			if (lo1 != null && lo2 != null) {
-				if (!sl1 && !sl2) {
-					sl = false;
-				}
-				lo = add(lo1, lo2);
-			}
-			if (up1 != null && up2 != null) {
-				if (!su1 && !su2) {
-					su = false;
-				}
-				up = add(up1, up2);
-			}
-			return newInterval(isIntegral, lo, sl, up, su);
-		}
+		assert isIntegral == i2.isIntegral();
+		return newInterval(isIntegral, add(i1.lower(), i2.lower()),
+				i1.strictLower() || i2.strictLower(),
+				add(i1.upper(), i2.upper()),
+				i1.strictUpper() || i2.strictUpper());
 	}
 
 	@Override
 	public Interval multiply(Interval i1, Interval i2) {
 		assert i1 != null && i2 != null;
 		assert !i1.isEmpty() && !i2.isEmpty();
-		assert i1.isIntegral() == i2.isIntegral();
 
-		Number lo1 = i1.lower(), up1 = i1.upper();
-		Number lo2 = i2.lower(), up2 = i2.upper();
-		Number lo = null, up = null;
-		boolean sl1 = i1.strictLower(), su1 = i1.strictUpper();
-		boolean sl2 = i2.strictLower(), su2 = i2.strictUpper();
-		boolean sl = true, su = true;
 		boolean isIntegral = i1.isIntegral();
+
+		assert isIntegral == i2.isIntegral();
+
+		Number lo1 = i1.lower();
+		Number up1 = i1.upper();
+		Number lo2 = i2.lower();
+		Number up2 = i2.upper();
+		Number lo = infiniteNumber(isIntegral, false);
+		Number up = infiniteNumber(isIntegral, true);
+		boolean sl1 = i1.strictLower();
+		boolean su1 = i1.strictUpper();
+		boolean sl2 = i2.strictLower();
+		boolean su2 = i2.strictUpper();
+		boolean sl = true;
+		boolean su = true;
 
 		// Algorithm used is retrieved from:
 		// https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -1517,7 +1598,8 @@ public class RealNumberFactory implements NumberFactory {
 			// then return universal.
 			return isIntegral ? universalIntegerInterval
 					: universalRationalInterval;
-		else if (lo1 == null && lo2 == null) {
+		else if (lo1.isInfinite() && lo2.isInfinite()) {
+			// i.e. If up1 == 0 && su1, then signumUp1 = 0 * 2 - 1;
 			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
 			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
 
@@ -1530,7 +1612,7 @@ public class RealNumberFactory implements NumberFactory {
 				lo = multiply(up1, up2);
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
-		} else if (lo1 == null && up2 == null) {
+		} else if (lo1.isInfinite() && up2.isInfinite()) {
 			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
 			int signumLo2 = sl2 ? lo2.signum() * 2 + 1 : lo2.signum();
 
@@ -1545,7 +1627,7 @@ public class RealNumberFactory implements NumberFactory {
 				up = multiply(up1, lo2);
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
-		} else if (up1 == null && lo2 == null) {
+		} else if (up1.isInfinite() && lo2.isInfinite()) {
 			int signumLo1 = sl1 ? lo1.signum() * 2 + 1 : lo1.signum();
 			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
 
@@ -1558,7 +1640,7 @@ public class RealNumberFactory implements NumberFactory {
 				up = multiply(lo1, up2);
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
-		} else if (up1 == null && up2 == null) {
+		} else if (up1.isInfinite() && up2.isInfinite()) {
 			int signumLo1 = sl1 ? lo1.signum() * 2 + 1 : lo1.signum();
 			int signumLo2 = sl2 ? lo2.signum() * 2 + 1 : lo2.signum();
 
@@ -1571,7 +1653,7 @@ public class RealNumberFactory implements NumberFactory {
 				lo = multiply(lo1, lo2);
 				return newInterval(isIntegral, lo, sl, up, su);
 			}
-		} else if (lo1 == null) {
+		} else if (lo1.isInfinite()) {
 			int signumLo2 = sl2 ? lo2.signum() * 2 + 1 : lo2.signum();
 			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
 			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
@@ -1602,7 +1684,7 @@ public class RealNumberFactory implements NumberFactory {
 				return isIntegral ? universalIntegerInterval
 						: universalRationalInterval;
 			}
-		} else if (up1 == null) {
+		} else if (up1.isInfinite()) {
 			int signumLo1 = sl1 ? lo1.signum() * 2 + 1 : lo1.signum();
 			int signumLo2 = sl2 ? lo2.signum() * 2 + 1 : lo2.signum();
 			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
@@ -1633,7 +1715,7 @@ public class RealNumberFactory implements NumberFactory {
 				return isIntegral ? universalIntegerInterval
 						: universalRationalInterval;
 			}
-		} else if (lo2 == null) {
+		} else if (lo2.isInfinite()) {
 			int signumLo1 = sl1 ? lo1.signum() * 2 + 1 : lo1.signum();
 			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
 			int signumUp2 = su2 ? up2.signum() * 2 - 1 : up2.signum();
@@ -1664,7 +1746,7 @@ public class RealNumberFactory implements NumberFactory {
 				return isIntegral ? universalIntegerInterval
 						: universalRationalInterval;
 			}
-		} else if (up2 == null) {
+		} else if (up2.isInfinite()) {
 			int signumLo1 = sl1 ? lo1.signum() * 2 + 1 : lo1.signum();
 			int signumLo2 = sl2 ? lo2.signum() * 2 + 1 : lo2.signum();
 			int signumUp1 = su1 ? up1.signum() * 2 - 1 : up1.signum();
@@ -1794,174 +1876,109 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	public Interval power(Interval interval, int exp) {
 		assert interval != null;
+
+		boolean isIntegral = interval.isIntegral();
+
+		assert exp >= 0 || !isIntegral;
 		assert !(interval.isZero() && exp == 0);
 
 		boolean strictLower = interval.strictLower();
 		boolean strictUpper = interval.strictUpper();
 		boolean newSl = true;
 		boolean newSu = true;
-		boolean isIntegral = interval.isIntegral();
 		Number lower = interval.lower();
 		Number upper = interval.upper();
-		Number newLo = null;
-		Number newUp = null;
+		Number newLo = infiniteNumber(isIntegral, false);
+		Number newUp = infiniteNumber(isIntegral, true);
 		Number oneNumber = isIntegral ? oneInteger : oneRational;
 		Number zeroNumber = isIntegral ? zeroInteger : zeroRational;
 
-		if (exp == 0) {
-			return newInterval(isIntegral, oneNumber, false, oneNumber, false);
-		} else if (exp > 0) {
-			if (interval.isUniversal()) {
-				return interval;
-			} else if (lower == null) {
-				int signumUp = strictUpper ? upper.signum() * 2 - 1
-						: upper.signum();
+		if (exp == 0)
+			return singletonInterval(oneNumber);
+		if (exp < 0)
+			return power(divide(singletonInterval(oneNumber), interval), -exp);
+		// exp > 0
+		if (interval.isUniversal()) {
+			return interval;
+		} else if (lower.isInfinite()) {
+			int signumUp = strictUpper ? upper.signum() * 2 - 1
+					: upper.signum();
 
+			if (exp % 2 == 0) {
 				if (signumUp < 0) {
-					if (exp % 2 == 0) {
-						newLo = power(negate(upper), exp);
-						newSl = strictUpper;
-					} else {
-						newUp = power(upper, exp);
-						newSu = strictUpper;
-					}
+					newLo = power(upper, exp);
+					newSl = strictUpper;
 				} else {
-					if (exp % 2 == 0) {
-						newLo = zeroNumber;
-						newSl = false;
-					} else {
-						newUp = power(upper, exp);
-						newSu = strictUpper;
-					}
+					newLo = zeroNumber;
+					newSl = false;
 				}
-				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
-			} else if (upper == null) {
-				int signumLo = strictLower ? lower.signum() * 2 + 1
-						: lower.signum();
-
-				if (signumLo > 0) {
-					newLo = power(lower, exp);
-					newSl = strictLower;
-				} else {
-					if (exp % 2 == 0) {
-						newLo = zeroNumber;
-						newSl = false;
-					} else {
-						newLo = power(lower, exp);
-						newSl = strictLower;
-					}
-				}
-				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 			} else {
-				int signumLo = strictLower ? lower.signum() * 2 + 1
-						: lower.signum();
-				int signumUp = strictUpper ? upper.signum() * 2 - 1
-						: upper.signum();
-
 				newUp = power(upper, exp);
 				newSu = strictUpper;
+			}
+			return newInterval(isIntegral, newLo, newSl, newUp, newSu);
+		} else if (upper.isInfinite()) {
+			int signumLo = strictLower ? lower.signum() * 2 + 1
+					: lower.signum();
+
+			if (signumLo > 0) {
 				newLo = power(lower, exp);
 				newSl = strictLower;
-				if (signumLo >= 0) {
-					assert signumUp >= 0;
-					// Do nothing
-				} else if (signumUp <= 0) {
-					assert signumLo <= 0;
-					if (exp % 2 == 0) {
-						newUp = power(negate(lower), exp);
-						newSu = strictLower;
-						newLo = power(negate(upper), exp);
-						newSl = strictUpper;
-					}
+			} else {
+				if (exp % 2 == 0) {
+					newLo = zeroNumber;
+					newSl = false;
 				} else {
-					if (exp % 2 == 0) {
-						Number tempUpFromLo = power(negate(lower), exp);
-						Number tempUpFromUp = power(upper, exp);
-						if (tempUpFromLo.compareTo(tempUpFromUp) < 0) {
-							newUp = tempUpFromUp;
-							newSu = strictUpper;
-						} else {
-							newUp = tempUpFromLo;
-							newSu = strictLower;
-						}
-						newLo = zeroNumber;
-						newSl = false;
-					}
+					newLo = power(lower, exp);
+					newSl = strictLower;
 				}
-				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 			}
+			return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 		} else {
-			exp = -exp;
-			if (interval.isUniversal()) {
-				throw new IllegalArgumentException(
-						"When the exponent number is less than zero, the interval should not contain zero");
-			} else if (lower == null) {
-				int signumUp = strictUpper ? upper.signum() * 2 - 1
-						: upper.signum();
+			int signumLo = strictLower ? lower.signum() * 2 + 1
+					: lower.signum();
+			int signumUp = strictUpper ? upper.signum() * 2 - 1
+					: upper.signum();
 
-				if (signumUp < 0) {
-					if (exp % 2 == 0) {
-						newLo = zeroNumber;
-						newSl = true;
-						newUp = divide(oneNumber, power(negate(upper), exp));
+			newUp = power(upper, exp);
+			newSu = strictUpper;
+			newLo = power(lower, exp);
+			newSl = strictLower;
+
+			if (exp % 2 == 0)
+				if (signumUp <= 0) {
+					assert signumLo <= 0;
+
+					Number tempNum = newUp;
+					boolean tempStrict = newSu;
+
+					newUp = newLo;
+					newSu = newSl;
+					newLo = tempNum;
+					newSl = tempStrict;
+				} else if (signumLo < 0) {
+					Number tempUpFromLo = power(negate(lower), exp);
+					Number tempUpFromUp = power(upper, exp);
+
+					if (tempUpFromLo.compareTo(tempUpFromUp) < 0) {
+						newUp = tempUpFromUp;
 						newSu = strictUpper;
 					} else {
-						newLo = divide(oneNumber, power(upper, exp));
-						newSl = strictUpper;
-						newUp = zeroNumber;
-						newSu = true;
+						newUp = tempUpFromLo;
+						newSu = strictLower;
 					}
-				} else {
-					throw new IllegalArgumentException(
-							"When the exponent number is less than zero, the interval should not contain zero");
-				}
-				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
-			} else if (upper == null) {
-				int signumLo = strictLower ? lower.signum() * 2 + 1
-						: lower.signum();
-
-				if (signumLo > 0) {
 					newLo = zeroNumber;
-					newSl = true;
-					newUp = divide(oneNumber, power(lower, exp));
-					newSu = strictLower;
+					newSl = false;
 				} else {
-					throw new IllegalArgumentException(
-							"When the exponent number is less than zero, the interval should not contain zero");
+					assert signumLo >= 0 && signumUp >= 0;
 				}
-				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
-			} else {
-				int signumLo = strictLower ? lower.signum() * 2 + 1
-						: lower.signum();
-				int signumUp = strictUpper ? upper.signum() * 2 - 1
-						: upper.signum();
-
-				newLo = divide(oneNumber, power(upper, exp));
-				newSl = strictUpper;
-				newUp = divide(oneNumber, power(lower, exp));
-				newSu = strictLower;
-				if (signumLo > 0) {
-					assert signumUp > 0;
-					// Do nothing
-				} else if (signumUp < 0) {
-					assert signumLo < 0;
-					if (exp % 2 == 0) {
-						newUp = divide(oneNumber, power(negate(upper), exp));
-						newSu = strictUpper;
-						newLo = divide(oneNumber, power(negate(lower), exp));
-						newSl = strictLower;
-					}
-				} else {
-					throw new IllegalArgumentException(
-							"When the exponent number is less than zero, the interval should not contain zero");
-				}
-				return newInterval(isIntegral, newLo, newSl, newUp, newSu);
-			}
 		}
+		return newInterval(isIntegral, newLo, newSl, newUp, newSu);
 	}
 
 	@Override
 	public Number power(Number number, int exp) {
+		assert exp >= 0;
 		if (number instanceof IntegerNumber) {
 			return power((IntegerNumber) number, exp);
 		} else if (number instanceof RationalNumber) {
@@ -1979,9 +1996,19 @@ public class RealNumberFactory implements NumberFactory {
 		if (exp == 0) {
 			if (number.isZero())
 				throw new IllegalArgumentException("0 could not power with 0.");
+			else if (number.isInfinite())
+				throw new IllegalArgumentException(
+						"The infinity could not power with 0.");
 			else
 				return oneInteger;
 		}
+
+		if (number.isInfinite())
+			if (number.signum() < 0 && exp % 2 != 0)
+				return infiniteInteger(false);
+			else
+				return infiniteInteger(true);
+
 		IntegerNumber result = oneInteger;
 		IntegerNumber base = number;
 		IntegerNumber e = integer(exp);
@@ -2011,13 +2038,13 @@ public class RealNumberFactory implements NumberFactory {
 			if (number.isZero())
 				throw new IllegalArgumentException(
 						"0.0 could not power with 0.");
+			else if (number.isInfinite())
+				throw new IllegalArgumentException(
+						"The infinity could not power with 0.");
 			else
 				return oneRational;
 		}
-		if (exp == 0) {
-			resultNum = oneInteger;
-			resultDen = oneInteger;
-		} else if (exp > 0) {
+		if (exp > 0) {
 			resultNum = power(baseNum, integer(exp));
 			resultDen = power(baseDen, integer(exp));
 		} else {
@@ -2029,7 +2056,7 @@ public class RealNumberFactory implements NumberFactory {
 
 	@Override
 	public Interval singletonInterval(Number x) {
-		assert x != null;
+		assert !x.isInfinite();
 		return newInterval(x instanceof IntegerNumber, x, false, x, false);
 	}
 
@@ -2156,63 +2183,67 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	public Interval join(Interval i1, Interval i2) {
 		assert i1 != null && i2 != null;
+
+		boolean isIntegral = i1.isIntegral();
+
 		assert i1.isIntegral() == i2.isIntegral();
 
-		boolean isInt = i1.isIntegral();
-		boolean strictLower1 = i1.strictLower();
-		boolean strictLower2 = i2.strictLower();
-		boolean strictUpper1 = i1.strictUpper();
-		boolean strictUpper2 = i2.strictUpper();
-		boolean strictUpperResult = false;
-		boolean strictLowerResult = false;
-		Number lower1 = i1.lower();
-		Number lower2 = i2.lower();
-		Number upper1 = i1.upper();
-		Number upper2 = i2.upper();
-		Number lowerResult = null;
-		Number upperResult = null;
+		boolean sl1 = i1.strictLower();
+		boolean sl2 = i2.strictLower();
+		boolean su1 = i1.strictUpper();
+		boolean su2 = i2.strictUpper();
+		boolean su = false;
+		boolean sl = false;
+		Number lo1 = i1.lower();
+		Number lo2 = i2.lower();
+		Number up1 = i1.upper();
+		Number up2 = i2.upper();
+		Number lo = null;
+		Number up = null;
 
-		if (lower1 != null && lower2 != null) {
-			int compareLower = lower1.compareTo(lower2);
+		if (i2.isEmpty() || i1.isUniversal())
+			return i1;
+		if (i1.isEmpty() || i2.isUniversal())
+			return i2;
 
-			if (compareLower < 0) {
-				strictLowerResult = strictLower1;
-				lowerResult = lower1;
-			} else if (compareLower > 0) {
-				strictLowerResult = strictLower2;
-				lowerResult = lower2;
-			} else {
-				strictLowerResult = strictLower1 && strictLower2;
-				lowerResult = lower2;
-			}
+		int compareLo = lo1.numericalCompareTo(lo2);
+		int compareUp = up1.numericalCompareTo(up2);
+
+		if (compareLo < 0) {
+			// lo1 < lo2
+			sl = sl1;
+			lo = lo1;
+		} else if (compareLo > 0) {
+			// lo1 > lo2
+			sl = sl2;
+			lo = lo2;
 		} else {
-			strictLowerResult = true;
+			// lo1 == lo2
+			sl = sl1 && sl2;
+			lo = lo2;
 		}
-		if (upper1 != null && upper2 != null) {
-			int compareUpper = upper1.compareTo(upper2);
-
-			if (compareUpper > 0) {
-				strictUpperResult = strictUpper1;
-				upperResult = upper1;
-			} else if (compareUpper < 0) {
-				strictUpperResult = strictUpper2;
-				upperResult = upper2;
-			} else {
-				strictUpperResult = strictUpper1 && strictUpper2;
-				upperResult = upper2;
-			}
+		if (compareUp > 0) {
+			// up1 < up2
+			su = su1;
+			up = up1;
+		} else if (compareUp < 0) {
+			// up1 > up2
+			su = su2;
+			up = up2;
 		} else {
-			strictUpperResult = true;
+			// up1 == up2
+			su = su1 && su2;
+			up = up2;
 		}
-		return newInterval(isInt, lowerResult, strictLowerResult, upperResult,
-				strictUpperResult);
+		return newInterval(isIntegral, lo, sl, up, su);
 	}
 
 	@Override
 	public Interval restrictUpper(Interval interval, Number bound,
 			boolean strict) {
-		Interval i2 = newInterval(interval.isIntegral(), null, true, bound,
-				strict);
+		boolean isIntegral = interval.isIntegral();
+		Interval i2 = newInterval(isIntegral, infiniteNumber(isIntegral, false),
+				true, bound, strict);
 		Interval result = intersection(interval, i2);
 
 		return result;
@@ -2221,8 +2252,9 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	public Interval restrictLower(Interval interval, Number bound,
 			boolean strict) {
-		Interval i2 = newInterval(interval.isIntegral(), bound, strict, null,
-				true);
+		boolean isIntegral = interval.isIntegral();
+		Interval i2 = newInterval(isIntegral, bound, strict,
+				infiniteNumber(isIntegral, true), true);
 		Interval result = intersection(interval, i2);
 
 		return result;
@@ -2232,12 +2264,9 @@ public class RealNumberFactory implements NumberFactory {
 	public IntegerNumber nthRootInt(IntegerNumber number, IntegerNumber n) {
 		// Pre-condition Checking
 		assert number != null && n != null;
+		assert !number.isInfinite() && !n.isInfinite();
+		assert n.signum() > 0;
 
-		// nth, n should be a positive integer
-		if (n.signum() <= 0)
-			throw new IllegalArgumentException(
-					"The Argument 'n' to the method nthRootInt should be greater than 0."
-							+ "\nThe n is: " + n);
 		// If number is negative, n could not be even.
 		if (number.signum() < 0) {
 			if (mod(n, integer(2)).isZero()) {
@@ -2248,8 +2277,7 @@ public class RealNumberFactory implements NumberFactory {
 			}
 		}
 		// Special Cases
-		if (n.isOne() || number.isZero() || number.isOne()
-				|| negate(number).isOne())
+		if (n.isOne() || number.isZero() || abs(number).isOne())
 			return number;
 
 		boolean flag = true;
@@ -2295,21 +2323,26 @@ public class RealNumberFactory implements NumberFactory {
 	}
 
 	private RationalNumber power(RationalNumber number, IntegerNumber exp) {
+		assert number != null && exp != null;
+		assert exp.signum() >= 0;
+
 		IntegerNumber baseNum = integer(number.numerator());
 		IntegerNumber baseDen = integer(number.denominator());
 		IntegerNumber resultNum = null;
 		IntegerNumber resultDen = null;
 
+		if (number.signum() < 0 && exp.isInfinite())
+			throw new IllegalArgumentException(
+					"The negative number could not power with the positive infinity.");
 		if (exp.isZero()) {
 			if (number.isZero())
 				throw new IllegalArgumentException(
 						"0.0 could not power with 0.");
+			else if (number.isInfinite())
+				throw new IllegalArgumentException(
+						"The infinity could not power with 0.");
 			else
 				return oneRational;
-		}
-		if (exp.isZero()) {
-			resultNum = oneInteger;
-			resultDen = oneInteger;
 		} else if (exp.signum() > 0) {
 			resultNum = power(baseNum, exp);
 			resultDen = power(baseDen, exp);
@@ -2324,9 +2357,15 @@ public class RealNumberFactory implements NumberFactory {
 	public IntegerNumber power(IntegerNumber number, IntegerNumber exp) {
 		assert number != null && exp != null;
 		assert exp.signum() >= 0;
+		if (number.signum() < 0 && exp.isInfinite())
+			throw new IllegalArgumentException(
+					"The negative number could not power with the positive infinity.");
 		if (exp.isZero()) {
 			if (number.isZero())
 				throw new IllegalArgumentException("0 could not power with 0.");
+			else if (number.isInfinite())
+				throw new IllegalArgumentException(
+						"The infinity could not power with 0.");
 			else
 				return zeroInteger;
 		} else {
@@ -2353,40 +2392,46 @@ public class RealNumberFactory implements NumberFactory {
 	public Interval divide(Interval interval, Number num) {
 		assert interval != null && num != null;
 
-		Boolean isInt = interval.isIntegral();
+		int sign = num.signum();
 
-		if (interval.isEmpty())
-			return isInt ? emptyIntegerInterval : emptyRationalInterval;
-		assert isInt == num instanceof IntegerNumber;
+		if (num.isZero())
+			throw new ArithmeticException("Interval divide by zero");
+
+		Boolean isIntegral = interval.isIntegral();
+
+		assert isIntegral == num instanceof IntegerNumber;
+		if (interval.isEmpty() || interval.isUniversal())
+			return interval;
+		if (num.isInfinite())
+			return isIntegral ? zeroIntegerInterval : zeroRationalInterval;
 
 		Number lo = interval.lower();
 		Number up = interval.upper();
 		boolean sl = interval.strictLower();
 		boolean su = interval.strictUpper();
-		int sign = num.signum();
 
-		if (sign == 0)
-			throw new ArithmeticException("Interval divide by zero");
-
-		lo = lo == null ? null : divide(lo, num);
-		up = up == null ? null : divide(up, num);
+		lo = lo.isInfinite() ? infiniteNumber(isIntegral, false)
+				: divide(lo, num);
+		up = up.isInfinite() ? infiniteNumber(isIntegral, true)
+				: divide(up, num);
 		if (sign > 0)
-			return new CommonInterval(isInt, up, sl, lo, su);
+			return newInterval(isIntegral, up, sl, lo, su);
 		else
-			return new CommonInterval(isInt, lo, sl, up, su);
+			return newInterval(isIntegral, lo, sl, up, su);
 	}
 
 	@Override
 	public Interval multiply(Number num, Interval interval) {
-		assert interval != null;
+		assert interval != null && num != null;
+		assert !num.isInfinite();
 
-		Boolean isInt = interval.isIntegral();
+		Boolean isIntegral = interval.isIntegral();
 
-		if (num == null)
-			return new CommonInterval(isInt, null, true, null, true);
+		assert isIntegral == num instanceof IntegerNumber;
 		if (interval.isEmpty())
-			return isInt ? emptyIntegerInterval : emptyRationalInterval;
-		assert isInt == num instanceof IntegerNumber;
+			return interval;
+		if (num.isZero())
+			return isIntegral ? zeroIntegerInterval : zeroRationalInterval;
 
 		Number lo = interval.lower();
 		Number up = interval.upper();
@@ -2394,39 +2439,41 @@ public class RealNumberFactory implements NumberFactory {
 		boolean su = interval.strictUpper();
 		int sign = num.signum();
 
-		if (sign == 0) {
-			Number zeroNum = isInt ? zeroInteger : zeroRational;
-			return new CommonInterval(isInt, zeroNum, false, zeroNum, false);
-		}
-		lo = lo == null ? null : multiply(lo, num);
-		up = up == null ? null : multiply(up, num);
+		lo = multiply(lo, num);
+		up = multiply(up, num);
 		if (sign > 0)
-			return new CommonInterval(isInt, up, sl, lo, su);
+			return newInterval(isIntegral, up, sl, lo, su);
 		else
-			return new CommonInterval(isInt, lo, sl, up, su);
+			return newInterval(isIntegral, lo, sl, up, su);
 	}
 
 	@Override
 	public Interval divide(Interval i1, Interval i2) {
 		assert i1 != null && i2 != null;
 
-		Boolean isInt = i1.isIntegral();
+		Boolean isIntegral = i1.isIntegral();
 
-		assert isInt == i2.isIntegral();
-
-		Number zeroNum = isInt ? zeroInteger : zeroRational;
-		Number oneNum = isInt ? oneInteger : oneRational;
+		assert isIntegral == i2.isIntegral();
 
 		if (i2.isZero())
 			throw new ArithmeticException(
 					"DividedByZero: The Interval used as denominator is exactly 0");
+		else if (i2.isEmpty())
+			throw new ArithmeticException(
+					"DividedByEmptyInterval: The Interval used as denominator is an empty set.");
+		else if (i1.isEmpty())
+			return i1;
 
 		Number lo2 = i2.lower();
 		Number up2 = i2.upper();
 		boolean sl2 = i2.strictLower();
 		boolean su2 = i2.strictUpper();
-		Number tempLo = null, tempUp = null;
-		boolean tempSl = true, tempSu = true;
+		Number tempLo = infiniteNumber(isIntegral, false);
+		Number tempUp = infiniteNumber(isIntegral, true);
+		boolean tempSl = true;
+		boolean tempSu = true;
+		Number zeroNum = isIntegral ? zeroInteger : zeroRational;
+		Number oneNum = isIntegral ? oneInteger : oneRational;
 
 		// Algorithm used is retrived from:
 		// https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -2444,44 +2491,64 @@ public class RealNumberFactory implements NumberFactory {
 		// | | However in single interval: (-infi, +inif)
 		if (i2.contains(zeroNum)) {
 			// 0 in i2
-			if (lo2 != null && lo2.isZero()) {
-				if (up2 == null) {
-					// i2 = [0, +infi)
-					tempLo = zeroNum;
-				} else {
-					// i2 = [0, pos)|]
-					tempLo = divide(oneNum, up2);
-					tempSl = su2;
-				}
-			} else if (up2 != null && up2.isZero()) {
-				if (lo2 == null) {
-					// i2 = (-infi, 0]
-					tempUp = zeroNum;
-				} else {
-					// i2 = [|(neg, 0]
-					tempUp = divide(oneNum, lo2);
-					tempSu = sl2;
-				}
-			}
-			// else i2 = [|(neg, pos)|] containing 0;
+			if (lo2.isZero()) {
+				tempLo = divide(oneNum, up2);
+				tempSl = su2;
+			} else if (up2.isZero()) {
+				tempUp = divide(oneNum, lo2);
+				tempSu = sl2;
+			} else
+				return isIntegral ? universalIntegerInterval
+						: universalRationalInterval;
 		} else {
 			// 0 not in i2
-			if (lo2 == null)
-				// i2 = (-infi, neg)|]
-				tempUp = zeroNum;
-			else if (!lo2.isZero())
-				// Either i2 < 0 or i2 > 0
+			if (!lo2.isZero()) {
 				tempUp = divide(oneNum, lo2);
-			// else i2 = (0, pos)|]
-			if (up2 == null)
-				// i2 = [|(pos, +infi)
-				tempLo = zeroNum;
-			else if (!up2.isZero())
-				// Either i2 < 0 or i2 > 0
+				tempSu = sl2;
+			}
+			if (!up2.isZero()) {
 				tempLo = divide(oneNum, up2);
-			// else i2 = [|(neg, 0)
+				tempSl = su2;
+			}
 		}
 		return multiply(i1,
-				new CommonInterval(isInt, tempLo, tempSl, tempUp, tempSu));
+				newInterval(isIntegral, tempLo, tempSl, tempUp, tempSu));
+	}
+
+	@Override
+	public IntegerNumber infiniteInteger(boolean isPositiveInfinity) {
+		return isPositiveInfinity ? INT_POS_INFINITY : INT_NEG_INFINITY;
+	}
+
+	@Override
+	public RationalNumber infiniteRational(boolean isPositiveInfinity) {
+		return isPositiveInfinity ? RAT_POS_INFINITY : RAT_NEG_INFINITY;
+	}
+
+	@Override
+	public Number infiniteNumber(boolean isIntegeral,
+			boolean isPositiveInfinity) {
+		return isIntegeral ? infiniteInteger(isPositiveInfinity)
+				: infiniteRational(isPositiveInfinity);
+	}
+
+	@Override
+	public RationalNumber positiveInfinityRational() {
+		return RAT_POS_INFINITY;
+	}
+
+	@Override
+	public IntegerNumber positiveInfinityInteger() {
+		return INT_POS_INFINITY;
+	}
+
+	@Override
+	public RationalNumber negativeInfinityRational() {
+		return RAT_NEG_INFINITY;
+	}
+
+	@Override
+	public IntegerNumber negativeInfinityInteger() {
+		return INT_NEG_INFINITY;
 	}
 }

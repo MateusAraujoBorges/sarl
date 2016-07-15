@@ -26,12 +26,16 @@ public interface IntegerNumber extends Number {
 	/**
 	 * Attempts to extract a Java int value from this IntegerNumber. The answer
 	 * could be wrong if the integer value is outside of the range of the Java
-	 * int type.
+	 * int type. <br>
+	 * If this number is <strong>infinite</strong>, it will return
+	 * Integer.MAX_VALUE = 2147483647 [0x7fffffff]
 	 */
 	int intValue();
 
 	/**
-	 * Returns this integer as an instance of Java's {@link BigInteger}.
+	 * Returns this integer as an instance of Java's {@link BigInteger}.<br>
+	 * If this number is <strong>infinite</strong>, it will return <strong>
+	 * <code>null</code></strong>;
 	 * 
 	 * @return instance of {@link BigInteger} equivalent to this integer
 	 */

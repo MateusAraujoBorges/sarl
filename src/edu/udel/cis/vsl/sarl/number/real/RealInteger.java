@@ -58,13 +58,18 @@ public class RealInteger extends RealNumber implements IntegerNumber {
 		return value.toString();
 	}
 
+	/**
+	 * Get the value of this integer;<br>
+	 * 
+	 * @return
+	 */
 	public BigInteger value() {
 		return value;
 	}
 
 	@Override
 	public String atomString() {
-		return toString();
+		return "(" + toString() + ")";
 	}
 
 	@Override
@@ -77,10 +82,11 @@ public class RealInteger extends RealNumber implements IntegerNumber {
 		return value == BigInteger.ONE;
 	}
 
-	// TODO: check that the int is in range. If not, throw an
-	// exception.
 	@Override
 	public int intValue() {
+		if (value.abs().shiftRight(32).compareTo(BigInteger.ZERO) != 0)
+			throw new ArithmeticException(
+					"The value of this BigInteger is out of the range of Integer.");
 		return value.intValue();
 	}
 
@@ -92,11 +98,14 @@ public class RealInteger extends RealNumber implements IntegerNumber {
 	@Override
 	public int numericalCompareTo(Number other) {
 		assert other instanceof IntegerNumber;
+		if (other.isInfinite())
+			return -other.signum();
+		return (this.value().subtract(((RealInteger) other).value())).signum();
+	}
 
-		RealInteger x = (RealInteger) this;
-		RealInteger y = (RealInteger) other;
-
-		return (x.value().subtract(y.value())).signum();
+	@Override
+	public boolean isInfinite() {
+		return false;
 	}
 
 }

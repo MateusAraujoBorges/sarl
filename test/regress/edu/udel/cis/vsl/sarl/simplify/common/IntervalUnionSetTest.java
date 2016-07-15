@@ -42,10 +42,12 @@ public class IntervalUnionSetTest {
 	private static NumberFactory numberFactory = Numbers.REAL_FACTORY;
 	private static Interval INT_EMPTY = numberFactory.emptyIntegerInterval();
 	private static Interval RAT_EMPTY = numberFactory.emptyRealInterval();
-	private static Interval INT_UNIV = numberFactory.newInterval(true, null,
-			true, null, true);
-	private static Interval RAT_UNIV = numberFactory.newInterval(false, null,
-			true, null, true);
+	private static Interval INT_UNIV = numberFactory.universalIntegerInterval();
+	private static Interval RAT_UNIV = numberFactory.universalRealInterval();
+	private static IntegerNumber INT_POS_INF = numberFactory
+			.infiniteInteger(true);
+	private static IntegerNumber INT_NEG_INF = numberFactory
+			.infiniteInteger(false);
 	private static IntegerNumber INT_ZERO = numberFactory.zeroInteger();
 	private static IntegerNumber INT_ONE = numberFactory.integer(1);
 	private static IntegerNumber INT_TWO = numberFactory.integer(2);
@@ -67,6 +69,10 @@ public class IntervalUnionSetTest {
 	private static IntegerNumber INT_N_EIGHT = numberFactory.integer(-8);
 	private static IntegerNumber INT_N_NINE = numberFactory.integer(-9);
 	private static IntegerNumber INT_N_TEN = numberFactory.integer(-10);
+	private static RationalNumber RAT_POS_INF = numberFactory
+			.infiniteRational(true);
+	private static RationalNumber RAT_NEG_INF = numberFactory
+			.infiniteRational(false);
 	private static RationalNumber RAT_ZERO = numberFactory.rational(INT_ZERO);
 	private static RationalNumber RAT_ONE = numberFactory.rational(INT_ONE);
 	private static RationalNumber RAT_TWO = numberFactory.rational(INT_TWO);
@@ -197,7 +203,7 @@ public class IntervalUnionSetTest {
 		if (ASSERTION_ENABLED) {
 			IntegerNumber nullNum = null;
 			actual = new IntervalUnionSet(nullNum);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -207,7 +213,7 @@ public class IntervalUnionSetTest {
 		if (ASSERTION_ENABLED) {
 			RationalNumber nullNum = null;
 			actual = new IntervalUnionSet(nullNum);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -235,7 +241,7 @@ public class IntervalUnionSetTest {
 		if (ASSERTION_ENABLED) {
 			Interval nullInterval = null;
 			actual = new IntervalUnionSet(nullInterval);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -277,7 +283,7 @@ public class IntervalUnionSetTest {
 	@Test
 	public void constructIntervalUnionSet_Interval_CorrectForm1() {
 		Interval singleInterval = numberFactory.newInterval(true, INT_ZERO,
-				false, null, true);
+				false, INT_POS_INF, true);
 		actual = new IntervalUnionSet(singleInterval);
 
 		assertTrue(!actual.isEmpty());
@@ -290,7 +296,7 @@ public class IntervalUnionSetTest {
 		if (ASSERTION_ENABLED) {
 			Interval[] nullList = null;
 			actual = new IntervalUnionSet(nullList);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -300,7 +306,7 @@ public class IntervalUnionSetTest {
 		if (ASSERTION_ENABLED) {
 			Interval[] emptyList = new Interval[0];
 			actual = new IntervalUnionSet(emptyList);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -315,7 +321,7 @@ public class IntervalUnionSetTest {
 
 			Interval[] intList = { int_zeroInterval, rat_zeroInterval };
 			actual = new IntervalUnionSet(intList);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -330,7 +336,7 @@ public class IntervalUnionSetTest {
 
 			Interval[] intList = { rat_zeroInterval, int_zeroInterval };
 			actual = new IntervalUnionSet(intList);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -400,10 +406,10 @@ public class IntervalUnionSetTest {
 		Interval[] list = new Interval[ARR_SIZE];
 
 		for (int i = 0; i * 3 < ARR_SIZE && i < 7; i += 2) {
-			RationalNumber rat_i = numberFactory.rational(numberFactory
-					.integer(i));
-			RationalNumber rat_j = numberFactory.rational(numberFactory
-					.integer(i + 1));
+			RationalNumber rat_i = numberFactory
+					.rational(numberFactory.integer(i));
+			RationalNumber rat_j = numberFactory
+					.rational(numberFactory.integer(i + 1));
 
 			expectedList[i] = numberFactory.newInterval(false, rat_i, true,
 					rat_j, true);
@@ -485,9 +491,10 @@ public class IntervalUnionSetTest {
 		// All of the intervals in the array are disjoint.
 		Interval[] list = new Interval[ARR_SIZE];
 
-		list[0] = numberFactory.newInterval(true, null, true, INT_ZERO, false);
+		list[0] = numberFactory.newInterval(true, INT_NEG_INF, true, INT_ZERO,
+				false);
 		list[Math.min(ARR_SIZE, 4)] = numberFactory.newInterval(true, INT_NINE,
-				false, null, true);
+				false, INT_POS_INF, true);
 		for (int i = 1; i < ARR_SIZE && i < 4; i++) {
 			IntegerNumber int_i = numberFactory.integer(i);
 			IntegerNumber int_j = numberFactory.integer(i + 5);
@@ -513,10 +520,10 @@ public class IntervalUnionSetTest {
 		Interval[] list = new Interval[ARR_SIZE];
 
 		for (int i = 0; i < ARR_SIZE; i++) {
-			RationalNumber rat_i = numberFactory.rational(numberFactory
-					.integer(i));
-			RationalNumber rat_j = numberFactory.rational(numberFactory
-					.integer(i + 1));
+			RationalNumber rat_i = numberFactory
+					.rational(numberFactory.integer(i));
+			RationalNumber rat_j = numberFactory
+					.rational(numberFactory.integer(i + 1));
 
 			expectedList[i] = numberFactory.newInterval(false, rat_i, true,
 					rat_j, true);
@@ -542,10 +549,10 @@ public class IntervalUnionSetTest {
 		Interval[] list = new Interval[ARR_SIZE];
 
 		for (int i = 0; i < ARR_SIZE; i++) {
-			RationalNumber rat_i = numberFactory.rational(numberFactory
-					.integer(i));
-			RationalNumber rat_j = numberFactory.rational(numberFactory
-					.integer(i + 1));
+			RationalNumber rat_i = numberFactory
+					.rational(numberFactory.integer(i));
+			RationalNumber rat_j = numberFactory
+					.rational(numberFactory.integer(i + 1));
 
 			expectedList[i] = numberFactory.newInterval(false, rat_i, false,
 					rat_j, false);
@@ -571,10 +578,10 @@ public class IntervalUnionSetTest {
 		Interval[] list = new Interval[ARR_SIZE];
 
 		for (int i = 0; i < ARR_SIZE; i++) {
-			RationalNumber rat_i = numberFactory.rational(numberFactory
-					.integer(i));
-			RationalNumber rat_j = numberFactory.rational(numberFactory
-					.integer(i + 1));
+			RationalNumber rat_i = numberFactory
+					.rational(numberFactory.integer(i));
+			RationalNumber rat_j = numberFactory
+					.rational(numberFactory.integer(i + 1));
 
 			expectedList[i] = numberFactory.newInterval(false, rat_i, true,
 					rat_j, false);
@@ -633,10 +640,10 @@ public class IntervalUnionSetTest {
 		expectedList[0] = numberFactory.newInterval(false, RAT_ZERO, false,
 				RAT_TEN, true);
 		for (int i = 0; i < ARR_SIZE && i < 10; i++) {
-			RationalNumber rat_i = numberFactory.rational(numberFactory
-					.integer(i));
-			RationalNumber rat_j = numberFactory.rational(numberFactory
-					.integer(i + 1));
+			RationalNumber rat_i = numberFactory
+					.rational(numberFactory.integer(i));
+			RationalNumber rat_j = numberFactory
+					.rational(numberFactory.integer(i + 1));
 
 			list[i] = numberFactory.newInterval(false, rat_i, false, rat_j,
 					true);
@@ -669,8 +676,8 @@ public class IntervalUnionSetTest {
 					IntegerNumber int_i = numberFactory.integer(i);
 					IntegerNumber int_j = numberFactory.integer(i + 1);
 
-					expectedList[i / 2] = numberFactory.newInterval(true,
-							int_i, false, int_j, false);
+					expectedList[i / 2] = numberFactory.newInterval(true, int_i,
+							false, int_j, false);
 					list[i] = numberFactory.newInterval(true, int_i, false,
 							int_j, false);
 				} else {
@@ -686,7 +693,7 @@ public class IntervalUnionSetTest {
 
 			expected = new IntervalUnionSet(expectedList);
 			actual = new IntervalUnionSet(list);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -698,9 +705,10 @@ public class IntervalUnionSetTest {
 		IntegerNumber int_max = numberFactory.integer(ARR_SIZE - 1);
 
 		expectedList[0] = INT_UNIV;
-		list[0] = numberFactory.newInterval(true, null, true, INT_ZERO, false);
+		list[0] = numberFactory.newInterval(true, INT_NEG_INF, true, INT_ZERO,
+				false);
 		list[ARR_SIZE - 1] = numberFactory.newInterval(true, int_max, false,
-				null, true);
+				INT_POS_INF, true);
 		for (int i = 1; i < ARR_SIZE - 1; i++) {
 			IntegerNumber int_i = numberFactory.integer(i);
 
@@ -731,8 +739,8 @@ public class IntervalUnionSetTest {
 				int_a, false);
 		expectedList[1] = numberFactory.newInterval(true, int_b, false, int_c,
 				false);
-		list[0] = numberFactory
-				.newInterval(true, INT_ZERO, false, int_a, false);
+		list[0] = numberFactory.newInterval(true, INT_ZERO, false, int_a,
+				false);
 		list[ARR_SIZE - 1] = numberFactory.newInterval(true, int_b, false,
 				int_c, false);
 		for (int i = 1; i < ARR_SIZE - 1; i++) {
@@ -765,8 +773,8 @@ public class IntervalUnionSetTest {
 				int_y, false);
 		expectedList[1] = numberFactory.newInterval(true, int_x, false, int_z,
 				false);
-		list[0] = numberFactory
-				.newInterval(true, INT_ZERO, false, int_y, false);
+		list[0] = numberFactory.newInterval(true, INT_ZERO, false, int_y,
+				false);
 		list[ARR_SIZE - 1] = numberFactory.newInterval(true, int_x, false,
 				int_z, false);
 		for (int i = 1; i < ARR_SIZE - 1; i++) {
@@ -800,8 +808,8 @@ public class IntervalUnionSetTest {
 
 		expectedList[0] = numberFactory.newInterval(true, INT_THREE, false,
 				INT_FOUR, false);
-		expectedList[1] = numberFactory.newInterval(true, INT_SIX, false,
-				int_a, false);
+		expectedList[1] = numberFactory.newInterval(true, INT_SIX, false, int_a,
+				false);
 		expectedList[2] = numberFactory.newInterval(true, int_b, false, int_c,
 				false);
 
@@ -832,10 +840,10 @@ public class IntervalUnionSetTest {
 	public void constructIntervalUnionSet_IntervalList_Complicated4() {
 		Interval[] expectedList = new Interval[ARR_SIZE];
 		Interval[] list = new Interval[ARR_SIZE];
-		RationalNumber rat_x = numberFactory.rational(numberFactory
-				.integer(ARR_SIZE + 24));
-		RationalNumber rat_a = numberFactory.rational(numberFactory
-				.integer(ARR_SIZE + 25));
+		RationalNumber rat_x = numberFactory
+				.rational(numberFactory.integer(ARR_SIZE + 24));
+		RationalNumber rat_a = numberFactory
+				.rational(numberFactory.integer(ARR_SIZE + 25));
 
 		expectedList[0] = numberFactory.newInterval(false, RAT_ZERO, false,
 				rat_a, false);
@@ -843,10 +851,10 @@ public class IntervalUnionSetTest {
 		list[ARR_SIZE - 1] = numberFactory.newInterval(false, RAT_ONE, true,
 				rat_x, true);
 		for (int i = 0; i / 3 < ARR_SIZE - 1; i += 3) {
-			RationalNumber rat_i = numberFactory.rational(numberFactory
-					.integer(i));
-			RationalNumber rat_j = numberFactory.rational(numberFactory
-					.integer(i + 1));
+			RationalNumber rat_i = numberFactory
+					.rational(numberFactory.integer(i));
+			RationalNumber rat_j = numberFactory
+					.rational(numberFactory.integer(i + 1));
 
 			list[i / 3] = numberFactory.newInterval(false, rat_i, false, rat_j,
 					false);
@@ -866,18 +874,19 @@ public class IntervalUnionSetTest {
 	@Test
 	public void constructIntervalUnionSet_IntervalList_Complicated5() {
 		Interval[] list = new Interval[ARR_SIZE];
-		RationalNumber rat_x = numberFactory.rational(numberFactory
-				.integer(ARR_SIZE - 1));
+		RationalNumber rat_x = numberFactory
+				.rational(numberFactory.integer(ARR_SIZE - 1));
 
-		list[0] = numberFactory.newInterval(false, null, true, RAT_ONE, false);
+		list[0] = numberFactory.newInterval(false, RAT_NEG_INF, true, RAT_ONE,
+				false);
 
 		list[ARR_SIZE - 1] = numberFactory.newInterval(false, rat_x, false,
-				null, true);
+				RAT_POS_INF, true);
 		for (int i = 1; i < ARR_SIZE - 1; i++) {
-			RationalNumber rat_i = numberFactory.rational(numberFactory
-					.integer(i));
-			RationalNumber rat_j = numberFactory.rational(numberFactory
-					.integer(i + 1));
+			RationalNumber rat_i = numberFactory
+					.rational(numberFactory.integer(i));
+			RationalNumber rat_j = numberFactory
+					.rational(numberFactory.integer(i + 1));
 
 			list[i] = numberFactory.newInterval(false, rat_i, true, rat_j,
 					false);
@@ -897,17 +906,18 @@ public class IntervalUnionSetTest {
 	@Test
 	public void constructIntervalUnionSet_IntervalList_Complicated6() {
 		Interval[] list = new Interval[ARR_SIZE];
-		RationalNumber rat_x = numberFactory.rational(numberFactory
-				.integer(ARR_SIZE - 1));
+		RationalNumber rat_x = numberFactory
+				.rational(numberFactory.integer(ARR_SIZE - 1));
 
-		list[ARR_SIZE - 1] = numberFactory.newInterval(false, null, true,
+		list[ARR_SIZE - 1] = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_ONE, false);
-		list[0] = numberFactory.newInterval(false, rat_x, false, null, true);
+		list[0] = numberFactory.newInterval(false, rat_x, false, RAT_POS_INF,
+				true);
 		for (int i = 1; i < ARR_SIZE - 1; i++) {
-			RationalNumber rat_i = numberFactory.rational(numberFactory
-					.integer(i));
-			RationalNumber rat_j = numberFactory.rational(numberFactory
-					.integer(i + 1));
+			RationalNumber rat_i = numberFactory
+					.rational(numberFactory.integer(i));
+			RationalNumber rat_j = numberFactory
+					.rational(numberFactory.integer(i + 1));
 
 			list[i] = numberFactory.newInterval(false, rat_i, true, rat_j,
 					false);
@@ -1049,7 +1059,7 @@ public class IntervalUnionSetTest {
 		if (ASSERTION_ENABLED) {
 			IntervalUnionSet nullIntervalUnionSet = null;
 			actual = new IntervalUnionSet(nullIntervalUnionSet);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -1068,8 +1078,8 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void constructIntervalUnionSet_IntervalUnionSet_Int_Simple() {
-		Interval intInterval = numberFactory.newInterval(true, INT_N_TEN,
-				false, INT_TEN, false);
+		Interval intInterval = numberFactory.newInterval(true, INT_N_TEN, false,
+				INT_TEN, false);
 		expected = new IntervalUnionSet(intInterval);
 		actual = new IntervalUnionSet((IntervalUnionSet) expected);
 
@@ -1104,7 +1114,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet nullIntervalUnionSet = null;
 			IntervalUnionSet original = new IntervalUnionSet(true);
 			actual = original.union(nullIntervalUnionSet);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -1115,7 +1125,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet rational = new IntervalUnionSet(false);
 			IntervalUnionSet integral = new IntervalUnionSet(true);
 			actual = integral.union(rational);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -1123,9 +1133,8 @@ public class IntervalUnionSetTest {
 	@Test
 	public void union_IntervalUnionSet_Empty() {
 		IntervalUnionSet emptyRatSet = new IntervalUnionSet(false);
-		IntervalUnionSet nonemptyRatSet = new IntervalUnionSet(
-				numberFactory
-						.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
+		IntervalUnionSet nonemptyRatSet = new IntervalUnionSet(numberFactory
+				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected = nonemptyRatSet;
 		actual1 = nonemptyRatSet.union(emptyRatSet);
 		actual2 = emptyRatSet.union(nonemptyRatSet);
@@ -1140,9 +1149,8 @@ public class IntervalUnionSetTest {
 	@Test
 	public void union_IntervalUnionSet_Univ() {
 		IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
-		IntervalUnionSet nonunivIntSet = new IntervalUnionSet(
-				numberFactory.newInterval(true, INT_N_ONE, false, INT_ONE,
-						false));
+		IntervalUnionSet nonunivIntSet = new IntervalUnionSet(numberFactory
+				.newInterval(true, INT_N_ONE, false, INT_ONE, false));
 		expected = univIntSet;
 		actual1 = nonunivIntSet.union(univIntSet);
 		actual2 = univIntSet.union(nonunivIntSet);
@@ -1156,9 +1164,8 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void union_IntervalUnionSet_Self() {
-		IntervalUnionSet original = new IntervalUnionSet(
-				numberFactory
-						.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
+		IntervalUnionSet original = new IntervalUnionSet(numberFactory
+				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected = original;
 		actual = original.union(original);
 
@@ -1208,7 +1215,7 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void union_IntervalUnionSet_Simple_Adjacent_Rat() {
-		Interval first1 = numberFactory.newInterval(false, null, true,
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_EIGHT, false);
 		Interval first2 = numberFactory.newInterval(false, RAT_N_EIGHT, true,
 				RAT_N_SIX, false);
@@ -1227,7 +1234,7 @@ public class IntervalUnionSetTest {
 		Interval fifth1 = numberFactory.newInterval(false, RAT_SIX, true,
 				RAT_EIGHT, false);
 		Interval fifth2 = numberFactory.newInterval(false, RAT_EIGHT, true,
-				null, true);
+				RAT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 
@@ -1245,7 +1252,7 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void union_IntervalUnionSet_Simple_Adjacent_Int() {
-		Interval first1 = numberFactory.newInterval(true, null, true,
+		Interval first1 = numberFactory.newInterval(true, INT_NEG_INF, true,
 				INT_N_TEN, false);
 		Interval first2 = numberFactory.newInterval(true, INT_N_NINE, false,
 				INT_N_EIGHT, false);
@@ -1263,8 +1270,8 @@ public class IntervalUnionSetTest {
 				INT_SEVEN, false);
 		Interval fifth1 = numberFactory.newInterval(true, INT_EIGHT, false,
 				INT_NINE, false);
-		Interval fifth2 = numberFactory.newInterval(true, INT_TEN, false, null,
-				true);
+		Interval fifth2 = numberFactory.newInterval(true, INT_TEN, false,
+				INT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 
@@ -1397,18 +1404,18 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void union_IntervalUnionSet_Simple_Complicated3_Rat() {
-		Interval first1 = numberFactory.newInterval(false, null, true,
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_SEVEN, true);
-		Interval first2 = numberFactory.newInterval(false, null, true,
+		Interval first2 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_FIVE, true);
 		Interval second1 = numberFactory.newInterval(false, RAT_N_SIX, true,
 				RAT_N_THREE, true);
 		Interval second2 = numberFactory.newInterval(false, RAT_N_FOUR, true,
 				RAT_N_ONE, true);
 		Interval third1 = numberFactory.newInterval(false, RAT_N_TWO, true,
-				null, true);
+				RAT_POS_INF, true);
 		Interval third2 = numberFactory.newInterval(false, RAT_ZERO, true,
-				null, true);
+				RAT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1 };
 		Interval[] list2 = { first2, second2, third2 };
 
@@ -1428,14 +1435,14 @@ public class IntervalUnionSetTest {
 	public void union_IntervalUnionSet_Simple_Complicated4_Rat() {
 		Interval first1 = numberFactory.newInterval(false, RAT_N_TEN, true,
 				RAT_N_SEVEN, true);
-		Interval first2 = numberFactory.newInterval(false, null, true,
+		Interval first2 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_FIVE, true);
 		Interval second1 = numberFactory.newInterval(false, RAT_N_SIX, true,
 				RAT_N_THREE, true);
 		Interval second2 = numberFactory.newInterval(false, RAT_N_FOUR, true,
 				RAT_N_ONE, true);
 		Interval third1 = numberFactory.newInterval(false, RAT_N_TWO, true,
-				null, true);
+				RAT_POS_INF, true);
 		Interval third2 = numberFactory.newInterval(false, RAT_ZERO, true,
 				RAT_TEN, true);
 		Interval[] list1 = { first1, second1, third1 };
@@ -1460,7 +1467,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
 
 			univIntSet.containsNumber(nullIntNum);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -1472,7 +1479,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet univRatSet = new IntervalUnionSet(RAT_UNIV);
 
 			univRatSet.containsNumber(intNum);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -1484,7 +1491,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
 
 			univIntSet.containsNumber(ratNum);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -1662,7 +1669,7 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void containsNumber_Int_Num_Contained1() {
-		Interval first = numberFactory.newInterval(true, null, true,
+		Interval first = numberFactory.newInterval(true, INT_NEG_INF, true,
 				INT_N_SEVEN, false);
 		Interval second = numberFactory.newInterval(true, INT_N_FIVE, false,
 				INT_N_TWO, false);
@@ -1671,7 +1678,7 @@ public class IntervalUnionSetTest {
 		Interval fourth = numberFactory.newInterval(true, INT_TWO, false,
 				INT_FIVE, false);
 		Interval fifth = numberFactory.newInterval(true, INT_SEVEN, false,
-				null, true);
+				INT_POS_INF, true);
 		IntervalUnionSet intervalSet = new IntervalUnionSet(first, second,
 				third, fourth, fifth);
 		boolean actual = intervalSet.containsNumber(INT_N_TEN);
@@ -1685,7 +1692,7 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void containsNumber_Int_Num_Contained2() {
-		Interval first = numberFactory.newInterval(true, null, true,
+		Interval first = numberFactory.newInterval(true, INT_NEG_INF, true,
 				INT_N_SEVEN, false);
 		Interval second = numberFactory.newInterval(true, INT_N_FIVE, false,
 				INT_N_TWO, false);
@@ -1694,7 +1701,7 @@ public class IntervalUnionSetTest {
 		Interval fourth = numberFactory.newInterval(true, INT_TWO, false,
 				INT_FIVE, false);
 		Interval fifth = numberFactory.newInterval(true, INT_SEVEN, false,
-				null, true);
+				INT_POS_INF, true);
 		IntervalUnionSet intervalSet = new IntervalUnionSet(first, second,
 				third, fourth, fifth);
 		boolean actual = intervalSet.containsNumber(INT_ZERO);
@@ -1708,7 +1715,7 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void containsNumber_Rat_Num_Contained1() {
-		Interval first = numberFactory.newInterval(false, null, true,
+		Interval first = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_SEVEN, false);
 		Interval second = numberFactory.newInterval(false, RAT_N_FIVE, true,
 				RAT_N_TWO, true);
@@ -1717,7 +1724,7 @@ public class IntervalUnionSetTest {
 		Interval fourth = numberFactory.newInterval(false, RAT_TWO, true,
 				RAT_FIVE, true);
 		Interval fifth = numberFactory.newInterval(false, RAT_SEVEN, true,
-				null, true);
+				RAT_POS_INF, true);
 		IntervalUnionSet intervalSet = new IntervalUnionSet(first, second,
 				third, fourth, fifth);
 		boolean actual = intervalSet.containsNumber(RAT_N_SEVEN);
@@ -1732,7 +1739,7 @@ public class IntervalUnionSetTest {
 	@Test
 	public void containsNumber_Rat_Num_Contained2() {
 		RationalNumber ratNum = numberFactory.divide(RAT_SEVEN, RAT_TWO);
-		Interval first = numberFactory.newInterval(false, null, true,
+		Interval first = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_SEVEN, false);
 		Interval second = numberFactory.newInterval(false, RAT_N_FIVE, true,
 				RAT_N_TWO, true);
@@ -1741,7 +1748,7 @@ public class IntervalUnionSetTest {
 		Interval fourth = numberFactory.newInterval(false, RAT_TWO, true,
 				RAT_FIVE, true);
 		Interval fifth = numberFactory.newInterval(false, RAT_SEVEN, true,
-				null, true);
+				RAT_POS_INF, true);
 		IntervalUnionSet intervalSet = new IntervalUnionSet(first, second,
 				third, fourth, fifth);
 		boolean actual = intervalSet.containsNumber(ratNum);
@@ -1760,7 +1767,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet univRatSet = new IntervalUnionSet(RAT_UNIV);
 
 			univRatSet.addNumber(nullRatNum);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -1772,7 +1779,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet univRatSet = new IntervalUnionSet(RAT_UNIV);
 
 			univRatSet.addNumber(intNum);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -1784,7 +1791,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
 
 			univIntSet.addNumber(ratNum);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -2077,7 +2084,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet intervalSet = new IntervalUnionSet(INT_UNIV);
 
 			intervalSet.contains(target);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -2089,7 +2096,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet intervalSet = new IntervalUnionSet(RAT_UNIV);
 
 			intervalSet.contains(target);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -2352,7 +2359,7 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void contains_IntervalUnionSet_Disjoint_Rat() {
-		Interval first1 = numberFactory.newInterval(false, null, true,
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_EIGHT, true);
 		Interval first2 = numberFactory.newInterval(false, RAT_N_SIX, true,
 				RAT_N_FIVE, true);
@@ -2370,8 +2377,8 @@ public class IntervalUnionSetTest {
 				RAT_ONE, true);
 		Interval fifth1 = numberFactory.newInterval(false, RAT_N_ONE, true,
 				RAT_ZERO, true);
-		Interval fifth2 = numberFactory.newInterval(false, RAT_TWO, true, null,
-				true);
+		Interval fifth2 = numberFactory.newInterval(false, RAT_TWO, true,
+				RAT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
@@ -2387,7 +2394,7 @@ public class IntervalUnionSetTest {
 	public void contains_IntervalUnionSet_Intersection1_Rat() {
 		Interval first1 = numberFactory.newInterval(false, RAT_N_NINE, false,
 				RAT_N_EIGHT, true);
-		Interval first2 = numberFactory.newInterval(false, null, true,
+		Interval first2 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_NINE, false);
 		Interval second1 = numberFactory.newInterval(false, RAT_N_EIGHT, true,
 				RAT_N_SEVEN, true);
@@ -2404,7 +2411,7 @@ public class IntervalUnionSetTest {
 		Interval fifth1 = numberFactory.newInterval(false, RAT_N_TWO, true,
 				RAT_N_ONE, false);
 		Interval fifth2 = numberFactory.newInterval(false, RAT_N_ONE, false,
-				null, true);
+				RAT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
@@ -2435,7 +2442,7 @@ public class IntervalUnionSetTest {
 		Interval fifth1 = numberFactory.newInterval(false, RAT_N_TWO, true,
 				RAT_N_ONE, false);
 		Interval fifth2 = numberFactory.newInterval(false, RAT_N_ONE, false,
-				null, true);
+				RAT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
@@ -2465,7 +2472,7 @@ public class IntervalUnionSetTest {
 		Interval fifth1 = numberFactory.newInterval(false, RAT_N_TWO, true,
 				RAT_N_ONE, false);
 		Interval fifth2 = numberFactory.newInterval(false, RAT_TWO, false,
-				null, true);
+				RAT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
@@ -2495,7 +2502,7 @@ public class IntervalUnionSetTest {
 		Interval fifth1 = numberFactory.newInterval(false, RAT_N_TWO, true,
 				RAT_N_ONE, false);
 		Interval fifth2 = numberFactory.newInterval(false, RAT_N_TWO, false,
-				null, true);
+				RAT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
@@ -2509,9 +2516,9 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void contains_IntervalUnionSet_Contains1_Rat() {
-		Interval first1 = numberFactory.newInterval(false, null, true,
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_SEVEN, false);
-		Interval first2 = numberFactory.newInterval(false, null, true,
+		Interval first2 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_SEVEN, true);
 		Interval second1 = numberFactory.newInterval(false, RAT_N_SIX, false,
 				RAT_N_FIVE, false);
@@ -2525,9 +2532,9 @@ public class IntervalUnionSetTest {
 		Interval fourth2 = numberFactory.newInterval(false, RAT_N_ONE, false,
 				RAT_ONE, false);
 		Interval fifth1 = numberFactory.newInterval(false, RAT_FIVE, true,
-				null, true);
+				RAT_POS_INF, true);
 		Interval fifth2 = numberFactory.newInterval(false, RAT_FIVE, true,
-				null, true);
+				RAT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
@@ -2566,9 +2573,9 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void contains_IntervalUnionSet_Contains3_Rat() {
-		Interval first1 = numberFactory.newInterval(false, null, true,
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_SEVEN, false);
-		Interval first2 = numberFactory.newInterval(false, null, true,
+		Interval first2 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_SEVEN, true);
 		Interval second1 = numberFactory.newInterval(false, RAT_N_SIX, false,
 				RAT_N_FIVE, false);
@@ -2594,9 +2601,9 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void contains_IntervalUnionSet_NotContains1_Rat() {
-		Interval first1 = numberFactory.newInterval(false, null, true,
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_SEVEN, false);
-		Interval first2 = numberFactory.newInterval(false, null, true,
+		Interval first2 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_SEVEN, true);
 		Interval second1 = numberFactory.newInterval(false, RAT_N_SIX, false,
 				RAT_N_FIVE, false);
@@ -2629,7 +2636,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet intervalSet = new IntervalUnionSet(INT_UNIV);
 
 			intervalSet.intersects(target);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -2641,7 +2648,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet intervalSet = new IntervalUnionSet(RAT_UNIV);
 
 			intervalSet.intersects(target);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -2889,7 +2896,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet nullSet = null;
 			IntervalUnionSet currentSet = new IntervalUnionSet(RAT_ZERO);
 			actual = currentSet.intersect(nullSet);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -2901,7 +2908,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet ratSet = new IntervalUnionSet(RAT_ZERO);
 
 			actual = ratSet.intersect(intSet);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -2909,9 +2916,8 @@ public class IntervalUnionSetTest {
 	@Test
 	public void intersect_IntervalUnionSet_Empty() {
 		IntervalUnionSet emptyRatSet = new IntervalUnionSet(false);
-		IntervalUnionSet nonemptyRatSet = new IntervalUnionSet(
-				numberFactory
-						.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
+		IntervalUnionSet nonemptyRatSet = new IntervalUnionSet(numberFactory
+				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected = emptyRatSet;
 		actual1 = nonemptyRatSet.intersect(emptyRatSet);
 		actual2 = emptyRatSet.intersect(nonemptyRatSet);
@@ -2926,9 +2932,8 @@ public class IntervalUnionSetTest {
 	@Test
 	public void intersect_IntervalUnionSet_Univ() {
 		IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
-		IntervalUnionSet nonunivIntSet = new IntervalUnionSet(
-				numberFactory.newInterval(true, INT_N_ONE, false, INT_ONE,
-						false));
+		IntervalUnionSet nonunivIntSet = new IntervalUnionSet(numberFactory
+				.newInterval(true, INT_N_ONE, false, INT_ONE, false));
 		expected = nonunivIntSet;
 		actual1 = nonunivIntSet.intersect(univIntSet);
 		actual2 = univIntSet.intersect(nonunivIntSet);
@@ -2942,9 +2947,8 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void intersect_IntervalUnionSet_Self() {
-		IntervalUnionSet original = new IntervalUnionSet(
-				numberFactory
-						.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
+		IntervalUnionSet original = new IntervalUnionSet(numberFactory
+				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected = original;
 		actual = original.intersect(original);
 
@@ -2994,7 +2998,7 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void intersect_IntervalUnionSet_Simple_Adjacent_Rat() {
-		Interval first1 = numberFactory.newInterval(false, null, true,
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_EIGHT, false);
 		Interval first2 = numberFactory.newInterval(false, RAT_N_EIGHT, true,
 				RAT_N_SIX, false);
@@ -3013,7 +3017,7 @@ public class IntervalUnionSetTest {
 		Interval fifth1 = numberFactory.newInterval(false, RAT_SIX, true,
 				RAT_EIGHT, false);
 		Interval fifth2 = numberFactory.newInterval(false, RAT_EIGHT, true,
-				null, true);
+				RAT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
@@ -3033,7 +3037,7 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void intersect_IntervalUnionSet_Simple_Adjacent_Int() {
-		Interval first1 = numberFactory.newInterval(true, null, true,
+		Interval first1 = numberFactory.newInterval(true, INT_NEG_INF, true,
 				INT_N_TEN, false);
 		Interval first2 = numberFactory.newInterval(true, INT_N_NINE, false,
 				INT_N_EIGHT, false);
@@ -3051,8 +3055,8 @@ public class IntervalUnionSetTest {
 				INT_SEVEN, false);
 		Interval fifth1 = numberFactory.newInterval(true, INT_EIGHT, false,
 				INT_NINE, false);
-		Interval fifth2 = numberFactory.newInterval(true, INT_TEN, false, null,
-				true);
+		Interval fifth2 = numberFactory.newInterval(true, INT_TEN, false,
+				INT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 
@@ -3172,7 +3176,7 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void intersect_IntervalUnionSet_Complicated2_Rat() {
-		Interval first1 = numberFactory.newInterval(false, null, true,
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_TWO, true);
 		Interval first2 = numberFactory.newInterval(false, RAT_N_NINE, true,
 				RAT_N_SEVEN, true);
@@ -3190,8 +3194,8 @@ public class IntervalUnionSetTest {
 				RAT_ONE, true);
 		Interval fifth1 = numberFactory.newInterval(false, RAT_NINE, true,
 				RAT_TEN, true);
-		Interval fifth2 = numberFactory.newInterval(false, RAT_TWO, true, null,
-				true);
+		Interval fifth2 = numberFactory.newInterval(false, RAT_TWO, true,
+				RAT_POS_INF, true);
 
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
@@ -3219,7 +3223,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet nullSet = null;
 			IntervalUnionSet currentSet = new IntervalUnionSet(RAT_ZERO);
 			actual = currentSet.minus(nullSet);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -3230,7 +3234,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet intSet = new IntervalUnionSet(INT_ZERO);
 			IntervalUnionSet ratSet = new IntervalUnionSet(RAT_ZERO);
 			actual = ratSet.minus(intSet);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -3238,9 +3242,8 @@ public class IntervalUnionSetTest {
 	@Test
 	public void minus_IntervalUnionSet_Empty() {
 		IntervalUnionSet emptyRatSet = new IntervalUnionSet(false);
-		IntervalUnionSet nonemptyRatSet = new IntervalUnionSet(
-				numberFactory
-						.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
+		IntervalUnionSet nonemptyRatSet = new IntervalUnionSet(numberFactory
+				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected1 = nonemptyRatSet;
 		expected2 = emptyRatSet;
 		actual1 = nonemptyRatSet.minus(emptyRatSet);
@@ -3257,13 +3260,14 @@ public class IntervalUnionSetTest {
 	@Test
 	public void minus_IntervalUnionSet_Univ() {
 		IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
-		IntervalUnionSet nonunivIntSet = new IntervalUnionSet(
-				numberFactory.newInterval(true, INT_N_ONE, false, INT_ONE,
-						false));
+		IntervalUnionSet nonunivIntSet = new IntervalUnionSet(numberFactory
+				.newInterval(true, INT_N_ONE, false, INT_ONE, false));
 		expected1 = new IntervalUnionSet(true);
-		expected2 = new IntervalUnionSet(numberFactory.newInterval(true, null,
-				true, INT_N_TWO, false), numberFactory.newInterval(true,
-				INT_TWO, false, null, true));
+		expected2 = new IntervalUnionSet(
+				numberFactory.newInterval(true, INT_NEG_INF, true, INT_N_TWO,
+						false),
+				numberFactory.newInterval(true, INT_TWO, false, INT_POS_INF,
+						true));
 		actual1 = nonunivIntSet.minus(univIntSet);
 		actual2 = univIntSet.minus(nonunivIntSet);
 
@@ -3277,9 +3281,8 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void minus_IntervalUnionSet_Self() {
-		IntervalUnionSet original = new IntervalUnionSet(
-				numberFactory
-						.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
+		IntervalUnionSet original = new IntervalUnionSet(numberFactory
+				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected = new IntervalUnionSet(false);
 		actual = original.minus(original);
 
@@ -3331,7 +3334,7 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void minus_IntervalUnionSet_Simple_Adjacent_Rat() {
-		Interval first1 = numberFactory.newInterval(false, null, true,
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_EIGHT, false);
 		Interval first2 = numberFactory.newInterval(false, RAT_N_EIGHT, true,
 				RAT_N_SIX, false);
@@ -3350,7 +3353,7 @@ public class IntervalUnionSetTest {
 		Interval fifth1 = numberFactory.newInterval(false, RAT_SIX, true,
 				RAT_EIGHT, false);
 		Interval fifth2 = numberFactory.newInterval(false, RAT_EIGHT, true,
-				null, true);
+				RAT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
@@ -3372,7 +3375,7 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void minus_IntervalUnionSet_Simple_Adjacent_Int() {
-		Interval first1 = numberFactory.newInterval(true, null, true,
+		Interval first1 = numberFactory.newInterval(true, INT_NEG_INF, true,
 				INT_N_TEN, false);
 		Interval first2 = numberFactory.newInterval(true, INT_N_NINE, false,
 				INT_N_EIGHT, false);
@@ -3390,8 +3393,8 @@ public class IntervalUnionSetTest {
 				INT_SEVEN, false);
 		Interval fifth1 = numberFactory.newInterval(true, INT_EIGHT, false,
 				INT_NINE, false);
-		Interval fifth2 = numberFactory.newInterval(true, INT_TEN, false, null,
-				true);
+		Interval fifth2 = numberFactory.newInterval(true, INT_TEN, false,
+				INT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
@@ -3538,11 +3541,11 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void minus_IntervalUnionSet_Complicated2_Rat() {
-		Interval first1 = numberFactory.newInterval(false, null, true,
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_TWO, true);
 		Interval first2 = numberFactory.newInterval(false, RAT_N_NINE, true,
 				RAT_N_SEVEN, true);
-		Interval first3 = numberFactory.newInterval(false, null, true,
+		Interval first3 = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_NINE, false);
 		Interval first4 = numberFactory.newInterval(false, RAT_TWO, true,
 				RAT_THREE, false);
@@ -3567,11 +3570,11 @@ public class IntervalUnionSetTest {
 		Interval fourth2 = numberFactory.newInterval(false, RAT_ZERO, true,
 				RAT_ONE, true);
 		Interval fourth4 = numberFactory.newInterval(false, RAT_TEN, false,
-				null, true);
+				RAT_POS_INF, true);
 		Interval fifth1 = numberFactory.newInterval(false, RAT_NINE, true,
 				RAT_TEN, true);
-		Interval fifth2 = numberFactory.newInterval(false, RAT_TWO, true, null,
-				true);
+		Interval fifth2 = numberFactory.newInterval(false, RAT_TWO, true,
+				RAT_POS_INF, true);
 		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
 		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
 		Interval[] list3 = { first3, second3, third3 };
@@ -3636,13 +3639,14 @@ public class IntervalUnionSetTest {
 	@Test
 	public void complement_test() {
 		IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
-		IntervalUnionSet nonunivIntSet = new IntervalUnionSet(
-				numberFactory.newInterval(true, INT_N_ONE, false, INT_ONE,
-						false));
+		IntervalUnionSet nonunivIntSet = new IntervalUnionSet(numberFactory
+				.newInterval(true, INT_N_ONE, false, INT_ONE, false));
 		actual = nonunivIntSet.complement();
-		expected1 = new IntervalUnionSet(numberFactory.newInterval(true, null,
-				true, INT_N_TWO, false), numberFactory.newInterval(true,
-				INT_TWO, false, null, true));
+		expected1 = new IntervalUnionSet(
+				numberFactory.newInterval(true, INT_NEG_INF, true, INT_N_TWO,
+						false),
+				numberFactory.newInterval(true, INT_TWO, false, INT_POS_INF,
+						true));
 		expected2 = univIntSet.minus(nonunivIntSet);
 
 		assertEquals(expected1.toString(), actual.toString());
@@ -3660,7 +3664,7 @@ public class IntervalUnionSetTest {
 			IntegerNumber b = INT_ZERO;
 			IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
 			actual = original.affineTransform(a, b);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -3672,7 +3676,7 @@ public class IntervalUnionSetTest {
 			IntegerNumber b = null;
 			IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
 			actual = original.affineTransform(a, b);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -3684,7 +3688,7 @@ public class IntervalUnionSetTest {
 			IntegerNumber b = INT_ONE;
 			IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
 			actual = original.affineTransform(a, b);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -3696,7 +3700,7 @@ public class IntervalUnionSetTest {
 			IntegerNumber b = INT_ONE;
 			IntervalUnionSet original = new IntervalUnionSet(RAT_ONE);
 			actual = original.affineTransform(a, b);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -3735,9 +3739,8 @@ public class IntervalUnionSetTest {
 	public void affineTransform_IntervalUnionSet_Self() {
 		IntegerNumber a = INT_ONE;
 		IntegerNumber b = INT_ZERO;
-		IntervalUnionSet original = new IntervalUnionSet(
-				numberFactory.newInterval(true, INT_N_TEN, false, INT_TEN,
-						false));
+		IntervalUnionSet original = new IntervalUnionSet(numberFactory
+				.newInterval(true, INT_N_TEN, false, INT_TEN, false));
 		expected = original;
 		actual = original.affineTransform(a, b);
 
@@ -3752,9 +3755,8 @@ public class IntervalUnionSetTest {
 	public void affineTransform_IntervalUnionSet_ArgA_GTZERO() {
 		IntegerNumber a = INT_THREE;
 		IntegerNumber b = INT_ONE;
-		IntervalUnionSet original = new IntervalUnionSet(
-				numberFactory.newInterval(true, INT_N_THREE, false, INT_THREE,
-						false));
+		IntervalUnionSet original = new IntervalUnionSet(numberFactory
+				.newInterval(true, INT_N_THREE, false, INT_THREE, false));
 		expected = new IntervalUnionSet(numberFactory.newInterval(true,
 				INT_N_EIGHT, false, INT_TEN, false));
 		actual = original.affineTransform(a, b);
@@ -3770,9 +3772,8 @@ public class IntervalUnionSetTest {
 	public void affineTransform_IntervalUnionSet_ArgA_EQZERO() {
 		RationalNumber a = RAT_ZERO;
 		RationalNumber b = RAT_ZERO;
-		IntervalUnionSet original = new IntervalUnionSet(
-				numberFactory
-						.newInterval(false, RAT_N_TEN, true, RAT_TEN, true));
+		IntervalUnionSet original = new IntervalUnionSet(numberFactory
+				.newInterval(false, RAT_N_TEN, true, RAT_TEN, true));
 		expected = new IntervalUnionSet(numberFactory.newInterval(false,
 				RAT_ZERO, false, RAT_ZERO, false));
 		actual = original.affineTransform(a, b);
@@ -3788,9 +3789,8 @@ public class IntervalUnionSetTest {
 	public void affineTransform_IntervalUnionSet_ArgA_LTZERO() {
 		IntegerNumber a = INT_N_THREE;
 		IntegerNumber b = INT_N_TWO;
-		IntervalUnionSet original = new IntervalUnionSet(
-				numberFactory.newInterval(true, INT_N_FOUR, false, INT_TWO,
-						false));
+		IntervalUnionSet original = new IntervalUnionSet(numberFactory
+				.newInterval(true, INT_N_FOUR, false, INT_TWO, false));
 		expected = new IntervalUnionSet(numberFactory.newInterval(true,
 				INT_N_EIGHT, false, INT_TEN, false));
 		actual = original.affineTransform(a, b);
@@ -3812,7 +3812,7 @@ public class IntervalUnionSetTest {
 			p(DEBUG, expected.toString());
 			p(DEBUG, actual.toString());
 			assertEquals(expected, actual);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -3828,7 +3828,7 @@ public class IntervalUnionSetTest {
 			p(DEBUG, expected.toString());
 			p(DEBUG, actual.toString());
 			assertEquals(expected, actual);
-		}else{
+		} else {
 			throw new AssertionError();
 		}
 	}
@@ -3857,8 +3857,8 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void symbolicRepresentation_SingleInterval() {
-		IntervalUnionSet set = new IntervalUnionSet(numberFactory.newInterval(
-				false, RAT_ZERO, true, RAT_TEN, true));
+		IntervalUnionSet set = new IntervalUnionSet(numberFactory
+				.newInterval(false, RAT_ZERO, true, RAT_TEN, true));
 		SymbolicExpression expected = universe.and(
 				universe.lessThan(universe.zeroReal(), RAT_X),
 				universe.lessThan(RAT_X, universe.rational(10.00)));
@@ -3871,18 +3871,20 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void symbolicRepresentation_MultiInterval1() {
-		Interval first = numberFactory.newInterval(false, null, true,
+		Interval first = numberFactory.newInterval(false, RAT_NEG_INF, true,
 				RAT_N_TEN, true);
 		Interval second = numberFactory.newInterval(false, RAT_N_ONE, true,
 				RAT_ONE, true);
-		Interval third = numberFactory.newInterval(false, RAT_TEN, true, null,
-				true);
+		Interval third = numberFactory.newInterval(false, RAT_TEN, true,
+				RAT_POS_INF, true);
 		IntervalUnionSet set = new IntervalUnionSet(first, second, third);
-		SymbolicExpression expected = universe.or(universe.or(universe
-				.lessThan(RAT_X, universe.rational(-10)), universe.and(
-				universe.lessThan(RAT_X, universe.rational(1)),
-				universe.lessThan(universe.rational(-1), RAT_X))), universe
-				.lessThan(universe.rational(10), RAT_X));
+		SymbolicExpression expected = universe.or(
+				universe.or(universe.lessThan(RAT_X, universe.rational(-10)),
+						universe.and(
+								universe.lessThan(RAT_X, universe.rational(1)),
+								universe.lessThan(universe.rational(-1),
+										RAT_X))),
+				universe.lessThan(universe.rational(10), RAT_X));
 		SymbolicExpression actual = set.symbolicRepresentation(RAT_X, universe);
 
 		p(DEBUG, expected.toString());
@@ -3892,17 +3894,17 @@ public class IntervalUnionSetTest {
 
 	@Test
 	public void symbolicRepresentation_MultiInterval2() {
-		Interval first = numberFactory.newInterval(true, null, true, INT_N_TEN,
-				false);
+		Interval first = numberFactory.newInterval(true, INT_NEG_INF, true,
+				INT_N_TEN, false);
 		Interval second = numberFactory.newInterval(true, INT_ZERO, false,
 				INT_ZERO, false);
-		Interval third = numberFactory.newInterval(true, INT_TEN, false, null,
-				true);
+		Interval third = numberFactory.newInterval(true, INT_TEN, false,
+				INT_POS_INF, true);
 		IntervalUnionSet set = new IntervalUnionSet(first, second, third);
-		SymbolicExpression expected = universe.or(universe.or(
-				universe.equals(INT_X, universe.integer(0)),
-				universe.lessThanEquals(universe.integer(10), INT_X)), universe
-				.lessThanEquals(INT_X, universe.integer(-10)));
+		SymbolicExpression expected = universe.or(
+				universe.or(universe.equals(INT_X, universe.integer(0)),
+						universe.lessThanEquals(universe.integer(10), INT_X)),
+				universe.lessThanEquals(INT_X, universe.integer(-10)));
 		SymbolicExpression actual = set.symbolicRepresentation(INT_X, universe);
 
 		p(DEBUG, expected.toString());

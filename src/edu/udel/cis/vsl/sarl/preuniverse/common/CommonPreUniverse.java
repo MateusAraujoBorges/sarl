@@ -82,7 +82,8 @@ public class CommonPreUniverse implements PreUniverse {
 	 */
 	public final static int QUANTIFIER_EXPAND_BOUND = 1000;
 
-	private static final int INTEGER_BIT_LENGTH = 32;
+	//TODO: To make the length as a argument to the bit-wise
+	private int INTEGER_BIT_LENGTH = 32;
 
 	/**
 	 * IntegerNumber versions of the corresponding static int fields.

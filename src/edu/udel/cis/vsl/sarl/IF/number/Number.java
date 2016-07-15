@@ -26,7 +26,7 @@ package edu.udel.cis.vsl.sarl.IF.number;
  * 
  * The natural comparison places some arbitrary order on Numbers consistent with
  * equals.
- * */
+ */
 public interface Number extends Comparable<Number> {
 
 	/**
@@ -43,6 +43,14 @@ public interface Number extends Comparable<Number> {
 
 	/** Is this number equal to 1? */
 	boolean isOne();
+
+	/**
+	 * Is this number infinite?
+	 * 
+	 * @return <code>true</code>, if it is positive/negative infinity;<br>
+	 *         <code>false</code>, if it is finite.
+	 */
+	boolean isInfinite();
 
 	/**
 	 * The string representation used when this number appears inside of another

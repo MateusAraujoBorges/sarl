@@ -39,10 +39,14 @@ public class NumberFactoryTest {
 	private static BigInteger bigTwenty = new BigInteger("20");
 	private static BigInteger bigThirty = new BigInteger("30");
 	private static BigInteger bigThirtyOne = new BigInteger("31");
+	private static IntegerNumber INT_POS_INF = factory.infiniteInteger(true);
+	private static IntegerNumber INT_NEG_INF = factory.infiniteInteger(false);
 	private static IntegerNumber INT_ZERO = factory.zeroInteger();
 	private static IntegerNumber INT_ONE = factory.integer(bigOne);
 	private static IntegerNumber INT_TWO = factory.integer(bigTwo);
 	private static IntegerNumber INT_THREE = factory.integer(bigThree);
+	private static RationalNumber RAT_POS_INF = factory.infiniteRational(true);
+	private static RationalNumber RAT_NEG_INF = factory.infiniteRational(false);
 	private static RationalNumber RAT_ZERO = factory.rational(INT_ZERO);
 	private static RationalNumber RAT_ONE = factory.rational(INT_ONE);
 	private static RationalNumber RAT_TWO = factory.rational(INT_TWO);
@@ -232,8 +236,8 @@ public class NumberFactoryTest {
 	public void realRatRat() {
 		RealRational a = (RealRational) factory.rational(bigThirty,
 				bigNegativeOne);
-		RealRational expectedA = (RealRational) factory.rational(
-				bigNegativeThirty, bigOne);
+		RealRational expectedA = (RealRational) factory
+				.rational(bigNegativeThirty, bigOne);
 		assertEquals(expectedA, a);
 	}
 
@@ -952,10 +956,10 @@ public class NumberFactoryTest {
 	@Test
 	public void intervalIntersectionI1DisjointI2Int() {
 		// i1: (-infi, -314] i2: [314, +infi) expected: (0, 0)
-		IntegerNumber lo1 = null;
+		IntegerNumber lo1 = INT_NEG_INF;
 		IntegerNumber up1 = factory.integer(-314);
 		IntegerNumber lo2 = factory.integer(314);
-		IntegerNumber up2 = null;
+		IntegerNumber up2 = INT_POS_INF;
 		IntegerNumber loR = factory.zeroInteger();
 		IntegerNumber upR = factory.zeroInteger();
 		boolean isIntegral1 = up1 instanceof IntegerNumber;
@@ -1044,8 +1048,8 @@ public class NumberFactoryTest {
 	public void intervalIntersectionI1IntersectI2withExactlyRangeOfOneRat() {
 		// i1: [314.0, +infi) i2: (-infi, 315) expected: [314.0, 315.0)
 		RationalNumber lo1 = factory.rational(factory.integer(314));
-		RationalNumber up1 = null;
-		RationalNumber lo2 = null;
+		RationalNumber up1 = RAT_POS_INF;
+		RationalNumber lo2 = RAT_NEG_INF;
 		RationalNumber up2 = factory.rational(factory.integer(315));
 		RationalNumber loR = factory.rational(factory.integer(314));
 		RationalNumber upR = factory.rational(factory.integer(315));
@@ -1104,11 +1108,11 @@ public class NumberFactoryTest {
 	@Test
 	public void intervalIntersectionI1IntersectI2withLargerRangeOfOneRat() {
 		// i1: (-infi, +infi) i2: (-infi, 314) expected: (-infi, 314.0)
-		RationalNumber lo1 = null;
-		RationalNumber up1 = null;
-		RationalNumber lo2 = null;
+		RationalNumber lo1 = RAT_NEG_INF;
+		RationalNumber up1 = RAT_POS_INF;
+		RationalNumber lo2 = RAT_NEG_INF;
 		RationalNumber up2 = factory.rational(factory.integer(314));
-		RationalNumber loR = null;
+		RationalNumber loR = RAT_NEG_INF;
 		RationalNumber upR = factory.rational(factory.integer(314));
 		boolean isIntegral1 = lo1 instanceof IntegerNumber;
 		boolean isIntegral2 = lo2 instanceof IntegerNumber;
@@ -1133,8 +1137,8 @@ public class NumberFactoryTest {
 
 	@Test
 	public void intervalIntersectionI1UnivI2EmptyRat() {
-		RationalNumber lo1 = null;
-		RationalNumber up1 = null;
+		RationalNumber lo1 = RAT_NEG_INF;
+		RationalNumber up1 = RAT_POS_INF;
 		RationalNumber lo2 = factory.rational(factory.zeroInteger());
 		RationalNumber up2 = factory.rational(factory.zeroInteger());
 		RationalNumber loR = factory.rational(factory.zeroInteger());
@@ -1255,10 +1259,10 @@ public class NumberFactoryTest {
 	@Test
 	public void intervalUnionI1DisjointI2Int() {
 		// i1: (-infi, -314] i2: [314, +infi) expected: {0, null}
-		IntegerNumber lo1 = null;
+		IntegerNumber lo1 = INT_NEG_INF;
 		IntegerNumber up1 = factory.integer(-314);
 		IntegerNumber lo2 = factory.integer(314);
-		IntegerNumber up2 = null;
+		IntegerNumber up2 = INT_POS_INF;
 		boolean isIntegral1 = up1 instanceof IntegerNumber;
 		boolean isIntegral2 = lo2 instanceof IntegerNumber;
 		boolean sl1 = true;
@@ -1337,11 +1341,11 @@ public class NumberFactoryTest {
 	public void intervalIntersectionI1IntersectI2withExactlyAdjacent() {
 		// i1: [314.0, +infi) i2: (-infi, 314.0) expected: (-infi, +infi)
 		RationalNumber lo1 = factory.rational(factory.integer(314));
-		RationalNumber up1 = null;
-		RationalNumber lo2 = null;
+		RationalNumber up1 = RAT_POS_INF;
+		RationalNumber lo2 = RAT_NEG_INF;
 		RationalNumber up2 = factory.rational(factory.integer(314));
-		RationalNumber loR = null;
-		RationalNumber upR = null;
+		RationalNumber loR = RAT_NEG_INF;
+		RationalNumber upR = RAT_POS_INF;
 		boolean isIntegral1 = lo1 instanceof IntegerNumber;
 		boolean isIntegral2 = up2 instanceof IntegerNumber;
 		boolean isIntegralR = loR instanceof IntegerNumber;
@@ -1402,11 +1406,11 @@ public class NumberFactoryTest {
 	@Test
 	public void intervalUnionI1IntersectI2withLargerRangeOfOneRat() {
 		// i1: (-infi, 314] i2: (-427.0, 314.0) expected: (-infi, 314.0]
-		RationalNumber lo1 = null;
+		RationalNumber lo1 = RAT_NEG_INF;
 		RationalNumber up1 = factory.rational(factory.integer(314));
 		RationalNumber lo2 = factory.rational(factory.integer(-427));
 		RationalNumber up2 = factory.rational(factory.integer(314));
-		RationalNumber loR = null;
+		RationalNumber loR = RAT_NEG_INF;
 		RationalNumber upR = factory.rational(factory.integer(314));
 		boolean isIntegral1 = lo1 instanceof IntegerNumber;
 		boolean isIntegral2 = lo2 instanceof IntegerNumber;
@@ -1436,10 +1440,10 @@ public class NumberFactoryTest {
 	public void intervalUnionI1EmptyI2UnivRat() {
 		RationalNumber lo1 = factory.rational(factory.zeroInteger());
 		RationalNumber up1 = factory.rational(factory.zeroInteger());
-		RationalNumber lo2 = null;
-		RationalNumber up2 = null;
-		RationalNumber loR = null;
-		RationalNumber upR = null;
+		RationalNumber lo2 = RAT_NEG_INF;
+		RationalNumber up2 = RAT_POS_INF;
+		RationalNumber loR = RAT_NEG_INF;
+		RationalNumber upR = RAT_POS_INF;
 		boolean isIntegral1 = lo1 instanceof IntegerNumber;
 		boolean isIntegral2 = lo2 instanceof IntegerNumber;
 		boolean isIntegralR = loR instanceof IntegerNumber;
@@ -1654,7 +1658,7 @@ public class NumberFactoryTest {
 	public void intervalAffineTransformIntervalWithLowerValue_NegInfinity() {
 		IntegerNumber a = factory.integer(314);
 		IntegerNumber b = factory.integer(314);
-		IntegerNumber lo = null;
+		IntegerNumber lo = INT_NEG_INF;
 		IntegerNumber up = factory.integer(1);
 		boolean isIntegral = up instanceof IntegerNumber;
 		boolean sl = true;
@@ -1662,7 +1666,7 @@ public class NumberFactoryTest {
 		Interval itv = factory.newInterval(isIntegral, lo, sl, up, su);
 		Interval result = factory.affineTransform(itv, a, b);
 
-		assert result.lower() == null;
+		assert result.lower().isInfinite() && result.lower().signum() < 0;
 		assert ((IntegerNumber) result.upper()).intValue() == 628;
 	}
 
@@ -1677,14 +1681,14 @@ public class NumberFactoryTest {
 		RationalNumber a = factory.rational(factory.integer(314));
 		RationalNumber b = factory.rational(factory.integer(314));
 		RationalNumber lo = factory.rational(factory.integer(-1));
-		RationalNumber up = null;
+		RationalNumber up = RAT_POS_INF;
 		boolean isIntegral = lo instanceof IntegerNumber;
 		boolean sl = true;
 		boolean su = true;
 		Interval itv = factory.newInterval(isIntegral, lo, sl, up, su);
 		Interval result = factory.affineTransform(itv, a, b);
 
-		assert (result.upper() == null);
+		assert (result.upper().isInfinite() && result.upper().signum() > 0);
 	}
 
 	/**
@@ -1722,7 +1726,7 @@ public class NumberFactoryTest {
 	public void intervalAffineTransformIntervalWithBothBoundNotStrictAndNumber_a_isZero() {
 		IntegerNumber a = factory.integer(0);
 		IntegerNumber b = factory.integer(3);
-		IntegerNumber lo = null;
+		IntegerNumber lo = INT_NEG_INF;
 		IntegerNumber up = factory.integer(427);
 		boolean isIntegral = up instanceof IntegerNumber;
 		boolean sl = true;
@@ -1746,7 +1750,7 @@ public class NumberFactoryTest {
 		RationalNumber a = factory.rational(factory.integer(0));
 		RationalNumber b = factory.rational(factory.integer(314));
 		RationalNumber lo = factory.rational(factory.integer(427));
-		RationalNumber up = null;
+		RationalNumber up = RAT_POS_INF;
 		boolean isIntegral = up instanceof IntegerNumber;
 		boolean sl = true;
 		boolean su = true;
@@ -1768,7 +1772,7 @@ public class NumberFactoryTest {
 	public void intervalAffineTransformIntervalWithUpperBoundStrictAndNumber_a_isZero() {
 		RationalNumber a = factory.rational(factory.integer(0));
 		RationalNumber b = factory.rational(factory.integer(314));
-		RationalNumber lo = null;
+		RationalNumber lo = RAT_NEG_INF;
 		RationalNumber up = factory.rational(factory.integer(427));
 		boolean isIntegral = up instanceof IntegerNumber;
 		boolean sl = true;
@@ -1791,8 +1795,8 @@ public class NumberFactoryTest {
 	public void intervalAffineTransformIntervalWithBothBoundStrictAndNumber_a_isZero() {
 		RationalNumber a = factory.rational(factory.integer(0));
 		RationalNumber b = factory.rational(factory.integer(314));
-		RationalNumber lo = null;
-		RationalNumber up = null;
+		RationalNumber lo = RAT_NEG_INF;
+		RationalNumber up = RAT_POS_INF;
 		boolean isIntegral = lo instanceof IntegerNumber;
 		boolean sl = true;
 		boolean su = true;
@@ -2015,20 +2019,20 @@ public class NumberFactoryTest {
 	public void compareInterval_Interval1_LeftDisjoint_Interval2() {
 		Interval int_interval1a = factory.newInterval(true, INT_ZERO, false,
 				INT_ONE, false);
-		Interval int_interval1b = factory.newInterval(true, null, true,
+		Interval int_interval1b = factory.newInterval(true, INT_NEG_INF, true,
 				INT_ONE, false);
 		Interval int_interval2a = factory.newInterval(true, INT_TWO, false,
 				INT_THREE, false);
 		Interval int_interval2b = factory.newInterval(true, INT_TWO, false,
-				null, true);
+				INT_POS_INF, true);
 		Interval rat_interval1a = factory.newInterval(false, RAT_ZERO, false,
 				RAT_ONE, false);
-		Interval rat_interval1b = factory.newInterval(false, null, true,
+		Interval rat_interval1b = factory.newInterval(false, RAT_NEG_INF, true,
 				RAT_ZERO, false);
 		Interval rat_interval2a = factory.newInterval(false, RAT_ONE, true,
 				RAT_THREE, true);
 		Interval rat_interval2b = factory.newInterval(false, RAT_ZERO, true,
-				null, true);
+				RAT_POS_INF, true);
 		int result1 = factory.compare(int_interval1a, int_interval2a);
 		int result2 = factory.compare(int_interval1b, int_interval2b);
 		int result3 = factory.compare(rat_interval1a, rat_interval2a);
@@ -2046,12 +2050,12 @@ public class NumberFactoryTest {
 				INT_ONE, false);
 		Interval int_interval1b = factory.newInterval(true, INT_ZERO, false,
 				INT_TWO, false);
-		Interval int_interval1c = factory.newInterval(true, null, true,
+		Interval int_interval1c = factory.newInterval(true, INT_NEG_INF, true,
 				INT_TWO, false);
 		Interval int_interval2a = factory.newInterval(true, INT_ONE, false,
 				INT_THREE, false);
 		Interval int_interval2b = factory.newInterval(true, INT_ONE, false,
-				null, true);
+				INT_POS_INF, true);
 		Interval rat_interval1a = factory.newInterval(false, RAT_ZERO, false,
 				RAT_ONE, false);
 		Interval rat_interval1b = factory.newInterval(false, RAT_ZERO, false,
@@ -2060,7 +2064,7 @@ public class NumberFactoryTest {
 				RAT_THREE, true);
 		Interval rat_interval1d = factory.newInterval(false, RAT_ONE, false,
 				RAT_THREE, true);
-		Interval rat_interval1e = factory.newInterval(false, null, true,
+		Interval rat_interval1e = factory.newInterval(false, RAT_NEG_INF, true,
 				RAT_ZERO, false);
 		Interval rat_interval2a = factory.newInterval(false, RAT_ONE, false,
 				RAT_THREE, false);
@@ -2069,7 +2073,7 @@ public class NumberFactoryTest {
 		Interval rat_interval2c = factory.newInterval(false, RAT_ZERO, true,
 				RAT_THREE, false);
 		Interval rat_interval2d = factory.newInterval(false, RAT_ZERO, false,
-				null, true);
+				RAT_POS_INF, true);
 
 		int result1 = factory.compare(int_interval1a, int_interval2a);
 		int result2 = factory.compare(int_interval1b, int_interval2a);
@@ -2102,32 +2106,32 @@ public class NumberFactoryTest {
 				INT_THREE, false);
 		Interval int_interval1c = factory.newInterval(true, INT_ZERO, false,
 				INT_THREE, false);
-		Interval int_interval1d = factory.newInterval(true, null, true,
+		Interval int_interval1d = factory.newInterval(true, INT_NEG_INF, true,
 				INT_THREE, false);
 		Interval int_interval1e = factory.newInterval(true, INT_ZERO, false,
-				null, true);
+				INT_POS_INF, true);
 		Interval int_interval2a = factory.newInterval(true, INT_ONE, false,
 				INT_TWO, false);
-		Interval int_interval2b = factory.newInterval(true, null, true,
+		Interval int_interval2b = factory.newInterval(true, INT_NEG_INF, true,
 				INT_ZERO, false);
 		Interval int_interval2c = factory.newInterval(true, INT_THREE, false,
-				null, true);
+				INT_POS_INF, true);
 		Interval rat_interval1a = factory.newInterval(false, RAT_ONE, false,
 				RAT_THREE, true);
 		Interval rat_interval1b = factory.newInterval(false, RAT_ONE, true,
 				RAT_THREE, false);
 		Interval rat_interval1c = factory.newInterval(false, RAT_ONE, false,
 				RAT_THREE, false);
-		Interval rat_interval1d = factory.newInterval(false, null, true,
+		Interval rat_interval1d = factory.newInterval(false, RAT_NEG_INF, true,
 				RAT_ZERO, false);
 		Interval rat_interval1e = factory.newInterval(false, RAT_ZERO, false,
-				null, true);
+				RAT_POS_INF, true);
 		Interval rat_interval2a = factory.newInterval(false, RAT_ONE, true,
 				RAT_THREE, true);
-		Interval rat_interval2b = factory.newInterval(false, null, true,
+		Interval rat_interval2b = factory.newInterval(false, RAT_NEG_INF, true,
 				RAT_ZERO, true);
 		Interval rat_interval2c = factory.newInterval(false, RAT_ZERO, true,
-				null, true);
+				RAT_POS_INF, true);
 		int result1 = factory.compare(int_interval1a, int_interval2a);
 		int result2 = factory.compare(int_interval1b, int_interval2a);
 		int result3 = factory.compare(int_interval1c, int_interval2a);
@@ -2155,22 +2159,21 @@ public class NumberFactoryTest {
 	public void compareInterval_Interval1_EqualsTo_Interval2() {
 		Interval int_intervala = factory.newInterval(true, INT_ONE, false,
 				INT_TWO, false);
-		Interval int_intervalb = factory.newInterval(true, null, true, null,
-				true);
-		Interval int_intervalc = factory.newInterval(true, null, true,
+		Interval int_intervalb = factory.universalIntegerInterval();
+		Interval int_intervalc = factory.newInterval(true, INT_NEG_INF, true,
 				INT_ZERO, false);
 		Interval int_intervald = factory.newInterval(true, INT_ZERO, false,
-				null, true);
+				INT_POS_INF, true);
 		Interval rat_intervala = factory.newInterval(false, RAT_ONE, true,
 				RAT_THREE, false);
 		Interval rat_intervalb = factory.newInterval(false, RAT_ONE, false,
 				RAT_THREE, true);
 		Interval rat_intervalc = factory.newInterval(false, RAT_ONE, true,
 				RAT_THREE, true);
-		Interval rat_intervald = factory.newInterval(false, null, true,
+		Interval rat_intervald = factory.newInterval(false, RAT_NEG_INF, true,
 				RAT_ZERO, true);
 		Interval rat_intervale = factory.newInterval(false, RAT_ZERO, true,
-				null, true);
+				RAT_POS_INF, true);
 		int result1 = factory.compare(int_intervala, int_intervala);
 		int result2 = factory.compare(int_intervalb, int_intervalb);
 		int result3 = factory.compare(int_intervalc, int_intervalc);
@@ -2196,36 +2199,36 @@ public class NumberFactoryTest {
 	public void compareInterval_Interval1_IsContainedBy_Interval2() {
 		Interval int_interval1a = factory.newInterval(true, INT_ONE, false,
 				INT_TWO, false);
-		Interval int_interval1b = factory.newInterval(true, null, true,
+		Interval int_interval1b = factory.newInterval(true, INT_NEG_INF, true,
 				INT_ZERO, false);
 		Interval int_interval1c = factory.newInterval(true, INT_THREE, false,
-				null, true);
+				INT_POS_INF, true);
 		Interval int_interval2a = factory.newInterval(true, INT_ZERO, false,
 				INT_TWO, false);
 		Interval int_interval2b = factory.newInterval(true, INT_ONE, false,
 				INT_THREE, false);
 		Interval int_interval2c = factory.newInterval(true, INT_ZERO, false,
 				INT_THREE, false);
-		Interval int_interval2d = factory.newInterval(true, null, true,
+		Interval int_interval2d = factory.newInterval(true, INT_NEG_INF, true,
 				INT_THREE, false);
 		Interval int_interval2e = factory.newInterval(true, INT_ZERO, false,
-				null, true);
+				INT_POS_INF, true);
 		Interval rat_interval1a = factory.newInterval(false, RAT_ONE, true,
 				RAT_THREE, true);
-		Interval rat_interval1b = factory.newInterval(false, null, true,
+		Interval rat_interval1b = factory.newInterval(false, RAT_NEG_INF, true,
 				RAT_ZERO, true);
 		Interval rat_interval1c = factory.newInterval(false, RAT_ZERO, true,
-				null, true);
+				RAT_POS_INF, true);
 		Interval rat_interval2a = factory.newInterval(false, RAT_ONE, false,
 				RAT_THREE, true);
 		Interval rat_interval2b = factory.newInterval(false, RAT_ONE, true,
 				RAT_THREE, false);
 		Interval rat_interval2c = factory.newInterval(false, RAT_ONE, false,
 				RAT_THREE, false);
-		Interval rat_interval2d = factory.newInterval(false, null, true,
+		Interval rat_interval2d = factory.newInterval(false, RAT_NEG_INF, true,
 				RAT_ZERO, false);
 		Interval rat_interval2e = factory.newInterval(false, RAT_ZERO, false,
-				null, true);
+				RAT_POS_INF, true);
 		int result1 = factory.compare(int_interval1a, int_interval2a);
 		int result2 = factory.compare(int_interval1a, int_interval2b);
 		int result3 = factory.compare(int_interval1a, int_interval2c);
@@ -2255,12 +2258,12 @@ public class NumberFactoryTest {
 				INT_ONE, false);
 		Interval int_interval2b = factory.newInterval(true, INT_ZERO, false,
 				INT_TWO, false);
-		Interval int_interval2c = factory.newInterval(true, null, true,
+		Interval int_interval2c = factory.newInterval(true, INT_NEG_INF, true,
 				INT_TWO, false);
 		Interval int_interval1a = factory.newInterval(true, INT_ONE, false,
 				INT_THREE, false);
 		Interval int_interval1b = factory.newInterval(true, INT_ONE, false,
-				null, true);
+				INT_POS_INF, true);
 		Interval rat_interval2a = factory.newInterval(false, RAT_ZERO, false,
 				RAT_ONE, false);
 		Interval rat_interval2b = factory.newInterval(false, RAT_ZERO, false,
@@ -2269,7 +2272,7 @@ public class NumberFactoryTest {
 				RAT_THREE, true);
 		Interval rat_interval2d = factory.newInterval(false, RAT_ONE, false,
 				RAT_THREE, true);
-		Interval rat_interval2e = factory.newInterval(false, null, true,
+		Interval rat_interval2e = factory.newInterval(false, RAT_NEG_INF, true,
 				RAT_ZERO, false);
 		Interval rat_interval1a = factory.newInterval(false, RAT_ONE, false,
 				RAT_THREE, false);
@@ -2278,7 +2281,7 @@ public class NumberFactoryTest {
 		Interval rat_interval1c = factory.newInterval(false, RAT_ZERO, true,
 				RAT_THREE, false);
 		Interval rat_interval1d = factory.newInterval(false, RAT_ZERO, false,
-				null, true);
+				RAT_POS_INF, true);
 
 		int result1 = factory.compare(int_interval1a, int_interval2a);
 		int result2 = factory.compare(int_interval1a, int_interval2b);
@@ -2308,18 +2311,18 @@ public class NumberFactoryTest {
 		Interval int_interval1a = factory.newInterval(true, INT_TWO, false,
 				INT_THREE, false);
 		Interval int_interval1b = factory.newInterval(true, INT_TWO, false,
-				null, true);
+				INT_POS_INF, true);
 		Interval int_interval2a = factory.newInterval(true, INT_ZERO, false,
 				INT_ONE, false);
-		Interval int_interval2b = factory.newInterval(true, null, true,
+		Interval int_interval2b = factory.newInterval(true, INT_NEG_INF, true,
 				INT_ONE, false);
 		Interval rat_interval1a = factory.newInterval(false, RAT_ONE, true,
 				RAT_THREE, true);
 		Interval rat_interval1b = factory.newInterval(false, RAT_ZERO, true,
-				null, true);
+				RAT_POS_INF, true);
 		Interval rat_interval2a = factory.newInterval(false, RAT_ZERO, false,
 				RAT_ONE, false);
-		Interval rat_interval2b = factory.newInterval(false, null, true,
+		Interval rat_interval2b = factory.newInterval(false, RAT_NEG_INF, true,
 				RAT_ZERO, false);
 		int result1 = factory.compare(int_interval1a, int_interval2a);
 		int result2 = factory.compare(int_interval1b, int_interval2b);
@@ -2348,8 +2351,8 @@ public class NumberFactoryTest {
 
 				IntegerNumber base = factory.integer(i);
 				IntegerNumber pow = factory.power(base, exp);
-				IntegerNumber root = ((RealNumberFactory) factory).nthRootInt(
-						pow, exp);
+				IntegerNumber root = ((RealNumberFactory) factory)
+						.nthRootInt(pow, exp);
 
 				if (root == null) {
 					System.out.println("B: " + base + ", E: " + exp + ", P: "

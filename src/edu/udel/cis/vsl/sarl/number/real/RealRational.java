@@ -50,7 +50,7 @@ public class RealRational extends RealNumber implements RationalNumber {
 	 * @param numerator
 	 * @param denominator
 	 */
-	public RealRational(BigInteger numerator, BigInteger denominator) {
+	RealRational(BigInteger numerator, BigInteger denominator) {
 		assert numerator != null;
 		assert denominator != null;
 		assert denominator.signum() != 0;
@@ -60,8 +60,8 @@ public class RealRational extends RealNumber implements RationalNumber {
 
 	@Override
 	/**
-	 * Overrides the method signum.
-	 * Determines signum solely based on the value of the numerator.
+	 * Overrides the method signum. Determines signum solely based on the value
+	 * of the numerator.
 	 */
 	public int signum() {
 		return numerator.signum();
@@ -122,14 +122,21 @@ public class RealRational extends RealNumber implements RationalNumber {
 	@Override
 	public int numericalCompareTo(Number other) {
 		assert other instanceof RationalNumber;
+		if (other.isInfinite())
+			return -other.signum();
 
 		RealRational that = (RealRational) other;
-		BigInteger a = this.numerator(), b = this.denominator(), c = that
-				.numerator(), d = that.denominator();
+		BigInteger a = this.numerator(), b = this.denominator(),
+				c = that.numerator(), d = that.denominator();
 
 		// a/b - c/d = (ad - bc) / bd
 		return (a.multiply(d).subtract(b.multiply(c))).signum() * b.signum()
 				* d.signum();
+	}
+
+	@Override
+	public boolean isInfinite() {
+		return false;
 	}
 
 }
