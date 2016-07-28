@@ -838,9 +838,17 @@ public class CommonPreUniverse implements PreUniverse {
 		case INT_DIVIDE:
 			return divide((NumericExpression) args[0],
 					(NumericExpression) args[1]);
-		case LAMBDA:
-			return lambda((SymbolicConstant) args[0],
-					(SymbolicExpression) args[1]);
+		case LAMBDA:{
+			//TODO change
+			int len = args.length;
+			List<SymbolicConstant> vars = new ArrayList<>();
+			
+			for(int i=0; i<len-1; i++){
+				vars.add((SymbolicConstant)args[i]);
+			}
+			return lambda(vars,
+					(SymbolicExpression) args[len-1]);
+		}
 		case LENGTH:
 			return length((SymbolicExpression) args[0]);
 		case LESS_THAN:
@@ -1640,7 +1648,41 @@ public class CommonPreUniverse implements PreUniverse {
 						expression.type()),
 				boundVariable, expression);
 	}
-
+	
+	/**
+	 * TODO
+	 * make lambda support multiple parameters
+	 * @param boundVariables
+	 * @param expression
+	 * @return
+	 */
+	@Override
+	public SymbolicExpression lambda(Collection<SymbolicConstant> boundVariables,
+			SymbolicExpression expression) {
+		List<SymbolicType> paraTypes = new ArrayList<>();
+		List<SymbolicObject> symbolicObjects = new ArrayList<>();
+		
+		for(SymbolicConstant var : boundVariables){
+			paraTypes.add(var.type());
+			symbolicObjects.add(var);
+		}
+		symbolicObjects.add(expression);
+		int size = symbolicObjects.size();
+		SymbolicObject[] so = new SymbolicObject[size];
+		
+		symbolicObjects.toArray(so);
+		return expression(SymbolicOperator.LAMBDA,
+				functionType(
+						typeFactory.sequence(paraTypes),
+						expression.type()),
+				so);
+	}
+	
+//	protected SymbolicExpression expression(SymbolicOperator operator,
+//			SymbolicType type, Iterable<SymbolicObject> arg0, SymbolicObject arg1) {
+//		return expressionFactory.expression(operator, type, arg0, arg1);
+//	}
+	// TODO change here
 	@Override
 	public SymbolicExpression apply(SymbolicExpression function,
 			Iterable<? extends SymbolicExpression> argumentSequence) {
@@ -1650,23 +1692,35 @@ public class CommonPreUniverse implements PreUniverse {
 		if (op0 == SymbolicOperator.LAMBDA) {
 			Iterator<? extends SymbolicExpression> iter = argumentSequence
 					.iterator();
-			SymbolicExpression arg;
+//			SymbolicExpression arg;
 
 			if (!iter.hasNext())
 				throw err("Argument argumentSequence to method apply is empty"
 						+ " but since function is a lambda expression it should"
 						+ " have at least one element");
-			arg = iter.next();
-			assert !iter.hasNext();
-			if (iter.hasNext())
-				throw err(
-						"Argument argumentSequence to method apply has more than one element"
-								+ " but since function is a lambda expression it should"
-								+ " have exactly one element");
+//			arg = iter.next();
+//			assert !iter.hasNext();
+//			if (iter.hasNext())
+//				throw err(
+//						"Argument argumentSequence to method apply has more than one element"
+//								+ " but since function is a lambda expression it should"
+//								+ " have exactly one element");
+			List<SymbolicExpression> values = new ArrayList<>();
+			List<SymbolicConstant> vars = new ArrayList<>();
+			
+			while(iter.hasNext()){
+				values.add(iter.next());
+			}
+			int argsNum = function.numArguments();
+			
+			for(int i=0; i<argsNum-1; i++){
+				vars.add((SymbolicConstant)function.argument(i));
+			}
 			// function.argument(0): bound symbolic constant : dummy variable
 			// function.argument(1): symbolic expression: body of function
-			result = simpleSubstituter((SymbolicConstant) function.argument(0),
-					arg).apply((SymbolicExpression) function.argument(1));
+//			result = simpleSubstituter((SymbolicConstant) function.argument(0),
+//					arg).apply((SymbolicExpression) function.argument(1));
+			result = simpleSubstituter(vars, values).apply((SymbolicExpression) function.argument(argsNum - 1));
 		} else {
 			// TODO check the argument types...
 			result = expression(SymbolicOperator.APPLY,
@@ -1674,6 +1728,12 @@ public class CommonPreUniverse implements PreUniverse {
 					function, sequence(argumentSequence));
 		}
 		return result;
+	}
+	
+	public UnaryOperator<SymbolicExpression> simpleSubstituter(
+			Collection<SymbolicConstant> vars, Collection<SymbolicExpression> values) {
+		return new SimpleSubstituter(this, objectFactory, typeFactory, vars,
+				values);
 	}
 
 	@Override

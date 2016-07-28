@@ -1478,6 +1478,9 @@ public interface CoreUniverse {
 	 */
 	SymbolicExpression lambda(SymbolicConstant boundVariable,
 			SymbolicExpression expression);
+	
+	SymbolicExpression lambda(Collection<SymbolicConstant> boundVariables,
+			SymbolicExpression expression);
 
 	/**
 	 * The result of applying an uninterpreted function to a sequence of

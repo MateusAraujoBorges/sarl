@@ -549,17 +549,26 @@ public class HomogeneousExpression<T extends SymbolicObject>
 				atomize(result);
 			return result;
 		}
-		case LAMBDA:
+		case LAMBDA:{
+			//TODO change
+			int len = arguments.length;
+			
 			result.append("lambda ");
-			result.append(arguments[0].toStringBuffer(false));
-			result.append(" : ");
-			result.append(((SymbolicExpression) arguments[0]).type()
-					.toStringBuffer(false));
+			for(int i=0; i<len-1; i++){
+				result.append(arguments[i].toStringBuffer(false));
+				result.append(" : ");
+				result.append(((SymbolicExpression) arguments[i]).type()
+						.toStringBuffer(false));
+				if(i != len -2)
+					result.append(" , ");
+					
+			}
 			result.append(" . ");
-			result.append(arguments[1].toStringBuffer(true));
+			result.append(arguments[len-1].toStringBuffer(true));
 			if (atomize)
 				atomize(result);
 			return result;
+		}
 		case LENGTH:
 			result.append("length(");
 			result.append(arguments[0].toStringBuffer(false));

@@ -1,7 +1,10 @@
 package edu.udel.cis.vsl.sarl.preuniverse.common;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Deque;
+import java.util.List;
 
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
@@ -22,13 +25,15 @@ public class SimpleSubstituter extends ExpressionSubstituter {
 	/**
 	 * The symbolic constant that is to be replaced.
 	 */
-	private SymbolicConstant var;
+	// private SymbolicConstant var;
+	private List<SymbolicConstant> vars;
 
 	/**
 	 * The symbolic expression that should be substituted for every occurrence
 	 * of {@link #var}.
 	 */
-	private SymbolicExpression value;
+	// private SymbolicExpression value;
+	private List<SymbolicExpression> values;
 
 	/**
 	 * The state of the search: a stack of bound symbolic constants. Used so
@@ -51,8 +56,20 @@ public class SimpleSubstituter extends ExpressionSubstituter {
 			SymbolicTypeFactory typeFactory, SymbolicConstant var,
 			SymbolicExpression value) {
 		super(universe, objectFactory, typeFactory);
-		this.var = var;
-		this.value = value;
+		this.vars = new ArrayList<>();
+		this.values = new ArrayList<>();
+		vars.add(var);
+		values.add(value);
+	}
+
+	public SimpleSubstituter(PreUniverse universe, ObjectFactory objectFactory,
+			SymbolicTypeFactory typeFactory, Collection<SymbolicConstant> vars,
+			Collection<SymbolicExpression> values) {
+		super(universe, objectFactory, typeFactory);
+		this.vars = new ArrayList<>();
+		this.values = new ArrayList<>();
+		this.vars.addAll(vars);
+		this.values.addAll(values);
 	}
 
 	@Override
@@ -90,9 +107,16 @@ public class SimpleSubstituter extends ExpressionSubstituter {
 	protected SymbolicExpression substituteNonquantifiedExpression(
 			SymbolicExpression expr, SubstituterState state) {
 		if (expr instanceof SymbolicConstant
-				&& !((BoundStack) state).stack.contains(expr)
-				&& var.equals(expr)) {
-			return value;
+				&& !((BoundStack) state).stack.contains(expr)) {
+			int varsSize = vars.size();
+			int valuesSize = values.size();
+
+			for (int i = 0; i < varsSize; i++) {
+				SymbolicConstant var = vars.get(i);
+
+				if (var.equals(expr) && valuesSize > i)
+					return values.get(i);
+			}
 		}
 		return super.substituteNonquantifiedExpression(expr, state);
 	}
