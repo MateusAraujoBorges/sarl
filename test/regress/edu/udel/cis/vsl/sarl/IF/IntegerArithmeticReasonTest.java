@@ -72,6 +72,22 @@ public class IntegerArithmeticReasonTest {
 	public void tearDown() throws Exception {
 	}
 
+	@Test
+	public void divisionByZeroTest() {
+		universe.setShowProverQueries(true);
+
+		NumericExpression fiveDivThree = universe.divide(fiveInt, threeInt);
+		NumericExpression xDiv3 = universe.divide(x, threeInt);
+		NumericExpression yDivz = universe.divide(y, z);
+		BooleanExpression predicate = universe.equals(
+				universe.add(universe.add(xDiv3, yDivz), fiveDivThree),
+				fiveInt);
+		Reasoner r = universe.reasoner(universe.bool(true));
+		ValidityResult result = r.valid(predicate);
+
+		assertEquals(ResultType.NO, result.getResultType());
+	}
+
 	/**
 	 * u < 3 && u >=2: u -> 2
 	 */

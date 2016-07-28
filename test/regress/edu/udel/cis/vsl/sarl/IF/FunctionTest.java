@@ -28,114 +28,157 @@ public class FunctionTest {
 	private SymbolicType integerType;
 	private SymbolicType realType;
 	private SymbolicCompleteArrayType arrayType;
-	private NumericSymbolicConstant x, a, b,c,d;
-	private NumericExpression one, two, four;
-	
-	
+	private NumericSymbolicConstant x, a, b, c, d;
+	private NumericExpression one, two, three, four, six, eight, thirteen;
+
 	@Before
 	public void setUp() throws Exception {
 		universe = SARL.newStandardUniverse();
 		integerType = universe.integerType();
 		realType = universe.realType();
-		x = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("x"), integerType);
+		x = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("x"), integerType);
 		arrayType = universe.arrayType(integerType, x);
-		a = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("a"), integerType);
-		b = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("b"), integerType);
-		c = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("c"), integerType);
-		d = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("d"), integerType);
+		a = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("a"), integerType);
+		b = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("b"), integerType);
+		c = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("c"), integerType);
+		d = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("d"), integerType);
 		one = universe.integer(1);
 		two = universe.integer(2);
+		three = universe.integer(3);
 		four = universe.integer(4);
+		six = universe.integer(6);
+		eight = universe.integer(8);
+		thirteen = universe.integer(13);
 	}
-	
+
 	@After
 	public void tearDown() throws Exception {
 	}
-	
+
 	@Test
 	public void arrayLambdaTest() {
 		SymbolicExpression function1;
 		SymbolicExpression arrayL1;
 		SymbolicExpression function2;
 		SymbolicExpression arrayL2;
-		
+
 		function1 = universe.lambda(a, universe.multiply(a, a));
 		arrayL1 = universe.arrayLambda(arrayType, function1);
 		function2 = universe.lambda(b, universe.add(b, one));
 		arrayL2 = universe.arrayLambda(arrayType, function2);
 
-		assertEquals(universe.multiply(two, two), universe.arrayRead(arrayL1, two));
-		assertEquals(universe.add(two, one), universe.arrayRead(arrayL2, universe.integer(2)));
+		assertEquals(universe.multiply(two, two),
+				universe.arrayRead(arrayL1, two));
+		assertEquals(universe.add(two, one),
+				universe.arrayRead(arrayL2, universe.integer(2)));
 	}
-	
+
+	/**
+	 * test lambda function with multiple args.
+	 */
 	@Test
-	public void applyTest(){
+	public void simpleTest() {
+		List<SymbolicConstant> vars = new ArrayList<>();
+		List<SymbolicExpression> values = new ArrayList<>();
+		SymbolicExpression function1;
+		SymbolicExpression function2;
+		SymbolicExpression function3;
+
+		vars.add(a);
+		vars.add(b);
+		values.add(two);
+		values.add(four);
+		function1 = universe.lambda(vars, universe.add(a, b));
+		function2 = universe.lambda(vars, universe.multiply(a, b));
+		SymbolicExpression r1 = universe.apply(function1, values);
+		SymbolicExpression r2 = universe.apply(function2, values);
+
+		assertEquals(six, r1);
+		assertEquals(eight, r2);
+
+		vars.add(c);
+
+		function3 = universe.lambda(vars,
+				universe.add(universe.multiply(three, a), universe.add(b, c)));
+		values.add(three);
+		SymbolicExpression r3 = universe.apply(function3, values);
+
+		assertEquals(thirteen, r3);
+	}
+
+	@Test
+	public void applyTest() {
 		SymbolicExpression function1;
 		function1 = universe.lambda(a, universe.multiply(a, a));
 		SymbolicExpression function2;
 		List<SymbolicExpression> args1 = new ArrayList<SymbolicExpression>();
 		args1.add(two);
-		function2 = universe.lambda(b, universe.multiply(b, (NumericExpression)universe.apply(function1, args1)));
+		function2 = universe.lambda(b, universe.multiply(b,
+				(NumericExpression) universe.apply(function1, args1)));
 		List<SymbolicExpression> args2 = new ArrayList<SymbolicExpression>();
 		args2.add(four);
 		SymbolicExpression r = universe.apply(function2, args2);
-		if(debug){
+		if (debug) {
 			out.println(r);
 		}
 		assertEquals(universe.multiply(four, universe.multiply(two, two)), r);
 	}
-	
+
 	/**
 	 * test function type
 	 */
 	@Test
-	public void applyTest2(){
+	public void applyTest2() {
 		SymbolicConstant f1;
 		SymbolicFunctionType functionType1 = universe.functionType(
-				Arrays.asList(new SymbolicType[] {integerType, integerType}), realType);
-		f1 = universe.symbolicConstant(universe.stringObject("f1"), functionType1);
-		SymbolicExpression r = universe.apply((SymbolicExpression)f1, 
-				Arrays.asList(new SymbolicExpression[] {a, b}));
+				Arrays.asList(new SymbolicType[] { integerType, integerType }),
+				realType);
+		f1 = universe.symbolicConstant(universe.stringObject("f1"),
+				functionType1);
+		SymbolicExpression r = universe.apply((SymbolicExpression) f1,
+				Arrays.asList(new SymbolicExpression[] { a, b }));
 		System.out.println(r);
 		assertEquals(realType, r.type());
 	}
-	
+
 	/**
-	 * TODO move to function reason test
-	 * f(a,b) = c
-	 * g(a,b) = d
-	 * ==>
-	 * h(c,d) = h(f(a,b), g(a,b))
+	 * TODO move to function reason test f(a,b) = c g(a,b) = d ==> h(c,d) =
+	 * h(f(a,b), g(a,b))
 	 */
 	@Test
-	public void applyReasonTest1(){
-		SymbolicConstant f1; //f
-		SymbolicConstant f2; //g
-		SymbolicConstant f3; //h
+	public void applyReasonTest1() {
+		SymbolicConstant f1; // f
+		SymbolicConstant f2; // g
+		SymbolicConstant f3; // h
 		SymbolicFunctionType functionType1 = universe.functionType(
-				Arrays.asList(new SymbolicType[] {integerType, integerType}), integerType);
-		f1 = universe.symbolicConstant(universe.stringObject("f1"), functionType1);
-		f2 = universe.symbolicConstant(universe.stringObject("f2"), functionType1);
-		f3 = universe.symbolicConstant(universe.stringObject("f3"), functionType1);
-		SymbolicExpression r1 = universe.apply((SymbolicExpression)f3, 
-				Arrays.asList(new SymbolicExpression[] {c, d})); //h(c,d)
-		SymbolicExpression f_a_b = universe.apply((SymbolicExpression)f1, 
-				Arrays.asList(new SymbolicExpression[] {a, b})); //f(a,b)
-		SymbolicExpression g_a_b = universe.apply((SymbolicExpression)f2, 
-				Arrays.asList(new SymbolicExpression[] {a, b})); //g(a,b)
-		SymbolicExpression r2 = universe.apply((SymbolicExpression)f3, 
-				Arrays.asList(new SymbolicExpression[] {f_a_b, g_a_b})); //h(f(a,b), g(a,b))
-		
-		Reasoner reasoner = universe.reasoner(universe.and(universe.equals(c, f_a_b), 
-				universe.equals(d, g_a_b)));
+				Arrays.asList(new SymbolicType[] { integerType, integerType }),
+				integerType);
+		f1 = universe.symbolicConstant(universe.stringObject("f1"),
+				functionType1);
+		f2 = universe.symbolicConstant(universe.stringObject("f2"),
+				functionType1);
+		f3 = universe.symbolicConstant(universe.stringObject("f3"),
+				functionType1);
+		SymbolicExpression r1 = universe.apply((SymbolicExpression) f3,
+				Arrays.asList(new SymbolicExpression[] { c, d })); // h(c,d)
+		SymbolicExpression f_a_b = universe.apply((SymbolicExpression) f1,
+				Arrays.asList(new SymbolicExpression[] { a, b })); // f(a,b)
+		SymbolicExpression g_a_b = universe.apply((SymbolicExpression) f2,
+				Arrays.asList(new SymbolicExpression[] { a, b })); // g(a,b)
+		SymbolicExpression r2 = universe.apply((SymbolicExpression) f3,
+				Arrays.asList(new SymbolicExpression[] { f_a_b, g_a_b })); // h(f(a,b),
+																			// g(a,b))
+
+		Reasoner reasoner = universe.reasoner(universe
+				.and(universe.equals(c, f_a_b), universe.equals(d, g_a_b)));
 		BooleanExpression eq = universe.equals(r1, r2);
 		ValidityResult result = reasoner.valid(eq);
 		assertEquals(result.getResultType(), ResultType.YES);
 	}
-	
+
 }
