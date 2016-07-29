@@ -655,25 +655,35 @@ public class Z3Translator {
 	 */
 	private FastList<String> translateLambda(
 			SymbolicExpression lambdaExpression) {
+		int argsNum = lambdaExpression.numArguments();
 		SymbolicFunctionType functionType = (SymbolicFunctionType) lambdaExpression
 				.type();
-		SymbolicConstant inputVar = (SymbolicConstant) lambdaExpression
-				.argument(0);
 		SymbolicExpression body = (SymbolicExpression) lambdaExpression
-				.argument(1);
+				.argument(argsNum - 1);
 		String name = "_lambda_" + z3AuxVarCount;
-		FastList<String> z3SymbolicConstant = translateSymbolicConstant(
-				inputVar, true);
-		FastList<String> z3InputType = translateType(inputVar.type());
+		FastList<String> z3SymbolicConstants = new FastList<>();
+		
+		for (int i = 0; i < argsNum - 1; i++) {
+			SymbolicConstant inputVar = (SymbolicConstant) lambdaExpression
+					.argument(i);
+			
+			z3SymbolicConstants.add("(");
+			z3SymbolicConstants
+					.append(translateSymbolicConstant(inputVar, true));
+			z3SymbolicConstants.add(" ");
+			z3SymbolicConstants.append(translateType(inputVar.type()));
+			z3SymbolicConstants.add(")");
+			if (i != argsNum - 2) {
+				z3SymbolicConstants.add(" ");
+			}
+		}
 		FastList<String> z3OutputType = translateType(
 				functionType.outputType());
 		FastList<String> z3Body = translate(body);
 
-		z3Declarations.addAll("(define-fun ", name, "((");
-		z3Declarations.append(z3SymbolicConstant);
-		z3Declarations.add(" ");
-		z3Declarations.append(z3InputType);
-		z3Declarations.add(")) ");
+		z3Declarations.addAll("(define-fun ", name, "(");
+		z3Declarations.append(z3SymbolicConstants);
+		z3Declarations.add(") ");
 		z3Declarations.append(z3OutputType);
 		z3Declarations.add(" ");
 		z3Declarations.append(z3Body);
@@ -1402,7 +1412,8 @@ public class Z3Translator {
 
 	private FastList<String> translateBitUnary(String operator,
 			SymbolicExpression arg0) {
-		FastList<String> result = new FastList<>("((_ bv2int " + BITLEN_INT + ") (", operator);
+		FastList<String> result = new FastList<>(
+				"((_ bv2int " + BITLEN_INT + ") (", operator);
 
 		result.add(" ((_ int2bv " + BITLEN_INT + ") ");
 		result.append(translate(arg0));
