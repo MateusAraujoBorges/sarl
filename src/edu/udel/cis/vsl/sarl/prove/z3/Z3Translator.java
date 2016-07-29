@@ -662,11 +662,11 @@ public class Z3Translator {
 				.argument(argsNum - 1);
 		String name = "_lambda_" + z3AuxVarCount;
 		FastList<String> z3SymbolicConstants = new FastList<>();
-		
+
 		for (int i = 0; i < argsNum - 1; i++) {
 			SymbolicConstant inputVar = (SymbolicConstant) lambdaExpression
 					.argument(i);
-			
+
 			z3SymbolicConstants.add("(");
 			z3SymbolicConstants
 					.append(translateSymbolicConstant(inputVar, true));
