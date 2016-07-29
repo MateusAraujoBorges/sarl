@@ -619,6 +619,8 @@ public class RealNumberFactory implements NumberFactory {
 	public IntegerNumber negate(IntegerNumber arg0) {
 		RealInteger x = (RealInteger) arg0;
 
+		if (arg0.isInfinite())
+			return infiniteInteger(arg0.signum() < 0);
 		return integer(x.value().negate());
 	}
 
