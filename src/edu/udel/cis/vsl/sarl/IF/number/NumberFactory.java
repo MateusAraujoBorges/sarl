@@ -586,6 +586,15 @@ public interface NumberFactory {
 	int compare(Interval i1, Interval i2);
 
 	/**
+	 * To negate the given non-<code>null</code> interval. <br>
+	 * 
+	 * @param interval
+	 *            a non-<code>null</code> {@link Interval}
+	 * @return the negated {@link Interval}
+	 */
+	Interval negate(Interval interval);
+
+	/**
 	 * To calculate the sum of two non-<code>null</code> and not empty
 	 * {@link Interval} with same type (real/integer)
 	 * 

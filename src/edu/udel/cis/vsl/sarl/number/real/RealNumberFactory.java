@@ -2551,4 +2551,15 @@ public class RealNumberFactory implements NumberFactory {
 	public IntegerNumber negativeInfinityInteger() {
 		return INT_NEG_INFINITY;
 	}
+
+	@Override
+	public Interval negate(Interval interval) {
+		assert interval != null;
+		if (interval.isEmpty() || interval.isUniversal())
+			return interval;
+
+		return newInterval(interval.isIntegral(), negate(interval.upper()),
+				interval.strictUpper(), negate(interval.lower()),
+				interval.strictLower());
+	}
 }
