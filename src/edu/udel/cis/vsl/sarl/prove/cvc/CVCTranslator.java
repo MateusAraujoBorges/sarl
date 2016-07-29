@@ -635,6 +635,7 @@ public class CVCTranslator {
 	 * 
 	 * <pre>
 	 * LAMBDA (x: REAL, i:INT): x + i - 1
+	 * LAMBDA (x,i: INT): i*x - 1 > 0
 	 * </pre>
 	 * 
 	 * @param expr
@@ -645,12 +646,18 @@ public class CVCTranslator {
 		List<Translation> translations = new ArrayList<Translation>();
 		Translation tempTranslation;
 		Boolean involveDivOrModulo = false;
-		FastList<String> result = new FastList<>("LAMBDA (",
-				((SymbolicConstant) expr.argument(0)).name().getString(), ":");
-
+		int argNum = expr.numArguments();
+		FastList<String> result = new FastList<>("LAMBDA (");
+		
+		for(int i=0; i<argNum-1; i++){
+			result.add(((SymbolicConstant) expr.argument(0)).name().getString()+":");
+			result.append(translateType(((SymbolicConstant) expr.argument(0)).type()));
+			if (i != argNum - 2)
+				result.add(", ");
+		}
 		result.append(translateType(expr.type()));
 		result.add("):");
-		tempTranslation = translate((SymbolicExpression) expr.argument(1));
+		tempTranslation = translate((SymbolicExpression) expr.argument(argNum-1));
 		if (tempTranslation.getIsDivOrModulo()) {
 			translations.add(tempTranslation);
 			involveDivOrModulo = true;
