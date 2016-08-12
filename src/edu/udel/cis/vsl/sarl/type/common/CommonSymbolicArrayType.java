@@ -138,4 +138,23 @@ public class CommonSymbolicArrayType extends CommonSymbolicType
 		this.pureType = pureType;
 	}
 
+	@Override
+	public SymbolicType baseType() {
+		if (elementType.typeKind() == SymbolicTypeKind.ARRAY)
+			return ((SymbolicArrayType) elementType).baseType();
+		else
+			return elementType;
+	}
+
+	@Override
+	public int dimensions() {
+		int dimensions = 1;
+		SymbolicType element = elementType;
+
+		while (element.typeKind() == SymbolicTypeKind.ARRAY) {
+			dimensions++;
+			element = ((SymbolicArrayType) elementType).elementType();
+		}
+		return dimensions;
+	}
 }
