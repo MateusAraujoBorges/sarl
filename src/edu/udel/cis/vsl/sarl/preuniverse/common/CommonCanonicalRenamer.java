@@ -25,8 +25,8 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * 
  * @author Stephen F. Siegel
  */
-public class CommonCanonicalRenamer extends ExpressionSubstituter implements
-		CanonicalRenamer {
+public class CommonCanonicalRenamer extends ExpressionSubstituter
+		implements CanonicalRenamer {
 
 	/**
 	 * State of search: stack of pairs of symbolic constants. Left component of
@@ -50,7 +50,8 @@ public class CommonCanonicalRenamer extends ExpressionSubstituter implements
 		}
 
 		void push(SymbolicConstant key, SymbolicConstant value) {
-			stack.push(new Pair<SymbolicConstant, SymbolicConstant>(key, value));
+			stack.push(
+					new Pair<SymbolicConstant, SymbolicConstant>(key, value));
 		}
 
 		void pop() {
@@ -126,30 +127,34 @@ public class CommonCanonicalRenamer extends ExpressionSubstituter implements
 			SymbolicExpression expression, SubstituterState state) {
 		SymbolicConstant oldBoundVariable = (SymbolicConstant) expression
 				.argument(0);
-
-		if (!((StringObject) ((SymbolicConstant) oldBoundVariable).argument(0))
-				.getString().startsWith(root))
-			return expression;
-
 		SymbolicType newType = substituteType(expression.type(), state);
-		String newName = root + varCount;
+		SymbolicConstant boundVariable = oldBoundVariable;
+		boolean renamedBoundVar = false;
 
-		varCount++;
+		// Rename bound variable if the name of it starts with root:
+		if (((StringObject) ((SymbolicConstant) oldBoundVariable).argument(0))
+				.getString().startsWith(root)) {
+			String newName = root + varCount;
 
-		SymbolicType newBoundVariableType = substituteType(
-				oldBoundVariable.type(), state);
-		SymbolicConstant newBoundVariable = universe.symbolicConstant(
-				universe.stringObject(newName), newBoundVariableType);
+			varCount++;
 
-		((BoundStack) state).push(oldBoundVariable, newBoundVariable);
+			SymbolicType newBoundVariableType = substituteType(
+					oldBoundVariable.type(), state);
+			SymbolicConstant newBoundVariable = universe.symbolicConstant(
+					universe.stringObject(newName), newBoundVariableType);
+
+			boundVariable = newBoundVariable;
+			((BoundStack) state).push(oldBoundVariable, newBoundVariable);
+		}
 
 		SymbolicExpression newBody = substituteExpression(
 				(SymbolicExpression) expression.argument(1), state);
 
-		((BoundStack) state).pop();
+		if (renamedBoundVar)
+			((BoundStack) state).pop();
 
 		SymbolicExpression result = universe.make(expression.operator(),
-				newType, new SymbolicObject[] { newBoundVariable, newBody });
+				newType, new SymbolicObject[] { boundVariable, newBody });
 
 		return result;
 	}
@@ -166,8 +171,9 @@ public class CommonCanonicalRenamer extends ExpressionSubstituter implements
 
 			if (!((StringObject) ((SymbolicConstant) expr).argument(0))
 					.getString().startsWith(root))
-				return newType == oldType ? expr : universe.symbolicConstant(
-						((SymbolicConstant) expr).name(), newType);
+				return newType == oldType ? expr
+						: universe.symbolicConstant(
+								((SymbolicConstant) expr).name(), newType);
 
 			SymbolicConstant newVar = ((BoundStack) state)
 					.get((SymbolicConstant) expr);
