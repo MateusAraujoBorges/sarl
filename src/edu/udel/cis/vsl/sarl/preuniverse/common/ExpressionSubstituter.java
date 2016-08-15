@@ -404,32 +404,47 @@ public abstract class ExpressionSubstituter
 			SymbolicExpression expression, SubstituterState state) {
 		if (expression.isNull())
 			return expression;
-		else {
-			int numArgs = expression.numArguments();
-			SymbolicType type = expression.type();
-			SymbolicType newType = substituteType(type, state);
-			SymbolicObject[] newArgs = type == newType ? null
-					: new SymbolicObject[numArgs];
+		// (by Manchun) added short-circuit handling for conditional expression
+		// given cond ? e0 : e1, if cond is valid then returns e0 immediately
+		// without evaluting e1; similarly when !cond is valid.
+		if (expression.operator() == SymbolicOperator.COND) {
+			SymbolicExpression cond = (SymbolicExpression) expression
+					.argument(0);
+			SymbolicExpression newCond = (SymbolicExpression) substituteObject(
+					cond, state);
 
-			for (int i = 0; i < numArgs; i++) {
-				SymbolicObject arg = expression.argument(i);
-				SymbolicObject newArg = substituteObject(arg, state);
-
-				if (newArg != arg) {
-					if (newArgs == null) {
-						newArgs = new SymbolicObject[numArgs];
-
-						for (int j = 0; j < i; j++)
-							newArgs[j] = expression.argument(j);
-					}
-				}
-				if (newArgs != null)
-					newArgs[i] = newArg;
+			if (newCond.isTrue()) {
+				return (SymbolicExpression) substituteObject(
+						expression.argument(1), state);
+			} else if (newCond.isFalse()) {
+				return (SymbolicExpression) substituteObject(
+						expression.argument(2), state);
 			}
-			if (newType == type && newArgs == null)
-				return expression;
-			return universe.make(expression.operator(), newType, newArgs);
 		}
+		int numArgs = expression.numArguments();
+		SymbolicType type = expression.type();
+		SymbolicType newType = substituteType(type, state);
+		SymbolicObject[] newArgs = type == newType ? null
+				: new SymbolicObject[numArgs];
+
+		for (int i = 0; i < numArgs; i++) {
+			SymbolicObject arg = expression.argument(i);
+			SymbolicObject newArg = substituteObject(arg, state);
+
+			if (newArg != arg) {
+				if (newArgs == null) {
+					newArgs = new SymbolicObject[numArgs];
+
+					for (int j = 0; j < i; j++)
+						newArgs[j] = expression.argument(j);
+				}
+			}
+			if (newArgs != null)
+				newArgs[i] = newArg;
+		}
+		if (newType == type && newArgs == null)
+			return expression;
+		return universe.make(expression.operator(), newType, newArgs);
 	}
 
 	/**
