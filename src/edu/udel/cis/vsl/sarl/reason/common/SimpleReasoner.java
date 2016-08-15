@@ -134,4 +134,9 @@ public class SimpleReasoner implements Reasoner {
 	public Interval intervalApproximation(NumericExpression expr) {
 		return simplifier.intervalApproximation(expr);
 	}
+
+	@Override
+	public Simplifier simplifier() {
+		return simplifier;
+	}
 }

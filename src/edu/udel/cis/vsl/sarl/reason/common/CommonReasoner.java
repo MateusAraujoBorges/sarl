@@ -209,4 +209,8 @@ public class CommonReasoner implements Reasoner {
 		return simplifier.intervalApproximation(expr);
 	}
 
+	@Override
+	public Simplifier simplifier() {
+		return this.simplifier;
+	}
 }

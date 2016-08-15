@@ -26,6 +26,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
+import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 
 /**
  * <p>
@@ -255,5 +256,7 @@ public interface Reasoner {
 	 * @return the concrete (Number) numeric value of that expression or null
 	 */
 	Number extractNumber(NumericExpression expression);
+	
+	Simplifier simplifier();
 
 }
