@@ -47,6 +47,21 @@ public class QuantifierDevTest {
 		assertEquals(ResultType.NO, result.getResultType());
 	}
 	
+	@Test
+	public void quantifiedTest(){
+		BooleanExpression t = universe.trueExpression();
+		SymbolicType integerType = universe.integerType();
+		SymbolicConstant i = universe
+				.symbolicConstant(universe.stringObject("i"), integerType);
+		SymbolicConstant j = universe
+				.symbolicConstant(universe.stringObject("j"), integerType);
+		BooleanExpression predicate = universe.lessThan((NumericExpression)i, (NumericExpression)j);
+		BooleanExpression be = universe.forall(i, predicate);
+		Reasoner r = universe.reasoner(t);
+		ValidityResult result = r.valid(be);
+		assertEquals(ResultType.NO, result.getResultType());
+	}
+	
 	/**
 	 * forall (i>1) : ( exists (j,k) : j/k=i )
 	 * 
