@@ -25,6 +25,7 @@ import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
@@ -124,7 +125,11 @@ public abstract class CommonSimplifier implements Simplifier {
 	protected abstract SymbolicExpression simplifyExpression(
 			SymbolicExpression expression, SimplifierState state);
 
-	protected SymbolicObject getCachedSimplification(SymbolicObject key) {
+	protected SymbolicObject getCachedSimplification(SymbolicObject key,
+			SimplifierState state) {
+		if (key instanceof SymbolicConstant
+				&& state.isBoundVaraible((SymbolicConstant) key))
+			return key;
 		return simplifyMap.get(key);
 	}
 
@@ -212,7 +217,8 @@ public abstract class CommonSimplifier implements Simplifier {
 
 	protected SymbolicType simplifyType(SymbolicType type,
 			SimplifierState state) {
-		SymbolicType result = (SymbolicType) getCachedSimplification(type);
+		SymbolicType result = (SymbolicType) getCachedSimplification(type,
+				state);
 
 		if (result == null) {
 			result = simplifyTypeWork(type, state);
@@ -275,7 +281,7 @@ public abstract class CommonSimplifier implements Simplifier {
 	protected SymbolicSequence<?> simplifySequence(
 			SymbolicSequence<?> collection, SimplifierState state) {
 		SymbolicSequence<?> result = (SymbolicSequence<?>) getCachedSimplification(
-				collection);
+				collection, state);
 
 		if (result == null) {
 			result = simplifySequenceWork(collection, state);
@@ -393,16 +399,7 @@ public abstract class CommonSimplifier implements Simplifier {
 	public SymbolicExpression apply(SymbolicExpression expression) {
 		// ensure that the expression is canonic:
 		expression = universe.canonic(expression);
-
-		SymbolicExpression result = (SymbolicExpression) getCachedSimplification(
-				expression);
-
-		if (result == null) {
-			result = simplifyExpression(expression, newState());
-			result = universe.canonic(result);
-			cacheSimplification(expression, result);
-		}
-		return result;
+		return simplifyExpression(expression, newState());
 	}
 
 }

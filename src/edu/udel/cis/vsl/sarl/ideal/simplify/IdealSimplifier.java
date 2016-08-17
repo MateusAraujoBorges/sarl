@@ -1305,7 +1305,7 @@ public class IdealSimplifier extends CommonSimplifier {
 			return result1;
 
 		BooleanExpression result2 = (BooleanExpression) getCachedSimplification(
-				result1);
+				result1, state);
 
 		if (result2 != null)
 			return result2;
@@ -2113,11 +2113,19 @@ public class IdealSimplifier extends CommonSimplifier {
 	@Override
 	protected SymbolicExpression simplifyExpression(
 			SymbolicExpression expression, SimplifierState state) {
-		if (isQuantified(expression)) {
-			return simplifiyQuantifiedExpression(expression, state);
-		} else {
-			return simplifiyNonQuantifiedExpression(expression, state);
+		SymbolicExpression result = (SymbolicExpression) getCachedSimplification(
+				expression, state);
+
+		if (result == null) {
+			if (isQuantified(expression)) {
+				result = simplifiyQuantifiedExpression(expression, state);
+			} else {
+				result = simplifiyNonQuantifiedExpression(expression, state);
+			}
+			result = universe.canonic(result);
+			cacheSimplification(expression, result);
 		}
+		return result;
 	}
 
 	private SymbolicExpression simplifiyQuantifiedExpression(
