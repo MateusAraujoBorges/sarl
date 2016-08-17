@@ -37,6 +37,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 
@@ -66,6 +67,11 @@ public abstract class CommonSimplifier implements Simplifier {
 	protected PreUniverse universe;
 
 	/**
+	 * Factory used for producing {@link SymbolicCollection}s.
+	 */
+	protected ObjectFactory objectFactory;
+
+	/**
 	 * Cached simplifications.
 	 * 
 	 * Problem here: the keys and/or values may or may not be canonic. Should we
@@ -76,11 +82,27 @@ public abstract class CommonSimplifier implements Simplifier {
 	public CommonSimplifier(PreUniverse universe) {
 		assert universe != null;
 		this.universe = universe;
+		this.objectFactory = universe.objectFactory();
 	}
 
 	@Override
 	public PreUniverse universe() {
 		return universe;
+	}
+
+	/**
+	 * Determines if the given expression is a quantified expression.
+	 * 
+	 * @param expr
+	 *            a non-<code>null</code> symbolic expression
+	 * @return <code>true</code> iff the expression is quantified
+	 */
+	protected boolean isQuantified(SymbolicExpression expr) {
+		SymbolicOperator operator = expr.operator();
+
+		return operator == SymbolicOperator.EXISTS
+				|| operator == SymbolicOperator.FORALL
+				|| operator == SymbolicOperator.LAMBDA;
 	}
 
 	/**
@@ -100,7 +122,7 @@ public abstract class CommonSimplifier implements Simplifier {
 	 * @return the simplified version of that expression
 	 */
 	protected abstract SymbolicExpression simplifyExpression(
-			SymbolicExpression expression);
+			SymbolicExpression expression, SimplifierState state);
 
 	protected SymbolicObject getCachedSimplification(SymbolicObject key) {
 		return simplifyMap.get(key);
@@ -117,7 +139,8 @@ public abstract class CommonSimplifier implements Simplifier {
 		simplifyMap.clear();
 	}
 
-	private SymbolicType simplifyTypeWork(SymbolicType type) {
+	private SymbolicType simplifyTypeWork(SymbolicType type,
+			SimplifierState state) {
 		switch (type.typeKind()) {
 		case BOOLEAN:
 		case INTEGER:
@@ -127,7 +150,8 @@ public abstract class CommonSimplifier implements Simplifier {
 		case ARRAY: {
 			SymbolicArrayType arrayType = (SymbolicArrayType) type;
 			SymbolicType elementType = arrayType.elementType();
-			SymbolicType simplifiedElementType = simplifyType(elementType);
+			SymbolicType simplifiedElementType = simplifyType(elementType,
+					state);
 
 			if (arrayType.isComplete()) {
 				NumericExpression extent = ((SymbolicCompleteArrayType) arrayType)
@@ -149,10 +173,10 @@ public abstract class CommonSimplifier implements Simplifier {
 		case FUNCTION: {
 			SymbolicFunctionType functionType = (SymbolicFunctionType) type;
 			SymbolicTypeSequence inputs = functionType.inputTypes();
-			SymbolicTypeSequence simplifiedInputs = simplifyTypeSequence(
-					inputs);
+			SymbolicTypeSequence simplifiedInputs = simplifyTypeSequence(inputs,
+					state);
 			SymbolicType output = functionType.outputType();
-			SymbolicType simplifiedOutput = simplifyType(output);
+			SymbolicType simplifiedOutput = simplifyType(output, state);
 
 			if (inputs != simplifiedInputs || output != simplifiedOutput)
 				return universe.functionType(simplifiedInputs,
@@ -163,7 +187,7 @@ public abstract class CommonSimplifier implements Simplifier {
 			SymbolicTypeSequence sequence = ((SymbolicTupleType) type)
 					.sequence();
 			SymbolicTypeSequence simplifiedSequence = simplifyTypeSequence(
-					sequence);
+					sequence, state);
 
 			if (simplifiedSequence != sequence)
 				return universe.tupleType(((SymbolicTupleType) type).name(),
@@ -174,7 +198,7 @@ public abstract class CommonSimplifier implements Simplifier {
 			SymbolicTypeSequence sequence = ((SymbolicUnionType) type)
 					.sequence();
 			SymbolicTypeSequence simplifiedSequence = simplifyTypeSequence(
-					sequence);
+					sequence, state);
 
 			if (simplifiedSequence != sequence)
 				return universe.unionType(((SymbolicUnionType) type).name(),
@@ -186,11 +210,12 @@ public abstract class CommonSimplifier implements Simplifier {
 		}
 	}
 
-	protected SymbolicType simplifyType(SymbolicType type) {
+	protected SymbolicType simplifyType(SymbolicType type,
+			SimplifierState state) {
 		SymbolicType result = (SymbolicType) getCachedSimplification(type);
 
 		if (result == null) {
-			result = simplifyTypeWork(type);
+			result = simplifyTypeWork(type, state);
 			result = (SymbolicType) universe.canonic(result);
 			cacheSimplification(type, result);
 		}
@@ -198,12 +223,12 @@ public abstract class CommonSimplifier implements Simplifier {
 	}
 
 	private Iterable<? extends SymbolicType> simplifyTypeSequenceWork(
-			SymbolicTypeSequence sequence) {
+			SymbolicTypeSequence sequence, SimplifierState state) {
 		int size = sequence.numTypes();
 
 		for (int i = 0; i < size; i++) {
 			SymbolicType type = sequence.getType(i);
-			SymbolicType simplifiedType = simplifyType(type);
+			SymbolicType simplifiedType = simplifyType(type, state);
 
 			if (type != simplifiedType) {
 				SymbolicType[] newTypes = new SymbolicType[size];
@@ -212,7 +237,7 @@ public abstract class CommonSimplifier implements Simplifier {
 					newTypes[j] = sequence.getType(j);
 				newTypes[i] = simplifiedType;
 				for (int j = i + 1; j < size; j++)
-					newTypes[j] = simplifyType(sequence.getType(j));
+					newTypes[j] = simplifyType(sequence.getType(j), state);
 				return Arrays.asList(newTypes);
 			}
 		}
@@ -220,32 +245,48 @@ public abstract class CommonSimplifier implements Simplifier {
 	}
 
 	private SymbolicTypeSequence simplifyTypeSequence(
-			SymbolicTypeSequence sequence) {
-		return universe.typeSequence(simplifyTypeSequenceWork(sequence));
+			SymbolicTypeSequence sequence, SimplifierState state) {
+		return universe.typeSequence(simplifyTypeSequenceWork(sequence, state));
 	}
 
 	private SymbolicSequence<?> simplifySequenceWork(
-			SymbolicSequence<?> sequence) {
-		@SuppressWarnings("unchecked")
-		SymbolicSequence<SymbolicExpression> theSequence = (SymbolicSequence<SymbolicExpression>) sequence;
+			SymbolicSequence<?> sequence, SimplifierState state) {
+		int size = sequence.size();
+		SymbolicExpression[] newElements = new SymbolicExpression[size];
+		SymbolicSequence<?> result = sequence;
 
-		return theSequence.apply(this);
+		for (int i = 0; i < size; i++) {
+			SymbolicExpression oldElement = sequence.get(i);
+			SymbolicExpression newElement = simplifyExpression(oldElement,
+					state);
+
+			newElements[i] = newElement;
+			if (newElement != oldElement) {
+				i++;
+				for (; i < size; i++)
+					newElements[i] = simplifyExpression(sequence.get(i), state);
+				result = objectFactory.sequence(newElements);
+				break;
+			}
+		}
+		return result;
 	}
 
 	protected SymbolicSequence<?> simplifySequence(
-			SymbolicSequence<?> collection) {
+			SymbolicSequence<?> collection, SimplifierState state) {
 		SymbolicSequence<?> result = (SymbolicSequence<?>) getCachedSimplification(
 				collection);
 
 		if (result == null) {
-			result = simplifySequenceWork(collection);
+			result = simplifySequenceWork(collection, state);
 			result = (SymbolicSequence<?>) universe.canonic(result);
 			cacheSimplification(collection, result);
 		}
 		return result;
 	}
 
-	protected SymbolicObject simplifyObject(SymbolicObject object) {
+	protected SymbolicObject simplifyObject(SymbolicObject object,
+			SimplifierState state) {
 		switch (object.symbolicObjectKind()) {
 		case BOOLEAN:
 		case INT:
@@ -254,13 +295,13 @@ public abstract class CommonSimplifier implements Simplifier {
 		case CHAR:
 			return object;
 		case EXPRESSION:
-			return apply((SymbolicExpression) object);
+			return simplifyExpression((SymbolicExpression) object, state);
 		case SEQUENCE:
-			return simplifySequence((SymbolicSequence<?>) object);
+			return simplifySequence((SymbolicSequence<?>) object, state);
 		case TYPE:
-			return simplifyType((SymbolicType) object);
+			return simplifyType((SymbolicType) object, state);
 		case TYPE_SEQUENCE:
-			return simplifyTypeSequence((SymbolicTypeSequence) object);
+			return simplifyTypeSequence((SymbolicTypeSequence) object, state);
 		default:
 			throw new SARLInternalException("unreachable");
 		}
@@ -289,7 +330,7 @@ public abstract class CommonSimplifier implements Simplifier {
 	 * @return a simplified version of that expression
 	 */
 	protected SymbolicExpression simplifyGenericExpression(
-			SymbolicExpression expression) {
+			SymbolicExpression expression, SimplifierState state) {
 		if (expression.isNull())
 			return expression;
 		else {
@@ -310,24 +351,15 @@ public abstract class CommonSimplifier implements Simplifier {
 			}
 			{
 				SymbolicType type = expression.type();
-				SymbolicType simplifiedType = simplifyType(type);
+				SymbolicType simplifiedType = simplifyType(type, state);
 				int numArgs = expression.numArguments();
 				SymbolicObject[] simplifiedArgs = null;
-				SymbolicOperator op = expression.operator();
-				boolean ignoreArg0 = false;
-				int start = 0;
 
-				if (op == SymbolicOperator.FORALL
-						|| op == SymbolicOperator.EXISTS
-						|| op == SymbolicOperator.LAMBDA
-						|| op == SymbolicOperator.ARRAY_LAMBDA) {
-					ignoreArg0 = true;
-					start = 1;
-				}
 				if (type == simplifiedType) {
-					for (int i = start; i < numArgs; i++) {
+					for (int i = 0; i < numArgs; i++) {
 						SymbolicObject arg = expression.argument(i);
-						SymbolicObject simplifiedArg = simplifyObject(arg);
+						SymbolicObject simplifiedArg = simplifyObject(arg,
+								state);
 
 						assert simplifiedArg != null;
 						if (simplifiedArg != arg) {
@@ -337,20 +369,15 @@ public abstract class CommonSimplifier implements Simplifier {
 							simplifiedArgs[i] = simplifiedArg;
 							for (int j = i + 1; j < numArgs; j++)
 								simplifiedArgs[j] = simplifyObject(
-										expression.argument(j));
+										expression.argument(j), state);
 							break;
 						}
 					}
-					if (ignoreArg0 && simplifiedArgs != null)
-						simplifiedArgs[0] = expression.argument(0);
 				} else {
 					simplifiedArgs = new SymbolicObject[numArgs];
-					if (ignoreArg0) {
-						simplifiedArgs[0] = expression.argument(0);
-					}
-					for (int i = start; i < numArgs; i++)
+					for (int i = 0; i < numArgs; i++)
 						simplifiedArgs[i] = simplifyObject(
-								expression.argument(i));
+								expression.argument(i), state);
 				}
 				if (simplifiedArgs == null)
 					return expression;
@@ -359,6 +386,8 @@ public abstract class CommonSimplifier implements Simplifier {
 			}
 		}
 	}
+
+	protected abstract SimplifierState newState();
 
 	@Override
 	public SymbolicExpression apply(SymbolicExpression expression) {
@@ -369,7 +398,7 @@ public abstract class CommonSimplifier implements Simplifier {
 				expression);
 
 		if (result == null) {
-			result = simplifyExpression(expression);
+			result = simplifyExpression(expression, newState());
 			result = universe.canonic(result);
 			cacheSimplification(expression, result);
 		}

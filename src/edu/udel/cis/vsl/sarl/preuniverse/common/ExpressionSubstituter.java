@@ -421,6 +421,7 @@ public abstract class ExpressionSubstituter
 						expression.argument(2), state);
 			}
 		}
+		
 		int numArgs = expression.numArguments();
 		SymbolicType type = expression.type();
 		SymbolicType newType = substituteType(type, state);

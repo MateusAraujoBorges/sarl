@@ -27,7 +27,6 @@ import org.junit.Test;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
-import edu.udel.cis.vsl.sarl.ideal.simplify.IdealSimplifier;
 
 /**
  * Testing on IdealSimplifier based on Polynomials for both assumptions and
@@ -85,7 +84,7 @@ public class IdealSimplifierSimpExprTest {
 
 		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
 
-		assertEquals(rat0, idealSimp.simplifyExpression(symExpr));
+		assertEquals(rat0, idealSimp.apply(symExpr));
 	}
 
 	/**
@@ -101,7 +100,7 @@ public class IdealSimplifierSimpExprTest {
 
 		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
 
-		assertEquals(rat0, idealSimp.simplifyExpression(symExpr));
+		assertEquals(rat0, idealSimp.apply(symExpr));
 	}
 
 	/**
@@ -120,8 +119,8 @@ public class IdealSimplifierSimpExprTest {
 
 		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
 
-		assertEquals(idealSimp.simplifyExpression(onePxPxSqdP3x4th),
-				idealSimp.simplifyExpression(symExpr));
+		assertEquals(idealSimp.apply(onePxPxSqdP3x4th),
+				idealSimp.apply(symExpr));
 	}
 
 	@Test
@@ -185,7 +184,7 @@ public class IdealSimplifierSimpExprTest {
 		out.println(numExpect);
 		expected = numExpect;
 
-		assertEquals(expected, idealSimp.simplifyExpression(symExpr));
+		assertEquals(expected, idealSimp.apply(symExpr));
 	}
 
 	/**
@@ -213,7 +212,7 @@ public class IdealSimplifierSimpExprTest {
 
 		expected = numExpect;
 
-		assertEquals(expected, idealSimp.simplifyExpression(symExpr));
+		assertEquals(expected, idealSimp.apply(symExpr));
 
 	}
 
@@ -233,7 +232,7 @@ public class IdealSimplifierSimpExprTest {
 						preUniv.multiply(rat4,
 								preUniv.multiply(preUniv.power(x, 3),
 										preUniv.power(y, 2))),
-				preUniv.multiply(rat2, preUniv.multiply(xy, x))),
+						preUniv.multiply(rat2, preUniv.multiply(xy, x))),
 				preUniv.multiply(rat3, xy));
 
 		NumericExpression denom = preUniv.multiply(y, x);
@@ -248,15 +247,16 @@ public class IdealSimplifierSimpExprTest {
 		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
 
 		// x(4xy+2)+3 = 4x^2y+2x+3
-		numExpect = preUniv.add(preUniv.multiply(x, preUniv
-				.add(preUniv.multiply(preUniv.multiply(rat4, x), y), rat2)),
+		numExpect = preUniv.add(
+				preUniv.multiply(x, preUniv.add(
+						preUniv.multiply(preUniv.multiply(rat4, x), y), rat2)),
 				rat3);
 
-		expected = idealSimp.simplifyExpression(numExpect);
+		expected = idealSimp.apply(numExpect);
 
 		// simplifying symExpr=numExpr
 		NumericExpression simplified = (NumericExpression) idealSimp
-				.simplifyExpression(symExpr);
+				.apply(symExpr);
 
 		assertEquals(expected, simplified);
 	}

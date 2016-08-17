@@ -24,6 +24,8 @@ import static edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator.
 import static edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator.NEQ;
 
 import java.io.PrintStream;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -72,6 +74,42 @@ import edu.udel.cis.vsl.sarl.util.SingletonMap;
  * </p>
  */
 public class IdealSimplifier extends CommonSimplifier {
+
+	/**
+	 * State of the simplification process includes a stack of bound symbolic
+	 * constants. Each time a quantified expression is encountered, a variable
+	 * is pushed onto the stack, the body of the expression is processes, and
+	 * the stack is popped. The stack is needed to determine whether a symbolic
+	 * constant is free or bound at any point.
+	 * 
+	 * @author siegel
+	 */
+	class BoundStack implements SimplifierState {
+
+		private Deque<SymbolicConstant> stack = new ArrayDeque<>();
+
+		public boolean contains(SymbolicConstant symbolicConstant) {
+			return stack.contains(symbolicConstant);
+		}
+
+		public void push(SymbolicConstant symbolicConstant) {
+			stack.push(symbolicConstant);
+		}
+
+		public void pop() {
+			stack.pop();
+		}
+
+		@Override
+		public boolean isInitial() {
+			return stack.isEmpty();
+		}
+
+		@Override
+		public boolean isBoundVaraible(SymbolicConstant symbol) {
+			return stack.contains(symbol);
+		}
+	}
 
 	// Static fields...
 
@@ -206,7 +244,7 @@ public class IdealSimplifier extends CommonSimplifier {
 			// need to substitute into assumption new value of symbolic
 			// constants.
 			BooleanExpression newAssumption = (BooleanExpression) simplifyExpression(
-					assumption);
+					assumption, newState());
 
 			rawAssumption = newAssumption;
 
@@ -257,7 +295,8 @@ public class IdealSimplifier extends CommonSimplifier {
 				if (monic instanceof SymbolicConstant) {
 					// symbolic constant: will be entirely eliminated
 				} else {
-					Monomial key = (Monomial) simplifyGenericExpression(monic);
+					Monomial key = (Monomial) simplifyGenericExpression(monic,
+							newState());
 					BooleanExpression constraint = info.idealFactory.equals(key,
 							info.idealFactory.constant(entry.getValue()));
 
@@ -274,7 +313,7 @@ public class IdealSimplifier extends CommonSimplifier {
 					// symbolic constant: will be entirely eliminated
 				} else {
 					SymbolicExpression simplifiedKey = simplifyGenericExpression(
-							key);
+							key, newState());
 					BooleanExpression constraint = info.universe
 							.equals(simplifiedKey, entry.getValue());
 
@@ -291,7 +330,7 @@ public class IdealSimplifier extends CommonSimplifier {
 					// symbolic constant: will be entirely eliminated
 				} else {
 					BooleanExpression simplifiedPrimitive = (BooleanExpression) simplifyGenericExpression(
-							primitive);
+							primitive, newState());
 
 					newAssumption = info.booleanFactory.and(newAssumption,
 							entry.getValue() ? simplifiedPrimitive
@@ -1033,14 +1072,18 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * @return a simplified version of <code>monic</code> which is equivalent to
 	 *         <code>monic</code> under the current assumptions
 	 */
-	private Monomial simplifyMonic(Monic monic) {
+	private Monomial simplifyMonic(Monic monic, SimplifierState state) {
 		assert !(monic instanceof Polynomial);
+
+		if (monic instanceof SymbolicConstant
+				&& state.isBoundVaraible((SymbolicConstant) monic))
+			return monic;
 
 		Number constant = constantMap.get(monic);
 
 		if (constant != null)
 			return info.idealFactory.constant(constant);
-		return (Monomial) super.simplifyGenericExpression(monic);
+		return (Monomial) super.simplifyGenericExpression(monic, state);
 	}
 
 	@SuppressWarnings("unused")
@@ -1248,15 +1291,16 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * @return simplified version of the expression, which may be the original
 	 *         expression
 	 */
-	private BooleanExpression simplifyRelational(BooleanExpression expression) {
+	private BooleanExpression simplifyRelational(BooleanExpression expression,
+			SimplifierState state) {
 		BooleanExpression result1 = (BooleanExpression) simplifyGenericExpression(
-				expression); // to
-								// substitute
-								// constants,
-								// etc.
+				expression, state); // to
+		// substitute
+		// constants,
+		// etc.
 
 		if (result1 == expression)
-			return simplifyRelationalWork(expression);
+			return simplifyRelationalWork(expression, state);
 		if (result1.operator() == SymbolicOperator.CONCRETE)
 			return result1;
 
@@ -1266,8 +1310,8 @@ public class IdealSimplifier extends CommonSimplifier {
 		if (result2 != null)
 			return result2;
 		if (isRelational(result1.operator()))
-			return simplifyRelationalWork(result1);
-		return (BooleanExpression) simplifyGenericExpression(result1);
+			return simplifyRelationalWork(result1, state);
+		return (BooleanExpression) simplifyGenericExpression(result1, state);
 	}
 
 	/**
@@ -1280,7 +1324,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * @return possibly simplified version of <code>expression</code>
 	 */
 	private BooleanExpression simplifyRelationalWork(
-			BooleanExpression expression) {
+			BooleanExpression expression, SimplifierState state) {
 		SymbolicOperator operator = expression.operator();
 		Monomial arg0 = (Monomial) expression.argument(0),
 				arg1 = (Monomial) expression.argument(1);
@@ -1331,7 +1375,8 @@ public class IdealSimplifier extends CommonSimplifier {
 
 			BooleanExpression negExpression = universe.not(expression);
 
-			result = (BooleanExpression) simplifyExpression(negExpression);
+			result = (BooleanExpression) simplifyExpression(negExpression,
+					state);
 			result = universe.not(result);
 			return result;
 		}
@@ -1347,10 +1392,12 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *            a non-<code>null</code> {@link Monic}
 	 * @return simplified expression equivalent to <code>monic</code>=0
 	 */
-	private BooleanExpression simplifiedEQ0Monic(Monic monic) {
+	private BooleanExpression simplifiedEQ0Monic(Monic monic,
+			SimplifierState state) {
 		NumericExpression zero = info.idealFactory.zero(monic.type());
 		BooleanExpression expr = info.idealFactory.equals(zero, monic);
-		BooleanExpression result = (BooleanExpression) simplifyExpression(expr);
+		BooleanExpression result = (BooleanExpression) simplifyExpression(expr,
+				state);
 
 		return result;
 	}
@@ -1362,10 +1409,12 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *            a non-<code>null</code> {@link Monic}
 	 * @return simplified expression equivalent to <code>monic</code>&ne;0
 	 */
-	private BooleanExpression simplifiedNEQ0Monic(Monic monic) {
+	private BooleanExpression simplifiedNEQ0Monic(Monic monic,
+			SimplifierState state) {
 		NumericExpression zero = info.idealFactory.zero(monic.type());
 		BooleanExpression expr = info.idealFactory.neq(zero, monic);
-		BooleanExpression result = (BooleanExpression) simplifyExpression(expr);
+		BooleanExpression result = (BooleanExpression) simplifyExpression(expr,
+				state);
 
 		return result;
 	}
@@ -1464,16 +1513,20 @@ public class IdealSimplifier extends CommonSimplifier {
 			return strict ? info.falseExpr : info.trueExpr;
 		case GE0:
 			if (gt)
-				return strict ? simplifiedNEQ0Monic(monic) : info.trueExpr;
+				return strict ? simplifiedNEQ0Monic(monic, newState())
+						: info.trueExpr;
 			else
-				return strict ? info.falseExpr : simplifiedEQ0Monic(monic);
+				return strict ? info.falseExpr
+						: simplifiedEQ0Monic(monic, newState());
 		case GT0:
 			return gt ? info.trueExpr : info.falseExpr;
 		case LE0:
 			if (gt)
-				return strict ? info.falseExpr : simplifiedEQ0Monic(monic);
+				return strict ? info.falseExpr
+						: simplifiedEQ0Monic(monic, newState());
 			else
-				return strict ? simplifiedNEQ0Monic(monic) : info.trueExpr;
+				return strict ? simplifiedNEQ0Monic(monic, newState())
+						: info.trueExpr;
 		case LT0:
 			return gt ? info.falseExpr : info.trueExpr;
 		default:
@@ -1948,7 +2001,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	private RationalExpression simplifyRationalExpression(
-			RationalExpression expression) {
+			RationalExpression expression, SimplifierState state) {
 		if (expression instanceof Constant)
 			return expression;
 
@@ -1957,10 +2010,10 @@ public class IdealSimplifier extends CommonSimplifier {
 		if (expression instanceof Polynomial)
 			result1 = simplifyPolynomial((Polynomial) expression);
 		else if (expression instanceof Monic)
-			result1 = simplifyMonic((Monic) expression);
+			result1 = simplifyMonic((Monic) expression, state);
 		else
-			result1 = (RationalExpression) simplifyGenericExpression(
-					expression);
+			result1 = (RationalExpression) simplifyGenericExpression(expression,
+					state);
 		if (result1 instanceof Primitive || result1 instanceof Constant)
 			return result1;
 
@@ -2059,9 +2112,38 @@ public class IdealSimplifier extends CommonSimplifier {
 	 */
 	@Override
 	protected SymbolicExpression simplifyExpression(
-			SymbolicExpression expression) {
+			SymbolicExpression expression, SimplifierState state) {
+		if (isQuantified(expression)) {
+			return simplifiyQuantifiedExpression(expression, state);
+		} else {
+			return simplifiyNonQuantifiedExpression(expression, state);
+		}
+	}
+
+	private SymbolicExpression simplifiyQuantifiedExpression(
+			SymbolicExpression expression, SimplifierState state) {
+		SymbolicType type = expression.type();
+		SymbolicConstant arg0 = (SymbolicConstant) expression.argument(0);
+		SymbolicExpression arg1 = (SymbolicExpression) expression.argument(1);
+
+		((BoundStack) state).push(arg0);
+
+		SymbolicExpression newArg1 = simplifyExpression(arg1, state);
+
+		((BoundStack) state).pop();
+
+		if (arg1 == newArg1)
+			return expression;
+		else
+			return universe.make(expression.operator(), type,
+					new SymbolicObject[] { arg0, newArg1 });
+	}
+
+	private SymbolicExpression simplifiyNonQuantifiedExpression(
+			SymbolicExpression expression, SimplifierState state) {
 		if (expression instanceof RationalExpression)
-			return simplifyRationalExpression((RationalExpression) expression);
+			return simplifyRationalExpression((RationalExpression) expression,
+					state);
 
 		SymbolicType type = expression.type();
 
@@ -2083,7 +2165,8 @@ public class IdealSimplifier extends CommonSimplifier {
 					return result;
 				}
 				if (isNumericRelational(expression))
-					return simplifyRelational((BooleanExpression) expression);
+					return simplifyRelational((BooleanExpression) expression,
+							state);
 			} else if (!type.isNumeric()) {
 				SymbolicExpression constant = otherConstantMap.get(expression);
 
@@ -2096,7 +2179,8 @@ public class IdealSimplifier extends CommonSimplifier {
 				}
 			}
 		}
-		return simplifyGenericExpression(expression);
+		return simplifyGenericExpression(expression, state);
+
 	}
 
 	@Override
@@ -2195,5 +2279,10 @@ public class IdealSimplifier extends CommonSimplifier {
 				i2 = intervalMonomial(denominator);
 
 		return info.numberFactory.divide(i1, i2);
+	}
+
+	@Override
+	protected SimplifierState newState() {
+		return new BoundStack();
 	}
 }

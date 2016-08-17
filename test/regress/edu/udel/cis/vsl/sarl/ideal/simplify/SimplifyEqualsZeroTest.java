@@ -73,8 +73,8 @@ public class SimplifyEqualsZeroTest {
 		// out.println(xSqrLess1);
 		// out.println(idealSimplifier.simplifyExpression(xSqrLess1));
 		// assumption: x=0. Simplify x^2-1 -> -1
-		assertEquals(intNeg1, idealSimplifier.simplifyExpression(xSqrLess1));
-		assertEquals(int1, idealSimplifier.simplifyExpression(xSqrP1));
+		assertEquals(intNeg1, idealSimplifier.apply(xSqrLess1));
+		assertEquals(int1, idealSimplifier.apply(xSqrP1));
 		// out.println(idealSimplifier.apply(symbExpr_xpyInt));
 		// out.println(idealSimplifier.simplifyExpression(symbExpr_xpyInt));
 		// out.println("xx - 1 : " + xSqrLess1.toString());
@@ -96,7 +96,7 @@ public class SimplifyEqualsZeroTest {
 		assertEquals(idealSimplifier.apply(bigMixedXYTermPoly).toString(),
 				preUniv.multiply(y, preUniv.multiply(y, y)).toString());
 		// out.println(idealSimplifier.simplifyExpression(mixedXYTermPoly));
-		assertEquals(idealSimplifier.simplifyExpression(mixedXYTermPoly), y);
+		assertEquals(idealSimplifier.apply(mixedXYTermPoly), y);
 	}
 
 }
