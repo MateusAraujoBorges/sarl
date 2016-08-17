@@ -313,9 +313,19 @@ public abstract class CommonSimplifier implements Simplifier {
 				SymbolicType simplifiedType = simplifyType(type);
 				int numArgs = expression.numArguments();
 				SymbolicObject[] simplifiedArgs = null;
+				SymbolicOperator op = expression.operator();
+				boolean ignoreArg0 = false;
+				int start = 0;
 
+				if (op == SymbolicOperator.FORALL
+						|| op == SymbolicOperator.EXISTS
+						|| op == SymbolicOperator.LAMBDA
+						|| op == SymbolicOperator.ARRAY_LAMBDA) {
+					ignoreArg0 = true;
+					start = 1;
+				}
 				if (type == simplifiedType) {
-					for (int i = 0; i < numArgs; i++) {
+					for (int i = start; i < numArgs; i++) {
 						SymbolicObject arg = expression.argument(i);
 						SymbolicObject simplifiedArg = simplifyObject(arg);
 
@@ -331,9 +341,14 @@ public abstract class CommonSimplifier implements Simplifier {
 							break;
 						}
 					}
+					if (ignoreArg0 && simplifiedArgs != null)
+						simplifiedArgs[0] = expression.argument(0);
 				} else {
 					simplifiedArgs = new SymbolicObject[numArgs];
-					for (int i = 0; i < numArgs; i++)
+					if (ignoreArg0) {
+						simplifiedArgs[0] = expression.argument(0);
+					}
+					for (int i = start; i < numArgs; i++)
 						simplifiedArgs[i] = simplifyObject(
 								expression.argument(i));
 				}
