@@ -433,9 +433,12 @@ public class IntegerBitwiseOperationTest {
 
 	@Test
 	public void simplyficationTest() {
-		SymbolicExpression x_and_4 = universe.bitand(x, universe.integer(4));
-		SymbolicExpression resExpr = universe.neq(x_and_4, intZero);
+		NumericExpression x_or_4 = universe.bitand(universe.integer(15), universe.integer(8));
+		SymbolicExpression actualResult = universe.bitor(x_or_4, y);
+		SymbolicExpression expectedResult = universe.bitor(universe.integer(8),y);
 
-		p(resExpr);
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
 	}
 }
