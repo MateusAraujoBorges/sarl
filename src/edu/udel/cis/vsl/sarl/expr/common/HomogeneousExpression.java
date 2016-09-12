@@ -331,9 +331,10 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		} else {
 			for (int i = 0; i < n; i++) {
 				T arg = arguments[i];
-				boolean atomizeArg = arg instanceof SymbolicExpression
-						&& ((SymbolicExpression) arg)
-								.operator() == SymbolicOperator.AND;
+				boolean atomizeArg = true;
+				// arg instanceof SymbolicExpression
+				// && ((SymbolicExpression) arg)
+				// .operator() == SymbolicOperator.AND;
 				StringBuffer argString = arg.toStringBuffer(atomizeArg);
 
 				if (i > 0)
