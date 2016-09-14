@@ -153,7 +153,7 @@ public class CommonSymbolicArrayType extends CommonSymbolicType
 
 		while (element.typeKind() == SymbolicTypeKind.ARRAY) {
 			dimensions++;
-			element = ((SymbolicArrayType) elementType).elementType();
+			element = ((SymbolicArrayType) element).elementType();
 		}
 		return dimensions;
 	}
