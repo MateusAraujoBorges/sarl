@@ -2324,7 +2324,8 @@ public class RealNumberFactory implements NumberFactory {
 		return result;
 	}
 
-	private RationalNumber power(RationalNumber number, IntegerNumber exp) {
+	@Override
+	public RationalNumber power(RationalNumber number, IntegerNumber exp) {
 		assert number != null && exp != null;
 		assert exp.signum() >= 0;
 
