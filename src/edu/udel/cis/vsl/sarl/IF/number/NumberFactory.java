@@ -673,6 +673,20 @@ public interface NumberFactory {
 	RationalNumber power(RationalNumber number, int exp);
 
 	/**
+	 * Calculate the given {@link Number} base powering a given
+	 * {@link IntegerNumber} exponent and returns result. The exponent must be a
+	 * natural number.
+	 * 
+	 * @param number
+	 *            a non-<code>null</code> {@link Number}
+	 * @param exp
+	 *            a non-<code>null</code> {@link IntegerNumber} representing an
+	 *            natural number which is greater or equal to zero.
+	 * @return
+	 */
+	Number power(Number number, IntegerNumber exp);
+	
+	/**
 	 * Calculate the given {@link RationalNumber} base powering a given
 	 * {@link IntegerNumber} exponent and returns result. The exponent must be a
 	 * natural number.

@@ -1979,6 +1979,19 @@ public class RealNumberFactory implements NumberFactory {
 	}
 
 	@Override
+	public Number power(Number number, IntegerNumber exp){
+		assert exp != null && exp.numericalCompareTo(zeroInteger) == 1;
+		if (number instanceof IntegerNumber) {
+			return power((IntegerNumber) number, exp);
+		} else if (number instanceof RationalNumber) {
+			return power((RationalNumber) number, exp);
+		} else {
+			throw new IllegalArgumentException(
+					"Unknown type of number: " + number);
+		}
+	}
+	
+	@Override
 	public Number power(Number number, int exp) {
 		assert exp >= 0;
 		if (number instanceof IntegerNumber) {
