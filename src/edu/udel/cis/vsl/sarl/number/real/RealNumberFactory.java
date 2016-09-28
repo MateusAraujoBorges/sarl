@@ -1888,6 +1888,7 @@ public class RealNumberFactory implements NumberFactory {
 		boolean strictUpper = interval.strictUpper();
 		boolean newSl = true;
 		boolean newSu = true;
+		IntegerNumber expNum = integer(exp);
 		Number lower = interval.lower();
 		Number upper = interval.upper();
 		Number newLo = infiniteNumber(isIntegral, false);
@@ -1897,8 +1898,8 @@ public class RealNumberFactory implements NumberFactory {
 
 		if (exp == 0)
 			return singletonInterval(oneNumber);
-		if (exp < 0)
-			return power(divide(singletonInterval(oneNumber), interval), -exp);
+		// if (exp < 0)
+		// return power(divide(singletonInterval(oneNumber), interval), -exp);
 		// exp > 0
 		if (interval.isUniversal()) {
 			return interval;
@@ -1908,14 +1909,14 @@ public class RealNumberFactory implements NumberFactory {
 
 			if (exp % 2 == 0) {
 				if (signumUp < 0) {
-					newLo = power(upper, exp);
+					newLo = power(upper, expNum);
 					newSl = strictUpper;
 				} else {
 					newLo = zeroNumber;
 					newSl = false;
 				}
 			} else {
-				newUp = power(upper, exp);
+				newUp = power(upper, expNum);
 				newSu = strictUpper;
 			}
 			return newInterval(isIntegral, newLo, newSl, newUp, newSu);
@@ -1924,14 +1925,14 @@ public class RealNumberFactory implements NumberFactory {
 					: lower.signum();
 
 			if (signumLo > 0) {
-				newLo = power(lower, exp);
+				newLo = power(lower, expNum);
 				newSl = strictLower;
 			} else {
 				if (exp % 2 == 0) {
 					newLo = zeroNumber;
 					newSl = false;
 				} else {
-					newLo = power(lower, exp);
+					newLo = power(lower, expNum);
 					newSl = strictLower;
 				}
 			}
@@ -1942,9 +1943,9 @@ public class RealNumberFactory implements NumberFactory {
 			int signumUp = strictUpper ? upper.signum() * 2 - 1
 					: upper.signum();
 
-			newUp = power(upper, exp);
+			newUp = power(upper, expNum);
 			newSu = strictUpper;
-			newLo = power(lower, exp);
+			newLo = power(lower, expNum);
 			newSl = strictLower;
 
 			if (exp % 2 == 0)
@@ -1959,8 +1960,8 @@ public class RealNumberFactory implements NumberFactory {
 					newLo = tempNum;
 					newSl = tempStrict;
 				} else if (signumLo < 0) {
-					Number tempUpFromLo = power(negate(lower), exp);
-					Number tempUpFromUp = power(upper, exp);
+					Number tempUpFromLo = power(negate(lower), expNum);
+					Number tempUpFromUp = power(upper, expNum);
 
 					if (tempUpFromLo.compareTo(tempUpFromUp) < 0) {
 						newUp = tempUpFromUp;
@@ -1979,7 +1980,7 @@ public class RealNumberFactory implements NumberFactory {
 	}
 
 	@Override
-	public Number power(Number number, IntegerNumber exp){
+	public Number power(Number number, IntegerNumber exp) {
 		assert exp != null && exp.numericalCompareTo(zeroInteger) == 1;
 		if (number instanceof IntegerNumber) {
 			return power((IntegerNumber) number, exp);
@@ -1990,7 +1991,7 @@ public class RealNumberFactory implements NumberFactory {
 					"Unknown type of number: " + number);
 		}
 	}
-	
+
 	@Override
 	public Number power(Number number, int exp) {
 		assert exp >= 0;
