@@ -48,10 +48,10 @@ public class IntervalTest {
 			.fraction(INT_NEG_FOUR, INT_POS_ONE);
 	private static RationalNumber RAT_POS_HALF = numFactory
 			.fraction(INT_POS_ONE, INT_POS_TWO);
-	private static RationalNumber RAT_NEG_HALF = numFactory
-			.fraction(INT_NEG_ONE, INT_POS_TWO);
-	private static RationalNumber RAT_POS_QUART = numFactory
-			.fraction(INT_POS_ONE, INT_POS_FOUR);
+	// private static RationalNumber RAT_NEG_HALF = numFactory
+	// .fraction(INT_NEG_ONE, INT_POS_TWO);
+	// private static RationalNumber RAT_POS_QUART = numFactory
+	// .fraction(INT_POS_ONE, INT_POS_FOUR);
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -1003,10 +1003,10 @@ public class IntervalTest {
 				false, RAT_POS_INF, true);
 		Interval interval_right_infi3 = numFactory.newInterval(false,
 				RAT_NEG_ONE, true, RAT_POS_INF, true);
-		Interval actualResult_l1_pow_neg1 = numFactory
-				.power(interval_left_infi1, -1);
-		Interval actualResult_l1_pow_neg2 = numFactory
-				.power(interval_left_infi1, -2);
+		// Interval actualResult_l1_pow_neg1 = numFactory
+		// .power(interval_left_infi1, -1);
+		// Interval actualResult_l1_pow_neg2 = numFactory
+		// .power(interval_left_infi1, -2);
 		Interval actualResult_l1_pow_pos1 = numFactory
 				.power(interval_left_infi1, 1);
 		Interval actualResult_l1_pow_pos2 = numFactory
@@ -1019,10 +1019,10 @@ public class IntervalTest {
 				.power(interval_left_infi3, 1);
 		Interval actualResult_l3_pow_pos2 = numFactory
 				.power(interval_left_infi3, 2);
-		Interval actualResult_r1_pow_neg1 = numFactory
-				.power(interval_right_infi1, -1);
-		Interval actualResult_r1_pow_neg2 = numFactory
-				.power(interval_right_infi1, -2);
+		// Interval actualResult_r1_pow_neg1 = numFactory
+		// .power(interval_right_infi1, -1);
+		// Interval actualResult_r1_pow_neg2 = numFactory
+		// .power(interval_right_infi1, -2);
 		Interval actualResult_r1_pow_pos1 = numFactory
 				.power(interval_right_infi1, 1);
 		Interval actualResult_r1_pow_pos2 = numFactory
@@ -1036,10 +1036,10 @@ public class IntervalTest {
 		Interval actualResult_r3_pow_pos2 = numFactory
 				.power(interval_right_infi3, 2);
 		//
-		Interval expectedResult_l1_pow_neg1 = numFactory.newInterval(false,
-				RAT_NEG_ONE, true, RAT_ZERO, true);
-		Interval expectedResult_l1_pow_neg2 = numFactory.newInterval(false,
-				RAT_ZERO, true, RAT_POS_ONE, true);
+		// Interval expectedResult_l1_pow_neg1 = numFactory.newInterval(false,
+		// RAT_NEG_ONE, true, RAT_ZERO, true);
+		// Interval expectedResult_l1_pow_neg2 = numFactory.newInterval(false,
+		// RAT_ZERO, true, RAT_POS_ONE, true);
 		Interval expectedResult_l1_pow_pos1 = interval_left_infi1;
 		Interval expectedResult_l1_pow_pos2 = numFactory.newInterval(false,
 				RAT_POS_ONE, true, RAT_POS_INF, true);
@@ -1047,9 +1047,9 @@ public class IntervalTest {
 		Interval expectedResult_l2_pow_pos2 = interval_right_infi2;
 		Interval expectedResult_l3_pow_pos1 = interval_left_infi3;
 		Interval expectedResult_l3_pow_pos2 = interval_right_infi2;
-		Interval expectedResult_r1_pow_neg1 = numFactory.newInterval(false,
-				RAT_ZERO, true, RAT_POS_ONE, false);
-		Interval expectedResult_r1_pow_neg2 = expectedResult_r1_pow_neg1;
+		// Interval expectedResult_r1_pow_neg1 = numFactory.newInterval(false,
+		// RAT_ZERO, true, RAT_POS_ONE, false);
+		// Interval expectedResult_r1_pow_neg2 = expectedResult_r1_pow_neg1;
 		Interval expectedResult_r1_pow_pos1 = interval_right_infi1;
 		Interval expectedResult_r1_pow_pos2 = interval_right_infi1;
 		Interval expectedResult_r2_pow_pos1 = interval_right_infi2;
@@ -1057,16 +1057,16 @@ public class IntervalTest {
 		Interval expectedResult_r3_pow_pos1 = interval_right_infi3;
 		Interval expectedResult_r3_pow_pos2 = interval_right_infi2;
 
-		assertEquals(expectedResult_l1_pow_neg1, actualResult_l1_pow_neg1);
-		assertEquals(expectedResult_l1_pow_neg2, actualResult_l1_pow_neg2);
+		// assertEquals(expectedResult_l1_pow_neg1, actualResult_l1_pow_neg1);
+		// assertEquals(expectedResult_l1_pow_neg2, actualResult_l1_pow_neg2);
 		assertEquals(expectedResult_l1_pow_pos1, actualResult_l1_pow_pos1);
 		assertEquals(expectedResult_l1_pow_pos2, actualResult_l1_pow_pos2);
 		assertEquals(expectedResult_l2_pow_pos1, actualResult_l2_pow_pos1);
 		assertEquals(expectedResult_l2_pow_pos2, actualResult_l2_pow_pos2);
 		assertEquals(expectedResult_l3_pow_pos1, actualResult_l3_pow_pos1);
 		assertEquals(expectedResult_l3_pow_pos2, actualResult_l3_pow_pos2);
-		assertEquals(expectedResult_r1_pow_neg1, actualResult_r1_pow_neg1);
-		assertEquals(expectedResult_r1_pow_neg2, actualResult_r1_pow_neg2);
+		// assertEquals(expectedResult_r1_pow_neg1, actualResult_r1_pow_neg1);
+		// assertEquals(expectedResult_r1_pow_neg2, actualResult_r1_pow_neg2);
 		assertEquals(expectedResult_r1_pow_pos1, actualResult_r1_pow_pos1);
 		assertEquals(expectedResult_r1_pow_pos2, actualResult_r1_pow_pos2);
 		assertEquals(expectedResult_r2_pow_pos1, actualResult_r2_pow_pos1);
@@ -1087,10 +1087,12 @@ public class IntervalTest {
 				false, RAT_POS_ONE, true);
 		Interval interval_pos_pos = numFactory.newInterval(false, RAT_POS_ONE,
 				false, RAT_POS_TWO, false);
-		Interval actualResult_nn_pow_neg1 = numFactory.power(interval_neg_neg,
-				-1);
-		Interval actualResult_nn_pow_neg2 = numFactory.power(interval_neg_neg,
-				-2);
+		// Interval actualResult_nn_pow_neg1 =
+		// numFactory.power(interval_neg_neg,
+		// -1);
+		// Interval actualResult_nn_pow_neg2 =
+		// numFactory.power(interval_neg_neg,
+		// -2);
 		Interval actualResult_nn_pow_pos1 = numFactory.power(interval_neg_neg,
 				1);
 		Interval actualResult_nn_pow_pos2 = numFactory.power(interval_neg_neg,
@@ -1107,19 +1109,21 @@ public class IntervalTest {
 				1);
 		Interval actualResult_zp_pow_pos2 = numFactory.power(interval_zero_pos,
 				2);
-		Interval actualResult_pp_pow_neg1 = numFactory.power(interval_pos_pos,
-				-1);
-		Interval actualResult_pp_pow_neg2 = numFactory.power(interval_pos_pos,
-				-2);
+		// Interval actualResult_pp_pow_neg1 =
+		// numFactory.power(interval_pos_pos,
+		// -1);
+		// Interval actualResult_pp_pow_neg2 =
+		// numFactory.power(interval_pos_pos,
+		// -2);
 		Interval actualResult_pp_pow_pos1 = numFactory.power(interval_pos_pos,
 				1);
 		Interval actualResult_pp_pow_pos2 = numFactory.power(interval_pos_pos,
 				2);
 		//
-		Interval expectedResult_nn_pow_neg1 = numFactory.newInterval(false,
-				RAT_NEG_ONE, true, RAT_NEG_HALF, true);
-		Interval expectedResult_nn_pow_neg2 = numFactory.newInterval(false,
-				RAT_POS_QUART, true, RAT_POS_ONE, true);
+		// Interval expectedResult_nn_pow_neg1 = numFactory.newInterval(false,
+		// RAT_NEG_ONE, true, RAT_NEG_HALF, true);
+		// Interval expectedResult_nn_pow_neg2 = numFactory.newInterval(false,
+		// RAT_POS_QUART, true, RAT_POS_ONE, true);
 		Interval expectedResult_nn_pow_pos1 = interval_neg_neg;
 		Interval expectedResult_nn_pow_pos2 = numFactory.newInterval(false,
 				RAT_POS_ONE, true, RAT_POS_FOUR, true);
@@ -1131,16 +1135,16 @@ public class IntervalTest {
 				RAT_ZERO, false, RAT_POS_ONE, false);
 		Interval expectedResult_zp_pow_pos1 = interval_zero_pos;
 		Interval expectedResult_zp_pow_pos2 = interval_zero_pos;
-		Interval expectedResult_pp_pow_neg1 = numFactory.newInterval(false,
-				RAT_POS_HALF, false, RAT_POS_ONE, false);
-		Interval expectedResult_pp_pow_neg2 = numFactory.newInterval(false,
-				RAT_POS_QUART, false, RAT_POS_ONE, false);
+		// Interval expectedResult_pp_pow_neg1 = numFactory.newInterval(false,
+		// RAT_POS_HALF, false, RAT_POS_ONE, false);
+		// Interval expectedResult_pp_pow_neg2 = numFactory.newInterval(false,
+		// RAT_POS_QUART, false, RAT_POS_ONE, false);
 		Interval expectedResult_pp_pow_pos1 = interval_pos_pos;
 		Interval expectedResult_pp_pow_pos2 = numFactory.newInterval(false,
 				RAT_POS_ONE, false, RAT_POS_FOUR, false);
 
-		assertEquals(expectedResult_nn_pow_neg1, actualResult_nn_pow_neg1);
-		assertEquals(expectedResult_nn_pow_neg2, actualResult_nn_pow_neg2);
+		// assertEquals(expectedResult_nn_pow_neg1, actualResult_nn_pow_neg1);
+		// assertEquals(expectedResult_nn_pow_neg2, actualResult_nn_pow_neg2);
 		assertEquals(expectedResult_nn_pow_pos1, actualResult_nn_pow_pos1);
 		assertEquals(expectedResult_nn_pow_pos2, actualResult_nn_pow_pos2);
 		assertEquals(expectedResult_nz_pow_pos1, actualResult_nz_pow_pos1);
@@ -1149,8 +1153,8 @@ public class IntervalTest {
 		assertEquals(expectedResult_np_pow_pos2, actualResult_np_pow_pos2);
 		assertEquals(expectedResult_zp_pow_pos1, actualResult_zp_pow_pos1);
 		assertEquals(expectedResult_zp_pow_pos2, actualResult_zp_pow_pos2);
-		assertEquals(expectedResult_pp_pow_neg1, actualResult_pp_pow_neg1);
-		assertEquals(expectedResult_pp_pow_neg2, actualResult_pp_pow_neg2);
+		// assertEquals(expectedResult_pp_pow_neg1, actualResult_pp_pow_neg1);
+		// assertEquals(expectedResult_pp_pow_neg2, actualResult_pp_pow_neg2);
 		assertEquals(expectedResult_pp_pow_pos1, actualResult_pp_pow_pos1);
 		assertEquals(expectedResult_pp_pow_pos2, actualResult_pp_pow_pos2);
 	}
