@@ -19,6 +19,7 @@
 package edu.udel.cis.vsl.sarl.type.common;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
@@ -67,6 +68,9 @@ public class CommonSymbolicCompleteArrayType extends CommonSymbolicArrayType
 
 	@Override
 	public boolean isComplete() {
+		if (elementType().typeKind() == SymbolicTypeKind.ARRAY) {
+			return ((SymbolicArrayType) elementType()).isComplete();
+		}
 		return true;
 	}
 
