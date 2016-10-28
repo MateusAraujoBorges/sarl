@@ -1192,7 +1192,6 @@ public class NumberFactoryTest {
 		Interval i1 = factory.newInterval(isIntegral1, lo1, sl1, up1, su1);
 		Interval i2 = null;
 		IntervalUnion iuRes = new IntervalUnion();
-		;
 
 		assert (lo1 instanceof IntegerNumber) == (up1 instanceof IntegerNumber);
 		factory.union(i1, i2, iuRes);
