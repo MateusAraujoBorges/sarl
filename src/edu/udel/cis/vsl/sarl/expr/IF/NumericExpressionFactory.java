@@ -26,7 +26,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
-import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
@@ -220,16 +219,17 @@ public interface NumericExpressionFactory {
 	NumericExpression minus(NumericExpression arg);
 
 	/**
-	 * Concrete power operator: e^b, where b is a concrete non-negative integer.
-	 * This method might actually multiply out the expression, i.e., it does not
-	 * necessarily return an expression with operator POWER.
+	 * Concrete power operator: e^b, where b is a {@link NumberObject} with a
+	 * concrete non-negative integer value. This method might actually multiply
+	 * out the expression, i.e., it does not necessarily return an expression
+	 * with operator POWER.
 	 * 
 	 * @param base
 	 *            the base expression in the power expression
 	 * @param exponent
-	 *            a non-negative concrete integer exponent
+	 *            a non-negative concrete {@link NumberObject} exponent
 	 */
-	NumericExpression power(NumericExpression base, IntObject exponent);
+	NumericExpression power(NumericExpression base, NumberObject exponent);
 
 	/**
 	 * General power operator: e^b. Both e and b are numeric expressions.

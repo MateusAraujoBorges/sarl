@@ -1193,7 +1193,7 @@ public class Z3Translator {
 
 		result.append(translate((SymbolicExpression) expression.argument(0)));
 		result.add(" ");
-		if (exponent instanceof IntObject)
+		if (exponent instanceof NumberObject)
 			result.add(exponent.toString());
 		else {
 			result.append(translate((SymbolicExpression) exponent));

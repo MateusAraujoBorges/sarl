@@ -30,7 +30,8 @@ import org.junit.Test;
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
-import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
@@ -54,6 +55,7 @@ public class IdealPowerTest {
 	private ObjectFactory objectFactory;
 	private SymbolicTypeFactory typeFactory;
 	private IdealFactory idealFactory;
+	private NumberFactory numberFactory;
 	/**
 	 * int constant -1
 	 */
@@ -89,6 +91,7 @@ public class IdealPowerTest {
 		objectFactory = system.objectFactory();
 		typeFactory = system.typeFactory();
 		idealFactory = (IdealFactory) system.numericFactory();
+		numberFactory = idealFactory.numberFactory();
 		intNegOne = idealFactory.intConstant(-1);
 		intZero = idealFactory.zeroInt();
 		intOne = idealFactory.intConstant(1);
@@ -112,12 +115,12 @@ public class IdealPowerTest {
 	 * @param a
 	 *            - NumericExpression
 	 * @param b
-	 *            - IntObject
+	 *            - NumberObject
 	 * 
 	 * @return the value of an expression consisting of numeric expression as
 	 *         base and IntObject as power
 	 */
-	public NumericExpression power(NumericExpression a, IntObject b) {
+	public NumericExpression power(NumericExpression a, NumberObject b) {
 		NumericExpression ne = idealFactory.power(a, b);
 		return ne;
 	}
@@ -175,8 +178,8 @@ public class IdealPowerTest {
 	@Test
 	public void bigPower() {
 		int exponent = 100;
-		IntObject n = objectFactory.intObject(exponent);
-		IntObject m = objectFactory.intObject(exponent - 1);
+		NumberObject n = objectFactory.numberObject(numberFactory.integer(exponent));
+		NumberObject m = objectFactory.numberObject(numberFactory.integer(exponent - 1));
 		NumericExpression xpy = idealFactory.add(x, y);
 		NumericExpression xpyen = power(xpy, n);
 		NumericExpression xpyem = power(xpy, m);

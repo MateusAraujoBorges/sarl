@@ -76,11 +76,12 @@ public class AffineFactory {
 	 */
 	public AffineExpression affine(Polynomial poly) {
 		SymbolicType type = poly.type();
-		int degree = poly.polynomialDegree();
+		NumberFactory nf = idealFactory.numberFactory();
+		IntegerNumber degree = poly.polynomialDegree(nf);
 
 		// any instance of Polynomial has nonnegative degree.
 		// The termmap must be non-empty.
-		if (degree == 0) { // fp is constant
+		if (degree.isZero()) { // fp is constant
 			return affine(null, type.isInteger() ? ZERO_INT : ZERO_REAL,
 					((Constant) poly).number());
 		} else {

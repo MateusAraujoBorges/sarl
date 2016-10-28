@@ -19,6 +19,7 @@
 package edu.udel.cis.vsl.sarl.ideal.IF;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 
 /**
  * A {@link RationalExpression} is the quotient of two {@link Monomial}s of real
@@ -76,8 +77,8 @@ public interface RationalExpression extends NumericExpression {
 
 	/**
 	 * Computes an expression equivalent to raising this expression to the
-	 * <code>exponent</code> power. In this case the exponent is a concrete
-	 * positive Java int.
+	 * <code>exponent</code> power. In this case the exponent is an
+	 * {@link IntegerNumber}.
 	 * 
 	 * @param factory
 	 *            the ideal factory responsible for this expression
@@ -87,5 +88,5 @@ public interface RationalExpression extends NumericExpression {
 	 * @return an expression equivalent to raising this expression to the
 	 *         <code>exponent</code> power
 	 */
-	RationalExpression powerInt(IdealFactory factory, int exponent);
+	RationalExpression powerInt(IdealFactory factory, IntegerNumber exponent);
 }

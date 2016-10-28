@@ -18,6 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
@@ -97,8 +98,10 @@ public class NTRationalExpression extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public RationalExpression powerInt(IdealFactory factory, int n) {
-		return factory.ntRationalExpression(numerator().powerInt(factory, n),
-				denominator().powerInt(factory, n));
+	public RationalExpression powerInt(IdealFactory factory,
+			IntegerNumber exponent) {
+		return factory.ntRationalExpression(
+				numerator().powerInt(factory, exponent),
+				denominator().powerInt(factory, exponent));
 	}
 }

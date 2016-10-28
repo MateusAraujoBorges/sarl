@@ -17,6 +17,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
@@ -199,8 +200,8 @@ public class MakeTest {
 		assertEquals((universe.make(SymbolicOperator.OR, Bool, Args_OR1)),
 				resultTrue);
 		// case POWER:
-		IntObject I1;
-		I1 = universe.intObject(1);
+		NumberObject I1;
+		I1 = universe.numberObject(universe.numberFactory().oneInteger());
 		SymbolicObject[] Args_Power1 = { one, one };
 		SymbolicObject[] Args_Power2 = { one, I1 };
 		SymbolicExpression result = universe.make(SymbolicOperator.POWER,

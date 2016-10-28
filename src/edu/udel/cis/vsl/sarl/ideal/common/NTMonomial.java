@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
@@ -125,8 +127,8 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int monomialDegree() {
-		return monic().monomialDegree();
+	public IntegerNumber monomialDegree(NumberFactory factory) {
+		return monic().monomialDegree(factory);
 	}
 
 	@Override
@@ -147,8 +149,8 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int totalDegree() {
-		return monic().totalDegree();
+	public IntegerNumber totalDegree(NumberFactory factory) {
+		return monic().totalDegree(factory);
 	}
 
 	@Override
@@ -197,14 +199,15 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Monomial powerInt(IdealFactory factory, int exponent) {
+	public Monomial powerInt(IdealFactory factory, IntegerNumber exponent) {
 		return factory.monomial(monomialConstant().powerInt(factory, exponent),
 				monic().powerInt(factory, exponent));
 	}
 
 	@Override
-	public int maxDegreeOf(Primitive primitive) {
-		return monic().maxDegreeOf(primitive);
+	public IntegerNumber maxDegreeOf(NumberFactory factory,
+			Primitive primitive) {
+		return monic().maxDegreeOf(factory, primitive);
 	}
 
 }

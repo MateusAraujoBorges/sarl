@@ -28,7 +28,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
-import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
@@ -143,7 +142,7 @@ public class CommonNumericExpressionFactory
 					.expression(
 							SymbolicOperator.CAST, oldType.isInteger()
 									? herbrandIntegerType : herbrandRealType,
-					arg);
+							arg);
 		}
 	}
 
@@ -535,12 +534,13 @@ public class CommonNumericExpressionFactory
 	 * 
 	 * @param base
 	 * @param exponent
-	 *            exponent is an IntObject
+	 *            exponent is an {@link NumberObject}
 	 * 
 	 * @return NumericExpression
 	 */
 	@Override
-	public NumericExpression power(NumericExpression base, IntObject exponent) {
+	public NumericExpression power(NumericExpression base,
+			NumberObject exponent) {
 		SymbolicType type = base.type();
 
 		if (type.isIdeal())

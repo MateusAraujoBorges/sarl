@@ -20,6 +20,8 @@ package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.io.PrintStream;
 
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
@@ -65,13 +67,13 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	 * Cached value returned by method {@link #degree()}. Initial value is -1,
 	 * indicating the method has not yet been called.
 	 */
-	private int monomialDegree = -1;
+	private IntegerNumber monomialDegree = null;
 
 	/**
 	 * Cached value returned by method {@link #totalDegree()}. Initial value is
 	 * -1, indicating the method has not yet been called.
 	 */
-	private int totalDegree = -1;
+	private IntegerNumber totalDegree = null;
 
 	/**
 	 * Cached result for method {@link #hasNontrivialExpansion(IdealFactory)}.
@@ -135,10 +137,11 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 				expansion = termMap(factory);
 			} else {
 				PrimitivePower[] factors = monicFactors();
-				int totalDegree, numFactors;
+				IntegerNumber totalDegree;
+				int numFactors;
 
 				if (debug) {
-					totalDegree = totalDegree();
+					totalDegree = totalDegree(factory.numberFactory());
 					numFactors = factors.length;
 					out.println("Starting: expanding monic of total degree "
 							+ totalDegree + " with " + numFactors + " factors");
@@ -163,21 +166,23 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	}
 
 	@Override
-	public int monomialDegree() {
-		if (monomialDegree < 0) {
-			monomialDegree = 0;
+	public IntegerNumber monomialDegree(NumberFactory factory) {
+		if (monomialDegree == null) {
+			monomialDegree = factory.zeroInteger();
 			for (PrimitivePower expr : monicFactors())
-				monomialDegree += expr.monomialDegree();
+				monomialDegree = factory.add(monomialDegree,
+						expr.monomialDegree(factory));
 		}
 		return monomialDegree;
 	}
 
 	@Override
-	public int totalDegree() {
-		if (totalDegree < 0) {
-			totalDegree = 0;
+	public IntegerNumber totalDegree(NumberFactory factory) {
+		if (totalDegree == null) {
+			totalDegree = factory.zeroInteger();
 			for (PrimitivePower expr : monicFactors())
-				totalDegree += expr.totalDegree();
+				totalDegree = factory.add(totalDegree,
+						expr.totalDegree(factory));
 		}
 		return totalDegree;
 	}
@@ -270,7 +275,7 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	}
 
 	@Override
-	public Monic powerInt(IdealFactory factory, int exponent) {
+	public Monic powerInt(IdealFactory factory, IntegerNumber exponent) {
 		PrimitivePower[] factors = monicFactors();
 		int n = factors.length;
 		PrimitivePower[] newFactors = new PrimitivePower[n];
@@ -282,11 +287,12 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	}
 
 	@Override
-	public int maxDegreeOf(Primitive primitive) {
-		int result = 0;
+	public IntegerNumber maxDegreeOf(NumberFactory factory,
+			Primitive primitive) {
+		IntegerNumber result = factory.zeroInteger();
 
 		for (PrimitivePower pp : monicFactors()) {
-			result += pp.maxDegreeOf(primitive);
+			result = factory.add(result, pp.maxDegreeOf(factory, primitive));
 		}
 		return result;
 	}

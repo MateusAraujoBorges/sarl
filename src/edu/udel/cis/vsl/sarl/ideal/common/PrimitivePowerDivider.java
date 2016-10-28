@@ -18,11 +18,11 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
-import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.util.BinaryOperator;
 
 /**
@@ -38,24 +38,24 @@ class PrimitivePowerDivider implements BinaryOperator<PrimitivePower> {
 
 	private IdealFactory idealFactory;
 
-	private ObjectFactory objectFactory;
-
 	public PrimitivePowerDivider(IdealFactory idealFactory) {
 		this.idealFactory = idealFactory;
-		this.objectFactory = idealFactory.objectFactory();
 	}
 
 	@Override
 	public PrimitivePower apply(PrimitivePower arg0, PrimitivePower arg1) {
-		int exp0 = arg0.primitivePowerExponent(idealFactory).getInt(),
-				exp1 = arg1.primitivePowerExponent(idealFactory).getInt();
-		int difference = exp0 - exp1;
+		IntegerNumber exp0 = (IntegerNumber) arg0
+				.primitivePowerExponent(idealFactory).getNumber(),
+				exp1 = (IntegerNumber) arg1.primitivePowerExponent(idealFactory)
+						.getNumber();
+		IntegerNumber difference = idealFactory.numberFactory().subtract(exp0,
+				exp1);
 
-		if (difference == 0)
+		if (difference.isZero())
 			return null;
 		else
 			return idealFactory.primitivePower(arg0.primitive(idealFactory),
-					objectFactory.intObject(difference));
+					idealFactory.objectFactory().numberObject(difference));
 
 	}
 }

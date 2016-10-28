@@ -27,7 +27,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
-import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
@@ -102,7 +101,7 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 					.canonic(typeFactory.functionType(
 							typeFactory.sequence(new SymbolicType[] {
 									herbrandRealType, herbrandRealType }),
-					herbrandRealType));
+							herbrandRealType));
 		return realBinaryOp;
 	}
 
@@ -122,7 +121,7 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 							typeFactory.functionType(
 									typeFactory.sequence(new SymbolicType[] {
 											herbrandRealType }),
-					herbrandRealType));
+									herbrandRealType));
 		return realUnaryOp;
 	}
 
@@ -133,7 +132,7 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 							typeFactory.functionType(
 									typeFactory.sequence(new SymbolicType[] {
 											herbrandIntegerType }),
-					herbrandIntegerType));
+									herbrandIntegerType));
 		return integerUnaryOp;
 	}
 
@@ -143,7 +142,7 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 					.canonic(typeFactory.functionType(
 							typeFactory.sequence(new SymbolicType[] {
 									herbrandRealType, herbrandRealType }),
-					booleanType));
+							booleanType));
 		return realBinaryPred;
 	}
 
@@ -463,19 +462,17 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 	}
 
 	@Override
-	public NumericExpression power(NumericExpression base, IntObject exponent) {
+	public NumericExpression power(NumericExpression base,
+			NumberObject exponent) {
 		SymbolicType type = base.type();
 
 		if (type.isInteger())
 			return expression(SymbolicOperator.APPLY, type, powerInteger(),
-					sequence(base, number(objectFactory.numberObject(
-							numberFactory.integer(exponent.getInt())))));
+					sequence(base, number(exponent)));
 		else
 			return expression(SymbolicOperator.APPLY, type, powerReal(),
-					sequence(base,
-							number(objectFactory.numberObject(
-									numberFactory.rational(numberFactory
-											.integer(exponent.getInt()))))));
+					sequence(base, number(objectFactory.numberObject(
+							numberFactory.rational(exponent.getNumber())))));
 	}
 
 	@Override

@@ -18,7 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.IF;
 
-import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 
 /**
  * A power of a {@link Primitive} expression, x<sup>i</sup>, where x is a
@@ -41,16 +42,16 @@ public interface PrimitivePower extends Monic {
 
 	/**
 	 * Returns the exponent in this primitive power expression, which is a
-	 * positive integer represented as an {@link IntObject}.
+	 * positive integer represented as an {@link NumberObject}.
 	 * 
 	 * @param factory
 	 *            the ideal factory owning this expression
 	 * 
 	 * @return the exponent of this expression
 	 */
-	IntObject primitivePowerExponent(IdealFactory factory);
+	NumberObject primitivePowerExponent(IdealFactory factory);
 
 	@Override
-	PrimitivePower powerInt(IdealFactory factory, int exponent);
+	PrimitivePower powerInt(IdealFactory factory, IntegerNumber exponent);
 
 }

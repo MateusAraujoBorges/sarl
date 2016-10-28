@@ -18,6 +18,9 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.IF;
 
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+
 /**
  * A {@link Monomial} is the product of a constant and a {@link Monic}. The
  * constant is called the "constant factor" of the monomial; the monic is called
@@ -51,9 +54,12 @@ public interface Monomial extends RationalExpression {
 	 * degree 1. For example, (X^2+Y^2)^3*Z^2 has monomial degree 5: it has two
 	 * factors, one of degree 3 and one of degree 2.
 	 * 
-	 * @return the monomial degree with NO expansion
+	 * @param factory
+	 *            the {@link NumberFactory} used for this operation
+	 * @return The {@link IntegerNumber} represents the monomial degree with NO
+	 *         expansion
 	 */
-	int monomialDegree();
+	IntegerNumber monomialDegree(NumberFactory factory);
 
 	/**
 	 * The degree of this monomial if it were fully expanded to a polynomial in
@@ -61,10 +67,12 @@ public interface Monomial extends RationalExpression {
 	 * or quotient of expressions. For example, (X^2+Y^2)^3*Z^2 has total degree
 	 * 8.
 	 * 
-	 * @return total degree of this monomial after full expansion to a
-	 *         polynomial
+	 * @param factory
+	 *            the {@link NumberFactory} used for this operation
+	 * @return The {@link IntegerNumber} represents total degree of this
+	 *         monomial after full expansion to a polynomial
 	 */
-	int totalDegree();
+	IntegerNumber totalDegree(NumberFactory factory);
 
 	/**
 	 * Returns the expansion of this monomial.
@@ -153,18 +161,21 @@ public interface Monomial extends RationalExpression {
 	Monomial[] lower(IdealFactory factory);
 
 	@Override
-	Monomial powerInt(IdealFactory factory, int exponent);
+	Monomial powerInt(IdealFactory factory, IntegerNumber exponent);
 
 	/**
 	 * Computes the maximum degree to which <code>primitive</code> occurs in
 	 * this {@link Monomial}. For example the primitive X occurs with max degree
 	 * 11 in XY(X+Z)^10.
 	 * 
+	 * @param factory
+	 *            the {@link NumberFactory} used for this operation
 	 * @param primitive
 	 *            the {@link Primitive} which must have same type as this; it is
 	 *            possible the primitive does not occur at all in this, in which
 	 *            case the result is 0
-	 * @return the maximum degree to which <code>primitive</code> occurs in this
+	 * @return The {@link IntegerNumber} represents the maximum degree to which
+	 *         <code>primitive</code> occurs in this
 	 */
-	int maxDegreeOf(Primitive primitive);
+	IntegerNumber maxDegreeOf(NumberFactory factory, Primitive primitive);
 }

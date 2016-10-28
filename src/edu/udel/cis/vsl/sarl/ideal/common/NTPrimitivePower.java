@@ -20,8 +20,9 @@ package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.io.PrintStream;
 
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
-import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
@@ -32,6 +33,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
+import edu.udel.cis.vsl.sarl.number.real.RealNumberFactory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
@@ -76,12 +78,13 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 	 *            a non-<code>null</code> instance of {@link Primitive}
 	 * @param exponent
 	 *            an integer greater than or equal to 2 represented as an
-	 *            {@link IntObject}
+	 *            {@link NumberObject}
 	 */
-	protected NTPrimitivePower(Primitive primitive, IntObject exponent) {
+	protected NTPrimitivePower(Primitive primitive, NumberObject exponent) {
 		super(SymbolicOperator.POWER, primitive.type(),
 				new SymbolicObject[] { primitive, exponent });
-		assert exponent.getInt() >= 2;
+		assert exponent.getNumber()
+				.numericalCompareTo((new RealNumberFactory()).integer(2)) >= 0;
 	}
 
 	/**
@@ -114,7 +117,7 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public IntObject primitivePowerExponent(IdealFactory factory) {
+	public NumberObject primitivePowerExponent(IdealFactory factory) {
 		return exponent();
 	}
 
@@ -123,8 +126,8 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 	 * 
 	 * @return the exponent
 	 */
-	public IntObject exponent() {
-		return (IntObject) argument(1);
+	public NumberObject exponent() {
+		return (NumberObject) argument(1);
 	}
 
 	@Override
@@ -153,11 +156,11 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 			if (!hasNontrivialExpansion(factory)) {
 				expansion = termMap(factory);
 			} else {
-				IntObject exponent = exponent();
-				int totalDegree;
+				NumberObject exponent = exponent();
+				IntegerNumber totalDegree;
 
 				if (debug) {
-					totalDegree = totalDegree();
+					totalDegree = totalDegree(factory.numberFactory());
 					out.println(
 							"Starting: expanding primitive power of total degree "
 									+ totalDegree + " with exponent "
@@ -190,8 +193,8 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int monomialDegree() {
-		return exponent().getInt();
+	public IntegerNumber monomialDegree(NumberFactory factory) {
+		return (IntegerNumber) exponent().getNumber();
 	}
 
 	@Override
@@ -213,8 +216,9 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 	 * </p>
 	 */
 	@Override
-	public int totalDegree() {
-		return exponent().getInt() * primitive().totalDegree();
+	public IntegerNumber totalDegree(NumberFactory factory) {
+		return (IntegerNumber) factory.multiply(exponent().getNumber(),
+				primitive().totalDegree(factory));
 	}
 
 	@Override
@@ -259,15 +263,15 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 	@Override
 	public RationalExpression powerRational(IdealFactory factory,
 			RationalExpression exponent) {
-		int n = exponent().getInt();
 		RationalExpression nRat;
 
 		if (exponent.type().isInteger()) {
-			nRat = factory.intConstant(n);
+			nRat = factory.constant(exponent().getNumber());
 		} else {
 			NumberFactory nf = factory.numberFactory();
 
-			nRat = factory.constant(nf.integerToRational(nf.integer(n)));
+			nRat = factory.constant(nf
+					.integerToRational((IntegerNumber) exponent().getNumber()));
 		}
 
 		RationalExpression newExponent = factory.multiply(nRat, exponent);
@@ -276,13 +280,19 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public PrimitivePower powerInt(IdealFactory factory, int exponent) {
-		return factory.primitivePower(primitive(), factory.objectFactory()
-				.intObject(exponent().getInt() * exponent));
+	public PrimitivePower powerInt(IdealFactory factory,
+			IntegerNumber exponent) {
+		IntegerNumber expNum = (IntegerNumber) factory.numberFactory()
+				.multiply(exponent().getNumber(), exponent);
+
+		return factory.primitivePower(primitive(),
+				factory.objectFactory().numberObject(expNum));
 	}
 
 	@Override
-	public int maxDegreeOf(Primitive primitive) {
-		return exponent().getInt() * primitive().maxDegreeOf(primitive);
+	public IntegerNumber maxDegreeOf(NumberFactory factory,
+			Primitive primitive) {
+		return (IntegerNumber) factory.multiply(exponent().getNumber(),
+				primitive().maxDegreeOf(factory, primitive));
 	}
 }

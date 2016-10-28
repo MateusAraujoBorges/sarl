@@ -19,6 +19,7 @@
 package edu.udel.cis.vsl.sarl.ideal.IF;
 
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 
@@ -48,6 +49,6 @@ public interface Constant extends Monomial {
 	Number number();
 
 	@Override
-	Constant powerInt(IdealFactory factory, int exponent);
+	Constant powerInt(IdealFactory factory, IntegerNumber exponent);
 
 }

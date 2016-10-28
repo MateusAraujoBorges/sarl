@@ -27,6 +27,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
@@ -345,11 +346,12 @@ public interface IdealFactory extends NumericExpressionFactory {
 	 *            the base, a non-<code>null</code> numeric primitive of integer
 	 *            or real type
 	 * @param exponent
-	 *            the exponent, which must be a non-negative integer
+	 *            the exponent, is a {@link NumberObject} which must represent a
+	 *            non-negative integer
 	 * @return a {@link PrimitivePower} expression representing raising
 	 *         <code>primitive</code> to the power <code>exponent</code>
 	 */
-	PrimitivePower primitivePower(Primitive primitive, IntObject exponent);
+	PrimitivePower primitivePower(Primitive primitive, NumberObject exponent);
 
 	/**
 	 * <p>
@@ -588,21 +590,22 @@ public interface IdealFactory extends NumericExpressionFactory {
 	/**
 	 * Raises a term map to the given power, returning the result as a term map.
 	 * This is the same as multiplying the term map with itself
-	 * <code>exponent</code> times. The <code>exponent</code> is a non-negative
-	 * integer. The type must be provided in case <code>map</code> is empty.
-	 * Otherwise, the <code>map</code> must have the type <code>type</code>.
+	 * <code>exponent</code> times. The <code>exponent</code> is a
+	 * {@link NumberObject} representing a non-negative integer. The type must
+	 * be provided in case <code>map</code> is empty. Otherwise, the
+	 * <code>map</code> must have the type <code>type</code>.
 	 * 
 	 * @param type
 	 *            the type of the given <code>map</code> and result
 	 * @param map
 	 *            a non-<code>null</code> term map
 	 * @param exponent
-	 *            a non-negative integer
+	 *            a {@link NumberObject} representing a non-negative integer
 	 * @return the result of multiplying <code>map</code> with itself
 	 *         <code>exponent</code> times
 	 */
 	Monomial[] powerTermMap(SymbolicType type, Monomial[] map,
-			IntObject exponent);
+			NumberObject exponent);
 
 	/**
 	 * <p>

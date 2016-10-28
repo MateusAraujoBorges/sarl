@@ -102,8 +102,8 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int monomialDegree() {
-		return isZero() ? -1 : 0;
+	public IntegerNumber monomialDegree(NumberFactory factory) {
+		return isZero() ? factory.integer(-1) : factory.zeroInteger();
 	}
 
 	@Override
@@ -112,8 +112,8 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int totalDegree() {
-		return isZero() ? -1 : 0;
+	public IntegerNumber totalDegree(NumberFactory factory) {
+		return isZero() ? factory.integer(-1) : factory.zeroInteger();
 	}
 
 	@Override
@@ -173,30 +173,15 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public Constant powerInt(IdealFactory factory, int n) {
-		Number baseValue = number();
-		SymbolicType type = type();
-		Number result = factory.one(type).number();
-		NumberFactory nf = factory.numberFactory();
-
-		assert n >= 0;
-		if (n > 0) {
-			while (true) {
-				if (n % 2 != 0) {
-					result = nf.multiply(result, baseValue);
-					n -= 1;
-					if (n == 0)
-						break;
-				}
-				baseValue = nf.multiply(baseValue, baseValue);
-				n /= 2;
-			}
-		}
-		return factory.constant(result);
+	public Constant powerInt(IdealFactory factory, IntegerNumber n) {
+		assert n.signum() >= 0;
+		return factory.constant(
+				factory.numberFactory().power(number(), (IntegerNumber) n));
 	}
 
 	@Override
-	public int maxDegreeOf(Primitive primitive) {
-		return 0;
+	public IntegerNumber maxDegreeOf(NumberFactory factory,
+			Primitive primitive) {
+		return factory.zeroInteger();
 	}
 }

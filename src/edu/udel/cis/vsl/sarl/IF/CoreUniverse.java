@@ -1155,16 +1155,16 @@ public interface CoreUniverse {
 
 	/**
 	 * Concrete power operator: <i>e</i><sup><i>b</i></sup>, where <i>b</i> is a
-	 * concrete non-negative integer. This method might actually multiply out
-	 * the expression, i.e., it does not necessarily return an expression with
-	 * operator {@link SymbolicOperator#POWER}.
+	 * concrete non-negative {@link IntegerNumber}. This method might actually
+	 * multiply out the expression, i.e., it does not necessarily return an
+	 * expression with operator {@link SymbolicOperator#POWER}.
 	 * 
 	 * @param base
 	 *            the base expression in the power expression
 	 * @param exponent
 	 *            a non-negative concrete integer exponent
 	 */
-	NumericExpression power(NumericExpression base, IntObject exponent);
+	NumericExpression power(NumericExpression base, IntegerNumber exponent);
 
 	/**
 	 * Equivalent to <code>power(base, intObject(exponent))</code>.
@@ -1478,7 +1478,7 @@ public interface CoreUniverse {
 	 */
 	SymbolicExpression lambda(SymbolicConstant boundVariable,
 			SymbolicExpression expression);
-	
+
 	SymbolicExpression lambda(Collection<SymbolicConstant> boundVariables,
 			SymbolicExpression expression);
 
@@ -2135,7 +2135,7 @@ public interface CoreUniverse {
 	 *         an integer.
 	 */
 	NumericExpression bitvector2Integer(SymbolicExpression bitvector);
-	
+
 	/**
 	 * <p>
 	 * <b>Summary:</b>Set name (path) for prover unexpected error file.

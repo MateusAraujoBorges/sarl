@@ -18,6 +18,9 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.IF;
 
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+
 /**
  * A polynomial: an expression which is the sum of monomials. Use method
  * {@link #termMap(IdealFactory)} to get the term map for this
@@ -46,8 +49,10 @@ public interface Polynomial extends Primitive {
 	 * comprising this polynomial. Note that since this {@link Polynomial} is a
 	 * {@link Primitive}, its "monomial degree" is 1.
 	 * 
-	 * @return the degree of this polynomial, i.e., the maximum degree of its
-	 *         terms
+	 * @param factory
+	 *            the {@link NumberFactory} used for this operation
+	 * @return The {@link IntegerNumber} represents the degree of this
+	 *         polynomial, i.e., the maximum degree of its terms
 	 */
-	int polynomialDegree();
+	IntegerNumber polynomialDegree(NumberFactory factory);
 }

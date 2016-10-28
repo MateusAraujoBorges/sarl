@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
@@ -105,11 +106,12 @@ public class FastEvaluator {
 
 	class PowerNode extends EvalNode {
 		private EvalNode base;
-		private int exponent;
+		private IntegerNumber exponent;
 
-		PowerNode(NumericExpression expr, EvalNode base, int exponent) {
+		PowerNode(NumericExpression expr, EvalNode base,
+				IntegerNumber exponent) {
 			super(expr);
-			assert exponent >= 2;
+			assert exponent.numericalCompareTo(nf.integer(2)) >= 0;
 			this.base = base;
 			this.exponent = exponent;
 			base.addParent(this);
@@ -163,9 +165,9 @@ public class FastEvaluator {
 
 	private VarNode[] varNodes;
 
-	private int[] maxDegrees;
+	private IntegerNumber[] maxDegrees;
 
-	private int[] varVals;
+	private IntegerNumber[] varVals;
 
 	private Map<Monomial, EvalNode> exprMap = new HashMap<>();
 
@@ -177,17 +179,30 @@ public class FastEvaluator {
 		this.root = makeNode(monomial);
 		this.numVars = varNodeList.size();
 		this.varNodes = varNodeList.toArray(new VarNode[numVars]);
-		this.varVals = new int[numVars];
-		this.maxDegrees = new int[numVars];
+		this.varVals = new IntegerNumber[numVars];
+		this.maxDegrees = new IntegerNumber[numVars];
 		for (int i = 0; i < varNodes.length; i++) {
-			this.maxDegrees[i] = monomial
-					.maxDegreeOf((Primitive) varNodes[i].expr);
-			this.varVals[i] = 0;
+			this.maxDegrees[i] = monomial.maxDegreeOf(nf,
+					(Primitive) varNodes[i].expr);
+			this.varVals[i] = nf.zeroInteger();
 			this.varNodes[i]
 					.setValue(isInteger ? nf.zeroInteger() : nf.zeroRational());
 		}
 	}
 
+	private void print(IntegerNumber[] array) {
+		int n = array.length;
+
+		out.print("[");
+		for (int i = 0; i < n; i++) {
+			if (i > 0)
+				out.print(",");
+			out.print(array[i]);
+		}
+		out.print("]");
+	}
+
+	@SuppressWarnings("unused")
 	private void print(int[] array) {
 		int n = array.length;
 
@@ -237,7 +252,8 @@ public class FastEvaluator {
 			if (exp instanceof IntObject) {
 				EvalNode base = makeNode((Monomial) expr.argument(0));
 
-				result = new PowerNode(expr, base, ((IntObject) exp).getInt());
+				result = new PowerNode(expr, base,
+						(IntegerNumber) ((NumberObject) exp).getNumber());
 				break;
 			}
 			// flow right into default case...
@@ -252,18 +268,18 @@ public class FastEvaluator {
 
 	private boolean next() {
 		for (int i = 0; i < numVars; i++) {
-			int val = varVals[i];
+			IntegerNumber val = varVals[i];
 
-			if (val < maxDegrees[i]) {
-				val++;
+			if (val.numericalCompareTo(maxDegrees[i]) < 0) {
+				val = nf.increment(val);
 				varVals[i] = val;
-				varNodes[i].setValue(isInteger ? nf.integer(val)
-						: nf.integerToRational(nf.integer(val)));
+				varNodes[i]
+						.setValue(isInteger ? val : nf.integerToRational(val));
 				return true;
 			} else {
-				varVals[i] = 0;
-				varNodes[i].setValue(
-						isInteger ? nf.zeroInteger() : nf.zeroRational());
+				varVals[i] = nf.zeroInteger();
+				varNodes[i]
+						.setValue(isInteger ? val : nf.integerToRational(val));
 			}
 		}
 		return false;

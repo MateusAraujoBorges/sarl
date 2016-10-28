@@ -18,7 +18,9 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
-import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
@@ -84,8 +86,8 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public IntObject primitivePowerExponent(IdealFactory factory) {
-		return factory.oneIntObject();
+	public NumberObject primitivePowerExponent(IdealFactory factory) {
+		return factory.objectFactory().oneIntegerObj();
 	}
 
 	@Override
@@ -104,8 +106,8 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int monomialDegree() {
-		return 1;
+	public IntegerNumber monomialDegree(NumberFactory factory) {
+		return factory.oneInteger();
 	}
 
 	@Override
@@ -124,8 +126,8 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int totalDegree() {
-		return 1;
+	public IntegerNumber totalDegree(NumberFactory factory) {
+		return factory.oneInteger();
 	}
 
 	@Override
@@ -167,17 +169,19 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public PrimitivePower powerInt(IdealFactory factory, int exponent) {
+	public PrimitivePower powerInt(IdealFactory factory,
+			IntegerNumber exponent) {
 		// what if this is a POWER operation? no difference, simplifier
 		// will simplify if needed
 		return factory.primitivePower(this,
-				factory.objectFactory().intObject(exponent));
+				factory.objectFactory().numberObject(exponent));
 	}
 
 	@Override
-	public int maxDegreeOf(Primitive primitive) {
+	public IntegerNumber maxDegreeOf(NumberFactory factory,
+			Primitive primitive) {
 		if (this.equals(primitive))
-			return 1;
-		return 0;
+			return factory.oneInteger();
+		return factory.zeroInteger();
 	}
 }

@@ -21,6 +21,7 @@ package edu.udel.cis.vsl.sarl.ideal.common;
 import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
@@ -192,7 +193,10 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *         otherwise a positive integer
 	 */
 	private int comparePolynomials(Polynomial p1, Polynomial p2) {
-		int result = p2.polynomialDegree() - p1.polynomialDegree();
+		NumberFactory nf = idealFactory.numberFactory();
+		int result = nf
+				.subtract(p2.polynomialDegree(nf), p1.polynomialDegree(nf))
+				.signum();
 
 		if (result != 0)
 			return result;
@@ -234,7 +238,9 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *         otherwise a positive integer
 	 */
 	private int compareMonomials(Monomial m1, Monomial m2) {
-		int result = m2.monomialDegree() - m1.monomialDegree();
+		NumberFactory nf = idealFactory.numberFactory();
+		int result = nf.subtract(m2.monomialDegree(nf), m1.monomialDegree(nf))
+				.signum();
 
 		if (result != 0)
 			return result;
@@ -260,14 +266,16 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *         positive integer
 	 */
 	public int compareMonics(Monic m1, Monic m2) {
-		int degree1 = m1.monomialDegree();
-		int degree2 = m2.monomialDegree();
+		NumberFactory nf = idealFactory.numberFactory();
+		IntegerNumber degree1 = m1.monomialDegree(nf);
+		IntegerNumber degree2 = m2.monomialDegree(nf);
 
-		if (degree1 == 0) { // the only constant monic is 1
-			return degree2; // if 0, both are 1, else m2 has higher degree
+		if (degree1.isZero()) { // the only constant monic is 1
+			return degree2.signum();
+			// if 0, both are 1, else m2 has higher degree
 		}
 
-		int result = degree2 - degree1;
+		int result = nf.subtract(degree2, degree1).signum();
 
 		if (result != 0)
 			return result;
@@ -283,7 +291,8 @@ public class IdealComparator implements Comparator<NumericExpression> {
 					ppower2.primitive(idealFactory));
 			if (result != 0)
 				return result;
-			result = ppower2.monomialDegree() - ppower1.monomialDegree();
+			result = nf.subtract(ppower2.monomialDegree(nf),
+					ppower1.monomialDegree(nf)).signum();
 			if (result != 0)
 				return result;
 		}

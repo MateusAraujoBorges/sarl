@@ -962,13 +962,13 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		for (PrimitivePower pp : factors) {
 			Primitive primitive = pp.primitive(idf);
-			int outerExponent = pp.primitivePowerExponent(idf).getInt();
-			IntegerNumber signedOuterExponent = nf
-					.integer(positive ? outerExponent : -outerExponent);
-			RationalExpression realSignedOuterExponent = idf
-					.constant(isInteger ? signedOuterExponent
-							: nf.integerToRational(signedOuterExponent));
-			RationalExpression newExponent;
+			IntegerNumber outerExp = (IntegerNumber) pp
+					.primitivePowerExponent(idf).getNumber();
+			IntegerNumber signedOuterExp = positive ? outerExp
+					: nf.negate(outerExp);
+			RationalExpression realSignedOuterExp = idf.constant(isInteger
+					? signedOuterExp : nf.integerToRational(signedOuterExp));
+			RationalExpression newExp;
 			SymbolicObject baseObj = primitive.argument(0);
 			Primitive base;
 
@@ -977,40 +977,40 @@ public class IdealSimplifier extends CommonSimplifier {
 
 				if (primitive.operator() == SymbolicOperator.POWER) {
 					baseConst = (Constant) primitive.argument(0);
-					newExponent = idf.multiply(realSignedOuterExponent,
+					newExp = idf.multiply(realSignedOuterExp,
 							(RationalExpression) primitive.argument(1));
-					change = change || outerExponent != Math.abs(
-							idf.getConcreteExponent(newExponent).intValue());
+					change = change || outerExp.numericalCompareTo(
+							nf.abs(idf.getConcreteExponent(newExp))) != 0;
 
 					NumericExpression oldExponent = powerMap2.get(baseConst);
 
 					if (oldExponent == null) {
-						powerMap2.put(baseConst, newExponent);
+						powerMap2.put(baseConst, newExp);
 						powerMap.remove(primitive);
 					} else {
-						powerMap2.put(baseConst,
-								idf.add(oldExponent, newExponent));
+						powerMap2.put(baseConst, idf.add(oldExponent, newExp));
 						change = true;
 					}
 				}
 			} else {
 				if (primitive.operator() == SymbolicOperator.POWER) {
 					base = (Primitive) primitive.argument(0);
-					newExponent = idf.multiply(realSignedOuterExponent,
+
+					newExp = idf.multiply(realSignedOuterExp,
 							(RationalExpression) primitive.argument(1));
-					change = change || outerExponent != Math.abs(
-							idf.getConcreteExponent(newExponent).intValue());
+					change = change || outerExp.numericalCompareTo(
+							nf.abs(idf.getConcreteExponent(newExp))) != 0;
 				} else {
 					base = primitive;
-					newExponent = realSignedOuterExponent;
+					newExp = realSignedOuterExp;
 				}
 
 				NumericExpression oldExponent = powerMap.get(base);
 
 				if (oldExponent == null) {
-					powerMap.put(base, newExponent);
+					powerMap.put(base, newExp);
 				} else {
-					powerMap.put(base, idf.add(oldExponent, newExponent));
+					powerMap.put(base, idf.add(oldExponent, newExp));
 					change = true;
 				}
 			}
@@ -1965,11 +1965,12 @@ public class IdealSimplifier extends CommonSimplifier {
 	 */
 	@SuppressWarnings("unused")
 	private boolean is0byEvaluation(Polynomial poly) {
+		IdealFactory id = info.idealFactory;
 		Primitive primitive = findATruePrimitive(poly);
 
 		assert primitive != null;
 
-		int deg = poly.maxDegreeOf(primitive);
+		IntegerNumber deg = poly.maxDegreeOf(id.numberFactory(), primitive);
 
 		if (debugSimps) {
 			out.println("Max degree of " + primitive + " is " + deg);
@@ -1979,9 +1980,9 @@ public class IdealSimplifier extends CommonSimplifier {
 		BooleanExpression result = info.trueExpr;
 		SymbolicType type = poly.type();
 		boolean isInteger = type.isInteger();
-		IdealFactory id = info.idealFactory;
 
-		for (int i = 0; i <= deg; i++) {
+		for (int i = 0; id.numberFactory().integer(i)
+				.numericalCompareTo(deg) <= 0; i++) {
 			SymbolicExpression point = isInteger ? info.universe.integer(i)
 					: info.universe.rational(i);
 			Map<SymbolicExpression, SymbolicExpression> map = new SingletonMap<>(

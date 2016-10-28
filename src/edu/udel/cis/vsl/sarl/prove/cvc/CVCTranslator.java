@@ -18,6 +18,7 @@ import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.CharObject;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
@@ -62,15 +63,14 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * </p>
  * 
  * <p>
- * Since CVC currently has a bad performance on dealing with division and modulo.
- * During the translation, division and modulo will be transformed into a value and 
- * a set of constraints which are polynomials (Note that we only consider cases when
- * numerator is greater or equal to 0 and denominator is greater than 0. The rest
- * are dealt with in CIVL).
- * eg. a/b will be transformed into:
- * value: q (q is the result of a/b)
- * constraints: b * q + r = a && r >= 0 && r < b
- * value and constraint are encapsulated into an object {@link Translation}.
+ * Since CVC currently has a bad performance on dealing with division and
+ * modulo. During the translation, division and modulo will be transformed into
+ * a value and a set of constraints which are polynomials (Note that we only
+ * consider cases when numerator is greater or equal to 0 and denominator is
+ * greater than 0. The rest are dealt with in CIVL). eg. a/b will be transformed
+ * into: value: q (q is the result of a/b) constraints: b * q + r = a && r >= 0
+ * && r < b value and constraint are encapsulated into an object
+ * {@link Translation}.
  * </p>
  * 
  * @author siegel
@@ -329,10 +329,10 @@ public class CVCTranslator {
 			return res;
 		}
 	}
-	
+
 	/**
-	 * Merge the auxiliary variables and auxiliary constraints of those translations
-	 * in the list(translations) into the translation(t)
+	 * Merge the auxiliary variables and auxiliary constraints of those
+	 * translations in the list(translations) into the translation(t)
 	 * 
 	 * @param t
 	 * @param translations
@@ -341,13 +341,13 @@ public class CVCTranslator {
 			List<Translation> translations) {
 		t.setIsDivOrModulo(true);
 		int size = translations.size();
-		
+
 		for (int i = 0; i < size; i++) {
 			Translation tempTranslation = translations.get(i);
-			
+
 			t.getAuxVars().addAll(tempTranslation.getAuxVars());
 			FastList<String> auxConstraints = t.getAuxConstraints();
-			
+
 			auxConstraints.add("AND (");
 			auxConstraints.append(tempTranslation.getAuxConstraints().clone());
 			auxConstraints.add(")");
@@ -648,16 +648,19 @@ public class CVCTranslator {
 		Boolean involveDivOrModulo = false;
 		int argNum = expr.numArguments();
 		FastList<String> result = new FastList<>("LAMBDA (");
-		
-		for(int i=0; i<argNum-1; i++){
-			result.add(((SymbolicConstant) expr.argument(0)).name().getString()+":");
-			result.append(translateType(((SymbolicConstant) expr.argument(0)).type()));
+
+		for (int i = 0; i < argNum - 1; i++) {
+			result.add(((SymbolicConstant) expr.argument(0)).name().getString()
+					+ ":");
+			result.append(translateType(
+					((SymbolicConstant) expr.argument(0)).type()));
 			if (i != argNum - 2)
 				result.add(", ");
 		}
 		result.append(translateType(expr.type()));
 		result.add("):");
-		tempTranslation = translate((SymbolicExpression) expr.argument(argNum-1));
+		tempTranslation = translate(
+				(SymbolicExpression) expr.argument(argNum - 1));
 		if (tempTranslation.getIsDivOrModulo()) {
 			translations.add(tempTranslation);
 			involveDivOrModulo = true;
@@ -1017,25 +1020,26 @@ public class CVCTranslator {
 		res = new Translation(result);
 		return res;
 	}
-	
+
 	/**
-	 * Construct a exists expression using auxiliary variables and auxiliary constraints
-	 * from division and modulo.
+	 * Construct a exists expression using auxiliary variables and auxiliary
+	 * constraints from division and modulo.
 	 * 
 	 * @param currentResult
-	 * @param translations list of {@link Translation}s coming from division or modulo
+	 * @param translations
+	 *            list of {@link Translation}s coming from division or modulo
 	 * @return
 	 */
 	private FastList<String> postProcessForSideEffectsOfDivideOrModule(
 			FastList<String> currentResult, List<Translation> translations) {
 		String exist = SymbolicOperator.EXISTS.toString();
 		FastList<String> result = new FastList<>("(");
-		
+
 		result.add(exist + " (");
 		int translationNum = translations.size();
 		for (int i = 0; i < translationNum; i++) {
 			List<FastList<String>> auxVars = translations.get(i).getAuxVars();
-			
+
 			int auxVarNum = auxVars.size();
 			for (int j = 0; j < auxVarNum; j++) {
 				if (i != translationNum - 1 || j != auxVarNum - 1) {
@@ -1343,7 +1347,7 @@ public class CVCTranslator {
 		}
 		result.append(tempTranslation.getResult());
 		result.add(")^");
-		if (exponent instanceof IntObject)
+		if (exponent instanceof NumberObject)
 			result.add(exponent.toString());
 		else {
 			result.add("(");
@@ -1402,31 +1406,30 @@ public class CVCTranslator {
 		}
 		return translation;
 	}
-	
+
 	/**
 	 * 
 	 * <p>
-	 * Division or Modulo will be transformed into a struct consisting of the value of the expression,
-	 * auxiliary variables and auxiliary constraints.
+	 * Division or Modulo will be transformed into a struct consisting of the
+	 * value of the expression, auxiliary variables and auxiliary constraints.
 	 * </p>
 	 * 
 	 * <p>
-	 * eg. a/b will be transformed into:
-	 * value: q (q is the result of a/b)
+	 * eg. a/b will be transformed into: value: q (q is the result of a/b)
 	 * constraints: b * q + r = a && r >= 0 && r < b
 	 * </p>
 	 * 
-	 * @param arg1 
-	 * 			numerator
-	 * @param arg2 
-	 * 			denominator
-	 * @param operator 
-	 * 			either {@link SymbolicOperator.#INT_DIVIDE} or {@link SymbolicOperator.#MODULO}
+	 * @param arg1
+	 *            numerator
+	 * @param arg2
+	 *            denominator
+	 * @param operator
+	 *            either {@link SymbolicOperator.#INT_DIVIDE} or
+	 *            {@link SymbolicOperator.#MODULO}
 	 * 
-	 * @return A struct {@link Translation} encapsules 
-	 * 1. the value of the division or modulo
-	 * 2. the generated auxiliary variables
-	 * 3. the generated constraints
+	 * @return A struct {@link Translation} encapsules 1. the value of the
+	 *         division or modulo 2. the generated auxiliary variables 3. the
+	 *         generated constraints
 	 */
 	private Translation getIntDivInfo(NumericExpression arg1,
 			NumericExpression arg2, SymbolicOperator operator) {
@@ -1503,10 +1506,11 @@ public class CVCTranslator {
 	}
 
 	/**
-	 * @param operator 
-	 * 			the operator can be {@link SymbolicOperator.#DIVIDE} or 
-	 * 			{@link SymbolicOperator.#SUBTRACT} or {@link SymbolicOperator.#LESS_THAN}
-	 * 			or {@link SymbolicOperator.#LESS_THAN_EQUALS}
+	 * @param operator
+	 *            the operator can be {@link SymbolicOperator.#DIVIDE} or
+	 *            {@link SymbolicOperator.#SUBTRACT} or
+	 *            {@link SymbolicOperator.#LESS_THAN} or
+	 *            {@link SymbolicOperator.#LESS_THAN_EQUALS}
 	 * @param arg0
 	 * @param arg1
 	 * @return
@@ -1571,10 +1575,10 @@ public class CVCTranslator {
 	}
 
 	/**
-	 * @param operator 
-	 * 			The operator can be {@link SymbolicOperator.#MULTIPLY} or
-	 * 			{@link SymbolicOperator.#ADD} or {@link SymbolicOperator.#AND}
-	 * 			{@link SymbolicOperator.#OR}
+	 * @param operator
+	 *            The operator can be {@link SymbolicOperator.#MULTIPLY} or
+	 *            {@link SymbolicOperator.#ADD} or {@link SymbolicOperator.#AND}
+	 *            {@link SymbolicOperator.#OR}
 	 * @param defaultValue
 	 * @param expression
 	 * @return

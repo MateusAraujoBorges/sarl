@@ -18,7 +18,9 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
@@ -129,8 +131,8 @@ public class One extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int monomialDegree() {
-		return 0;
+	public IntegerNumber monomialDegree(NumberFactory factory) {
+		return factory.zeroInteger();
 	}
 
 	@Override
@@ -139,8 +141,8 @@ public class One extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public int totalDegree() {
-		return 0;
+	public IntegerNumber totalDegree(NumberFactory factory) {
+		return factory.zeroInteger();
 	}
 
 	@Override
@@ -172,13 +174,13 @@ public class One extends HomogeneousExpression<SymbolicObject>
 	}
 
 	@Override
-	public One powerInt(IdealFactory factory, int exponent) {
+	public One powerInt(IdealFactory factory, IntegerNumber exponent) {
 		return this;
 	}
 
 	@Override
-	public int maxDegreeOf(Primitive primitive) {
-		return 0;
+	public IntegerNumber maxDegreeOf(NumberFactory factory,
+			Primitive primitive) {
+		return factory.zeroInteger();
 	}
-
 }

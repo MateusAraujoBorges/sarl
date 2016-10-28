@@ -209,6 +209,11 @@ public class CommonIdealFactory implements IdealFactory {
 	private PrimitivePowerMultiplier primitivePowerMultiplier;
 
 	/**
+	 * A {@link IntegerNumber} of 2, which is used for 'n % 2' operation.
+	 */
+	private IntegerNumber intNumTwo;
+
+	/**
 	 * The monic factory, a key set factory in which the values are
 	 * {@link PrimitivePower}s and the key is obtained by taking the
 	 * {@link Primitive} base of the {@link PrimitivePower}.
@@ -305,6 +310,7 @@ public class CommonIdealFactory implements IdealFactory {
 		this.primitivePowerMultiplier = new PrimitivePowerMultiplier(this);
 		this.monicFactory = new MonicFactory(primitiveComparator);
 		this.polynomialFactory = new PolynomialFactory(monicComparator);
+		this.intNumTwo = numberFactory.integer(2);
 	}
 
 	// ************************** Private Methods *************************
@@ -446,12 +452,13 @@ public class CommonIdealFactory implements IdealFactory {
 	 *            a non-<code>null</code> instance of {@link Primitive} which
 	 *            will be the base in the new primitive power expression
 	 * @param exponent
-	 *            the exponent in the new expression, which must be an integer
-	 *            greater than or equal to 2
+	 *            the exponent in the new expression, which must be a
+	 *            {@link NumberObject} representing an integer which is greater
+	 *            than or equal to 2
 	 * @return the non-trivial primitive power as specified
 	 */
 	private NTPrimitivePower ntPrimitivePower(Primitive primitive,
-			IntObject exponent) {
+			NumberObject exponent) {
 		return new NTPrimitivePower(primitive, exponent);
 	}
 
@@ -512,20 +519,26 @@ public class CommonIdealFactory implements IdealFactory {
 			PrimitivePower ppower2 = monicFactory.get(set2, base);
 
 			if (ppower2 != null) {
-				IntObject exponent1 = ppower1.primitivePowerExponent(this);
-				IntObject exponent2 = ppower2.primitivePowerExponent(this);
-				IntObject minExponent = exponent1.minWith(exponent2);
-				IntObject newExponent1 = exponent1.minus(minExponent);
-				IntObject newExponent2 = exponent2.minus(minExponent);
+				NumberObject exponent1 = ppower1.primitivePowerExponent(this);
+				NumberObject exponent2 = ppower2.primitivePowerExponent(this);
+				Number exp1Num = exponent1.getNumber();
+				Number exp2Num = exponent2.getNumber();
+				NumberObject minExponent = exp1Num
+						.numericalCompareTo(exp2Num) <= 0 ? exponent1
+								: exponent2;
+				NumberObject newExponent1 = objectFactory
+						.numberObject(numberFactory.subtract(exp1Num, exp2Num));
+				NumberObject newExponent2 = objectFactory
+						.numberObject(numberFactory.subtract(exp2Num, exp1Num));
 
 				common = monicFactory.put(common,
 						primitivePower(base, minExponent));
-				if (newExponent1.isPositive())
+				if (newExponent1.getNumber().signum() > 0)
 					newSet1 = monicFactory.put(newSet1,
 							primitivePower(base, newExponent1));
 				else
 					newSet1 = monicFactory.removeKey(newSet1, base);
-				if (newExponent2.isPositive())
+				if (newExponent2.getNumber().signum() > 0)
 					newSet2 = monicFactory.put(newSet2,
 							primitivePower(base, newExponent2));
 				else
@@ -557,37 +570,42 @@ public class CommonIdealFactory implements IdealFactory {
 			factorSets[i] = monics[i].monicFactors(this);
 		for (PrimitivePower pp0 : factorSets[0]) {
 			Primitive primitive = pp0.primitive(this);
-			int min = pp0.primitivePowerExponent(this).getInt();
+			IntegerNumber min = (IntegerNumber) pp0.primitivePowerExponent(this)
+					.getNumber();
 
-			assert min >= 1;
+			assert min.numericalCompareTo(numberFactory.oneInteger()) >= 0;
 			for (int i = 1; i < length; i++) {
 				PrimitivePower pp1 = monicFactory.get(factorSets[i], primitive);
 
-				if (pp1 == null) { // same as exponent 0
-					min = 0;
+				if (pp1 == null) {
+					min = numberFactory.zeroInteger();
 					break;
 				}
 
-				int exponent = pp1.primitivePowerExponent(this).getInt();
+				IntegerNumber exponent = (IntegerNumber) pp1
+						.primitivePowerExponent(this).getNumber();
 
-				if (exponent < min)
+				if (exponent.numericalCompareTo(min) < 0)
 					min = exponent;
 			}
-			if (min == 0)
+			if (min.isZero())
 				continue;
 			common = monicFactory.put(common,
-					primitivePower(primitive, objectFactory.intObject(min)));
+					primitivePower(primitive, objectFactory.numberObject(min)));
 			for (int i = 0; i < length; i++) {
 				PrimitivePower[] set = factorSets[i];
 				PrimitivePower pp1 = monicFactory.get(set, primitive);
-				int exponent = pp1.primitivePowerExponent(this).getInt();
-				int newExponent = exponent - min;
+				IntegerNumber exponent = (IntegerNumber) pp1
+						.primitivePowerExponent(this).getNumber();
+				IntegerNumber newExponent = numberFactory.subtract(exponent,
+						min);
 
-				if (newExponent == 0)
+				if (newExponent.isZero())
 					factorSets[i] = monicFactory.removeKey(set, primitive);
 				else
-					factorSets[i] = monicFactory.put(set, primitivePower(
-							primitive, objectFactory.intObject(newExponent)));
+					factorSets[i] = monicFactory.put(set,
+							primitivePower(primitive,
+									objectFactory.numberObject(newExponent)));
 			}
 			for (int i = 0; i < length; i++)
 				monics[i] = monic(type, factorSets[i]);
@@ -872,9 +890,10 @@ public class CommonIdealFactory implements IdealFactory {
 
 		for (PrimitivePower primitivePower : factors) {
 			Primitive primitive = primitivePower.primitive(this);
-			int exponent = primitivePower.primitivePowerExponent(this).getInt();
+			IntegerNumber exponent = (IntegerNumber) primitivePower
+					.primitivePowerExponent(this).getNumber();
 
-			if (exponent % 2 == 0)
+			if (numberFactory.mod(exponent, intNumTwo).isZero())
 				nonzeros.add(primitive);
 			else
 				positives.add(primitive);
@@ -965,12 +984,13 @@ public class CommonIdealFactory implements IdealFactory {
 		assert signum != 0;
 		for (PrimitivePower primitivePower : factors) {
 			Primitive p = primitivePower.primitive(this);
-			int exponent = primitivePower.primitivePowerExponent(this).getInt();
+			IntegerNumber exponent = (IntegerNumber) primitivePower
+					.primitivePowerExponent(this).getNumber();
 
-			if (exponent % 2 != 0)
-				odds.add(p);
-			else
+			if (numberFactory.mod(exponent, intNumTwo).isZero())
 				evens.add(p);
+			else
+				odds.add(p);
 		}
 
 		int numOdds = odds.size();
@@ -1366,7 +1386,7 @@ public class CommonIdealFactory implements IdealFactory {
 			IntegerNumber exponent) {
 		// nothing can be done if exponent is larger than max int because
 		// the canonical form uses Java ints for exponents...
-		return ((RationalExpression) base).powerInt(this, exponent.intValue());
+		return ((RationalExpression) base).powerInt(this, exponent);
 	}
 
 	/**
@@ -1473,7 +1493,7 @@ public class CommonIdealFactory implements IdealFactory {
 			SymbolicObject arg1 = numericExpression.argument(1);
 
 			if (arg1.symbolicObjectKind() == SymbolicObjectKind.INT)
-				return power(realBase, (IntObject) arg1);
+				return power(realBase, ((NumberObject) arg1));
 			else
 				return power(realBase, castToReal((NumericExpression) arg1));
 		}
@@ -1694,13 +1714,14 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	@Override
-	public NumericExpression power(NumericExpression base, IntObject exponent) {
-		int n = exponent.getInt();
+	public NumericExpression power(NumericExpression base,
+			NumberObject exponent) {
+		IntegerNumber n = (IntegerNumber) exponent.getNumber();
 
-		assert n >= 0;
-		if (n == 0)
+		assert n.signum() >= 0;
+		if (n.isZero())
 			return one(base.type());
-		if (n == 1)
+		if (n.isOne())
 			return base;
 		return ((RationalExpression) base).powerInt(this, n);
 	}
@@ -2017,7 +2038,7 @@ public class CommonIdealFactory implements IdealFactory {
 
 	@Override
 	public PrimitivePower primitivePower(Primitive primitive,
-			IntObject exponent) {
+			NumberObject exponent) {
 		if (exponent.isZero())
 			throw new IllegalArgumentException(
 					"Exponent to primitive power must be positive: "
@@ -2137,21 +2158,22 @@ public class CommonIdealFactory implements IdealFactory {
 
 	@Override
 	public Monomial[] powerTermMap(SymbolicType type, Monomial[] map,
-			IntObject exponent) {
+			NumberObject exponent) {
 		Monomial[] result = oneTermMap(type);
-		int n = exponent.getInt();
+		IntegerNumber n = (IntegerNumber) exponent.getNumber();
 
-		assert n >= 0;
-		if (n > 0) {
+		assert n.signum() >= 0;
+		if (n.signum() > 0) {
 			while (true) {
-				if (n % 2 != 0) {
+				if (!numberFactory.mod(n, intNumTwo).isZero()) {
 					result = multiplyTermMaps(result, map);
-					n -= 1;
-					if (n == 0)
+					n = (IntegerNumber) numberFactory.subtract(
+							exponent.getNumber(), numberFactory.oneInteger());
+					if (n.isZero())
 						break;
 				}
 				map = multiplyTermMaps(map, map);
-				n /= 2;
+				n = numberFactory.divide(n, intNumTwo);
 			}
 		}
 		return result;

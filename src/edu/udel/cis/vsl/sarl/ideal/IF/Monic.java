@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.IF;
 
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+
 /**
  * A Monic is a product of powers of primitive expressions x<sub>1</sub><sup>i
  * <sub>1</sub></sup>*...*x<sub>n</sub><sup>i<sub>n</sub></sup>, where the x
@@ -49,5 +51,5 @@ public interface Monic extends Monomial {
 	boolean isTrivialMonic();
 
 	@Override
-	Monic powerInt(IdealFactory factory, int exponent);
+	Monic powerInt(IdealFactory factory, IntegerNumber exponent);
 }

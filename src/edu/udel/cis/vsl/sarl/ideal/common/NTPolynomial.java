@@ -20,7 +20,9 @@ package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.io.PrintStream;
 
-import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
@@ -72,7 +74,7 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	 * The total degree of the polynomial, or -1 if the degree has not yet been
 	 * computed.
 	 */
-	private int totalDegree = -1;
+	private IntegerNumber totalDegree = null;
 
 	/**
 	 * Cached value returned by {@link #expand(IdealFactory)}.
@@ -137,8 +139,8 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	 * @return the degree of this polynomial
 	 */
 	@Override
-	public int polynomialDegree() {
-		return arguments[0].monomialDegree();
+	public IntegerNumber polynomialDegree(NumberFactory factory) {
+		return arguments[0].monomialDegree(factory);
 	}
 
 	@Override
@@ -156,7 +158,8 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 
 			if (hasNontrivialExpansion(factory)) {
 				if (debug) {
-					out.println("Starting expansion of " + shortString());
+					out.println("Starting expansion of "
+							+ shortString(factory.numberFactory()));
 					out.flush();
 				}
 				expansion = emptyMonomialList;
@@ -166,7 +169,8 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 				if (isCanonic())
 					factory.objectFactory().canonize(expansion);
 				if (debug) {
-					out.println("Finished expansion of " + shortString());
+					out.println("Finished expansion of "
+							+ shortString(factory.numberFactory()));
 					out.flush();
 				}
 			} else {
@@ -202,12 +206,14 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	 * 
 	 */
 	@Override
-	public int totalDegree() {
-		if (totalDegree < 0) {
-			for (Monomial monomial : arguments) {
-				int d = monomial.totalDegree();
+	public IntegerNumber totalDegree(NumberFactory factory) {
+		if (totalDegree == null) {
+			totalDegree = factory.integer(-1);
 
-				if (d > totalDegree)
+			for (Monomial monomial : arguments) {
+				IntegerNumber d = monomial.totalDegree(factory);
+
+				if (d.numericalCompareTo(totalDegree) > 0)
 					totalDegree = d;
 			}
 		}
@@ -220,8 +226,8 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public IntObject primitivePowerExponent(IdealFactory factory) {
-		return factory.oneIntObject();
+	public NumberObject primitivePowerExponent(IdealFactory factory) {
+		return factory.objectFactory().oneIntegerObj();
 	}
 
 	@Override
@@ -250,8 +256,8 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public int monomialDegree() {
-		return 1;
+	public IntegerNumber monomialDegree(NumberFactory factory) {
+		return factory.oneInteger();
 	}
 
 	@Override
@@ -273,9 +279,9 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 			of.canonize(monicFactors);
 	}
 
-	public String shortString() {
+	public String shortString(NumberFactory factory) {
 		return "Poly[id=" + id() + ",numTerms=" + arguments.length
-				+ ",totalDegree=" + totalDegree() + "]";
+				+ ",totalDegree=" + totalDegree(factory) + "]";
 	}
 
 	@Override
@@ -319,19 +325,21 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	}
 
 	@Override
-	public PrimitivePower powerInt(IdealFactory factory, int exponent) {
+	public PrimitivePower powerInt(IdealFactory factory,
+			IntegerNumber exponent) {
 		return factory.primitivePower(this,
-				factory.objectFactory().intObject(exponent));
+				factory.objectFactory().numberObject(exponent));
 	}
 
 	@Override
-	public int maxDegreeOf(Primitive primitive) {
-		int result = 0;
+	public IntegerNumber maxDegreeOf(NumberFactory factory,
+			Primitive primitive) {
+		IntegerNumber result = factory.zeroInteger();
 
 		for (Monomial term : termMap()) {
-			int d = term.maxDegreeOf(primitive);
+			IntegerNumber d = term.maxDegreeOf(factory, primitive);
 
-			if (d > result)
+			if (d.numericalCompareTo(result) > 0)
 				result = d;
 		}
 		return result;
