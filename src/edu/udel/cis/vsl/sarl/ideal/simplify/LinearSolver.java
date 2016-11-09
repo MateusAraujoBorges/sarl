@@ -91,9 +91,6 @@ public class LinearSolver {
 
 	private Set<Monic> realMonicSet = new HashSet<Monic>();
 
-	// this has to change. the map now maps Monic to Numbers.
-	// Some of those Monics may be Polynomials...
-
 	private Map<Monic, Number> map;
 
 	private Monic[] intMonics, realMonics;
@@ -156,9 +153,9 @@ public class LinearSolver {
 	/**
 	 * Builds the matrix representations of the maps. For the integer
 	 * constraints, there is one row for each integer entry in the map and one
-	 * column for each monic of integer type, plus one additional column to hold
-	 * the value associated to the constant value associated to the map entry.
-	 * The real map is similar.
+	 * column for each monic which occurs as a term in some key, of integer
+	 * type, plus one additional column to hold the value associated to the
+	 * constant value associated to the map entry. The real map is similar.
 	 */
 	private void buildMatrices() {
 		int numIntMonics = intMonics.length;
