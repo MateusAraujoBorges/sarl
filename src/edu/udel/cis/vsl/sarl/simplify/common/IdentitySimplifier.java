@@ -64,7 +64,7 @@ public class IdentitySimplifier implements Simplifier {
 	}
 
 	@Override
-	public Map<SymbolicConstant, SymbolicExpression> substitutionMap() {
+	public Map<SymbolicConstant, SymbolicExpression> constantSubstitutionMap() {
 		return new EmptyMap<SymbolicConstant, SymbolicExpression>();
 	}
 
@@ -84,4 +84,16 @@ public class IdentitySimplifier implements Simplifier {
 				null, true, null, true);
 	}
 
+	@Override
+	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			boolean selfupdate) {
+		return new EmptyMap<SymbolicExpression, SymbolicExpression>();
+	}
+
+	@Override
+	public SymbolicExpression fullySubstitute(
+			Map<SymbolicExpression, SymbolicExpression> substituteMap,
+			SymbolicExpression expression) {
+		return expression;
+	}
 }

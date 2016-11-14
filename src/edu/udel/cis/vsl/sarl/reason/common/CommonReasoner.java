@@ -189,7 +189,7 @@ public class CommonReasoner implements Reasoner {
 
 	@Override
 	public Map<SymbolicConstant, SymbolicExpression> substitutionMap() {
-		return simplifier.substitutionMap();
+		return simplifier.constantSubstitutionMap();
 	}
 
 	@Override

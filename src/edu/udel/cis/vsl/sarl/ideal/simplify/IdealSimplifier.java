@@ -187,6 +187,11 @@ public class IdealSimplifier extends CommonSimplifier {
 	private Map<Monic, Number> constantMap = new HashMap<>();
 
 	/**
+	 * General Map for replacing equivalent {@link Monic}s.
+	 */
+	private Map<Monic, Monic> reduceMap = new HashMap<>();
+
+	/**
 	 * Map assigning concrete values to certain non-numeric expressions.
 	 */
 	private Map<SymbolicExpression, SymbolicExpression> otherConstantMap = new HashMap<>();
@@ -474,6 +479,9 @@ public class IdealSimplifier extends CommonSimplifier {
 
 		boolean satisfiable = LinearSolver.reduceConstantMap(info.idealFactory,
 				constantMap);
+		// satisfiability should be same as the result of
+		// LinearSolver.reduceConstantMap
+		LinearSolver.reduceMap(info.idealFactory, constantMap, reduceMap);
 
 		if (debug) {
 			printBoundMap(info.out);
@@ -2220,7 +2228,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	}
 
 	@Override
-	public Map<SymbolicConstant, SymbolicExpression> substitutionMap() {
+	public Map<SymbolicConstant, SymbolicExpression> constantSubstitutionMap() {
 		if (substitutionMap == null) {
 			substitutionMap = new HashMap<SymbolicConstant, SymbolicExpression>();
 			for (Entry<Monic, Number> entry : constantMap.entrySet()) {
@@ -2258,7 +2266,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	@Override
 	public BooleanExpression getFullContext() {
 		if (fullContext == null) {
-			Map<SymbolicConstant, SymbolicExpression> map = substitutionMap();
+			Map<SymbolicConstant, SymbolicExpression> map = constantSubstitutionMap();
 
 			fullContext = getReducedContext();
 			for (Entry<SymbolicConstant, SymbolicExpression> entry : map
@@ -2293,5 +2301,34 @@ public class IdealSimplifier extends CommonSimplifier {
 	@Override
 	protected SimplifierState newState() {
 		return new BoundStack();
+	}
+
+	@Override
+	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			boolean selfupdate) {
+		Map<SymbolicExpression, SymbolicExpression> result = new HashMap<>();
+
+		for (Entry<Monic, Monic> entry : reduceMap.entrySet()) {
+			result.put(universe.canonic(entry.getKey()),
+					universe.canonic(entry.getValue()));
+		}
+		if (selfupdate) {
+			Map<SymbolicExpression, SymbolicExpression> newSubstituteMap = new HashMap<>(
+					reduceMap);
+
+			for (Entry<SymbolicExpression, SymbolicExpression> entry : result
+					.entrySet()) {
+				SymbolicExpression key, newKey;
+
+				key = entry.getKey();
+				newSubstituteMap.remove(key);
+				newKey = fullySubstitute(newSubstituteMap, key);
+				newSubstituteMap.put(key, entry.getValue());
+				if (newKey != key)
+					newSubstituteMap.put(newKey, entry.getValue());
+			}
+			result = newSubstituteMap;
+		}
+		return result;
 	}
 }

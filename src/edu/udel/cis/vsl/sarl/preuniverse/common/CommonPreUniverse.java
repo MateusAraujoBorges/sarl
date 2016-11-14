@@ -58,6 +58,7 @@ import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
+import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
@@ -193,6 +194,13 @@ public class CommonPreUniverse implements PreUniverse {
 	 */
 	private ArrayList<SymbolicConstant> int2bvConstants = new ArrayList<SymbolicConstant>();
 
+	/**
+	 * The name of a fold expression: Sigma. A sigma expression represents a
+	 * summation: Sigma(x, y, function(int)).
+	 * <code>Sigma(x, y, function(int)) = function(x) + function(x+1) + ... function(y)</code>
+	 */
+	private final String Sigma = "sigma";
+
 	// Constructor...
 
 	/**
@@ -222,7 +230,6 @@ public class CommonPreUniverse implements PreUniverse {
 		arrayIndex = (NumericSymbolicConstant) canonic(
 				symbolicConstant(stringObject("i"), integerType));
 		exprSeqFactory = new SequenceFactory<SymbolicExpression>() {
-
 			@Override
 			protected SymbolicExpression[] newArray(int size) {
 				return new SymbolicExpression[size];
@@ -796,6 +803,8 @@ public class CommonPreUniverse implements PreUniverse {
 		case AND:
 			return and(args);
 		case APPLY: // 2 args: function and sequence
+			if (isSigmaApplied((SymbolicExpression) args[0]))
+				return makeSigma((SymbolicSequence<?>) args[1]);
 			return apply((SymbolicExpression) args[0],
 					(SymbolicSequence<?>) args[1]);
 		case ARRAY_LAMBDA:
@@ -3544,6 +3553,93 @@ public class CommonPreUniverse implements PreUniverse {
 			out.println(
 					"Unkownn Symbolic Object: " + expr.symbolicObjectKind());
 		}
+	}
+
+	@Override
+	public SymbolicExpression sigma(NumericExpression low,
+			NumericExpression high, SymbolicExpression function) {
+		NumericExpression sum;
+
+		if (!low.type().isInteger() || !high.type().isInteger())
+			throw new SARLException(
+					"low and high of Sigma expression must have integer type");
+		if (function.type().typeKind() != SymbolicTypeKind.FUNCTION)
+			throw new SARLException(
+					"Addends of Sigma expression must have function type");
+
+		SymbolicFunctionType functionType = (SymbolicFunctionType) function
+				.type();
+
+		if (functionType.inputTypes().numTypes() != 1)
+			throw new SARLException(
+					"The type of the addend of Sigma expression must be a function type and "
+							+ "have exact one input type");
+		// Simplification case : low and high are both constants:
+		if ((low instanceof Constant) && ((high instanceof Constant))) {
+			IntegerNumber lowNum = (IntegerNumber) ((Constant) low).value()
+					.getNumber();
+			IntegerNumber highNum = (IntegerNumber) ((Constant) high).value()
+					.getNumber();
+			NumberFactory numberFactory = numberFactory();
+
+			sum = zeroInt();
+			for (IntegerNumber i = lowNum; numberFactory.compare(i,
+					highNum) <= 0; i = numberFactory.increment(i)) {
+				NumberObject input = numberObject(i);
+				// TODO: here the casting is not safe. To fix this, needs to
+				// give a calculus for lambda expression:
+				NumericExpression addend = (NumericExpression) apply(function,
+						Arrays.asList(
+								numericExpressionFactory().number(input)));
+
+				sum = add(sum, addend);
+			}
+			return sum;
+		}
+		// General case: return an uninterpreted function:
+		StringObject sigma = stringObject(Sigma);
+		SymbolicExpression result = symbolicConstant(sigma, functionType);
+
+		return this.apply(result, Arrays.asList(low, high, function));
+	}
+
+	/**
+	 * @param function
+	 *            A symbolic expression may represent the "Sigma" function.
+	 * @return true if and only if the given {@link SymbolicExpression} is a
+	 *         {@link SymbolicConstant} which represents the {@link #Sigma}
+	 *         uninterpreted function.
+	 */
+	private boolean isSigmaApplied(SymbolicExpression function) {
+		// Uninterpreted function is a symbolic constant:
+		if (function.operator() == SymbolicOperator.SYMBOLIC_CONSTANT) {
+			StringObject functionName = (StringObject) function.argument(0);
+
+			return functionName.getString().equals(Sigma);
+		}
+		return false;
+	}
+
+	/**
+	 * A helper method for
+	 * {@link #make(SymbolicOperator, SymbolicType, SymbolicObject[])}.
+	 * 
+	 * <p>
+	 * Make a sigma expression by giving a {@link SymbolicSequence} of arguments
+	 * of the sigma uninterpreted funtion
+	 * </p>
+	 * 
+	 * @param args
+	 *            {@link SymbolicSequence} of arguments of the uninterpreted
+	 *            function "Sigma".
+	 * @return
+	 */
+	private SymbolicExpression makeSigma(SymbolicSequence<?> args) {
+		NumericExpression low = (NumericExpression) args.get(0);
+		NumericExpression high = (NumericExpression) args.get(1);
+		SymbolicExpression sigmaFunction = args.get(2);
+
+		return sigma(low, high, sigmaFunction);
 	}
 
 	@Override

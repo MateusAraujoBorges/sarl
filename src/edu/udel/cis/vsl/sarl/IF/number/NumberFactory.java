@@ -290,8 +290,8 @@ public interface NumberFactory {
 	int compare(RationalNumber arg0, RationalNumber arg1);
 
 	/**
-	 * Returns a positive value if arg0>arg1, 0 if arg0 equals arg1, -1 if
-	 * arg0<arg1.
+	 * Returns a positive value if arg0 &lt arg1, 0 if arg0 equals arg1, -1 if
+	 * arg0 &lt arg1.
 	 */
 	int compare(IntegerNumber arg0, IntegerNumber arg1);
 
@@ -685,7 +685,7 @@ public interface NumberFactory {
 	 * @return
 	 */
 	Number power(Number number, IntegerNumber exp);
-	
+
 	/**
 	 * Calculate the given {@link RationalNumber} base powering a given
 	 * {@link IntegerNumber} exponent and returns result. The exponent must be a
@@ -699,7 +699,7 @@ public interface NumberFactory {
 	 * @return
 	 */
 	RationalNumber power(RationalNumber number, IntegerNumber exp);
-	
+
 	/**
 	 * Calculate the given {@link IntegerNumber} base powering a given
 	 * {@link IntegerNumber} exponent and returns result. The exponent must be a

@@ -1042,6 +1042,29 @@ public interface CoreUniverse {
 	NumericExpression subtract(NumericExpression arg0, NumericExpression arg1);
 
 	/**
+	 * A integeral summation expression s takes 3 arguments: start b, end e,
+	 * function f.
+	 * 
+	 * <code> s := f(b) + f(b+1) + ... + f(b+n-1); where b+n-1 == e and n > 0 </code>
+	 * Note that s(b, e, f) == s(e, b, f) but to use this interface, e must be
+	 * greater than or equal to b.
+	 * 
+	 *
+	 * @param low
+	 *            The lower bound of the integer set
+	 * @param high
+	 *            The higher bound of the integer set
+	 * @param function
+	 *            An expression representing the set of addends of the summation
+	 *            expression. It must have a function type t. t must have an
+	 *            integer input type. The output type is the type of the
+	 *            summation expression.
+	 * @return
+	 */
+	SymbolicExpression sigma(NumericExpression low, NumericExpression high,
+			SymbolicExpression function);
+
+	/**
 	 * Returns a symbolic expression which is the result of multiplying the two
 	 * given symbolic expressions. The two given expressions must have the same
 	 * (numeric) type: either both integers, or both real.

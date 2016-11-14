@@ -550,22 +550,22 @@ public class HomogeneousExpression<T extends SymbolicObject>
 				atomize(result);
 			return result;
 		}
-		case LAMBDA:{
-			//TODO change
+		case LAMBDA: {
+			// TODO change
 			int len = arguments.length;
-			
+
 			result.append("lambda ");
-			for(int i=0; i<len-1; i++){
+			for (int i = 0; i < len - 1; i++) {
 				result.append(arguments[i].toStringBuffer(false));
 				result.append(" : ");
 				result.append(((SymbolicExpression) arguments[i]).type()
 						.toStringBuffer(false));
-				if(i != len -2)
+				if (i != len - 2)
 					result.append(" , ");
-					
+
 			}
 			result.append(" . ");
-			result.append(arguments[len-1].toStringBuffer(true));
+			result.append(arguments[len - 1].toStringBuffer(true));
 			if (atomize)
 				atomize(result);
 			return result;
@@ -690,10 +690,11 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	}
 
 	private void processBitNot(StringBuffer buffer, boolean atomizeResult) {
-		atomizeResult = (((NumericExpression)arguments[0]).numArguments() > 1) || atomizeResult;
+		atomizeResult = (((NumericExpression) arguments[0]).numArguments() > 1)
+				|| atomizeResult;
 		buffer.append('~');
 		buffer.append(arguments[0].toStringBuffer(false));
-		if (atomizeResult){
+		if (atomizeResult) {
 			buffer.insert(1, '(');
 			buffer.append(')');
 		}

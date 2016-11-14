@@ -318,11 +318,11 @@ public class ContextMinimizingReasoner implements Reasoner {
 			dbgcnt1++;
 			debugOut.println("dbgcnt1 = " + dbgcnt1);
 		}
-
+		// TODO: why the method name is NoReduce ?
 		BooleanExpression newContext = getSimplifier().getReducedContext();
 		BooleanExpression newPredicate = (BooleanExpression) simplifier
 				.apply(predicate);
-		ValidityResult result;
+		ValidityResult result = null;
 		ContextMinimizingReasoner newReasoner; // may be same as old
 
 		if (newContext == context) {
@@ -330,21 +330,56 @@ public class ContextMinimizingReasoner implements Reasoner {
 		} else {
 			newReasoner = factory.getReasoner(newContext);
 		}
-		if (newPredicate != predicate || newContext != context) {
-			// the predicate or context got simpler, so start over again with
-			// checks of trivial cases, cache, etc...
-			if (debug) {
-				debugOut.println("Context              : " + context);
-				debugOut.println("Simplified context   : " + newContext);
-				debugOut.println("Predicate            : " + predicate);
-				debugOut.println("Simplified predicate : " + newPredicate);
-				debugOut.flush();
+
+		/*
+		 * Three-level predicate reducetion is applied:
+		 * 
+		 * Level 0: reduce predicate with constant substitution map;
+		 * 
+		 * Level 1: reduce predicate with general reduce map;
+		 * 
+		 * Level 2: reduce predicate with a self-substituted reduce map;
+		 * 
+		 * Starts with level 0, if the result is MAYBE, continue to apply a
+		 * higher level.
+		 */
+		int predicateRecudeLevels = 3;
+
+		for (int lv = 0; lv < predicateRecudeLevels; lv++) {
+			if (lv > 0) {
+				boolean reduceMapSelfupdate = lv == 2;
+				SymbolicExpression reducedNewPredicate = (BooleanExpression) simplifier
+						.fullySubstitute(
+								simplifier.substitutionMap(reduceMapSelfupdate),
+								newPredicate);
+
+				if (reducedNewPredicate.isTrue()) {
+					result = Prove.RESULT_YES;
+					break;
+				}
+
+				if (reducedNewPredicate == newPredicate)
+					break;
 			}
-			result = newReasoner.valid1(newPredicate, getModel);
-		} else if (getModel) {
-			result = getProver().validOrModel(newPredicate);
-		} else {
-			result = getProver().valid(newPredicate);
+			if (newPredicate != predicate || newContext != context) {
+				// the predicate or context got simpler, so start over again
+				// with
+				// checks of trivial cases, cache, etc...
+				if (debug) {
+					debugOut.println("Context              : " + context);
+					debugOut.println("Simplified context   : " + newContext);
+					debugOut.println("Predicate            : " + predicate);
+					debugOut.println("Simplified predicate : " + newPredicate);
+					debugOut.flush();
+				}
+				result = newReasoner.valid1(newPredicate, getModel);
+			} else if (getModel) {
+				result = getProver().validOrModel(newPredicate);
+			} else {
+				result = getProver().valid(newPredicate);
+			}
+			if (result.getResultType() != ResultType.MAYBE)
+				break;
 		}
 		return result;
 	}
@@ -436,7 +471,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 	@Override
 	public Map<SymbolicConstant, SymbolicExpression> substitutionMap() {
-		return getSimplifier().substitutionMap();
+		return getSimplifier().constantSubstitutionMap();
 	}
 
 	@Override

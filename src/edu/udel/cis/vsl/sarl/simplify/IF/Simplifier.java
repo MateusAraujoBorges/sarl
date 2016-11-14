@@ -124,7 +124,41 @@ public interface Simplifier extends UnaryOperator<SymbolicExpression> {
 	 * @return a mapping from some symbolic constants occurring in original
 	 *         context to their solved values
 	 */
-	Map<SymbolicConstant, SymbolicExpression> substitutionMap();
+	Map<SymbolicConstant, SymbolicExpression> constantSubstitutionMap();
+
+	/**
+	 * In the process of simplifying the initial context, this simplifier may
+	 * have "solved" for some of the symbolic constants ocurring in the context.
+	 * This method returns a map in which the keys are those symbolic
+	 * expressions and the value associated to a key is another symbolic
+	 * expression which represents a "solved" value. The solved value will be
+	 * substituted for the symbolic expressions in any expression given to the
+	 * {@link Transform#apply} method of this simplifier.
+	 * 
+	 * @param selfupdate
+	 *            Set to true triggers a the substitution on the key set of the
+	 *            map.
+	 *            <p>
+	 *            For example: The map originally is : X=A, Z=B, X*Z=C. After a
+	 *            selfupdate, the map finally will be: X=A, Z=B, X*Z=C, A*B=C
+	 *            </p>
+	 * @return
+	 */
+	Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			boolean selfupdate);
+
+	/**
+	 * Substitue the given {@link SymbolicExpression} expression by keep
+	 * applying the method {@link #apply(SymbolicExpression)} until the no more
+	 * substitution can happen.
+	 * 
+	 * @param reduceMap
+	 * @param predicate
+	 * @return The new predicate which is done by substitution.
+	 */
+	SymbolicExpression fullySubstitute(
+			Map<SymbolicExpression, SymbolicExpression> substituteMap,
+			SymbolicExpression expression);
 
 	/**
 	 * Returns the reduced context associated to this Reasoner. This expression

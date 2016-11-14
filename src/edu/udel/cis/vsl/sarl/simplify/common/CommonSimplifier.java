@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
+import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
@@ -402,4 +403,19 @@ public abstract class CommonSimplifier implements Simplifier {
 		return simplifyExpression(expression, newState());
 	}
 
+	@Override
+	public SymbolicExpression fullySubstitute(
+			Map<SymbolicExpression, SymbolicExpression> substituteMap,
+			SymbolicExpression expression) {
+		UnaryOperator<SymbolicExpression> substituter = universe
+				.mapSubstituter(substituteMap);
+		SymbolicExpression transformedExpression = expression;
+		SymbolicExpression prevTransformedExpression = expression;
+
+		do {
+			prevTransformedExpression = transformedExpression;
+			transformedExpression = substituter.apply(transformedExpression);
+		} while (transformedExpression != prevTransformedExpression);
+		return transformedExpression;
+	}
 }
