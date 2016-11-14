@@ -348,7 +348,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 		for (int lv = 0; lv < predicateRecudeLevels; lv++) {
 			if (lv > 0) {
 				boolean reduceMapSelfupdate = lv == 2;
-				SymbolicExpression reducedNewPredicate = (BooleanExpression) simplifier
+				BooleanExpression reducedNewPredicate = (BooleanExpression) simplifier
 						.fullySubstitute(
 								simplifier.substitutionMap(reduceMapSelfupdate),
 								newPredicate);
@@ -357,9 +357,11 @@ public class ContextMinimizingReasoner implements Reasoner {
 					result = Prove.RESULT_YES;
 					break;
 				}
-
+				// If substitution makes no difference, it's no need to reason
+				// the predicate again:
 				if (reducedNewPredicate == newPredicate)
-					break;
+					continue;
+				newPredicate = reducedNewPredicate;
 			}
 			if (newPredicate != predicate || newContext != context) {
 				// the predicate or context got simpler, so start over again
