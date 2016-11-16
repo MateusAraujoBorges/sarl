@@ -2167,8 +2167,8 @@ public class CommonIdealFactory implements IdealFactory {
 			while (true) {
 				if (!numberFactory.mod(n, intNumTwo).isZero()) {
 					result = multiplyTermMaps(result, map);
-					n = (IntegerNumber) numberFactory.subtract(
-							exponent.getNumber(), numberFactory.oneInteger());
+					n = (IntegerNumber) numberFactory.subtract(n,
+							numberFactory.oneInteger());
 					if (n.isZero())
 						break;
 				}
