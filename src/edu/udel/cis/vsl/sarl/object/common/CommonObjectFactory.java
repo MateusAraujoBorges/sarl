@@ -21,8 +21,8 @@ package edu.udel.cis.vsl.sarl.object.common;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
@@ -46,7 +46,7 @@ public class CommonObjectFactory implements ObjectFactory {
 
 	private NumberFactory numberFactory;
 
-	private Map<SymbolicObject, SymbolicObject> objectMap = new HashMap<SymbolicObject, SymbolicObject>();
+	private Map<SymbolicObject, SymbolicObject> objectMap = new ConcurrentHashMap<SymbolicObject, SymbolicObject>();
 
 	private ArrayList<SymbolicObject> objectList = new ArrayList<SymbolicObject>();
 
