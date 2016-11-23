@@ -206,7 +206,7 @@ public class Z3Translator {
 
 	// Constructors...
 
-	Z3Translator(PreUniverse universe, SymbolicExpression theExpression,
+	public Z3Translator(PreUniverse universe, SymbolicExpression theExpression,
 			boolean simplifyIntDivision) {
 		this.universe = universe;
 		this.z3AuxVarCount = 0;
@@ -219,7 +219,7 @@ public class Z3Translator {
 		this.z3Translation = translate(theExpression);
 	}
 
-	Z3Translator(Z3Translator startingContext,
+	public Z3Translator(Z3Translator startingContext,
 			SymbolicExpression theExpression) {
 		this.universe = startingContext.universe;
 		this.z3AuxVarCount = startingContext.z3AuxVarCount;
@@ -1556,7 +1556,7 @@ public class Z3Translator {
 	 * 
 	 * @return result of translation of the specified symbolic expression
 	 */
-	FastList<String> getTranslation() {
+	public FastList<String> getTranslation() {
 		return z3Translation;
 	}
 
@@ -1567,7 +1567,7 @@ public class Z3Translator {
 	 * 
 	 * @return the declarations of the Z3 symbols
 	 */
-	FastList<String> getDeclarations() {
+	public FastList<String> getDeclarations() {
 		return z3Declarations;
 	}
 }
