@@ -3,6 +3,7 @@ package edu.udel.cis.vsl.sarl.IF;
 import static org.junit.Assert.assertEquals;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.Before;
@@ -11,6 +12,8 @@ import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
@@ -375,5 +378,36 @@ public class BooleanReasonDevTest {
 			out.println("e2 is " + e2);
 		}
 		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
+	}
+
+	/**
+	 * forall int i; 1 &lt= i &lt= UP ==> array[i-1] == 0 && i == 0;
+	 */
+	@Test
+	public void quantifiedExpressionInterfere() {
+		BooleanExpression context;
+		NumericSymbolicConstant idx = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("i"),
+						universe.integerType());
+		NumericSymbolicConstant upper = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("UP"),
+						universe.integerType());
+		SymbolicExpression array = universe.array(universe.integerType(),
+				Arrays.asList(universe.zeroInt(), universe.zeroInt(),
+						universe.zeroInt()));
+
+		context = universe
+				.forallInt(idx, universe.integer(1), upper,
+						universe.equals(
+								universe.arrayRead(array,
+										universe.subtract(idx,
+												universe.oneInt())),
+								universe.zeroInt()));
+		context = universe.and(context,
+				universe.equals(universe.integer(0), idx));
+
+		Reasoner reasoner = universe.reasoner(context);
+
+		reasoner.getFullContext();
 	}
 }
