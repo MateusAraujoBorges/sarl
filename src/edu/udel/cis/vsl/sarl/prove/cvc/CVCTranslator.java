@@ -1539,35 +1539,30 @@ public class CVCTranslator {
 			if (b2)
 				translations.add(t2);
 			translationsNum = translations.size();
+			// merge side effects.
+			FastList<String> newConstraint = new FastList<>();
+			List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
 
-			if (operator.equals(" < ") || operator.equals(" <= ")) {
-				result = postProcessForSideEffectsOfDivideOrModule(result,
-						translations);
-				translation = new Translation(result);
-			} else {// merge side effects.
-				FastList<String> newConstraint = new FastList<>();
-				List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+			if (translationsNum == 1) {
+				Translation tempTranslation = translations.get(0);
 
-				if (translationsNum == 1) {
-					Translation tempTranslation = translations.get(0);
+				newConstraint = tempTranslation.getAuxConstraints().clone();
+				newAuxVars.addAll(tempTranslation.getAuxVars());
+			} else {
+				Translation tempTranslation1 = translations.get(0);
+				Translation tempTranslation2 = translations.get(1);
 
-					newConstraint = tempTranslation.getAuxConstraints().clone();
-					newAuxVars.addAll(tempTranslation.getAuxVars());
-				} else {
-					Translation tempTranslation1 = translations.get(0);
-					Translation tempTranslation2 = translations.get(1);
-
-					newAuxVars.addAll(tempTranslation1.getAuxVars());
-					newAuxVars.addAll(tempTranslation2.getAuxVars());
-					newConstraint.add("(");
-					newConstraint.append(tempTranslation1.getAuxConstraints());
-					newConstraint.add(" AND ");
-					newConstraint.append(tempTranslation2.getAuxConstraints());
-					newConstraint.add(")");
-				}
-				translation = new Translation(result, true, newConstraint,
-						newAuxVars);
+				newAuxVars.addAll(tempTranslation1.getAuxVars());
+				newAuxVars.addAll(tempTranslation2.getAuxVars());
+				newConstraint.add("(");
+				newConstraint.append(tempTranslation1.getAuxConstraints());
+				newConstraint.add(" AND ");
+				newConstraint.append(tempTranslation2.getAuxConstraints());
+				newConstraint.add(")");
 			}
+			translation = new Translation(result, true, newConstraint,
+					newAuxVars);
+
 		} else {
 			translation = new Translation(result);
 		}
@@ -1678,6 +1673,25 @@ public class CVCTranslator {
 			break;
 		case ARRAY_WRITE:
 			result = translateArrayWrite(expression);
+			break;
+		case BIT_AND:
+			result = translateBitwiseOperation(" & ",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case BIT_NOT:
+			result = translateBitwiseOperation(" ~ ",
+					(SymbolicExpression) expression.argument(0), null);
+			break;
+		case BIT_OR:
+			result = translateBitwiseOperation(" ~ BVNOR ",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case BIT_XOR:
+			result = translateBitwiseOperation(" BVXOR ",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
 			break;
 		case CAST:
 			result = translateCast(expression);
@@ -1798,6 +1812,80 @@ public class CVCTranslator {
 					"unreachable: unknown operator: " + operator);
 		}
 		return result;
+	}
+
+	private Translation translateBitwiseOperation(String operator,
+			SymbolicExpression arg0, SymbolicExpression arg1) {
+		FastList<String> result = new FastList<>("");
+		Translation translation = new Translation(result);
+		Boolean isBitNot = operator.equals(" ~ ");
+
+//		if (isBitNot) {
+//			Translation t1 = translate(arg0);
+//			Boolean b1 = t1.getIsDivOrModulo();
+//			
+//			result.addAll(operator, " (");
+//			result.append(t1.getResult());
+//			result.add(")");
+//
+//			translation = new Translation(result);
+//		} else {
+//			Translation t1 = translate(arg0);
+//			Boolean b1 = t1.getIsDivOrModulo();
+//			Translation t2 = translate(arg1);
+//			Boolean b2 = t2.getIsDivOrModulo();
+//
+//			result.append(t1.getResult());
+//			result.addAll(") ", operator, " (");
+//			result.append(t2.getResult());
+//			result.add(")");
+//
+//			if (b1 || b2) {
+//				List<Translation> translations = new ArrayList<Translation>();
+//				int translationsNum;
+//
+//				if (b1)
+//					translations.add(t1);
+//				if (b2)
+//					translations.add(t2);
+//				translationsNum = translations.size();
+//
+//				if (operator.equals(" < ") || operator.equals(" <= ")) {
+//					result = postProcessForSideEffectsOfDivideOrModule(result,
+//							translations);
+//					translation = new Translation(result);
+//				} else {// merge side effects.
+//					FastList<String> newConstraint = new FastList<>();
+//					List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+//
+//					if (translationsNum == 1) {
+//						Translation tempTranslation = translations.get(0);
+//
+//						newConstraint = tempTranslation.getAuxConstraints()
+//								.clone();
+//						newAuxVars.addAll(tempTranslation.getAuxVars());
+//					} else {
+//						Translation tempTranslation1 = translations.get(0);
+//						Translation tempTranslation2 = translations.get(1);
+//
+//						newAuxVars.addAll(tempTranslation1.getAuxVars());
+//						newAuxVars.addAll(tempTranslation2.getAuxVars());
+//						newConstraint.add("(");
+//						newConstraint
+//								.append(tempTranslation1.getAuxConstraints());
+//						newConstraint.add(" AND ");
+//						newConstraint
+//								.append(tempTranslation2.getAuxConstraints());
+//						newConstraint.add(")");
+//					}
+//					translation = new Translation(result, true, newConstraint,
+//							newAuxVars);
+//				}
+//			} else {
+//				translation = new Translation(result);
+//			}
+//		}
+		return translation;
 	}
 
 	private FastList<String> translateType(SymbolicType type) {
