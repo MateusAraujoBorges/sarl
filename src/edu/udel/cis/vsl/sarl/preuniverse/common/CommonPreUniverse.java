@@ -3691,4 +3691,190 @@ public class CommonPreUniverse implements PreUniverse {
 					"Unkownn Symbolic Object: " + expr.symbolicObjectKind());
 		}
 	}
+
+	@Override
+	public NumericExpression bitshiftLeft(NumericExpression left,
+			NumericExpression right) {
+		assert left != null && right != null;
+
+		SymbolicCompleteArrayType bitVectorType = bitVectorType(
+				INTEGER_BIT_LENGTH);
+		SymbolicObject leftObj = left.argument(0);
+		SymbolicObject rightObj = right.argument(0);
+		boolean isLeftConcrete = leftObj instanceof NumberObject;
+		boolean isRightConcrete = rightObj instanceof NumberObject;
+
+		if (isLeftConcrete && isRightConcrete) {
+			SymbolicExpression leftBitVector = integer2Bitvector(left,
+					bitVectorType);
+			SymbolicExpression rightShiftNumBits = right;
+			SymbolicExpression resBitVector = bitshiftLeft(leftBitVector,
+					rightShiftNumBits);
+
+			return bitvector2Integer(resBitVector);
+		} else if (isLeftConcrete) {
+			// TODO: If CVC4 supports symbolic bit-wise analysis
+		} else if (isRightConcrete) {
+			// TODO: If CVC4 supports symbolic bit-wise analysis
+		}
+		return numericFactory.expression(SymbolicOperator.BIT_SHIFT_LEFT,
+				integerType, left, right);
+	}
+
+	private SymbolicExpression bitshiftLeft(SymbolicExpression left,
+			SymbolicExpression right) {
+		if (left == null)
+			throw err("Argument left to method bitShiftLeft is null.");
+		if (right == null)
+			throw err("Argument right to method bitShiftLeft is null.");
+		if (!(left.type() instanceof SymbolicCompleteArrayType))
+			throw err(
+					"Argument left to method bitShiftLeft does not have array type."
+							+ "\narray: " + left + "\ntype: " + left.type());
+		if (!(right instanceof NumericExpression))
+			throw err(
+					"Argument right to method bitShiftLeft should be an unsigned integer."
+							+ "\narray: " + right + "\ntype: " + right.type());
+
+		SymbolicCompleteArrayType leftArrayType = (SymbolicCompleteArrayType) left
+				.type();
+
+		if (!leftArrayType.elementType().isBoolean()) {
+			throw err(
+					"Elements of left to method bitShiftLeft does not have the boolean type."
+							+ "\nelement type: " + leftArrayType.typeKind());
+		}
+
+		IntegerNumber lengthNumber = (IntegerNumber) extractNumber(
+				leftArrayType.extent());
+		IntegerNumber shiftNumberOfBits = (IntegerNumber) extractNumber(
+				(NumericExpression) right);
+
+		assert lengthNumber != null;
+		assert shiftNumberOfBits != null;
+
+		int size = lengthNumber.intValue();
+		int shiftSize = shiftNumberOfBits.intValue();
+		BooleanExpression[] resultArray = new BooleanExpression[size];
+
+		if (size < 0) {
+			throw err(
+					"Argument left to method bitShiftLeft could not have a length less than 0."
+							+ "\nleft array: " + left + "\nleft array length: "
+							+ size);
+		}
+		if (shiftSize < 0) {
+			throw err(
+					"Argument right to method bitShiftLeft could not have a value less than 0."
+							+ "\nleft array: " + left + "\nleft array length: "
+							+ shiftSize);
+		} else if (shiftSize >= INTEGER_BIT_LENGTH) {
+			// Return 0
+			for (int i = 0; i < size; i++)
+				resultArray[i] = booleanFactory.falseExpr();
+		} else {
+			for (int i = 0; i < size - shiftSize; i++) {
+				int shift_i = i + shiftSize;
+				NumericExpression shift_index = integer(shift_i);
+				resultArray[i] = (BooleanExpression) arrayRead(left,
+						shift_index);
+			}
+			for (int i = size - shiftSize; i < size; i++)
+				resultArray[i] = booleanFactory.falseExpr();
+		}
+		return array(leftArrayType.elementType(), resultArray);
+	}
+
+	@Override
+	public NumericExpression bitshiftRight(NumericExpression left,
+			NumericExpression right) {
+		assert left != null && right != null;
+
+		SymbolicCompleteArrayType bitVectorType = bitVectorType(
+				INTEGER_BIT_LENGTH);
+		SymbolicObject leftObj = left.argument(0);
+		SymbolicObject rightObj = right.argument(0);
+		boolean isLeftConcrete = leftObj instanceof NumberObject;
+		boolean isRightConcrete = rightObj instanceof NumberObject;
+
+		if (isLeftConcrete && isRightConcrete) {
+			SymbolicExpression leftBitVector = integer2Bitvector(left,
+					bitVectorType);
+			SymbolicExpression rightShiftNumBits = right;
+			SymbolicExpression resBitVector = bitshiftRight(leftBitVector,
+					rightShiftNumBits);
+
+			return bitvector2Integer(resBitVector);
+		} else if (isLeftConcrete) {
+			// TODO: If CVC4 supports symbolic bit-wise analysis
+		} else if (isRightConcrete) {
+			// TODO: If CVC4 supports symbolic bit-wise analysis
+		}
+		return numericFactory.expression(SymbolicOperator.BIT_SHIFT_RIGHT,
+				integerType, left, right);
+	}
+
+	private SymbolicExpression bitshiftRight(SymbolicExpression left,
+			SymbolicExpression right) {
+		if (left == null)
+			throw err("Argument left to method bitshiftRight is null.");
+		if (right == null)
+			throw err("Argument right to method bitshiftRight is null.");
+		if (!(left.type() instanceof SymbolicCompleteArrayType))
+			throw err(
+					"Argument left to method bitshiftRight does not have array type."
+							+ "\narray: " + left + "\ntype: " + left.type());
+		if (!(right instanceof NumericExpression))
+			throw err(
+					"Argument right to method bitshiftRight should be an unsigned integer."
+							+ "\narray: " + right + "\ntype: " + right.type());
+
+		SymbolicCompleteArrayType leftArrayType = (SymbolicCompleteArrayType) left
+				.type();
+
+		if (!leftArrayType.elementType().isBoolean()) {
+			throw err(
+					"Elements of left to method bitshiftRight does not have the boolean type."
+							+ "\nelement type: " + leftArrayType.typeKind());
+		}
+
+		IntegerNumber lengthNumber = (IntegerNumber) extractNumber(
+				leftArrayType.extent());
+		IntegerNumber shiftNumberOfBits = (IntegerNumber) extractNumber(
+				(NumericExpression) right);
+
+		assert lengthNumber != null;
+		assert shiftNumberOfBits != null;
+
+		int size = lengthNumber.intValue();
+		int shiftSize = shiftNumberOfBits.intValue();
+		BooleanExpression[] resultArray = new BooleanExpression[size];
+
+		if (size < 0) {
+			throw err(
+					"Argument left to method bitshiftRight could not have a length less than 0."
+							+ "\nleft array: " + left + "\nleft array length: "
+							+ size);
+		}
+		if (shiftSize < 0) {
+			throw err(
+					"Argument right to method bitshiftRight could not have a value less than 0."
+							+ "\nleft array: " + left + "\nleft array length: "
+							+ shiftSize);
+		} else if (shiftSize >= INTEGER_BIT_LENGTH) {
+			// Return 0
+			for (int i = 0; i < size; i++)
+				resultArray[i] = booleanFactory.falseExpr();
+		} else {
+			for (int i = 0; i < shiftSize; i++)
+				resultArray[i] = booleanFactory.falseExpr();
+			for (int i = shiftSize; i < size; i++) {
+				int shift_i = i - shiftSize;
+				NumericExpression shift_index = integer(shift_i);
+				resultArray[i] = (BooleanExpression) arrayRead(left,
+						shift_index);
+			}
+		}
+		return array(leftArrayType.elementType(), resultArray);
+	}
 }

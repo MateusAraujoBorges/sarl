@@ -160,6 +160,18 @@ public interface SymbolicExpression extends SymbolicObject {
 		 */
 		BIT_XOR,
 		/**
+		 * Operator for an expression representing the result of applying
+		 * bit-wise left shifting operation on two given values. 2 arguments:
+		 * Both Arg0 and Arg1 are integers or unsigned integers.
+		 */
+		BIT_SHIFT_LEFT,
+		/**
+		 * Operator for an expression representing the result of applying
+		 * bit-wise right shifting operation on two given values. 2 arguments:
+		 * Both Arg0 and Arg1 are integers or unsigned integers.
+		 */
+		BIT_SHIFT_RIGHT,
+		/**
 		 * Operator for an expression representing the result of converting a
 		 * value from one type to another. 1 argument: the value being cast. The
 		 * {@link #type()} method in this expression yields the new type to

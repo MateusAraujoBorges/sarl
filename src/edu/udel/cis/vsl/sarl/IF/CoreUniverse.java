@@ -2116,6 +2116,36 @@ public interface CoreUniverse {
 	NumericExpression bitnot(NumericExpression expression);
 
 	/**
+	 * Returns the result of bit-left-shift operation for the given unsigned
+	 * integer, the given unsigned integer is in the form of
+	 * {@link NumericExpression}. <br>
+	 * Note that: all blank bits caused by shifting are filled with 0.
+	 * 
+	 * @param left
+	 *            The integer will be applied with bit-shift
+	 * @param right
+	 *            The integer represents the number of shifited bits.
+	 * @return
+	 */
+	NumericExpression bitshiftLeft(NumericExpression left,
+			NumericExpression right);
+
+	/**
+	 * Returns the result of bit-right-shift operation for the given unsigned
+	 * integer, the given unsigned integer is in the form of
+	 * {@link NumericExpression}. <br>
+	 * Note that: all blank bits caused by shifting are filled with 0.
+	 * 
+	 * @param left
+	 *            The integer will be applied with bit-shift
+	 * @param right
+	 *            The integer represents the number of shifited bits.
+	 * @return
+	 */
+	NumericExpression bitshiftRight(NumericExpression left,
+			NumericExpression right);
+
+	/**
 	 * Returns the {@link SymbolicCompleteArrayType} representing a
 	 * bitVectorType, which is an array of booleans with concrete length.
 	 * 
