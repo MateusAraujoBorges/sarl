@@ -1302,6 +1302,16 @@ public class Z3Translator {
 					(SymbolicExpression) expression.argument(0),
 					(SymbolicExpression) expression.argument(1));
 			break;
+		case BIT_SHIFT_LEFT:
+			result = translateBitBinary("bvshl",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case BIT_SHIFT_RIGHT:
+			result = translateBitBinary("bvlshr",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
 		case CAST:
 			result = translateCast(expression);
 			break;

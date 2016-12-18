@@ -1693,6 +1693,16 @@ public class CVCTranslator {
 					(SymbolicExpression) expression.argument(0),
 					(SymbolicExpression) expression.argument(1));
 			break;
+		case BIT_SHIFT_LEFT:
+			result = translateBitShift("bvshl",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case BIT_SHIFT_RIGHT:
+			result = translateBitShift("bvlshr",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
 		case CAST:
 			result = translateCast(expression);
 			break;
@@ -1812,6 +1822,14 @@ public class CVCTranslator {
 					"unreachable: unknown operator: " + operator);
 		}
 		return result;
+	}
+
+	private Translation translateBitShift(String operator,
+			SymbolicExpression arg0, SymbolicExpression arg1) {
+		FastList<String> result = new FastList<>("");
+		Translation translation = new Translation(result);
+
+		return translation;
 	}
 
 	private Translation translateBitwiseOperation(String operator,
