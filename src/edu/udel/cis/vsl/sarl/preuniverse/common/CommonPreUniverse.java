@@ -816,6 +816,23 @@ public class CommonPreUniverse implements PreUniverse {
 		case ARRAY_WRITE:
 			return arrayWrite((SymbolicExpression) args[0],
 					(NumericExpression) args[1], (SymbolicExpression) args[2]);
+		case BIT_AND:
+			return bitand((NumericExpression) args[0],
+					(NumericExpression) args[1]);
+		case BIT_NOT:
+			return bitnot((NumericExpression) args[0]);
+		case BIT_OR:
+			return bitor((NumericExpression) args[0],
+					(NumericExpression) args[1]);
+		case BIT_XOR:
+			return bitxor((NumericExpression) args[0],
+					(NumericExpression) args[1]);
+		case BIT_SHIFT_LEFT:
+			return bitshiftLeft((NumericExpression) args[0],
+					(NumericExpression) args[1]);
+		case BIT_SHIFT_RIGHT:
+			return bitshiftRight((NumericExpression) args[0],
+					(NumericExpression) args[1]);
 		case CAST:
 			return cast(type, (SymbolicExpression) args[0]);
 		case CONCRETE:
