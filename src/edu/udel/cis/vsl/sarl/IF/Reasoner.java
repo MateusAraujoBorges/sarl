@@ -256,7 +256,8 @@ public interface Reasoner {
 	 * @return the concrete (Number) numeric value of that expression or null
 	 */
 	Number extractNumber(NumericExpression expression);
-	
+
+	// TODO: why is this here? This is supposed to be an implementation detail...
 	Simplifier simplifier();
 
 }

@@ -381,7 +381,7 @@ public class BooleanReasonDevTest {
 	}
 
 	/**
-	 * forall int i; 1 &lt= i &lt= UP ==> array[i-1] == 0 && i == 0;
+	 * (forall int i; 1&le;i&le;UP ==> array[i-1] == 0) && i == 0;
 	 */
 	@Test
 	public void quantifiedExpressionInterfere() {

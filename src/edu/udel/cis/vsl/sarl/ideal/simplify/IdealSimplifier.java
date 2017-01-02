@@ -68,10 +68,6 @@ import edu.udel.cis.vsl.sarl.util.SingletonMap;
  * {@link IdealFactory}.
  * </p>
  *
- * <p>
- * TODO: also would like to map symbolic constants that can be solved for in
- * terms of earlier ones to expressions.
- * </p>
  */
 public class IdealSimplifier extends CommonSimplifier {
 
@@ -211,6 +207,10 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *            based
 	 */
 	public IdealSimplifier(SimplifierInfo info, BooleanExpression assumption) {
+		// NOTE: currently, this simplifier does not "clean" the assumption
+		// or expressions, which means there can be bound variables that
+		// have the same name as other bound variables or other free variables.
+		// does this create a problem?
 		super(info.universe);
 		this.info = info;
 		this.assumption = assumption;
@@ -1087,6 +1087,9 @@ public class IdealSimplifier extends CommonSimplifier {
 				&& state.isBoundVaraible((SymbolicConstant) monic))
 			return monic;
 
+		// TODO: but what if the monic involves symbolic constants that 
+		// are bound?  Don't you need to look in the stack???
+		
 		Number constant = constantMap.get(monic);
 
 		if (constant != null)

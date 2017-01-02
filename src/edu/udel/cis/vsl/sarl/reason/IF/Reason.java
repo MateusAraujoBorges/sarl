@@ -34,12 +34,9 @@ public class Reason {
 	public static ReasonerFactory newReasonerFactory(PreUniverse universe,
 			SimplifierFactory simplifierFactory,
 			TheoremProverFactory proverFactory) {
-		ReasonerFactory result;
+		ReasonerFactory result = new ContextMinimizingReasonerFactory(universe,
+				proverFactory, simplifierFactory);
 
-		// result = new CommonReasonerFactory(simplifierFactory, proverFactory);
-
-		result = new ContextMinimizingReasonerFactory(universe, proverFactory,
-				simplifierFactory);
 		return result;
 	}
 }

@@ -131,6 +131,10 @@ public abstract class CommonSimplifier implements Simplifier {
 		if (key instanceof SymbolicConstant
 				&& state.isBoundVaraible((SymbolicConstant) key))
 			return key;
+		// TODO: problem is key may not be a symbolic constant but
+		// nevertheless involves symbolic constants that are bound.
+		// FIX ME!!!
+		
 		return simplifyMap.get(key);
 	}
 
