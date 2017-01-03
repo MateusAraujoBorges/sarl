@@ -2240,4 +2240,17 @@ public interface CoreUniverse {
 	 *            the output stream
 	 */
 	void printExprTree(SymbolicExpression expr, PrintStream out);
+
+	/**
+	 * Substitute the given {@link SymbolicExpression} expression by repeatedly
+	 * applying the method {@link #apply(SymbolicExpression)} until no more
+	 * substitution can happen.
+	 * 
+	 * @param substituteMap
+	 * @param expression
+	 * @return The new predicate which is done the fully substitution.
+	 */
+	SymbolicExpression fullySubstitute(
+			Map<SymbolicExpression, SymbolicExpression> substituteMap,
+			SymbolicExpression expression);
 }

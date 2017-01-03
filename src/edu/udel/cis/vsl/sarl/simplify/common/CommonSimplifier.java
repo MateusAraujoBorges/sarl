@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
-import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
@@ -134,7 +133,7 @@ public abstract class CommonSimplifier implements Simplifier {
 		// TODO: problem is key may not be a symbolic constant but
 		// nevertheless involves symbolic constants that are bound.
 		// FIX ME!!!
-		
+
 		return simplifyMap.get(key);
 	}
 
@@ -405,21 +404,5 @@ public abstract class CommonSimplifier implements Simplifier {
 		// ensure that the expression is canonic:
 		expression = universe.canonic(expression);
 		return simplifyExpression(expression, newState());
-	}
-
-	@Override
-	public SymbolicExpression fullySubstitute(
-			Map<SymbolicExpression, SymbolicExpression> substituteMap,
-			SymbolicExpression expression) {
-		UnaryOperator<SymbolicExpression> substituter = universe
-				.mapSubstituter(substituteMap);
-		SymbolicExpression transformedExpression = expression;
-		SymbolicExpression prevTransformedExpression = expression;
-
-		do {
-			prevTransformedExpression = transformedExpression;
-			transformedExpression = substituter.apply(transformedExpression);
-		} while (transformedExpression != prevTransformedExpression);
-		return transformedExpression;
 	}
 }

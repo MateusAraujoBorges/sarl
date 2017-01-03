@@ -1087,9 +1087,9 @@ public class IdealSimplifier extends CommonSimplifier {
 				&& state.isBoundVaraible((SymbolicConstant) monic))
 			return monic;
 
-		// TODO: but what if the monic involves symbolic constants that 
-		// are bound?  Don't you need to look in the stack???
-		
+		// TODO: but what if the monic involves symbolic constants that
+		// are bound? Don't you need to look in the stack???
+
 		Number constant = constantMap.get(monic);
 
 		if (constant != null)
@@ -2325,7 +2325,7 @@ public class IdealSimplifier extends CommonSimplifier {
 
 				key = entry.getKey();
 				newSubstituteMap.remove(key);
-				newKey = fullySubstitute(newSubstituteMap, key);
+				newKey = universe.fullySubstitute(newSubstituteMap, key);
 				newSubstituteMap.put(key, entry.getValue());
 				if (newKey != key)
 					newSubstituteMap.put(newKey, entry.getValue());

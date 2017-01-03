@@ -349,7 +349,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 			if (lv > 0) {
 				boolean reduceMapSelfupdate = lv == 2;
 				BooleanExpression reducedNewPredicate = (BooleanExpression) simplifier
-						.fullySubstitute(
+						.universe().fullySubstitute(
 								simplifier.substitutionMap(reduceMapSelfupdate),
 								newPredicate);
 

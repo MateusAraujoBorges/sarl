@@ -3894,4 +3894,20 @@ public class CommonPreUniverse implements PreUniverse {
 		}
 		return array(leftArrayType.elementType(), resultArray);
 	}
+
+	@Override
+	public SymbolicExpression fullySubstitute(
+			Map<SymbolicExpression, SymbolicExpression> substituteMap,
+			SymbolicExpression expression) {
+		UnaryOperator<SymbolicExpression> substituter = mapSubstituter(
+				substituteMap);
+		SymbolicExpression transformedExpression = expression;
+		SymbolicExpression prevTransformedExpression = expression;
+
+		do {
+			prevTransformedExpression = transformedExpression;
+			transformedExpression = substituter.apply(transformedExpression);
+		} while (transformedExpression != prevTransformedExpression);
+		return transformedExpression;
+	}
 }
