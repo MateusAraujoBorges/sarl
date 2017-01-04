@@ -84,7 +84,7 @@ public class CommonPreUniverse implements PreUniverse {
 	public final static int QUANTIFIER_EXPAND_BOUND = 1000;
 
 	// TODO: To make the length as a argument to the bit-wise
-	private int INTEGER_BIT_LENGTH = 32;
+	private int INTEGER_BIT_BOUND = 32;
 
 	/**
 	 * IntegerNumber versions of the corresponding static int fields.
@@ -3059,19 +3059,12 @@ public class CommonPreUniverse implements PreUniverse {
 			// Input integer is symbolic
 			SymbolicConstant int2bvConstant = null;
 
-			for (SymbolicConstant sc : int2bvConstants) {
-				// Find existed bvType with the given length
-				SymbolicFunctionType tmpFuncType = (SymbolicFunctionType) sc
-						.type();
-				SymbolicCompleteArrayType tmpBvType = (SymbolicCompleteArrayType) tmpFuncType
-						.outputType();
-				IntegerNumber tmpLenNum = (IntegerNumber) extractNumber(
-						tmpBvType.extent());
-				int tmpLenVal = tmpLenNum.intValue();
-
-				if (tmpLenVal == length)
-					int2bvConstant = sc; /* Found */
+			if (length > int2bvConstants.size()) {
+				for (int i = int2bvConstants.size() - 1; i < length; i++) {
+					int2bvConstants.add(null);
+				}
 			}
+			int2bvConstant = int2bvConstants.get(length);
 			if (int2bvConstant == null) {
 				// Create new bvType, if not found.
 				SymbolicFunctionType int2bvFunctionType = functionType(
@@ -3081,6 +3074,7 @@ public class CommonPreUniverse implements PreUniverse {
 				int2bvConstant = symbolicConstant(stringObject(bvName),
 						int2bvFunctionType);
 				int2bvConstants.add(int2bvConstant); /* Record */
+				int2bvConstants.set(length, int2bvConstant);
 			}
 			// If input is x and length is 32, it will return 'int2bv_32(x)'
 			return apply(int2bvConstant, Arrays.asList(integer));
@@ -3350,7 +3344,7 @@ public class CommonPreUniverse implements PreUniverse {
 		assert left != null && right != null;
 
 		SymbolicCompleteArrayType bitVectorType = bitVectorType(
-				INTEGER_BIT_LENGTH);
+				INTEGER_BIT_BOUND);
 		SymbolicObject leftObj = left.argument(0);
 		SymbolicObject rightObj = right.argument(0);
 		boolean isLeftConcrete = leftObj instanceof NumberObject;
@@ -3367,7 +3361,7 @@ public class CommonPreUniverse implements PreUniverse {
 			return bitvector2Integer(resBitVector);
 		} else if (isLeftConcrete) {
 			NumericExpression limit = power(integer(2),
-					integer(INTEGER_BIT_LENGTH));
+					integer(INTEGER_BIT_BOUND));
 
 			if (((NumberObject) leftObj).isZero())
 				return numericFactory.zeroInt();
@@ -3375,7 +3369,7 @@ public class CommonPreUniverse implements PreUniverse {
 				return right;
 		} else if (isRightConcrete) {
 			NumericExpression limit = power(integer(2),
-					integer(INTEGER_BIT_LENGTH));
+					integer(INTEGER_BIT_BOUND));
 
 			if (((NumberObject) rightObj).isZero())
 				return numericFactory.zeroInt();
@@ -3392,7 +3386,7 @@ public class CommonPreUniverse implements PreUniverse {
 		assert left != null && right != null;
 
 		SymbolicCompleteArrayType bitVectorType = bitVectorType(
-				INTEGER_BIT_LENGTH);
+				INTEGER_BIT_BOUND);
 		SymbolicObject leftObj = left.argument(0);
 		SymbolicObject rightObj = right.argument(0);
 		boolean isLeftConcrete = leftObj instanceof NumberObject;
@@ -3409,7 +3403,7 @@ public class CommonPreUniverse implements PreUniverse {
 			return bitvector2Integer(resBitVector);
 		} else if (isLeftConcrete) {
 			NumericExpression limit = power(integer(2),
-					integer(INTEGER_BIT_LENGTH));
+					integer(INTEGER_BIT_BOUND));
 
 			if (((NumberObject) leftObj).isZero())
 				return right;
@@ -3417,7 +3411,7 @@ public class CommonPreUniverse implements PreUniverse {
 				return left;
 		} else if (isRightConcrete) {
 			NumericExpression limit = power(integer(2),
-					integer(INTEGER_BIT_LENGTH));
+					integer(INTEGER_BIT_BOUND));
 
 			if (((NumberObject) rightObj).isZero())
 				return left;
@@ -3434,7 +3428,7 @@ public class CommonPreUniverse implements PreUniverse {
 		assert left != null && right != null;
 
 		SymbolicCompleteArrayType bitVectorType = bitVectorType(
-				INTEGER_BIT_LENGTH);
+				INTEGER_BIT_BOUND);
 		SymbolicObject leftObj = left.argument(0);
 		SymbolicObject rightObj = right.argument(0);
 		boolean isLeftConcrete = leftObj instanceof NumberObject;
@@ -3451,7 +3445,7 @@ public class CommonPreUniverse implements PreUniverse {
 			return bitvector2Integer(resBitVector);
 		} else if (isLeftConcrete) {
 			NumericExpression limit = power(integer(2),
-					integer(INTEGER_BIT_LENGTH));
+					integer(INTEGER_BIT_BOUND));
 
 			if (((NumberObject) leftObj).isZero())
 				return right;
@@ -3459,7 +3453,7 @@ public class CommonPreUniverse implements PreUniverse {
 				return bitnot(right);
 		} else if (isRightConcrete) {
 			NumericExpression limit = power(integer(2),
-					integer(INTEGER_BIT_LENGTH));
+					integer(INTEGER_BIT_BOUND));
 
 			if (((NumberObject) rightObj).isZero())
 				return left;
@@ -3475,7 +3469,7 @@ public class CommonPreUniverse implements PreUniverse {
 		assert expression != null;
 
 		SymbolicCompleteArrayType bitVectorType = bitVectorType(
-				INTEGER_BIT_LENGTH);
+				INTEGER_BIT_BOUND);
 		SymbolicObject exprObj = expression.argument(0);
 		boolean isConcrete = exprObj instanceof NumberObject;
 
@@ -3715,7 +3709,7 @@ public class CommonPreUniverse implements PreUniverse {
 		assert left != null && right != null;
 
 		SymbolicCompleteArrayType bitVectorType = bitVectorType(
-				INTEGER_BIT_LENGTH);
+				INTEGER_BIT_BOUND);
 		SymbolicObject leftObj = left.argument(0);
 		SymbolicObject rightObj = right.argument(0);
 		boolean isLeftConcrete = leftObj instanceof NumberObject;
@@ -3785,7 +3779,7 @@ public class CommonPreUniverse implements PreUniverse {
 					"Argument right to method bitShiftLeft could not have a value less than 0."
 							+ "\nleft array: " + left + "\nleft array length: "
 							+ shiftSize);
-		} else if (shiftSize >= INTEGER_BIT_LENGTH) {
+		} else if (shiftSize >= INTEGER_BIT_BOUND) {
 			// Return 0
 			for (int i = 0; i < size; i++)
 				resultArray[i] = booleanFactory.falseExpr();
@@ -3808,7 +3802,7 @@ public class CommonPreUniverse implements PreUniverse {
 		assert left != null && right != null;
 
 		SymbolicCompleteArrayType bitVectorType = bitVectorType(
-				INTEGER_BIT_LENGTH);
+				INTEGER_BIT_BOUND);
 		SymbolicObject leftObj = left.argument(0);
 		SymbolicObject rightObj = right.argument(0);
 		boolean isLeftConcrete = leftObj instanceof NumberObject;
@@ -3878,7 +3872,7 @@ public class CommonPreUniverse implements PreUniverse {
 					"Argument right to method bitshiftRight could not have a value less than 0."
 							+ "\nleft array: " + left + "\nleft array length: "
 							+ shiftSize);
-		} else if (shiftSize >= INTEGER_BIT_LENGTH) {
+		} else if (shiftSize >= INTEGER_BIT_BOUND) {
 			// Return 0
 			for (int i = 0; i < size; i++)
 				resultArray[i] = booleanFactory.falseExpr();
@@ -3909,5 +3903,18 @@ public class CommonPreUniverse implements PreUniverse {
 			transformedExpression = substituter.apply(transformedExpression);
 		} while (transformedExpression != prevTransformedExpression);
 		return transformedExpression;
+	}
+
+	@Override
+	public int getIntegerLengthBound() {
+		return this.INTEGER_BIT_BOUND;
+	}
+
+	@Override
+	public boolean setIntegerLengthBound(int bound) {
+		boolean result = bound >= this.INTEGER_BIT_BOUND;
+
+		this.INTEGER_BIT_BOUND = bound;
+		return result;
 	}
 }

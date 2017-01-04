@@ -2253,4 +2253,19 @@ public interface CoreUniverse {
 	SymbolicExpression fullySubstitute(
 			Map<SymbolicExpression, SymbolicExpression> substituteMap,
 			SymbolicExpression expression);
+
+	/**
+	 * Get the current upper bound of the integer length.
+	 * 
+	 * @return the maximum bit-length of the integer type
+	 */
+	int getIntegerLengthBound();
+
+	/**
+	 * Set the upper bound of the length of the integer type.
+	 * 
+	 * @param bound
+	 * @return <code>true</code>
+	 */
+	boolean setIntegerLengthBound(int bound);
 }
