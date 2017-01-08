@@ -88,6 +88,37 @@ public class CVCTranslator {
 	private boolean simplifyIntDivision;
 
 	/**
+	 * Currently, CVC4 does not support the type conversion between
+	 * <code>BITVECTOR(N)</code> and <code>INT</code>. Thus, for expressions
+	 * containing bitwise operations with symbolic arguments, CVCTranslater will
+	 * first process the expression in normal approach, and then set
+	 * <code>hasBitOp</code> as <code>true</code> iff there exists at least one
+	 * bit-wise operation in the expression.<br>
+	 * If <code>hasBitOp</code> is true, CVCTranslater will try to generated a
+	 * BITVECTOR(N)-based query. If all involved operators can be used with the
+	 * type of BITVECTOR(N), a BITVECTOR(N)-based query can be used by CVC4
+	 * prover.<br>
+	 * 12-20-2016, W.Wu
+	 */
+	@SuppressWarnings("unused")
+	private boolean hasBitOp;
+
+	/**
+	 * If the given expression containing operations can NOT be converted to a
+	 * corresponding bit-wise operation in CVC4 native language,
+	 * <code>supporBit</code> will be <code>false</code> so that CVCTranslator
+	 * will not convert the expression into a BITVECTOR(N)-based query.
+	 */
+	@SuppressWarnings("unused")
+	private boolean supportBit;
+
+	/**
+	 * The bound of the length of bit-vector, which represents an unsigned
+	 * integer.
+	 */
+	private int intLen;
+
+	/**
 	 * The symbolic universe used to create and manipulate SARL symbolic
 	 * expressions.
 	 */
@@ -114,6 +145,12 @@ public class CVCTranslator {
 	private Map<SymbolicExpression, Translation> expressionMap;
 
 	/**
+	 * Mapping of SARL symbolic expression to corresponding BITVECTOR(N)-based
+	 * CVC expression. Used to cache the results of translation.
+	 */
+	private Map<SymbolicExpression, Translation> expressionBVMap;
+
+	/**
 	 * Mapping of pairs (t1,t2) of SARL types to the uninterpreted function
 	 * symbol which represents casting from t1 to t2. The function has type
 	 * "function from translate(t1) to translate(t2)".
@@ -127,6 +164,14 @@ public class CVCTranslator {
 	 * NOTE: currently, this is not being used for anything.
 	 */
 	private Map<SymbolicConstant, FastList<String>> variableMap;
+
+	/**
+	 * Map from SARL symbolic constants to corresponding CVC expressions.
+	 * Entries are a subset of those of {@link #expressionMap}.
+	 * 
+	 * NOTE: currently, this is not being used for anything.
+	 */
+	private Map<SymbolicConstant, FastList<String>> variableBVMap;
 
 	/**
 	 * Mapping of SARL symbolic type to corresponding CVC type. Used to cache
@@ -157,13 +202,18 @@ public class CVCTranslator {
 
 	CVCTranslator(PreUniverse universe, SymbolicExpression theExpression,
 			boolean simplifyIntDivision) throws TheoremProverException {
+		this.hasBitOp = false;
+		this.supportBit = true;
 		this.simplifyIntDivision = simplifyIntDivision;
 		this.universe = universe;
+		this.intLen = universe.getIntegerLengthBound();
 		this.cvcAuxVarCount = 0;
 		this.sarlAuxVarCount = 0;
 		this.expressionMap = new HashMap<>();
+		this.expressionBVMap = new HashMap<>();
 		this.castMap = new HashMap<>();
 		this.variableMap = new HashMap<>();
+		this.variableBVMap = new HashMap<>();
 		this.typeMap = new HashMap<>();
 		if (simplifyIntDivision)
 			this.intDivMap = new HashMap<>();
@@ -171,17 +221,24 @@ public class CVCTranslator {
 			this.intDivMap = null;
 		this.cvcDeclarations = new FastList<>();
 		this.cvcTranslation = translate(theExpression).getResult();
+		//if (hasBitOp && supportBit)
+		//	this.cvcTranslation = translate_BV(theExpression).getResult();
 	}
 
 	CVCTranslator(CVCTranslator startingContext,
 			SymbolicExpression theExpression) throws TheoremProverException {
+		this.hasBitOp = false;
+		this.supportBit = true;
 		this.simplifyIntDivision = startingContext.simplifyIntDivision;
 		this.universe = startingContext.universe;
+		this.intLen = universe.getIntegerLengthBound();
 		this.cvcAuxVarCount = startingContext.cvcAuxVarCount;
 		this.sarlAuxVarCount = startingContext.sarlAuxVarCount;
 		this.expressionMap = new HashMap<>(startingContext.expressionMap);
+		this.expressionBVMap = new HashMap<>();
 		this.castMap = new HashMap<>(startingContext.castMap);
 		this.variableMap = new HashMap<>(startingContext.variableMap);
+		this.variableBVMap = new HashMap<>(startingContext.variableBVMap);
 		this.typeMap = new HashMap<>(startingContext.typeMap);
 		if (simplifyIntDivision)
 			this.intDivMap = new HashMap<>(startingContext.intDivMap);
@@ -189,6 +246,8 @@ public class CVCTranslator {
 			intDivMap = null;
 		this.cvcDeclarations = new FastList<>();
 		this.cvcTranslation = translate(theExpression).getResult();
+		//if (hasBitOp && supportBit)
+		//	this.cvcTranslation = translate_BV(theExpression).getResult();
 	}
 
 	// Private methods...
@@ -599,6 +658,44 @@ public class CVCTranslator {
 	}
 
 	/**
+	 * Translates any concrete SymbolicExpression with concrete type to
+	 * equivalent CVC Expr using the ExprManager.
+	 * 
+	 * @param expr
+	 * @return the CVC equivalent Expr
+	 */
+	private Translation translateConcrete_BV(SymbolicExpression expr) {
+		Translation translation;
+		SymbolicType type = expr.type();
+		SymbolicTypeKind kind = type.typeKind();
+		SymbolicObject object = expr.argument(0);
+		FastList<String> result;
+		switch (kind) {
+		case BOOLEAN:
+			result = new FastList<>(
+					((BooleanObject) object).getBoolean() ? "TRUE" : "FALSE");
+			break;
+		case CHAR:
+			result = new FastList<>(
+					Integer.toString((int) ((CharObject) object).getChar()));
+			break;
+		case INTEGER:
+			String intStr = object.toString();
+			long rawVal = Long.valueOf(intStr);
+
+			result = new FastList<>(getBVString(rawVal));
+			break;
+		case REAL:
+			result = new FastList<>(object.toString());
+			break;
+		default:
+			throw new SARLInternalException("Unknown concrete object: " + expr);
+		}
+		translation = new Translation(result);
+		return translation;
+	}
+
+	/**
 	 * Translates a symbolic constant. It is assumed that this is the first time
 	 * the symbolic constant has been seen. It returns simply the name of the
 	 * symbolic constant (in the form of a <code>FastList</code> of strings).
@@ -626,6 +723,42 @@ public class CVCTranslator {
 			cvcDeclarations.add(";\n");
 		}
 		this.variableMap.put(symbolicConstant, result);
+		translation = new Translation(result.clone());
+		return translation;
+	}
+
+	/**
+	 * Translates a symbolic constant into the BIT-VECTOR. It is assumed that
+	 * this is the first time the symbolic constant has been seen. It returns
+	 * simply the name of the symbolic constant (in the form of a
+	 * <code>FastList</code> of strings). For an ordinary (i.e., not quantified)
+	 * symbolic constant, this method also adds to {@link #cvcDeclarations} a
+	 * declaration of the symbolic constant.
+	 * 
+	 * @param symbolicConstant
+	 *            a SARL symbolic constant
+	 * @param isBoundVariable
+	 *            is this a bound variable?
+	 * @return the name of the symbolic constant as a fast string list
+	 */
+	private Translation translateSymbolicConstant_BV(
+			SymbolicConstant symbolicConstant, boolean isBoundVariable) {
+		Translation translation;
+		String name = symbolicConstant.name().getString();
+		SymbolicType symbolicType = symbolicConstant.type();
+		FastList<String> type = translateType(symbolicType);
+		FastList<String> result = new FastList<>(name);
+
+		if (!isBoundVariable) {
+			cvcDeclarations.addAll(name, " : ");
+			if (symbolicType.isInteger())
+				cvcDeclarations
+						.append(new FastList<>("BITVECTOR(" + intLen + ")"));
+			else
+				cvcDeclarations.append(type);
+			cvcDeclarations.add(";\n");
+		}
+		this.variableBVMap.put(symbolicConstant, result);
 		translation = new Translation(result.clone());
 		return translation;
 	}
@@ -1571,6 +1704,72 @@ public class CVCTranslator {
 
 	/**
 	 * @param operator
+	 *            the operator can be {@link SymbolicOperator.#DIVIDE} or
+	 *            {@link SymbolicOperator.#SUBTRACT} or
+	 *            {@link SymbolicOperator.#LESS_THAN} or
+	 *            {@link SymbolicOperator.#LESS_THAN_EQUALS}
+	 * @param arg0
+	 * @param arg1
+	 * @return
+	 */
+	private Translation translateBinary_BV(String operator,
+			SymbolicExpression arg0, SymbolicExpression arg1) {
+		hasBitOp = true;
+
+		Translation translation;
+		Translation t1 = translate_BV(arg0);
+		Translation t2 = translate_BV(arg1);
+		FastList<String> result = new FastList<>(operator + "(");
+
+		result.append(t1.getResult());
+		result.addAll(", ");
+		result.append(t2.getResult());
+		result.add(")");
+
+		Boolean b1 = t1.getIsDivOrModulo();
+		Boolean b2 = t2.getIsDivOrModulo();
+
+		if (b1 || b2) {
+			List<Translation> translations = new ArrayList<Translation>();
+			int translationsNum;
+
+			if (b1)
+				translations.add(t1);
+			if (b2)
+				translations.add(t2);
+			translationsNum = translations.size();
+			// merge side effects.
+			FastList<String> newConstraint = new FastList<>();
+			List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+
+			if (translationsNum == 1) {
+				Translation tempTranslation = translations.get(0);
+
+				newConstraint = tempTranslation.getAuxConstraints().clone();
+				newAuxVars.addAll(tempTranslation.getAuxVars());
+			} else {
+				Translation tempTranslation1 = translations.get(0);
+				Translation tempTranslation2 = translations.get(1);
+
+				newAuxVars.addAll(tempTranslation1.getAuxVars());
+				newAuxVars.addAll(tempTranslation2.getAuxVars());
+				newConstraint.add("(");
+				newConstraint.append(tempTranslation1.getAuxConstraints());
+				newConstraint.add(" AND ");
+				newConstraint.append(tempTranslation2.getAuxConstraints());
+				newConstraint.add(")");
+			}
+			translation = new Translation(result, true, newConstraint,
+					newAuxVars);
+
+		} else {
+			translation = new Translation(result);
+		}
+		return translation;
+	}
+
+	/**
+	 * @param operator
 	 *            The operator can be {@link SymbolicOperator.#MULTIPLY} or
 	 *            {@link SymbolicOperator.#ADD} or {@link SymbolicOperator.#AND}
 	 *            {@link SymbolicOperator.#OR}
@@ -1675,21 +1874,21 @@ public class CVCTranslator {
 			result = translateArrayWrite(expression);
 			break;
 		case BIT_AND:
-			result = translateBitwiseOperation(" & ",
+			result = translateBitOperation(" & ",
 					(SymbolicExpression) expression.argument(0),
 					(SymbolicExpression) expression.argument(1));
 			break;
 		case BIT_NOT:
-			result = translateBitwiseOperation(" ~ ",
+			result = translateBitOperation(" ~ ",
 					(SymbolicExpression) expression.argument(0), null);
 			break;
 		case BIT_OR:
-			result = translateBitwiseOperation(" ~ BVNOR ",
+			result = translateBitOperation(" BVNOR ",
 					(SymbolicExpression) expression.argument(0),
 					(SymbolicExpression) expression.argument(1));
 			break;
 		case BIT_XOR:
-			result = translateBitwiseOperation(" BVXOR ",
+			result = translateBitOperation(" BVXOR ",
 					(SymbolicExpression) expression.argument(0),
 					(SymbolicExpression) expression.argument(1));
 			break;
@@ -1826,83 +2025,272 @@ public class CVCTranslator {
 
 	private Translation translateBitShift(String operator,
 			SymbolicExpression arg0, SymbolicExpression arg1) {
-		FastList<String> result = new FastList<>("");
-		Translation translation = new Translation(result);
+		hasBitOp = true;
 
+		Translation translation;
+		Translation t1 = translate(arg0);
+		Translation t2 = translate(arg1); // Should be BV, but requires INT
+		FastList<String> result = new FastList<>(operator + "(");
+
+		result.append(t1.getResult());
+		result.add(", ");
+		result.append(t2.getResult());
+		result.add(")");
+
+		Boolean b1 = t1.getIsDivOrModulo();
+		Boolean b2 = t2.getIsDivOrModulo();
+
+		if (b1 || b2) {
+			List<Translation> translations = new ArrayList<Translation>();
+			int translationsNum;
+
+			if (b1)
+				translations.add(t1);
+			if (b2)
+				translations.add(t2);
+			translationsNum = translations.size();
+			// merge side effects.
+			FastList<String> newConstraint = new FastList<>();
+			List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+
+			if (translationsNum == 1) {
+				Translation tempTranslation = translations.get(0);
+
+				newConstraint = tempTranslation.getAuxConstraints().clone();
+				newAuxVars.addAll(tempTranslation.getAuxVars());
+			} else {
+				Translation tempTranslation1 = translations.get(0);
+				Translation tempTranslation2 = translations.get(1);
+
+				newAuxVars.addAll(tempTranslation1.getAuxVars());
+				newAuxVars.addAll(tempTranslation2.getAuxVars());
+				newConstraint.add("(");
+				newConstraint.append(tempTranslation1.getAuxConstraints());
+				newConstraint.add(" AND ");
+				newConstraint.append(tempTranslation2.getAuxConstraints());
+				newConstraint.add(")");
+			}
+			translation = new Translation(result, true, newConstraint,
+					newAuxVars);
+
+		} else {
+			translation = new Translation(result);
+		}
 		return translation;
 	}
 
-	private Translation translateBitwiseOperation(String operator,
+	private Translation translateBitShift_BV(String operator,
 			SymbolicExpression arg0, SymbolicExpression arg1) {
-		FastList<String> result = new FastList<>("");
-		Translation translation = new Translation(result);
-		Boolean isBitNot = operator.equals(" ~ ");
+		hasBitOp = true;
 
-//		if (isBitNot) {
-//			Translation t1 = translate(arg0);
-//			Boolean b1 = t1.getIsDivOrModulo();
-//			
-//			result.addAll(operator, " (");
-//			result.append(t1.getResult());
-//			result.add(")");
-//
-//			translation = new Translation(result);
-//		} else {
-//			Translation t1 = translate(arg0);
-//			Boolean b1 = t1.getIsDivOrModulo();
-//			Translation t2 = translate(arg1);
-//			Boolean b2 = t2.getIsDivOrModulo();
-//
-//			result.append(t1.getResult());
-//			result.addAll(") ", operator, " (");
-//			result.append(t2.getResult());
-//			result.add(")");
-//
-//			if (b1 || b2) {
-//				List<Translation> translations = new ArrayList<Translation>();
-//				int translationsNum;
-//
-//				if (b1)
-//					translations.add(t1);
-//				if (b2)
-//					translations.add(t2);
-//				translationsNum = translations.size();
-//
-//				if (operator.equals(" < ") || operator.equals(" <= ")) {
-//					result = postProcessForSideEffectsOfDivideOrModule(result,
-//							translations);
-//					translation = new Translation(result);
-//				} else {// merge side effects.
-//					FastList<String> newConstraint = new FastList<>();
-//					List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
-//
-//					if (translationsNum == 1) {
-//						Translation tempTranslation = translations.get(0);
-//
-//						newConstraint = tempTranslation.getAuxConstraints()
-//								.clone();
-//						newAuxVars.addAll(tempTranslation.getAuxVars());
-//					} else {
-//						Translation tempTranslation1 = translations.get(0);
-//						Translation tempTranslation2 = translations.get(1);
-//
-//						newAuxVars.addAll(tempTranslation1.getAuxVars());
-//						newAuxVars.addAll(tempTranslation2.getAuxVars());
-//						newConstraint.add("(");
-//						newConstraint
-//								.append(tempTranslation1.getAuxConstraints());
-//						newConstraint.add(" AND ");
-//						newConstraint
-//								.append(tempTranslation2.getAuxConstraints());
-//						newConstraint.add(")");
-//					}
-//					translation = new Translation(result, true, newConstraint,
-//							newAuxVars);
-//				}
-//			} else {
-//				translation = new Translation(result);
-//			}
-//		}
+		Translation translation;
+		Translation t1 = translate_BV(arg0);
+		Translation t2 = translate(arg1); // Should be BV, but requires INT
+		FastList<String> result = new FastList<>(operator + "(");
+
+		result.append(t1.getResult());
+		result.add(", ");
+		result.append(t2.getResult());
+		result.add(")");
+
+		Boolean b1 = t1.getIsDivOrModulo();
+		Boolean b2 = t2.getIsDivOrModulo();
+
+		if (b1 || b2) {
+			List<Translation> translations = new ArrayList<Translation>();
+			int translationsNum;
+
+			if (b1)
+				translations.add(t1);
+			if (b2)
+				translations.add(t2);
+			translationsNum = translations.size();
+			// merge side effects.
+			FastList<String> newConstraint = new FastList<>();
+			List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+
+			if (translationsNum == 1) {
+				Translation tempTranslation = translations.get(0);
+
+				newConstraint = tempTranslation.getAuxConstraints().clone();
+				newAuxVars.addAll(tempTranslation.getAuxVars());
+			} else {
+				Translation tempTranslation1 = translations.get(0);
+				Translation tempTranslation2 = translations.get(1);
+
+				newAuxVars.addAll(tempTranslation1.getAuxVars());
+				newAuxVars.addAll(tempTranslation2.getAuxVars());
+				newConstraint.add("(");
+				newConstraint.append(tempTranslation1.getAuxConstraints());
+				newConstraint.add(" AND ");
+				newConstraint.append(tempTranslation2.getAuxConstraints());
+				newConstraint.add(")");
+			}
+			translation = new Translation(result, true, newConstraint,
+					newAuxVars);
+
+		} else {
+			translation = new Translation(result);
+		}
+		return translation;
+	}
+
+	private Translation translateBitOperation(String operator,
+			SymbolicExpression arg0, SymbolicExpression arg1) {
+		hasBitOp = true;
+
+		Translation translation;
+
+		if (arg1 == null) {
+			Translation tempTranslation;
+			List<Translation> translations = new ArrayList<Translation>();
+			Boolean involveDivOrModulo = false;
+			FastList<String> result = new FastList<>("~ (");
+
+			tempTranslation = translate((SymbolicExpression) arg0.argument(0));
+			if (tempTranslation.getIsDivOrModulo()) {
+				translations.add(tempTranslation);
+				involveDivOrModulo = true;
+			}
+			result.append(tempTranslation.getResult());
+			result.add(")");
+			translation = new Translation(result);
+			if (involveDivOrModulo) {
+				combineTranslations(translation, translations);
+			}
+			return translation;
+		}
+
+		Translation t1 = translate(arg0);
+		Translation t2 = translate(arg1); // Should be BV, but requires INT
+		FastList<String> result = new FastList<>(operator + "(");
+
+		result.append(t1.getResult());
+		result.add(", ");
+		result.append(t2.getResult());
+		result.add(")");
+		if (operator.contains("BVNOR")) {
+			result.addFront("~(");
+			result.add(")");
+		}
+
+		Boolean b1 = t1.getIsDivOrModulo();
+		Boolean b2 = t2.getIsDivOrModulo();
+
+		if (b1 || b2) {
+			List<Translation> translations = new ArrayList<Translation>();
+			int translationsNum;
+
+			if (b1)
+				translations.add(t1);
+			if (b2)
+				translations.add(t2);
+			translationsNum = translations.size();
+			// merge side effects.
+			FastList<String> newConstraint = new FastList<>();
+			List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+
+			if (translationsNum == 1) {
+				Translation tempTranslation = translations.get(0);
+
+				newConstraint = tempTranslation.getAuxConstraints().clone();
+				newAuxVars.addAll(tempTranslation.getAuxVars());
+			} else {
+				Translation tempTranslation1 = translations.get(0);
+				Translation tempTranslation2 = translations.get(1);
+
+				newAuxVars.addAll(tempTranslation1.getAuxVars());
+				newAuxVars.addAll(tempTranslation2.getAuxVars());
+				newConstraint.add("(");
+				newConstraint.append(tempTranslation1.getAuxConstraints());
+				newConstraint.add(" AND ");
+				newConstraint.append(tempTranslation2.getAuxConstraints());
+				newConstraint.add(")");
+			}
+			translation = new Translation(result, true, newConstraint,
+					newAuxVars);
+
+		} else {
+			translation = new Translation(result);
+		}
+		return translation;
+	}
+
+	private Translation translateBitOperation_BV(String operator,
+			SymbolicExpression arg0, SymbolicExpression arg1) {
+		hasBitOp = true;
+
+		Translation translation;
+
+		if (arg1 == null) {
+			Translation tempTranslation;
+			List<Translation> translations = new ArrayList<Translation>();
+			Boolean involveDivOrModulo = false;
+			FastList<String> result = new FastList<>("~ (");
+
+			tempTranslation = translate_BV(
+					(SymbolicExpression) arg0.argument(0));
+			if (tempTranslation.getIsDivOrModulo()) {
+				translations.add(tempTranslation);
+				involveDivOrModulo = true;
+			}
+			result.append(tempTranslation.getResult());
+			result.add(")");
+			translation = new Translation(result);
+			if (involveDivOrModulo) {
+				combineTranslations(translation, translations);
+			}
+			return translation;
+		}
+
+		Translation t1 = translate_BV(arg0);
+		Translation t2 = translate_BV(arg1); // Should be BV, but requires INT
+		FastList<String> result = new FastList<>(operator + "(");
+
+		result.append(t1.getResult());
+		result.add(", ");
+		result.append(t2.getResult());
+		result.add(")");
+
+		Boolean b1 = t1.getIsDivOrModulo();
+		Boolean b2 = t2.getIsDivOrModulo();
+
+		if (b1 || b2) {
+			List<Translation> translations = new ArrayList<Translation>();
+			int translationsNum;
+
+			if (b1)
+				translations.add(t1);
+			if (b2)
+				translations.add(t2);
+			translationsNum = translations.size();
+			// merge side effects.
+			FastList<String> newConstraint = new FastList<>();
+			List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+
+			if (translationsNum == 1) {
+				Translation tempTranslation = translations.get(0);
+
+				newConstraint = tempTranslation.getAuxConstraints().clone();
+				newAuxVars.addAll(tempTranslation.getAuxVars());
+			} else {
+				Translation tempTranslation1 = translations.get(0);
+				Translation tempTranslation2 = translations.get(1);
+
+				newAuxVars.addAll(tempTranslation1.getAuxVars());
+				newAuxVars.addAll(tempTranslation2.getAuxVars());
+				newConstraint.add("(");
+				newConstraint.append(tempTranslation1.getAuxConstraints());
+				newConstraint.add(" AND ");
+				newConstraint.append(tempTranslation2.getAuxConstraints());
+				newConstraint.add(")");
+			}
+			translation = new Translation(result, true, newConstraint,
+					newAuxVars);
+
+		} else {
+			translation = new Translation(result);
+		}
 		return translation;
 	}
 
@@ -2030,6 +2418,297 @@ public class CVCTranslator {
 			this.expressionMap.put(expression, res);
 		}
 		return res.clone();
+	}
+
+	// BV-Based Query Translations
+	// TODO: Re-factor this part like Z3Translator, when CVC allows the
+	// conversion between BITVECTOR(N) and INT.
+
+	private Translation translate_BV(SymbolicExpression expression)
+			throws TheoremProverException {
+		Translation res = expressionBVMap.get(expression);
+
+		if (res == null) {
+			res = translateWork_BV(expression);
+			this.expressionBVMap.put(expression, res);
+		}
+		if (res == null)
+			System.out.println(expression.operator());
+		return res.clone();
+	}
+
+	private Translation translateWork_BV(SymbolicExpression expression) {
+		SymbolicOperator operator = expression.operator();
+		Translation result = null;
+
+		// TODO: Implement all operators
+		switch (operator) {
+		case ADD:
+			result = translateKeySet_BV(" BVPLUS ", getBVString(0), expression);
+			break;
+		case AND:
+			result = translateKeySet(" AND ", "TRUE", expression);
+			break;
+		case APPLY:
+			result = translateApply(expression);
+			break;
+		case ARRAY:
+			// result = translateConcreteArray(expression);
+			break;
+		case ARRAY_LAMBDA:
+			throw new TheoremProverException(
+					"Array lambdas are not supported by CVC");
+		case ARRAY_READ:
+			result = translateArrayRead(expression);
+			break;
+		case ARRAY_WRITE:
+			// result = translateArrayWrite(expression);
+			break;
+		case BIT_AND:
+			result = translateBitOperation_BV(" & ",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case BIT_NOT:
+			result = translateBitOperation_BV(" ~ ",
+					(SymbolicExpression) expression.argument(0), null);
+			break;
+		case BIT_OR:
+			result = translateBitOperation_BV(" BVNOR ",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case BIT_XOR:
+			// result = translateBitOperation(" BVXOR ",
+			// (SymbolicExpression) expression.argument(0),
+			// (SymbolicExpression) expression.argument(1));
+			break;
+		case BIT_SHIFT_LEFT:
+			result = translateBitShift_BV(" BVSHL ",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case BIT_SHIFT_RIGHT:
+			result = translateBitShift_BV(" BVLSHR ",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case CAST:
+			result = translateCast(expression);
+			break;
+		case CONCRETE:
+			result = translateConcrete_BV(expression);
+			break;
+		case COND:
+			// result = translateCond(expression);
+			break;
+		case DENSE_ARRAY_WRITE:
+			// result = translateDenseArrayWrite(expression);
+			break;
+		case DENSE_TUPLE_WRITE:
+			// result = translateDenseTupleWrite(expression);
+			break;
+		case DIVIDE: // real division
+			// result = translateBinary(" / ",
+			// (SymbolicExpression) expression.argument(0),
+			// (SymbolicExpression) expression.argument(1));
+			break;
+		case EQUALS:
+			// result = translateEquality(expression);
+			break;
+		case EXISTS:
+		case FORALL:
+			// result = translateQuantifier(expression);
+			break;
+		case INT_DIVIDE:
+			// if (simplifyIntDivision) {
+			// result = getIntDivInfo(
+			// (NumericExpression) expression.argument(0),
+			// (NumericExpression) expression.argument(1),
+			// SymbolicOperator.INT_DIVIDE);
+			// } else {
+			// result = translateBinary(" DIV ",
+			// (SymbolicExpression) expression.argument(0),
+			// (SymbolicExpression) expression.argument(1));
+			// }
+			break;
+		case LENGTH:
+			// result = lengthOfArray((SymbolicExpression)
+			// expression.argument(0));
+			break;
+		case LESS_THAN:
+			result = translateBinary_BV(" BVLT ",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case LESS_THAN_EQUALS:
+			result = translateBinary_BV(" BVLE ",
+					(SymbolicExpression) expression.argument(0),
+					(SymbolicExpression) expression.argument(1));
+			break;
+		case MODULO:
+			// if (simplifyIntDivision) {
+			// result = getIntDivInfo(
+			// (NumericExpression) expression.argument(0),
+			// (NumericExpression) expression.argument(1),
+			// SymbolicOperator.MODULO);
+			// } else
+			// result = translateBinary(" MOD ",
+			// (SymbolicExpression) expression.argument(0),
+			// (SymbolicExpression) expression.argument(1));
+			break;
+		case MULTIPLY:
+			result = translateKeySet(" BVMULT ", getBVString(1), expression);
+			break;
+		case NEGATIVE:
+			// result = translateNegative(expression);
+			break;
+		case NEQ:
+			// result = translateNEQ(expression);
+			break;
+		case NOT:
+			result = translateNot(expression);
+			break;
+		case OR:
+			result = translateKeySet(" OR ", "FALSE", expression);
+			break;
+		case POWER:
+			// result = translatePower(expression);
+			break;
+		case SUBTRACT:
+			// result = translateBinary(" - ",
+			// (SymbolicExpression) expression.argument(0),
+			// (SymbolicExpression) expression.argument(1));
+			break;
+		case SYMBOLIC_CONSTANT:
+			result = translateSymbolicConstant_BV((SymbolicConstant) expression,
+					false);
+			break;
+		case TUPLE:
+			// result = translateConcreteTuple(expression);
+			break;
+		case TUPLE_READ:
+			// result = translateTupleRead(expression);
+			break;
+		case TUPLE_WRITE:
+			// result = translateTupleWrite(expression);
+			break;
+		case UNION_EXTRACT:
+			// result = translateUnionExtract(expression);
+			break;
+		case UNION_INJECT:
+			// result = translateUnionInject(expression);
+			break;
+		case UNION_TEST:
+			// result = translateUnionTest(expression);
+			break;
+		case LAMBDA:
+			// result = translateLambda(expression);
+			break;
+		case NULL:
+			result = null;
+			break;
+		default:
+			throw new SARLInternalException(
+					"unreachable: unknown operator: " + operator);
+		}
+		if (result == null)
+			System.out.println(expression.toString());
+		return result;
+	}
+
+	/**
+	 * @param operator
+	 *            The operator can be {@link SymbolicOperator.#MULTIPLY} or
+	 *            {@link SymbolicOperator.#ADD}
+	 * @param defaultValue
+	 * @param expression
+	 * @return
+	 */
+	private Translation translateKeySet_BV(String operator, String defaultValue,
+			SymbolicExpression expression) {
+		Translation translation;
+		int size = expression.numArguments();
+
+		if (size == 0) {
+			return new Translation(new FastList<>(defaultValue));
+		} else if (size == 1) {
+			return translate_BV((SymbolicExpression) expression.argument(0));
+		} else {
+			Boolean divOrModole = false;
+			List<Translation> translations = new ArrayList<>();
+			FastList<String> result = new FastList<>();
+
+			for (int i = 0; i < size; i++) {
+				SymbolicExpression term = (SymbolicExpression) expression
+						.argument(i);
+				Translation t_bv = translate_BV(term);
+
+				if (t_bv.getIsDivOrModulo()) {
+					translations.add(t_bv.clone());
+					divOrModole = true;
+				}
+				if (i == 0) {
+					result.add(operator);
+					result.add("(" + intLen + ", ");
+					result.append(t_bv.getResult());
+				} else if (i == 1) {
+					result.add(", ");
+					result.append(t_bv.getResult());
+					result.add(")");
+				} else {
+					result.addFront("(" + intLen + ", ");
+					result.addFront(operator);
+					result.append(t_bv.getResult());
+					result.add(")");
+				}
+			}
+			if (divOrModole && (operator.equals(" BVPLUS ")
+					|| operator.equals(" BVMULT "))) {
+				int translationsNum = translations.size();
+				FastList<String> newConstraint = new FastList<>();
+				List<FastList<String>> newAuxVars = new ArrayList<FastList<String>>();
+
+				if (translationsNum == 1) {
+					Translation tempTranslation = translations.get(0);
+
+					newConstraint = tempTranslation.getAuxConstraints().clone();
+					newAuxVars.addAll(tempTranslation.getAuxVars());
+				} else {
+					Translation tempTranslation1 = translations.get(0);
+					Translation tempTranslation2 = translations.get(1);
+
+					newAuxVars.addAll(tempTranslation1.getAuxVars());
+					newAuxVars.addAll(tempTranslation2.getAuxVars());
+					newConstraint.add("(");
+					newConstraint.append(tempTranslation1.getAuxConstraints());
+					newConstraint.add(" AND ");
+					newConstraint.append(tempTranslation2.getAuxConstraints());
+					newConstraint.add(")");
+				}
+				translation = new Translation(result, true, newConstraint,
+						newAuxVars);
+			} else {
+				translation = new Translation(result);
+			}
+			return translation;
+		}
+	}
+
+	private String getBVString(long val) {
+		char bitvector[] = new char[intLen];
+
+		for (int i = intLen - 1; i >= 0; i--) {
+			long bit = val % 2;
+
+			if (bit == 1)
+				bitvector[i] = '1';
+			else
+				bitvector[i] = '0';
+			val = (val - bit) / 2;
+		}
+
+		return "0bin" + String.valueOf(bitvector);
 	}
 
 	// Exported methods...
