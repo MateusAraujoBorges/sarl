@@ -77,33 +77,6 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
  */
 public interface Simplifier extends UnaryOperator<SymbolicExpression> {
 
-	/**
-	 * An object for storing some information about the state of the search
-	 * through a symbolic expression. Used as the type of one of the arguments
-	 * to all the methods.
-	 * 
-	 * @author siegel
-	 */
-	public interface SimplifierState {
-
-		/**
-		 * Is this an initial state? If this returns <code>true</cache>
-		 * it gives permission to the Simplifier to use its
-		 * cache to store and retrieve previous simplification results.
-		 * 
-		 * @return <code>true</code> iff this is an initial state
-		 */
-		boolean isInitial();
-
-		/**
-		 * returns true iff the given symbolic constant is a bound variable
-		 * 
-		 * @param symbol
-		 * @return
-		 */
-		boolean isBoundVaraible(SymbolicConstant symbol);
-
-	}
 
 	/**
 	 * Returns the pre-universe associated to this simplifier

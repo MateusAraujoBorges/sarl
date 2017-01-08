@@ -135,7 +135,7 @@ public class CommonPreUniverse implements PreUniverse {
 	/**
 	 * The object used to give quantified (bound) variables unique names.
 	 */
-	private BoundCleaner cleaner;
+	private BoundCleaner2 cleaner;
 
 	/** The boolean type. */
 	private SymbolicType booleanType;
@@ -226,7 +226,7 @@ public class CommonPreUniverse implements PreUniverse {
 		denseArrayMaxSize = numberFactory.integer(DENSE_ARRAY_MAX_SIZE);
 		quantifierExpandBound = numberFactory.integer(QUANTIFIER_EXPAND_BOUND);
 		nullExpression = expressionFactory.nullExpression();
-		cleaner = new BoundCleaner(this, objectFactory, typeFactory);
+		cleaner = new BoundCleaner2(this, objectFactory, typeFactory);
 		arrayIndex = (NumericSymbolicConstant) canonic(
 				symbolicConstant(stringObject("i"), integerType));
 		exprSeqFactory = new SequenceFactory<SymbolicExpression>() {
@@ -2757,8 +2757,20 @@ public class CommonPreUniverse implements PreUniverse {
 		}
 	}
 
+	@Override
 	public SymbolicExpression cleanBoundVariables(SymbolicExpression expr) {
 		return cleaner.apply(expr);
+	}
+
+	@Override
+	public UnaryOperator<SymbolicExpression> newBoundCleaner() {
+		return new BoundCleaner2(this, objectFactory, typeFactory);
+	}
+
+	@Override
+	public UnaryOperator<SymbolicExpression> cloneBoundCleaner(
+			UnaryOperator<SymbolicExpression> boundCleaner) {
+		return ((BoundCleaner2) boundCleaner).clone();
 	}
 
 	@Override

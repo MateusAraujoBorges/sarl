@@ -43,8 +43,8 @@ import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
  * <p>
  * A generic, abstract class for performing substitutions on symbolic
  * expressions. Concrete classes must implement the interface
- * {@link SubstituterState}, which is used store anything about the state of the
- * search through the expression. They must also implement the method
+ * {@link SubstituterState}, which is used to store anything about the state of
+ * the search through the expression. They must also implement the method
  * {@link #newState()} to produce the initial {@link SubstituterState}. They
  * should also override any or all of the <code>protected</code> methods here.
  * </p>
@@ -421,7 +421,7 @@ public abstract class ExpressionSubstituter
 						expression.argument(2), state);
 			}
 		}
-		
+
 		int numArgs = expression.numArguments();
 		SymbolicType type = expression.type();
 		SymbolicType newType = substituteType(type, state);
@@ -450,7 +450,7 @@ public abstract class ExpressionSubstituter
 
 	/**
 	 * Performs substitution on a symbolic expression. Determines whether the
-	 * expression is quantified or not, can invokes the appropriate method:
+	 * expression is quantified or not, and invokes the appropriate method:
 	 * {@link #substituteQuantifiedExpression(SymbolicExpression, SubstituterState)}
 	 * or
 	 * {@link #substituteNonquantifiedExpression(SymbolicExpression, SubstituterState)}

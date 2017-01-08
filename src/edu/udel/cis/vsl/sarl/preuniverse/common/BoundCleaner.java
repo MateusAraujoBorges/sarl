@@ -35,7 +35,9 @@ import edu.udel.cis.vsl.sarl.util.Pair;
 /**
  * Replaces all bound variables in expressions with new ones so that each has a
  * unique name and a name different from any unbound symbolic constant (assuming
- * no one else use the special string).
+ * no one else uses the "special string").
+ * 
+ * New names: z, __b0, x, y, __b1, __b2, y, x, __b3
  * 
  * @author Stephen F. Siegel
  */
@@ -43,7 +45,7 @@ public class BoundCleaner extends ExpressionSubstituter {
 
 	/**
 	 * Special string which will be used to give unique name to new variables.
-	 * "'" is good but not for Z3.
+	 * "'" is good for some provers, but not for Z3.
 	 */
 	private final static String specialString = "__";
 
@@ -146,6 +148,14 @@ public class BoundCleaner extends ExpressionSubstituter {
 				return newConstant;
 		}
 		return super.substituteNonquantifiedExpression(expression, state);
+	}
+
+	public BoundCleaner clone() {
+		BoundCleaner result = new BoundCleaner(universe, objectFactory,
+				typeFactory);
+
+		result.countMap.putAll(countMap);
+		return result;
 	}
 
 }

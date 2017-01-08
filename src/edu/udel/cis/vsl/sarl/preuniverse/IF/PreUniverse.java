@@ -2,6 +2,7 @@ package edu.udel.cis.vsl.sarl.preuniverse.IF;
 
 import edu.udel.cis.vsl.sarl.IF.CoreUniverse;
 import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
+import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.CharObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
@@ -17,7 +18,7 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * provide a hierarchical design to SARL. The simplification/proving modules
  * require the basic symbolic algebra services provided by a {@link PreUniverse}
  * . A full {@link SymbolicUniverse} requires the simplification and proving
- * modules. A hierarchy in the USES relation is achieved
+ * modules. A hierarchy in the USES relation is achieved.
  * 
  * @author siegel
  *
@@ -65,4 +66,14 @@ public interface PreUniverse extends CoreUniverse {
 	 *         the bound variables possibly changed to be unique
 	 */
 	SymbolicExpression cleanBoundVariables(SymbolicExpression expr);
+
+	/**
+	 * Produces a new object for renaming bound variables.
+	 * 
+	 * @return new bound cleaner with empty state
+	 */
+	UnaryOperator<SymbolicExpression> newBoundCleaner();
+
+	UnaryOperator<SymbolicExpression> cloneBoundCleaner(
+			UnaryOperator<SymbolicExpression> boundCleaner);
 }

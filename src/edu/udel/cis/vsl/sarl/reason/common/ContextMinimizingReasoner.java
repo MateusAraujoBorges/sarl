@@ -42,7 +42,6 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * @see {@link ContextPartition}
  * 
  * @author Stephen F. Siegel
- *
  */
 public class ContextMinimizingReasoner implements Reasoner {
 
@@ -95,8 +94,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 	/**
 	 * The partition of the set of conjunctive clauses of the context into
-	 * equivalence classes. The equivalence relation is given by two clauses are
-	 * equivalent if they share a common variables; complete to an equivalence
+	 * equivalence classes. Two clauses are equivalent if they share a common
+	 * variable; complete (take the transitive closure) to an equivalence
 	 * relation.
 	 */
 	private ContextPartition partition;
@@ -332,7 +331,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 		}
 
 		/*
-		 * Three-level predicate reducetion is applied:
+		 * Three-level predicate reduction is applied:
 		 * 
 		 * Level 0: reduce predicate with constant substitution map;
 		 * 
@@ -365,8 +364,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 			}
 			if (newPredicate != predicate || newContext != context) {
 				// the predicate or context got simpler, so start over again
-				// with
-				// checks of trivial cases, cache, etc...
+				// with checks of trivial cases, cache, etc...
 				if (debug) {
 					debugOut.println("Context              : " + context);
 					debugOut.println("Simplified context   : " + newContext);
