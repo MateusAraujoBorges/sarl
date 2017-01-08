@@ -3723,10 +3723,6 @@ public class CommonPreUniverse implements PreUniverse {
 					rightShiftNumBits);
 
 			return bitvector2Integer(resBitVector);
-		} else if (isLeftConcrete) {
-			// TODO: If CVC4 supports symbolic bit-wise analysis
-		} else if (isRightConcrete) {
-			// TODO: If CVC4 supports symbolic bit-wise analysis
 		}
 		return numericFactory.expression(SymbolicOperator.BIT_SHIFT_LEFT,
 				integerType, left, right);
@@ -3816,10 +3812,6 @@ public class CommonPreUniverse implements PreUniverse {
 					rightShiftNumBits);
 
 			return bitvector2Integer(resBitVector);
-		} else if (isLeftConcrete) {
-			// TODO: If CVC4 supports symbolic bit-wise analysis
-		} else if (isRightConcrete) {
-			// TODO: If CVC4 supports symbolic bit-wise analysis
 		}
 		return numericFactory.expression(SymbolicOperator.BIT_SHIFT_RIGHT,
 				integerType, left, right);
