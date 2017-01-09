@@ -14,6 +14,8 @@ import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
@@ -136,5 +138,18 @@ public class IntegerArithmeticDevTest {
 				positiveIntegeralInfi);
 
 		assertEquals(falsePred, false);
+	}
+
+	@Test
+	public void intervalNegation() {
+		IntegerNumber one = universe.numberFactory().oneInteger();
+		IntegerNumber infi = universe.numberFactory().infiniteInteger(true);
+		Interval interval = universe.numberFactory().newInterval(true, one,
+				true, infi, false);
+		IntegerNumber negOne = universe.numberFactory().negate(one);
+		Interval result = universe.numberFactory().multiply(negOne, interval);
+		Interval negInterval = universe.numberFactory().negate(interval);
+
+		assertEquals(result, negInterval);
 	}
 }
