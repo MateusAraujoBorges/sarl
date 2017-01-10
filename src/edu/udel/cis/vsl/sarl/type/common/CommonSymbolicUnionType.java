@@ -23,9 +23,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
-/**
- * Implementation of {@link SymbolicUnionType}.
- */
 public class CommonSymbolicUnionType extends CommonSymbolicType
 		implements SymbolicUnionType {
 
@@ -118,5 +115,10 @@ public class CommonSymbolicUnionType extends CommonSymbolicType
 	 */
 	public void setPureType(SymbolicUnionType pureType) {
 		this.pureType = pureType;
+	}
+
+	@Override
+	public boolean containsQuantifier() {
+		return sequence.containsQuantifier();
 	}
 }

@@ -22,11 +22,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
-/**
- * @author jthakkar
- * 
- *         an implementation of {@link SymbolicArrayType}
- */
 public class CommonSymbolicArrayType extends CommonSymbolicType
 		implements SymbolicArrayType {
 
@@ -156,5 +151,10 @@ public class CommonSymbolicArrayType extends CommonSymbolicType
 			element = ((SymbolicArrayType) element).elementType();
 		}
 		return dimensions;
+	}
+
+	@Override
+	public boolean containsQuantifier() {
+		return false;
 	}
 }

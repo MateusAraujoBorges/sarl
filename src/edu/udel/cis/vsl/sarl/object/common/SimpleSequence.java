@@ -7,6 +7,7 @@ import java.util.Iterator;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.Transform;
+import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
@@ -14,7 +15,7 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * Implementation based on arrays. The entire array is copied with every
- * operation. Performance can be good for small sized.
+ * operation. Performance can be good for small sizes.
  * 
  * @author siegel
  * 
@@ -36,6 +37,14 @@ public class SimpleSequence<T extends SymbolicExpression>
 	 * The number of elements which are NULL.
 	 */
 	private int numNull;
+
+	/**
+	 * Does this sequence contain an expression that contains a quantified
+	 * expression anywhere within its structure? Initially
+	 * {@link ResultType#MAYBE}, it will be changed to a definite result the
+	 * first time the method {@link #containsQuantifier()} is called.
+	 */
+	private ResultType containsQuantifier = ResultType.MAYBE;
 
 	/**
 	 * The numNull is NOT checked. It better be right, or all bets are off.
@@ -370,5 +379,19 @@ public class SimpleSequence<T extends SymbolicExpression>
 	@Override
 	public T getFirst() {
 		return elements[0];
+	}
+
+	@Override
+	public boolean containsQuantifier() {
+		if (containsQuantifier != ResultType.MAYBE)
+			return containsQuantifier == ResultType.YES;
+		for (SymbolicExpression x : elements) {
+			if (x != null && x.containsQuantifier()) {
+				containsQuantifier = ResultType.YES;
+				return true;
+			}
+		}
+		containsQuantifier = ResultType.NO;
+		return false;
 	}
 }

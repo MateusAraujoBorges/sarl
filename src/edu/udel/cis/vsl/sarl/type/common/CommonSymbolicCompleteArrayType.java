@@ -23,16 +23,11 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
-/**
- * @author jthakkar
- *
- *         implementation for {@link SymbolicCompleteArrayType}
- */
 public class CommonSymbolicCompleteArrayType extends CommonSymbolicArrayType
 		implements SymbolicCompleteArrayType {
 
 	/**
-	 * extent is used to specify the length of a Complete Array
+	 * The expression which yields the length of arrays in this type.
 	 */
 	private NumericExpression extent;
 
@@ -68,6 +63,11 @@ public class CommonSymbolicCompleteArrayType extends CommonSymbolicArrayType
 	@Override
 	public boolean isComplete() {
 		return true;
+	}
+
+	@Override
+	public boolean containsQuantifier() {
+		return extent.containsQuantifier();
 	}
 
 }

@@ -213,10 +213,6 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *            based
 	 */
 	public IdealSimplifier(SimplifierInfo info, BooleanExpression assumption) {
-		// NOTE: currently, this simplifier does not "clean" the assumption
-		// or expressions, which means there can be bound variables that
-		// have the same name as other bound variables or other free variables.
-		// does this create a problem?
 		super(info.universe);
 		this.info = info;
 		// rename bound variables so every variable has a unique name...

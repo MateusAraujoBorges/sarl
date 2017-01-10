@@ -29,11 +29,8 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.object.common.CommonSymbolicObject;
 
 /**
- * an implementation of {@link SymbolicTypeSequence} which is a finite, ordered
+ * An implementation of {@link SymbolicTypeSequence} which is a finite, ordered
  * sequence of SymbolicType.
- * 
- * @author alali
- *
  */
 public class CommonSymbolicTypeSequence extends CommonSymbolicObject
 		implements SymbolicTypeSequence {
@@ -155,6 +152,15 @@ public class CommonSymbolicTypeSequence extends CommonSymbolicObject
 	@Override
 	public StringBuffer toStringBufferLong() {
 		return toStringBuffer(false);
+	}
+
+	@Override
+	public boolean containsQuantifier() {
+		for (SymbolicType t : elements) {
+			if (t.containsQuantifier())
+				return true;
+		}
+		return false;
 	}
 
 }

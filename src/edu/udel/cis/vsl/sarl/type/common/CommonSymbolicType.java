@@ -22,11 +22,6 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.object.common.CommonSymbolicObject;
 
-/**
- * an abstract representation of the {@link SymbolicType}
- * 
- * @author alali
- */
 public abstract class CommonSymbolicType extends CommonSymbolicObject
 		implements SymbolicType {
 
@@ -39,7 +34,6 @@ public abstract class CommonSymbolicType extends CommonSymbolicObject
 	 * Constructs new SymbolicType object with given kind and ID number -1.
 	 */
 	CommonSymbolicType(SymbolicTypeKind kind) {
-		// super(SymbolicObjectKind.TYPE);
 		assert kind != null;
 		this.kind = kind;
 	}

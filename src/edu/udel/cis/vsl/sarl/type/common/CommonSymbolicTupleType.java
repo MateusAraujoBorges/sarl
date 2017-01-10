@@ -23,12 +23,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
-/**
- * an implementation of {@link SymbolicTupleType}
- * 
- * @author mohammedalali
- * 
- */
 public class CommonSymbolicTupleType extends CommonSymbolicType
 		implements SymbolicTupleType {
 
@@ -114,6 +108,11 @@ public class CommonSymbolicTupleType extends CommonSymbolicType
 	 */
 	public void setPureType(SymbolicTupleType pureType) {
 		this.pureType = pureType;
+	}
+
+	@Override
+	public boolean containsQuantifier() {
+		return sequence.containsQuantifier();
 	}
 
 }

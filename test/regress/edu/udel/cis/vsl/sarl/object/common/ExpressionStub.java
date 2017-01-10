@@ -128,4 +128,9 @@ public class ExpressionStub implements SymbolicExpression {
 		return new LinkedList<SymbolicObject>();
 	}
 
+	@Override
+	public boolean containsQuantifier() {
+		return false;
+	}
+
 }

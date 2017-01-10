@@ -150,4 +150,13 @@ public interface SymbolicObject {
 	 */
 	StringBuffer toStringBufferLong();
 
+	/**
+	 * Does this symbolic object contain a quantified expression anywhere in its
+	 * structure?
+	 * 
+	 * @return <code>true</code> iff a quantified expression appears somewhere
+	 *         inside this object
+	 */
+	boolean containsQuantifier();
+
 }

@@ -79,4 +79,9 @@ public class CommonStringObject extends CommonSymbolicObject
 	public SymbolicObjectKind symbolicObjectKind() {
 		return SymbolicObjectKind.STRING;
 	}
+
+	@Override
+	public boolean containsQuantifier() {
+		return false;
+	}
 }

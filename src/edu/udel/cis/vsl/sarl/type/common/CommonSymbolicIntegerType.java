@@ -124,4 +124,9 @@ public class CommonSymbolicIntegerType extends CommonSymbolicType
 		return this;
 	}
 
+	@Override
+	public boolean containsQuantifier() {
+		return false;
+	}
+
 }

@@ -124,4 +124,9 @@ public class CommonSymbolicMapType extends CommonSymbolicType
 	public SymbolicTupleType getEntryType() {
 		return entryType;
 	}
+
+	@Override
+	public boolean containsQuantifier() {
+		return keyType.containsQuantifier() || valueType.containsQuantifier();
+	}
 }

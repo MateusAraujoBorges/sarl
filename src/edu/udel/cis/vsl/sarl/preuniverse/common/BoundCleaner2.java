@@ -276,6 +276,13 @@ public class BoundCleaner2 extends ExpressionSubstituter {
 
 			if (newConstant != null)
 				return newConstant;
+			// still possible that type could change...
+		}
+		if (state.isInitial() && !expression.containsQuantifier()) {
+			// this means neither the expression nor its type contains
+			// any quantifier and the bound stack is empty, so no
+			// change is possible
+			return expression;
 		}
 		return super.substituteNonquantifiedExpression(expression, state);
 	}
@@ -292,6 +299,8 @@ public class BoundCleaner2 extends ExpressionSubstituter {
 
 	@Override
 	public SymbolicExpression apply(SymbolicExpression expression) {
+		if (!expression.containsQuantifier())
+			return expression;
 		for (SymbolicConstant x : universe
 				.getFreeSymbolicConstants(expression)) {
 			use(x.name().getString());

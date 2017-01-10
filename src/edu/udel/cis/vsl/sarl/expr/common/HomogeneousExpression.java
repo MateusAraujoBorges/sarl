@@ -20,6 +20,7 @@ package edu.udel.cis.vsl.sarl.expr.common;
 
 import java.util.Arrays;
 
+import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
@@ -50,6 +51,14 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	/** The arguments of this expression */
 	protected T[] arguments;
 
+	/**
+	 * Does this sequence contain an expression that contains a quantified
+	 * expression anywhere within its structure? Initially
+	 * {@link ResultType#MAYBE}, it will be changed to a definite result the
+	 * first time the method {@link #containsQuantifier()} is called.
+	 */
+	private ResultType containsQuantifier = ResultType.MAYBE;
+
 	// Constructors...
 
 	/**
@@ -75,6 +84,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		this.operator = operator;
 		this.type = type;
 		this.arguments = arguments;
+
 	}
 
 	@Override
@@ -821,5 +831,19 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	@Override
 	public boolean isNumeric() {
 		return this instanceof NumericExpression;
+	}
+
+	@Override
+	public boolean containsQuantifier() {
+		if (containsQuantifier != ResultType.MAYBE)
+			return containsQuantifier == ResultType.YES;
+		for (SymbolicObject x : arguments) {
+			if (x != null && x.containsQuantifier()) {
+				containsQuantifier = ResultType.YES;
+				return true;
+			}
+		}
+		containsQuantifier = ResultType.NO;
+		return false;
 	}
 }

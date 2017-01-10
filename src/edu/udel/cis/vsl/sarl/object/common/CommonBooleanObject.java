@@ -99,4 +99,8 @@ public class CommonBooleanObject extends CommonSymbolicObject
 		return SymbolicObjectKind.BOOLEAN;
 	}
 
+	@Override
+	public boolean containsQuantifier() {
+		return false;
+	}
 }

@@ -119,4 +119,9 @@ public class CommonNumberObject extends CommonSymbolicObject
 	public SymbolicObjectKind symbolicObjectKind() {
 		return SymbolicObjectKind.NUMBER;
 	}
+
+	@Override
+	public boolean containsQuantifier() {
+		return false;
+	}
 }

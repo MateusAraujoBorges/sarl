@@ -23,11 +23,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
-/**
- * @author jthakkar
- * 
- *         implementation of {@link SymbolicFunctionType}
- */
 public class CommonSymbolicFunctionType extends CommonSymbolicType
 		implements SymbolicFunctionType {
 
@@ -107,6 +102,17 @@ public class CommonSymbolicFunctionType extends CommonSymbolicType
 
 	public void setPureType(SymbolicFunctionType pureType) {
 		this.pureType = pureType;
+	}
+
+	@Override
+	public boolean containsQuantifier() {
+		if (outputType.containsQuantifier())
+			return true;
+		for (SymbolicType t : inputTypes) {
+			if (t.containsQuantifier())
+				return true;
+		}
+		return false;
 	}
 
 }

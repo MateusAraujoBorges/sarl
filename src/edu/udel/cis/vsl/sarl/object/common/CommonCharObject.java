@@ -88,4 +88,8 @@ public class CommonCharObject extends CommonSymbolicObject
 		return SymbolicObjectKind.CHAR;
 	}
 
+	@Override
+	public boolean containsQuantifier() {
+		return false;
+	}
 }

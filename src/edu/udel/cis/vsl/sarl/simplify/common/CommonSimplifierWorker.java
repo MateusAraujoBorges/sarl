@@ -62,6 +62,9 @@ public abstract class CommonSimplifierWorker {
 
 	// Instance fields...
 
+	/**
+	 * The simplifier that spawned this worker.
+	 */
 	protected CommonSimplifier simplifier;
 
 	protected int quantificationDepth = 0;
@@ -89,10 +92,31 @@ public abstract class CommonSimplifierWorker {
 
 	// Non-abstract methods...
 
+	/**
+	 * Retrieves a simplification result from the cache. The simplification
+	 * methods of the {@link Simplifier} will cache the results of
+	 * simplification. This method will get one of those cached results.
+	 * 
+	 * @param object
+	 *            a symbolic object
+	 * @return the result of a previous simplification of that object, or
+	 *         <code>null</code> is no result has been cached for that object
+	 */
 	protected SymbolicObject getCachedSimplification(SymbolicObject object) {
 		return simplifier.getCachedSimplification(object);
 	}
 
+	/**
+	 * Performs the work required to simplify a symbolic type. A primitive type
+	 * is returned unchanged. For compound types, simplification is recursive on
+	 * the structure of the type. Ultimately a non-trivial simplification can
+	 * occur because array types may involve an expression for the length of the
+	 * array.
+	 * 
+	 * @param type
+	 *            any canonic symbolic type
+	 * @return simplified version of that type
+	 */
 	protected SymbolicType simplifyTypeWork(SymbolicType type) {
 		switch (type.typeKind()) {
 		case BOOLEAN:
@@ -162,6 +186,15 @@ public abstract class CommonSimplifierWorker {
 		}
 	}
 
+	/**
+	 * Performs the work necessary to simplify a type sequence. The
+	 * simplification of a type sequence is the sequence resulting from
+	 * simplifying each component type individually.
+	 * 
+	 * @param sequence
+	 *            any canonic type sequence
+	 * @return the simplified sequence
+	 */
 	protected SymbolicTypeSequence simplifyTypeSequenceWork(
 			SymbolicTypeSequence sequence) {
 		int size = sequence.numTypes();
@@ -186,6 +219,15 @@ public abstract class CommonSimplifierWorker {
 		return sequence;
 	}
 
+	/**
+	 * Performs the work necessary for simplifying a sequence of symbolic
+	 * expressions. The result is obtained by simplifying each component
+	 * individually.
+	 * 
+	 * @param sequence
+	 *            any canonic symbolic expression sequence
+	 * @return the simplified sequence
+	 */
 	protected SymbolicSequence<?> simplifySequenceWork(
 			SymbolicSequence<?> sequence) {
 		int size = sequence.size();
@@ -209,6 +251,16 @@ public abstract class CommonSimplifierWorker {
 		return result;
 	}
 
+	/**
+	 * Performs the work necessary to simplify a symbolic object. This just
+	 * redirects to the appropriate specific method, such as
+	 * {@link #simplifySequenceWork(SymbolicSequence)},
+	 * {@link #simplifyTypeWork(SymbolicType)}, etc.
+	 * 
+	 * @param object
+	 *            any canonic symbolic object
+	 * @return the simplified version of that object
+	 */
 	protected SymbolicObject simplifyObjectWork(SymbolicObject object) {
 		switch (object.symbolicObjectKind()) {
 		case BOOLEAN:
@@ -230,6 +282,15 @@ public abstract class CommonSimplifierWorker {
 		}
 	}
 
+	/**
+	 * Simplifies a symbolic object by first looking in the cache for the
+	 * previous result of simplifying that object, and, if not found there,
+	 * invoking {@link #simplifyObjectWork(SymbolicObject)}
+	 * 
+	 * @param object
+	 *            any non-<code>null</code> symbolic object
+	 * @return result of simplification of <code>object</code>
+	 */
 	protected SymbolicObject simplifyObject(SymbolicObject object) {
 		object = simplifier.universe.canonic(object);
 
@@ -318,31 +379,32 @@ public abstract class CommonSimplifierWorker {
 	 * </p>
 	 * 
 	 * <p>
-	 * You almost certainly want to override this method.
-	 * </p>
-	 * 
-	 * <p>
 	 * This method does <strong>not</strong> look in the table of cached
 	 * simplification results for <code>expression</code>. However, the
 	 * recursive calls to the arguments may look in the cache.
 	 * </p>
 	 * 
+	 * <p>
+	 * You will probably want to use this method in your implementation of
+	 * {@link #simplifyExpressionWork(SymbolicExpression)}.
+	 * </p>
+	 * 
 	 * @param expression
-	 *            any symbolic expression
+	 *            any non-<code>null</code> symbolic expression
 	 * @return a simplified version of that expression
 	 */
 	public SymbolicExpression simplifyExpressionGeneric(
 			SymbolicExpression expression) {
 		if (expression.isNull())
 			return expression;
-	
+
 		SymbolicOperator operator = expression.operator();
 		boolean isQuantified = false;
-	
+
 		if (operator == SymbolicOperator.CONCRETE) {
 			SymbolicObject object = (SymbolicObject) expression.argument(0);
 			SymbolicObjectKind kind = object.symbolicObjectKind();
-	
+
 			switch (kind) {
 			case BOOLEAN:
 			case INT:
@@ -357,17 +419,17 @@ public abstract class CommonSimplifierWorker {
 			isQuantified = true;
 			quantificationDepth++;
 		}
-	
+
 		SymbolicType type = expression.type();
 		SymbolicType simplifiedType = simplifyType(type);
 		int numArgs = expression.numArguments();
 		SymbolicObject[] simplifiedArgs = null;
-	
+
 		if (type == simplifiedType) {
 			for (int i = 0; i < numArgs; i++) {
 				SymbolicObject arg = expression.argument(i);
 				SymbolicObject simplifiedArg = simplifyObject(arg);
-	
+
 				assert simplifiedArg != null;
 				if (simplifiedArg != arg) {
 					simplifiedArgs = new SymbolicObject[numArgs];
@@ -392,5 +454,4 @@ public abstract class CommonSimplifierWorker {
 		return simplifier.universe.make(operator, simplifiedType,
 				simplifiedArgs);
 	}
-
 }

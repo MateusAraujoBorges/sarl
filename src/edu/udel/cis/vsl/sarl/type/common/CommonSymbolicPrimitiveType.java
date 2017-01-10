@@ -71,4 +71,9 @@ public class CommonSymbolicPrimitiveType extends CommonSymbolicType {
 		return this;
 	}
 
+	@Override
+	public boolean containsQuantifier() {
+		return false;
+	}
+
 }

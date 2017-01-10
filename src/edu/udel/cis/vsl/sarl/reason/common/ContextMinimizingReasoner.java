@@ -317,7 +317,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 			dbgcnt1++;
 			debugOut.println("dbgcnt1 = " + dbgcnt1);
 		}
-		// TODO: why the method name is NoReduce ?
+		// the method named "getReducedContext" below has nothing to do
+		// with the context reduction being performed by this reasoner...
 		BooleanExpression newContext = getSimplifier().getReducedContext();
 		BooleanExpression newPredicate = (BooleanExpression) simplifier
 				.apply(predicate);

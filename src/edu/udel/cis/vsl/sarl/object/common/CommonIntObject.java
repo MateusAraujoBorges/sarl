@@ -130,4 +130,9 @@ public class CommonIntObject extends CommonSymbolicObject implements IntObject {
 		return SymbolicObjectKind.INT;
 	}
 
+	@Override
+	public boolean containsQuantifier() {
+		return false;
+	}
+
 }

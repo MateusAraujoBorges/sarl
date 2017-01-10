@@ -101,4 +101,9 @@ public class CommonSymbolicSetType extends CommonSymbolicType
 		this.pureType = pureType;
 	}
 
+	@Override
+	public boolean containsQuantifier() {
+		return elementType.containsQuantifier();
+	}
+
 }

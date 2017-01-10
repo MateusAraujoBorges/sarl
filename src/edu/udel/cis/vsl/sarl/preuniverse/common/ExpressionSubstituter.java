@@ -405,8 +405,8 @@ public abstract class ExpressionSubstituter
 		if (expression.isNull())
 			return expression;
 		// (by Manchun) added short-circuit handling for conditional expression
-		// given cond ? e0 : e1, if cond is valid then returns e0 immediately
-		// without evaluting e1; similarly when !cond is valid.
+		// given cond ? e0 : e1, if cond is true then returns e0 immediately
+		// without evaluating e1; similarly when cond is false.
 		if (expression.operator() == SymbolicOperator.COND) {
 			SymbolicExpression cond = (SymbolicExpression) expression
 					.argument(0);

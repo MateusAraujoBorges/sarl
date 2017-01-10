@@ -105,4 +105,9 @@ public class CommonSymbolicRealType extends CommonSymbolicType
 	public SymbolicType getPureType() {
 		return this;
 	}
+
+	@Override
+	public boolean containsQuantifier() {
+		return false;
+	}
 }
