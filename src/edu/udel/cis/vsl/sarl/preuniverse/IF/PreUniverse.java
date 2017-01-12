@@ -68,11 +68,13 @@ public interface PreUniverse extends CoreUniverse {
 	SymbolicExpression cleanBoundVariables(SymbolicExpression expr);
 
 	/**
-	 * Produces a new object for renaming bound variables.
+	 * Produces a new object for renaming bound variables in a minimal way.
+	 * Bound variables will only be renamed if it is necessary to prevent
+	 * conflict with a free variable.
 	 * 
 	 * @return new bound cleaner with empty state
 	 */
-	UnaryOperator<SymbolicExpression> newBoundCleaner();
+	UnaryOperator<SymbolicExpression> newMinimalBoundCleaner();
 
 	UnaryOperator<SymbolicExpression> cloneBoundCleaner(
 			UnaryOperator<SymbolicExpression> boundCleaner);

@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
+import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
@@ -39,6 +40,7 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
@@ -134,6 +136,12 @@ public class IdealSimplifier extends CommonSimplifier {
 	// Instance fields...
 
 	/**
+	 * The operator used to rename bound variables so that their names do not
+	 * conflict with those of free variables.
+	 */
+	UnaryOperator<SymbolicExpression> boundCleaner;
+
+	/**
 	 * Object that gathers together references to various objects needed for
 	 * simplification.
 	 */
@@ -215,6 +223,7 @@ public class IdealSimplifier extends CommonSimplifier {
 	public IdealSimplifier(SimplifierInfo info, BooleanExpression assumption) {
 		super(info.universe);
 		this.info = info;
+		this.boundCleaner = universe.newMinimalBoundCleaner();
 		// rename bound variables so every variable has a unique name...
 		this.assumption = (BooleanExpression) boundCleaner.apply(assumption);
 		this.boundMap = new BoundMap(info);
@@ -909,6 +918,38 @@ public class IdealSimplifier extends CommonSimplifier {
 	@Override
 	protected IdealSimplifierWorker newWorker() {
 		return new IdealSimplifierWorker(this);
+	}
+
+	@Override
+	public SymbolicExpression apply(SymbolicExpression x) {
+		// some optimizations...no need to create new worker in these
+		// basic cases...
+		if (x.isNull())
+			return x;
+
+		SymbolicOperator operator = x.operator();
+
+		if (operator == SymbolicOperator.CONCRETE) {
+			SymbolicObject object = (SymbolicObject) x.argument(0);
+			SymbolicObjectKind kind = object.symbolicObjectKind();
+
+			switch (kind) {
+			case BOOLEAN:
+			case INT:
+			case NUMBER:
+			case STRING:
+				return x;
+			default:
+			}
+		}
+		simplifyCount++;
+		// rename bound variables with counts starting from where the
+		// original assumption renaming left off. This ensures that
+		// all bound variables in the assumption and x are unique, but
+		// two different x's can have same bound variables (thus
+		// improving canonicalization)...
+		x = universe.cloneBoundCleaner(boundCleaner).apply(x);
+		return newWorker().simplifyExpression(x);
 	}
 
 	@Override

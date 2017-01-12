@@ -352,7 +352,7 @@ public abstract class CommonSimplifierWorker {
 		return result;
 	}
 
-	protected SymbolicExpression simplifyExpression(
+	public SymbolicExpression simplifyExpression(
 			SymbolicExpression expression) {
 		expression = simplifier.universe.canonic(expression);
 

@@ -114,6 +114,7 @@ public class RobustCVCTheoremProver implements TheoremProver {
 		// requires that these map to distinct variables.
 		// The CVC translator will screw up if there is a bound variable and a
 		// free variable with the same name because it is caching translation
+		// Also, this translator requires this assumption too now.
 		context = (BooleanExpression) universe.cleanBoundVariables(context);
 		this.assumptionTranslator = new CVCTranslator(universe, context, true);
 		command.add(info.getPath().getAbsolutePath());
@@ -187,6 +188,7 @@ public class RobustCVCTheoremProver implements TheoremProver {
 			boolean show, PrintStream out) throws TheoremProverException {
 		Process process = null;
 		ValidityResult result = null;
+		
 		try {
 			process = processBuilder.start();
 		} catch (IOException e) {

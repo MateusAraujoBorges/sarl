@@ -4,11 +4,7 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
-import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
@@ -54,8 +50,6 @@ public abstract class CommonSimplifier implements Simplifier {
 	 */
 	protected PreUniverse universe;
 
-	protected UnaryOperator<SymbolicExpression> boundCleaner;
-
 	/**
 	 * Factory used for producing {@link SymbolicSequence}s.
 	 */
@@ -71,7 +65,6 @@ public abstract class CommonSimplifier implements Simplifier {
 	public CommonSimplifier(PreUniverse universe) {
 		assert universe != null;
 		this.universe = universe;
-		this.boundCleaner = universe.newBoundCleaner();
 		this.objectFactory = universe.objectFactory();
 	}
 
@@ -106,38 +99,6 @@ public abstract class CommonSimplifier implements Simplifier {
 	}
 
 	// Methods specified in {@link Simplifier} ...
-
-	@Override
-	public SymbolicExpression apply(SymbolicExpression x) {
-		// some optimizations...no need to create new worker in these
-		// basic cases...
-		if (x.isNull())
-			return x;
-
-		SymbolicOperator operator = x.operator();
-
-		if (operator == SymbolicOperator.CONCRETE) {
-			SymbolicObject object = (SymbolicObject) x.argument(0);
-			SymbolicObjectKind kind = object.symbolicObjectKind();
-
-			switch (kind) {
-			case BOOLEAN:
-			case INT:
-			case NUMBER:
-			case STRING:
-				return x;
-			default:
-			}
-		}
-		simplifyCount++;
-		// rename bound variables with counts starting from where the
-		// original assumption renaming left off. This ensures that
-		// all bound variables in the assumption and x are unique, but
-		// two different x's can have same bound variables (thus
-		// improving canonicalization)...
-		x = universe.cloneBoundCleaner(boundCleaner).apply(x);
-		return newWorker().simplifyExpression(x);
-	}
 
 	@Override
 	public PreUniverse universe() {
