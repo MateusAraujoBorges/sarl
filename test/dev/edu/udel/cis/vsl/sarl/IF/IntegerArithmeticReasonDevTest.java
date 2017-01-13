@@ -332,7 +332,7 @@ public class IntegerArithmeticReasonDevTest {
 
 		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
 	}
-	
+
 	/**
 	 * Symbolic Integer modulus. true : (x^y)^z=x^(y*z)
 	 */
@@ -344,16 +344,37 @@ public class IntegerArithmeticReasonDevTest {
 
 		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
 	}
-	
+
 	/**
 	 * Symbolic Integer modulus. true : x^0=0
 	 */
 	@Test
 	public void exponentTest1() {
-		//NumericExpression e1 = universe.power(universe.power(x, y), z);
+		// NumericExpression e1 = universe.power(universe.power(x, y), z);
 		NumericExpression e2 = universe.power(x, universe.zeroInt());
 		reasoner = universe.reasoner(trueExpr);
 
 		assertEquals(universe.oneInt(), reasoner.simplify(e2));
+	}
+
+	@Test
+	public void simplifiedBoundVariableTest() {
+		NumericSymbolicConstant t = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("t"),
+						universe.integerType());
+		NumericSymbolicConstant x = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("x"),
+						universe.integerType());
+		BooleanExpression context = universe.equals(t, universe.oneInt());
+		// t < 1000:
+		BooleanExpression pred = universe.lessThan(t, universe.integer(1000));
+		// forall int t : 1 <= t <= x ==> t < 1000;
+		BooleanExpression quantifiedClaim = universe.forallInt(t,
+				universe.oneInt(), x, pred);
+
+		// Context: forall int t : 1 <= t <= x ==> t < 1000 AND t == 1
+		// These are suppose to be 2 different t.
+		context = universe.and(context, quantifiedClaim);
+		System.out.println(universe.reasoner(context).isValid(quantifiedClaim));
 	}
 }
