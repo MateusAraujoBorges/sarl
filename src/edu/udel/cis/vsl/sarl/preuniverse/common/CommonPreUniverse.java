@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -192,7 +193,8 @@ public class CommonPreUniverse implements PreUniverse {
 	/**
 	 * An array used to store created bit vector type with a concrete length.
 	 */
-	private ArrayList<SymbolicConstant> int2bvConstants = new ArrayList<SymbolicConstant>();
+	private List<SymbolicConstant> int2bvConstants = Collections
+			.synchronizedList(new ArrayList<SymbolicConstant>());
 
 	/**
 	 * The name of a fold expression: Sigma. A sigma expression represents a
@@ -866,13 +868,14 @@ public class CommonPreUniverse implements PreUniverse {
 					(NumericExpression) args[1]);
 		case LAMBDA: {
 			// TODO change
-			int len = args.length;
-			List<SymbolicConstant> vars = new ArrayList<>();
-
-			for (int i = 0; i < len - 1; i++) {
-				vars.add((SymbolicConstant) args[i]);
-			}
-			return lambda(vars, (SymbolicExpression) args[len - 1]);
+			// int len = args.length;
+			// List<SymbolicConstant> vars = new ArrayList<>();
+			//
+			// for (int i = 0; i < len - 1; i++) {
+			// vars.add((SymbolicConstant) args[i]);
+			// }
+			return lambda((SymbolicConstant) args[0],
+					(SymbolicExpression) args[1]);
 		}
 		case LENGTH:
 			return length((SymbolicExpression) args[0]);
@@ -1681,25 +1684,25 @@ public class CommonPreUniverse implements PreUniverse {
 	 * @param expression
 	 * @return
 	 */
-	@Override
-	public SymbolicExpression lambda(
-			Collection<SymbolicConstant> boundVariables,
-			SymbolicExpression expression) {
-		List<SymbolicType> paraTypes = new ArrayList<>();
-		List<SymbolicObject> symbolicObjects = new ArrayList<>();
-
-		for (SymbolicConstant var : boundVariables) {
-			paraTypes.add(var.type());
-			symbolicObjects.add(var);
-		}
-		symbolicObjects.add(expression);
-		int size = symbolicObjects.size();
-		SymbolicObject[] so = new SymbolicObject[size];
-
-		symbolicObjects.toArray(so);
-		return expression(SymbolicOperator.LAMBDA, functionType(
-				typeFactory.sequence(paraTypes), expression.type()), so);
-	}
+	// @Override
+	// public SymbolicExpression lambda(
+	// Collection<SymbolicConstant> boundVariables,
+	// SymbolicExpression expression) {
+	// List<SymbolicType> paraTypes = new ArrayList<>();
+	// List<SymbolicObject> symbolicObjects = new ArrayList<>();
+	//
+	// for (SymbolicConstant var : boundVariables) {
+	// paraTypes.add(var.type());
+	// symbolicObjects.add(var);
+	// }
+	// symbolicObjects.add(expression);
+	// int size = symbolicObjects.size();
+	// SymbolicObject[] so = new SymbolicObject[size];
+	//
+	// symbolicObjects.toArray(so);
+	// return expression(SymbolicOperator.LAMBDA, functionType(
+	// typeFactory.sequence(paraTypes), expression.type()), so);
+	// }
 
 	// protected SymbolicExpression expression(SymbolicOperator operator,
 	// SymbolicType type, Iterable<SymbolicObject> arg0, SymbolicObject arg1) {
@@ -1715,38 +1718,23 @@ public class CommonPreUniverse implements PreUniverse {
 		if (op0 == SymbolicOperator.LAMBDA) {
 			Iterator<? extends SymbolicExpression> iter = argumentSequence
 					.iterator();
-			// SymbolicExpression arg;
+			SymbolicExpression arg;
 
 			if (!iter.hasNext())
 				throw err("Argument argumentSequence to method apply is empty"
 						+ " but since function is a lambda expression it should"
 						+ " have at least one element");
-			// arg = iter.next();
-			// assert !iter.hasNext();
-			// if (iter.hasNext())
-			// throw err(
-			// "Argument argumentSequence to method apply has more than one
-			// element"
-			// + " but since function is a lambda expression it should"
-			// + " have exactly one element");
-			List<SymbolicExpression> values = new ArrayList<>();
-			List<SymbolicConstant> vars = new ArrayList<>();
-
-			while (iter.hasNext()) {
-				values.add(iter.next());
-			}
-			int argsNum = function.numArguments();
-
-			for (int i = 0; i < argsNum - 1; i++) {
-				vars.add((SymbolicConstant) function.argument(i));
-			}
+			arg = iter.next();
+			assert !iter.hasNext();
+			if (iter.hasNext())
+				throw err(
+						"Argument argumentSequence to method apply has more than one element"
+								+ " but since function is a lambda expression it should"
+								+ " have exactly one element");
 			// function.argument(0): bound symbolic constant : dummy variable
 			// function.argument(1): symbolic expression: body of function
-			// result = simpleSubstituter((SymbolicConstant)
-			// function.argument(0),
-			// arg).apply((SymbolicExpression) function.argument(1));
-			result = simpleSubstituter(vars, values)
-					.apply((SymbolicExpression) function.argument(argsNum - 1));
+			result = simpleSubstituter((SymbolicConstant) function.argument(0),
+					arg).apply((SymbolicExpression) function.argument(1));
 		} else {
 			// TODO check the argument types...
 			result = expression(SymbolicOperator.APPLY,
@@ -1756,12 +1744,11 @@ public class CommonPreUniverse implements PreUniverse {
 		return result;
 	}
 
-	public UnaryOperator<SymbolicExpression> simpleSubstituter(
-			Collection<SymbolicConstant> vars,
-			Collection<SymbolicExpression> values) {
-		return new SimpleSubstituter(this, objectFactory, typeFactory, vars,
-				values);
-	}
+//	public UnaryOperator<SymbolicExpression> simpleSubstituter(
+//			SymbolicConstant var, SymbolicExpression value) {
+//		return new SimpleSubstituter(this, objectFactory, typeFactory, var,
+//				value);
+//	}
 
 	@Override
 	public SymbolicExpression unionInject(SymbolicUnionType unionType,

@@ -159,7 +159,8 @@ public class ExpressionWalker {
 			return;
 		}
 		if (operator == SymbolicOperator.EXISTS
-				|| operator == SymbolicOperator.FORALL) {
+				|| operator == SymbolicOperator.FORALL
+				|| operator == SymbolicOperator.LAMBDA) {
 			SymbolicConstant arg0 = (SymbolicConstant) expression.argument(0);
 			SymbolicExpression arg1 = (SymbolicExpression) expression
 					.argument(1);
@@ -168,19 +169,6 @@ public class ExpressionWalker {
 			walkExpression(arg1);
 			boundStack.pop();
 			return;
-		} else if (operator == SymbolicOperator.LAMBDA) {
-			int argsNum = expression.numArguments();
-			SymbolicExpression body = (SymbolicExpression) expression
-					.argument(argsNum - 1);
-
-			for (int i = 0; i < argsNum - 1; i++) {
-				boundStack.push((SymbolicConstant) expression.argument(i));
-			}
-			walkExpression(body);
-			for (int i = 0; i < argsNum - 1; i++) {
-				boundStack.pop();
-			}
-
 		} else {
 			int numArgs = expression.numArguments();
 

@@ -29,7 +29,7 @@ public class FunctionTest {
 	private SymbolicType realType;
 	private SymbolicCompleteArrayType arrayType;
 	private NumericSymbolicConstant x, a, b, c, d;
-	private NumericExpression one, two, three, four, six, eight, thirteen;
+	private NumericExpression one, two, four;
 
 	@Before
 	public void setUp() throws Exception {
@@ -49,11 +49,7 @@ public class FunctionTest {
 				.symbolicConstant(universe.stringObject("d"), integerType);
 		one = universe.integer(1);
 		two = universe.integer(2);
-		three = universe.integer(3);
 		four = universe.integer(4);
-		six = universe.integer(6);
-		eight = universe.integer(8);
-		thirteen = universe.integer(13);
 	}
 
 	@After
@@ -76,39 +72,6 @@ public class FunctionTest {
 				universe.arrayRead(arrayL1, two));
 		assertEquals(universe.add(two, one),
 				universe.arrayRead(arrayL2, universe.integer(2)));
-	}
-
-	/**
-	 * test lambda function with multiple args.
-	 */
-	@Test
-	public void simpleTest() {
-		List<SymbolicConstant> vars = new ArrayList<>();
-		List<SymbolicExpression> values = new ArrayList<>();
-		SymbolicExpression function1;
-		SymbolicExpression function2;
-		SymbolicExpression function3;
-
-		vars.add(a);
-		vars.add(b);
-		values.add(two);
-		values.add(four);
-		function1 = universe.lambda(vars, universe.add(a, b));
-		function2 = universe.lambda(vars, universe.multiply(a, b));
-		SymbolicExpression r1 = universe.apply(function1, values);
-		SymbolicExpression r2 = universe.apply(function2, values);
-
-		assertEquals(six, r1);
-		assertEquals(eight, r2);
-
-		vars.add(c);
-
-		function3 = universe.lambda(vars,
-				universe.add(universe.multiply(three, a), universe.add(b, c)));
-		values.add(three);
-		SymbolicExpression r3 = universe.apply(function3, values);
-
-		assertEquals(thirteen, r3);
 	}
 
 	@Test

@@ -173,7 +173,7 @@ public class SimplifyTest {
 		SymbolicExpression Y8_k_times_Y9_k = universe.multiply(
 				(NumericExpression) universe.arrayRead(Y8, k),
 				(NumericExpression) universe.arrayRead(Y9, k));
-		SymbolicExpression lambda = universe.lambda(Arrays.asList(k),
+		SymbolicExpression lambda = universe.lambda(k,
 				Y8_k_times_Y9_k);
 		NumericExpression Y1_times_Y2_minus_1 = universe
 				.subtract(universe.multiply(Y1, Y2), universe.oneInt());
@@ -187,7 +187,7 @@ public class SimplifyTest {
 				.equals(universe.multiply(Y1, Y2), Y11);
 		// 0==(sigma(0,Y11 - 1,lambda t : int . (Y8[t]*Y9[t])) - 1*Y12)
 
-		lambda = universe.lambda(Arrays.asList(k), Y8_k_times_Y9_k);
+		lambda = universe.lambda(k, Y8_k_times_Y9_k);
 		// sigma = universe.sigma(universe.zeroInt(), Y11_minus_1, lambda);
 		sigma = universe.sigma(universe.zeroInt(), Y11_minus_1, lambda);
 		BooleanExpression assu_sigma_eq_Y12 = universe.equals(Y12, sigma);
