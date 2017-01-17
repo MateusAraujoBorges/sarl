@@ -238,6 +238,16 @@ public interface SymbolicExpression extends SymbolicObject {
 		 */
 		DENSE_TUPLE_WRITE,
 		/**
+		 * The (partial) derivative operator. Arg0 is an expression of type
+		 * function from R^n to R, for some positive integer n. Arg1 is an
+		 * {@link IntObject} which is a concrete integer in [0,n); it is the
+		 * index of the independent variable with respect to which the
+		 * derivative is being taken. Arg2 is an {@link IntObject} which is a
+		 * natural number and is the degree of the derivative (i.e., the number
+		 * of compositions of the derivative operator).
+		 */
+		DERIV,
+		/**
 		 * Operator for real number division. 2 arguments: arg0 the numerator,
 		 * arg1 the denominator. Both must be symbolic expressions of
 		 * {@link SymbolicRealType}. Result also has {@link SymbolicRealType}.

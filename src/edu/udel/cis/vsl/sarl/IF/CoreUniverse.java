@@ -1502,8 +1502,8 @@ public interface CoreUniverse {
 	SymbolicExpression lambda(SymbolicConstant boundVariable,
 			SymbolicExpression expression);
 
-//	SymbolicExpression lambda(Collection<SymbolicConstant> boundVariables,
-//			SymbolicExpression expression);
+	// SymbolicExpression lambda(Collection<SymbolicConstant> boundVariables,
+	// SymbolicExpression expression);
 
 	/**
 	 * The result of applying an uninterpreted function to a sequence of
@@ -2268,4 +2268,23 @@ public interface CoreUniverse {
 	 * @return <code>true</code>
 	 */
 	boolean setIntegerLengthBound(int bound);
+
+	/**
+	 * Returns the function which is the <code>degree</code>-th derivative of
+	 * <code>function</code> with respect to the <code>index</code>-th
+	 * parameter.
+	 * 
+	 * @param function
+	 *            a function of <i>n</i> real variables, for some <i>n</i> at
+	 *            least 1
+	 * @param index
+	 *            the parameter index, an integer greater than or equal to 0 and
+	 *            less than <i>n</i>
+	 * @param degree
+	 *            a non-negative integer, the number of times to differentiate
+	 * @return the function which is the derivative; it has the same signature
+	 *         as the given <code>function</code>
+	 */
+	SymbolicExpression derivative(SymbolicExpression function, IntObject index,
+			IntObject degree);
 }

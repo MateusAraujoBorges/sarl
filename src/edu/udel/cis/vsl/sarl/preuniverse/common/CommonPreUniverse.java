@@ -1744,11 +1744,11 @@ public class CommonPreUniverse implements PreUniverse {
 		return result;
 	}
 
-//	public UnaryOperator<SymbolicExpression> simpleSubstituter(
-//			SymbolicConstant var, SymbolicExpression value) {
-//		return new SimpleSubstituter(this, objectFactory, typeFactory, var,
-//				value);
-//	}
+	// public UnaryOperator<SymbolicExpression> simpleSubstituter(
+	// SymbolicConstant var, SymbolicExpression value) {
+	// return new SimpleSubstituter(this, objectFactory, typeFactory, var,
+	// value);
+	// }
 
 	@Override
 	public SymbolicExpression unionInject(SymbolicUnionType unionType,
@@ -3908,4 +3908,38 @@ public class CommonPreUniverse implements PreUniverse {
 		this.INTEGER_BIT_BOUND = bound;
 		return result;
 	}
+
+	@Override
+	public SymbolicExpression derivative(SymbolicExpression function,
+			IntObject index, IntObject degree) {
+		SymbolicType theType = function.type();
+
+		if (!(theType instanceof SymbolicFunctionType))
+			throw err("Argument function should have a function type, not "
+					+ theType);
+
+		SymbolicFunctionType functionType = (SymbolicFunctionType) theType;
+		SymbolicType outputType = functionType.outputType();
+
+		if (!outputType.isReal())
+			throw err("Function should return real, not " + outputType);
+
+		SymbolicTypeSequence inputTypes = functionType.inputTypes();
+		int numInputs = inputTypes.numTypes();
+
+		if (numInputs <= 0)
+			throw err("Function must accept at least one real input, not "
+					+ numInputs);
+		for (int i = 0; i < numInputs; i++) {
+			SymbolicType inputType = inputTypes.getType(i);
+
+			if (!inputType.isReal())
+				throw err(
+						"A differentiable function should only accept real inputs, but input type "
+								+ i + " is " + inputType);
+		}
+		return expression(SymbolicOperator.DERIV, functionType, function, index,
+				degree);
+	}
+
 }

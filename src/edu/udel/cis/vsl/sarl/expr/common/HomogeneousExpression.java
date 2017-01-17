@@ -828,6 +828,12 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	public boolean containsQuantifier() {
 		if (containsQuantifier != ResultType.MAYBE)
 			return containsQuantifier == ResultType.YES;
+		if (operator == SymbolicOperator.FORALL
+				|| operator == SymbolicOperator.EXISTS
+				|| operator == SymbolicOperator.LAMBDA) {
+			containsQuantifier = ResultType.YES;
+			return true;
+		}
 		for (SymbolicObject x : arguments) {
 			if (x != null && x.containsQuantifier()) {
 				containsQuantifier = ResultType.YES;
