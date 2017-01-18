@@ -89,4 +89,10 @@ public class IdentitySimplifier implements Simplifier {
 			boolean selfupdate) {
 		return new EmptyMap<SymbolicExpression, SymbolicExpression>();
 	}
+
+	@Override
+	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			SymbolicConstant expectedKey, boolean selfupdate) {
+		return new EmptyMap<SymbolicExpression, SymbolicExpression>();
+	}
 }

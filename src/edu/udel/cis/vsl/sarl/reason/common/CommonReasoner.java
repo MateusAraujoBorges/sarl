@@ -54,7 +54,7 @@ public class CommonReasoner implements Reasoner {
 	private Simplifier simplifier;
 
 	private TheoremProverFactory factory;
-	
+
 	// TODO: init me...
 	private SimplifierFactory simplifierFactory;
 
@@ -192,7 +192,7 @@ public class CommonReasoner implements Reasoner {
 	}
 
 	@Override
-	public Map<SymbolicConstant, SymbolicExpression> substitutionMap() {
+	public Map<SymbolicConstant, SymbolicExpression> constantSubstitutionMap() {
 		return simplifier.constantSubstitutionMap();
 	}
 
@@ -214,8 +214,20 @@ public class CommonReasoner implements Reasoner {
 	}
 
 	@Override
-	public Simplifier simplifier() {
-		return this.simplifier;
+	public ValidityResult validWTDeduction(BooleanExpression predicate) {
+		return valid(predicate);
+	}
+
+	@Override
+	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			boolean selfUpdate) {
+		return simplifier.substitutionMap(selfUpdate);
+	}
+
+	@Override
+	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			SymbolicConstant expectedKey, boolean selfUpdate) {
+		return simplifier.substitutionMap(expectedKey, selfUpdate);
 	}
 
 	/**
@@ -267,25 +279,28 @@ public class CommonReasoner implements Reasoner {
 		// create new context and add index constraint to the assumption.
 		// look for function calls to an abstract function from R^m to R.
 		// Within such a function call, look for an index i such that argument
-		// i has the form term+hi.  Taylor expand that call around parameter i.
+		// i has the form term+hi. Taylor expand that call around parameter i.
 		// First check that all parameters are in the bounding interval.
-		
-		// rename the indexConstraint and the limitVars if they conflict with any
+
+		// rename the indexConstraint and the limitVars if they conflict with
+		// any
 		// frees.
-		
-		BooleanExpression oldContext = simplifier().getFullContext();
-		BooleanExpression newContext = simplifier().universe().and(oldContext, indexConstraint);
-		
+
+		BooleanExpression oldContext = simplifier.getFullContext();
+		BooleanExpression newContext = simplifier.universe().and(oldContext,
+				indexConstraint);
+
 		// would like whole new reasoner for the newContext.
-		Simplifier newSimplifier = simplifierFactory.newSimplifier(newContext);
-		
+		// Simplifier newSimplifier =
+		// simplifierFactory.newSimplifier(newContext);
+
 		// need general expression substituter interface
 		// method:
 		// SymbolicObject replace(SymbolicObject o)
-		
+
 		// need to extend ExpressionSubstituter
-		
-		// need to use Ideal factory ? 
+
+		// need to use Ideal factory ?
 
 		return false;
 	}

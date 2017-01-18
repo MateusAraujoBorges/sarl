@@ -2,7 +2,10 @@ package edu.udel.cis.vsl.sarl.reason.common;
 
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.udel.cis.vsl.sarl.IF.ModelResult;
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
@@ -14,8 +17,10 @@ import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
@@ -332,7 +337,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 		}
 
 		/*
-		 * Three-level predicate reduction is applied:
+		 * Multi-level predicate reducetion is applied:
 		 * 
 		 * Level 0: reduce predicate with constant substitution map;
 		 * 
@@ -346,7 +351,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 		int predicateRecudeLevels = 3;
 
 		for (int lv = 0; lv < predicateRecudeLevels; lv++) {
-			if (lv > 0) {
+			if (0 < lv) {
 				boolean reduceMapSelfupdate = lv == 2;
 				BooleanExpression reducedNewPredicate = (BooleanExpression) simplifier
 						.universe().fullySubstitute(
@@ -471,7 +476,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 	// Public methods...
 
 	@Override
-	public Map<SymbolicConstant, SymbolicExpression> substitutionMap() {
+	public Map<SymbolicConstant, SymbolicExpression> constantSubstitutionMap() {
 		return getSimplifier().constantSubstitutionMap();
 	}
 
@@ -538,7 +543,9 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 		ValidityResult result = valid1(predicate, false);
 
-		if (showQuery) {
+		if (showQuery)
+
+		{
 			PrintStream out = universe.getOutputStream();
 			int id = universe.numValidCalls();
 
@@ -577,6 +584,44 @@ public class ContextMinimizingReasoner implements Reasoner {
 	}
 
 	@Override
+	public ValidityResult validWTDeduction(BooleanExpression predicate) {
+		ValidityResult result = valid(predicate);
+
+		// Quantified expression induction:
+		if (result.getResultType() == ResultType.MAYBE) {
+			int lv = 2;
+			ContextMinimizingReasoner newReasoner = this;
+
+			predicate = (BooleanExpression) simplifier.apply(predicate);
+			for (int i = 0; i < lv; i++) {
+				if (i > 0) {
+					// Make quantified expressions in context be consistent with
+					// the one in prediate:
+					Map<SymbolicExpression, SymbolicExpression> substMap = substitutionMap(
+							true);
+					BooleanExpression newContext;
+
+					predicate = (BooleanExpression) getSimplifier().universe()
+							.fullySubstitute(substMap, predicate);
+					newContext = (BooleanExpression) getSimplifier().universe()
+							.fullySubstitute(substMap, getReducedContext());
+					newReasoner = this.factory.getReasoner(newContext);
+				}
+				for (BooleanExpression quanP : universalQuantifiedExpressionsIn(
+						predicate))
+					if (newReasoner.integeralUniversalPredicateInduction(quanP))
+						context = simplifier.universe().and(context, quanP);
+				newReasoner = factory.getReasoner(context);
+				result = newReasoner.getProver().valid(predicate);
+
+				if (result.getResultType() != ResultType.MAYBE)
+					break;
+			}
+		}
+		return result;
+	}
+
+	@Override
 	public boolean isValid(BooleanExpression predicate) {
 		return valid(predicate).getResultType() == ResultType.YES;
 	}
@@ -593,7 +638,106 @@ public class ContextMinimizingReasoner implements Reasoner {
 	}
 
 	@Override
-	public Simplifier simplifier() {
-		return getSimplifier();
+	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			boolean selfUpdate) {
+		return getSimplifier().substitutionMap(selfUpdate);
+	}
+
+	@Override
+	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			SymbolicConstant expectedKey, boolean selfUpdate) {
+		return getSimplifier().substitutionMap(expectedKey, selfUpdate);
+	}
+
+	///////////////////////// Private helper methods ////////////////////////
+	/**
+	 * Given a predicate in CNF (conjunctive normal form), find out all
+	 * universal quantified expression in the predicate.
+	 * 
+	 * @param predicate
+	 *            A boolean expression in CNF
+	 * @return A list of boolean expressions, each of which is a universal
+	 *         quantified expression.
+	 */
+	private List<BooleanExpression> universalQuantifiedExpressionsIn(
+			BooleanExpression predicate) {
+		List<BooleanExpression> results = new LinkedList<>();
+
+		if (predicate.operator() == SymbolicOperator.AND
+				|| predicate.operator() == SymbolicOperator.OR) {
+			// clause_0 && clause_1 && ... && clause_n OR
+			// clause_0 || clause_1 || ... || clause_n:
+			for (SymbolicObject clause : predicate.getArguments())
+				results.addAll(universalQuantifiedExpressionsIn(
+						(BooleanExpression) clause));
+		} else {
+			// basic clause:
+			if (predicate.operator() == SymbolicOperator.FORALL)
+				results.add(predicate);
+		}
+		return results;
+	}
+
+	/**
+	 * <p>
+	 * Pre-condition: bouned vairiable of the given quantified expression must
+	 * have a integral type.
+	 * </p>
+	 * 
+	 * <p>
+	 * For a quantified expression q : <code>Q int i : (!r(i) || P(i))</code>
+	 * try to prove:
+	 * <ol>
+	 * <li>P(e)</li>
+	 * <li>Q i : ((i==e) || !r(i) || P(i))</li>
+	 * </ol>
+	 * If both condition 1 and 2 can be proved, the q is proved. e is chosen by
+	 * a heuristic: <br>
+	 * 
+	 * <b>Current naive approach of looking for e:</b> There is a symbolic
+	 * constant set C' in q that C' = C - {i}. Where C is the full free symbolic
+	 * constant set in q and i is the bound variable of q. For each c' in C',
+	 * assuming i == c' + 1 and i == c' - 1 are e candidates.
+	 * 
+	 * </p>
+	 * 
+	 * @param predicate
+	 */
+	private boolean integeralUniversalPredicateInduction(
+			BooleanExpression quantifiedP) {
+		SymbolicConstant boundVar = (SymbolicConstant) quantifiedP.argument(0);
+
+		if (!boundVar.type().isInteger())
+			return false;
+
+		BooleanExpression P = (BooleanExpression) quantifiedP.argument(1);
+		PreUniverse universe = getSimplifier().universe();
+		Set<SymbolicConstant> freeSymbolicConstants = universe
+				.getFreeSymbolicConstants(P);
+
+		freeSymbolicConstants.remove(boundVar);
+		for (SymbolicConstant c : freeSymbolicConstants) {
+			if (!c.type().equals(boundVar.type()))
+				continue;
+
+			NumericExpression e = (NumericExpression) c;
+			UnaryOperator<SymbolicExpression> replacer = universe
+					.simpleSubstituter(boundVar, e);
+			BooleanExpression ep0 = (BooleanExpression) replacer.apply(P);
+			BooleanExpression ep1 = universe.or(P,
+					universe.not(universe.neq(boundVar, e)));
+
+			ep1 = universe.forall(boundVar, ep1);
+
+			ContextMinimizingReasoner myReasoner = getReducedReasonerFor(ep0);
+
+			if (myReasoner.getProver().valid(ep0)
+					.getResultType() == ResultType.YES) {
+				myReasoner = getReducedReasonerFor(ep1);
+				if (getProver().valid(ep1).getResultType() == ResultType.YES)
+					return true;
+			}
+		}
+		return false;
 	}
 }

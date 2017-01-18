@@ -114,7 +114,7 @@ public class SimpleReasoner implements Reasoner {
 	}
 
 	@Override
-	public Map<SymbolicConstant, SymbolicExpression> substitutionMap() {
+	public Map<SymbolicConstant, SymbolicExpression> constantSubstitutionMap() {
 		return simplifier.constantSubstitutionMap();
 	}
 
@@ -136,7 +136,20 @@ public class SimpleReasoner implements Reasoner {
 	}
 
 	@Override
-	public Simplifier simplifier() {
-		return simplifier;
+	public ValidityResult validWTDeduction(BooleanExpression predicate) {
+		return valid(predicate);
 	}
+
+	@Override
+	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			boolean selfUpdate) {
+		return simplifier.substitutionMap(selfUpdate);
+	}
+
+	@Override
+	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			SymbolicConstant expectedKey, boolean selfUpdate) {
+		return simplifier.substitutionMap(expectedKey, selfUpdate);
+	}
+
 }

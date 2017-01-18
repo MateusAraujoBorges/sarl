@@ -50,6 +50,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifier;
+import edu.udel.cis.vsl.sarl.util.EmptyMap;
 
 /**
  * <p>
@@ -1065,5 +1066,20 @@ public class IdealSimplifier extends CommonSimplifier {
 			result = newSubstituteMap;
 		}
 		return result;
+	}
+
+	@Override
+	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			SymbolicConstant expectedKey, boolean selfupdate) {
+		if (!expectedKey.isNumeric())
+			return new EmptyMap<SymbolicExpression, SymbolicExpression>();
+		else if (reduceMap.containsKey(expectedKey))
+			return substitutionMap(selfupdate);
+		else {
+			reduceMap.clear();
+			LinearSolver.reduceMap(info.idealFactory, (Monic) expectedKey,
+					constantMap, reduceMap);
+			return substitutionMap(selfupdate);
+		}
 	}
 }

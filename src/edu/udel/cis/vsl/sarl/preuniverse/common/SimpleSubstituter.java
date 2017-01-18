@@ -68,6 +68,8 @@ public class SimpleSubstituter extends ExpressionSubstituter {
 		SymbolicType oldType = expression.type();
 		SymbolicType newType = substituteType(oldType, state);
 
+		boundVariable = (SymbolicConstant) this
+				.substituteExpression(boundVariable, state);
 		((BoundStack) state).stack.push(boundVariable);
 
 		SymbolicExpression oldBody = (SymbolicExpression) expression

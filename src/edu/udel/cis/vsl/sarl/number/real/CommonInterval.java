@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.number.real;
 
+import java.util.Objects;
+
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
@@ -96,6 +98,11 @@ public class CommonInterval implements Interval {
 					&& upper.equals(that.upper) && lower.equals(that.lower);
 		} else
 			return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(isIntegral, strictLower, strictUpper, lower, upper);
 	}
 
 	@Override

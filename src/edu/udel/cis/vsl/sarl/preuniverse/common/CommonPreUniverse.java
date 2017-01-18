@@ -2005,6 +2005,15 @@ public class CommonPreUniverse implements PreUniverse {
 				return arrayRead(origin, index);
 			}
 		} // end if (indexNumber != null)
+			// No matter is written Index is concrete or not:
+		if (op == SymbolicOperator.ARRAY_WRITE) {
+			NumericExpression writtenIndex = (NumericExpression) array
+					.argument(1);
+
+			if (writtenIndex.equals(index)) {
+				return (SymbolicExpression) array.argument(2);
+			}
+		}
 		return expression(SymbolicOperator.ARRAY_READ,
 				((SymbolicArrayType) array.type()).elementType(), array, index);
 	}

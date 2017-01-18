@@ -158,6 +158,7 @@ public class LinearSolver {
 	 * column for each monic which occurs as a term in some key, of integer
 	 * type, plus one additional column to hold the value associated to the
 	 * constant value associated to the map entry. The real map is similar.
+	 * 
 	 */
 	private void buildMatrices() {
 		int numIntMonics = intMonics.length;
@@ -202,6 +203,58 @@ public class LinearSolver {
 				realConstraintId++;
 			}
 		}
+	}
+
+	/**
+	 * Build a matrix m for a linear system. see {@link #buildMatrices()}.
+	 * 
+	 * Modify m to m' so that the column c which represents the given
+	 * "leadingMonic" will be the first column and the a row r has a non-zero
+	 * value at c will be the first row.
+	 * 
+	 * If the "leadingMonic" doesn't exist, m == m'<br>
+	 * If such a row r doesn't exist, m == m'
+	 * 
+	 * @param leadingMonic
+	 */
+	private void buildMatrices(Monic leadingMonic) {
+		buildMatrices();
+
+		int originalIdx = -1, nonzeroRow = -1, numRow;
+		boolean isInteger = leadingMonic.type().isInteger();
+		RationalNumber[][] matrix = isInteger ? intMatrix : realMatrix;
+		Monic[] columns = isInteger ? intMonics : realMonics;
+
+		numRow = matrix.length;
+		for (int i = 0; i < columns.length; i++)
+			if (columns[i].equals(leadingMonic))
+				originalIdx = i;
+		if (originalIdx < 0)
+			return;
+		for (int i = 0; i < numRow; i++)
+			if (!matrix[i][originalIdx].isZero())
+				nonzeroRow = i;
+		if (nonzeroRow < 0)
+			return;
+
+		// switch columns:
+		Monic tmpMonic = columns[originalIdx];
+
+		columns[originalIdx] = columns[0];
+		columns[0] = tmpMonic;
+		// switch columns of matrix:
+		for (int i = 0; i < numRow; i++) {
+			RationalNumber tmpColumn = matrix[i][originalIdx];
+
+			matrix[i][originalIdx] = matrix[i][0];
+			matrix[i][0] = tmpColumn;
+		}
+
+		// switch rows:
+		RationalNumber[] tmp = matrix[nonzeroRow];
+
+		matrix[nonzeroRow] = matrix[0];
+		matrix[0] = tmp;
 	}
 
 	private boolean rebuildIntMap() {
@@ -478,7 +531,8 @@ public class LinearSolver {
 		return true;
 	}
 
-	boolean reduce(Map<Monic, Number> map, Map<Monic, Monic> output) {
+	boolean reduce(Map<Monic, Number> map, Map<Monic, Monic> output,
+			Monic leadingMonic) {
 		this.map = map;
 
 		// Step 1: extract monics. Uses map. Yields intIdMap, realIdMap,
@@ -493,7 +547,10 @@ public class LinearSolver {
 		// intMatrix, realMatrix.
 
 		extractMonics();
-		buildMatrices();
+		if (leadingMonic != null)
+			buildMatrices(leadingMonic);
+		else
+			buildMatrices();
 		map.clear();
 		numberFactory.gaussianElimination(intMatrix);
 		numberFactory.gaussianElimination(realMatrix);
@@ -565,15 +622,46 @@ public class LinearSolver {
 	 * </p>
 	 * 
 	 * @param idealFactory
-	 * @param map
+	 * @param constantsMap
 	 * @param output
 	 * @return
 	 */
 	public static boolean reduceMap(IdealFactory idealFactory,
-			Map<Monic, Number> map, Map<Monic, Monic> output) {
-		Map<Monic, Number> copy = new HashMap<>(map);
+			Map<Monic, Number> constantsMap, Map<Monic, Monic> output) {
+		Map<Monic, Number> copy = new HashMap<>(constantsMap);
 		LinearSolver solver = new LinearSolver(idealFactory);
-		boolean result = solver.reduce(copy, output);
+		boolean result = solver.reduce(copy, output, null);
+
+		return result;
+	}
+
+	/**
+	 * <p>
+	 * In addition to {@link #reduceMap(IdealFactory, Map, Map)}, this method
+	 * guarantees that, for a given Monic m, as long as m in the ket set of the
+	 * constants map "constantsMap", m will be in the key set of the generated
+	 * map "output"
+	 * </p>
+	 * 
+	 * @param idealFactory
+	 *            a reference to the {@link IdealFactory}
+	 * @param expectedKey
+	 *            The {@link Monic} that will be in the ket set of the output if
+	 *            it is in the key set of "constantsMap"
+	 * @param constantsMap
+	 *            A map maps Monic to Constants which represents a set of
+	 *            equations
+	 * @param output
+	 *            The output map maps Monic to Monic which represents the same
+	 *            set of equations as the constantsMap.
+	 * @return True if and only if the set of equations are satisifiable
+	 */
+	public static boolean reduceMap(IdealFactory idealFactory,
+			Monic expectedKey, Map<Monic, Number> constantsMap,
+			Map<Monic, Monic> output) {
+		Map<Monic, Number> copy = new HashMap<>(constantsMap);
+		LinearSolver solver = new LinearSolver(idealFactory);
+		boolean result = solver.reduce(copy, output, expectedKey);
 
 		return result;
 	}

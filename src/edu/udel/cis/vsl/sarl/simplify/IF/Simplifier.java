@@ -27,6 +27,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
+import edu.udel.cis.vsl.sarl.ideal.common.IdealSymbolicConstant;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 
 /**
@@ -77,7 +78,6 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
  */
 public interface Simplifier extends UnaryOperator<SymbolicExpression> {
 
-
 	/**
 	 * Returns the pre-universe associated to this simplifier
 	 * 
@@ -119,6 +119,28 @@ public interface Simplifier extends UnaryOperator<SymbolicExpression> {
 	 */
 	Map<SymbolicExpression, SymbolicExpression> substitutionMap(
 			boolean selfupdate);
+
+	/**
+	 * An mutation of {@link #substitutionMap(boolean)}. This method allows the
+	 * caller to specify an {@link IdealSymbolicConstant} which is guaranteed to
+	 * be in the key set if and only if there is an equation on it in the
+	 * context of this simplifier.
+	 * 
+	 * @param expectedKey
+	 *            The {@link IdealSymbolicConstant} which either never appears
+	 *            in both key set or value set or guaranteed to be in the key
+	 *            set.
+	 * @param selfupdate
+	 *            Set to true triggers a the substitution on the key set of the
+	 *            map.
+	 *            <p>
+	 *            For example: The map originally is : X=A, Z=B, X*Z=C. After a
+	 *            selfupdate, the map finally will be: X=A, Z=B, X*Z=C, A*B=C
+	 *            </p>
+	 * @return
+	 */
+	Map<SymbolicExpression, SymbolicExpression> substitutionMap(
+			SymbolicConstant expectedKey, boolean selfupdate);
 
 	/**
 	 * Returns the reduced context associated to this Reasoner. This expression
