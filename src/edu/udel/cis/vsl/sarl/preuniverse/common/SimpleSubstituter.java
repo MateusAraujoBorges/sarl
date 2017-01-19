@@ -60,17 +60,40 @@ public class SimpleSubstituter extends ExpressionSubstituter {
 		return new BoundStack();
 	}
 
+	/**
+	 * Performs substitution on the type of the given symbolic constant.
+	 * 
+	 * @param x
+	 *            a symbolic constant
+	 * @param state
+	 *            current substituter state
+	 * @return if the type is unchanged, <code>x</code>, else the symbolic
+	 *         constant with the same name as <code>x</code> but with the new
+	 *         type
+	 */
+	private SymbolicConstant updateType(SymbolicConstant x,
+			SubstituterState state) {
+		SymbolicType oldType = x.type();
+		SymbolicType newType = substituteType(oldType, state);
+
+		if (oldType == newType)
+			return x;
+
+		SymbolicConstant result = universe.symbolicConstant(x.name(), newType);
+
+		return result;
+	}
+
 	@Override
 	protected SymbolicExpression substituteQuantifiedExpression(
 			SymbolicExpression expression, SubstituterState state) {
-		SymbolicConstant boundVariable = (SymbolicConstant) expression
+		SymbolicConstant oldBoundVariable = (SymbolicConstant) expression
 				.argument(0);
+		SymbolicConstant newBoundVariable = updateType(oldBoundVariable, state);
 		SymbolicType oldType = expression.type();
 		SymbolicType newType = substituteType(oldType, state);
 
-		boundVariable = (SymbolicConstant) this
-				.substituteExpression(boundVariable, state);
-		((BoundStack) state).stack.push(boundVariable);
+		((BoundStack) state).stack.push(newBoundVariable);
 
 		SymbolicExpression oldBody = (SymbolicExpression) expression
 				.argument(1);
@@ -80,11 +103,12 @@ public class SimpleSubstituter extends ExpressionSubstituter {
 
 		SymbolicExpression result;
 
-		if (oldBody == newBody && oldType == newType)
+		if (oldBody == newBody && oldType == newType
+				&& oldBoundVariable == newBoundVariable)
 			result = expression;
 		else
 			result = universe.make(expression.operator(), newType,
-					new SymbolicObject[] { boundVariable, newBody });
+					new SymbolicObject[] { newBoundVariable, newBody });
 		return result;
 	}
 
