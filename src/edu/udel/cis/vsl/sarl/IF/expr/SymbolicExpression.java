@@ -248,6 +248,18 @@ public interface SymbolicExpression extends SymbolicObject {
 		 */
 		DERIV,
 		/**
+		 * A predicate which declares a real-valued function to have some number
+		 * of continuous derivatives over a bounded, rectangular, closed
+		 * interval in R^n. Arg0 is a function from R^n to R for some positive
+		 * integer n. Arg1 is the degree, a nonnegative integer
+		 * {@link IntObject} which tells the number of partial derivatives (of
+		 * any combination) that exist and are continuous. Arg2 is a sequence of
+		 * real-value expressions which are the lower bounds of the intervals in
+		 * the domain; the length is n. Arg3 is a similar sequence of upper
+		 * bounds. Degree 0 means the function is continuous on the domain.
+		 */
+		DIFFERENTIABLE,
+		/**
 		 * Operator for real number division. 2 arguments: arg0 the numerator,
 		 * arg1 the denominator. Both must be symbolic expressions of
 		 * {@link SymbolicRealType}. Result also has {@link SymbolicRealType}.

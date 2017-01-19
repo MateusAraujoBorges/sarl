@@ -1,29 +1,31 @@
 package edu.udel.cis.vsl.sarl.reason.common;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
-import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
+import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.preuniverse.common.ExpressionSubstituter;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
+/**
+ * A substituter that replaces certain function calls with their truncated
+ * Taylor polynomial expansions.
+ * 
+ * @author siegel
+ */
 public class TaylorSubstituter extends ExpressionSubstituter {
-
-	private SymbolicConstant[] limitVars;
-
-	private int[] orders;
-
-	private NumericExpression[] lowerBounds;
-
-	private NumericExpression[] upperBounds;
 
 	/**
 	 * Reasoner containing expanded context, which includes assumptions on index
@@ -31,27 +33,282 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 	 */
 	private Reasoner reasoner;
 
+	/**
+	 * The variables (h0, h1, ...) tending to 0. These are essentially the bound
+	 * variables of a big-O expression. The length of this array is n, where n
+	 * is the dimension of the domain.
+	 */
+	private NumericSymbolicConstant[] limitVars;
+
+	/**
+	 * The orders of the corresponding bound variables. Also an array of length
+	 * n, where n is the dimension of the domain and the length of
+	 * {@link #limitVars}. These are nonnegative integers. If orders[i] is k,
+	 * that means we are trying to prove that something is O(hi^k).
+	 */
+	private int[] orders;
+
+	/**
+	 * Not sure if this is really needed, but the super-class requires some
+	 * state.
+	 */
+	private SubstituterState trivialState = new SubstituterState() {
+		@Override
+		public boolean isInitial() {
+			return true;
+		}
+	};
+
+	/**
+	 * Creates new {@link TaylorSubstituter}.
+	 * 
+	 * @param universe
+	 *            the symbolic universe to be used to create new
+	 *            {@link SymbolicExpression}s
+	 * @param objectFactory
+	 *            the {@link SymbolicObjectFactory} used to create new
+	 *            {@link SymbolicObject}s
+	 * @param typeFactory
+	 *            the {@link SymbolicTypeFactory} used to create new
+	 *            {@link SymbolicType}s
+	 * @param reasoner
+	 *            the {@link Reasoner} with the expanded context that includes
+	 *            assumptions on the integer bound variables that index the grid
+	 *            points
+	 * @param limitVars
+	 *            the real variables that are tending to 0: h0, h1, ...; an
+	 *            array of length n, where n is the dimension of the domain
+	 * @param orders
+	 *            the "orders" of the corresponding <code>limitVars</code>;
+	 *            i.e., the nonnegative integers n0, n1, ..., where we are
+	 *            trying to prove O(h0^n0)+O(h1^n1)+...
+	 * @param lowerBounds
+	 *            lower bounds of rectangular domain (length n)
+	 * @param upperBounds
+	 *            upper bounds of rectangular domain (length n)
+	 */
 	public TaylorSubstituter(PreUniverse universe, ObjectFactory objectFactory,
-			SymbolicTypeFactory typeFactory) {
+			SymbolicTypeFactory typeFactory, Reasoner reasoner,
+			NumericSymbolicConstant[] limitVars, int[] orders) {
 		super(universe, objectFactory, typeFactory);
-		// TODO Auto-generated constructor stub
+		this.reasoner = reasoner;
+		this.limitVars = limitVars;
+		this.orders = orders;
 	}
 
 	@Override
 	protected SubstituterState newState() {
-		// TODO Auto-generated method stub
-		return null;
+		return trivialState;
 	}
 
+	/**
+	 * Is the expression one of : h, C*h, or h*C where C is a concrete real?
+	 * 
+	 * @param expr
+	 *            the expression you want to check to determine if it is a
+	 *            constant multiple of <code>h</code>
+	 * @param h
+	 *            a symbolic constant of real type
+	 * @return <code>true</code> iff <code>expr</code> is h, C*h, or h*C.
+	 */
 	private boolean isConstantMultiple(NumericExpression expr,
 			NumericSymbolicConstant h) {
 		if (expr.equals(h))
 			return true;
 		if (expr.operator() == SymbolicOperator.MULTIPLY) {
-			NumericExpression arg0 = (NumericExpression)expr.argument(0);
+			int numArgs = expr.numArguments();
+
+			if (numArgs == 2) {
+				NumericExpression arg0 = (NumericExpression) expr.argument(0),
+						arg1 = (NumericExpression) expr.argument(1);
+
+				if (arg0.operator() == SymbolicOperator.CONCRETE
+						&& arg1.equals(h))
+					return true;
+				if (arg1.operator() == SymbolicOperator.CONCRETE
+						&& arg0.equals(h))
+					return true;
+			} else { // numArgs == 1
+				@SuppressWarnings("unchecked")
+				Iterable<? extends SymbolicExpression> args = (Iterable<? extends SymbolicExpression>) expr
+						.argument(0);
+				boolean foundH = false, foundC = false;
+
+				for (SymbolicExpression arg : args) {
+					if (arg.operator() == SymbolicOperator.CONCRETE && !foundC)
+						foundC = true;
+					else if (arg.equals(h) && !foundH)
+						foundH = true;
+					else
+						return false;
+				}
+				if (foundH)
+					return true;
+			}
 		}
-	
 		return false;
+	}
+
+	/**
+	 * Attempts to perform a Taylor expansion of the given function evaluated at
+	 * a point in R^n. This method looks for an appropriate component to expand.
+	 * If i-th argument is a sum in which a term is a constant multiple of the
+	 * i-th accuracy variable, it satisfies the heuristic. The least such is
+	 * chosen. The expansion is truncated according to the degree
+	 * {@link #orders}[i]. If no such i is found, returns <code>null</code>.
+	 * 
+	 * @param function
+	 *            a function which accepts n real inputs (for some positive
+	 *            integer n) and returns real
+	 * @param maxDegree
+	 *            the maximum number of derivatives that can be taken of
+	 *            <code>function</code>
+	 * @param point
+	 *            an array of length n consisting of the arguments to
+	 *            <code>function</code>; this is the "point" in R^n at which
+	 *            <code>function</code> is evaluated
+	 * @return a truncated Taylor expansion or <code>null</code>
+	 */
+	private NumericExpression taylorExpansion(SymbolicExpression function,
+			int maxDegree, NumericExpression[] point) {
+		int n = point.length; // the dimension of the domain
+		int indexToExpand = -1;
+		NumericExpression hTerm = null;
+		NumericExpression remainingTerm = null;
+
+		// look for an index i that can be expanded
+		for (int i = 0; i < n; i++) { // loop over arguments
+			// it won't help if we can't expand as far as we need to
+			// to prove O(order)...
+			if (orders[i] > maxDegree)
+				continue;
+
+			NumericExpression arg = point[i];
+			SymbolicOperator op = arg.operator();
+			NumericSymbolicConstant h = limitVars[i];
+			int numArgs = arg.numArguments();
+
+			if (op == SymbolicOperator.ADD) {
+				if (numArgs == 2) {
+					NumericExpression arg0 = (NumericExpression) arg
+							.argument(0),
+							arg1 = (NumericExpression) arg.argument(1);
+
+					if (isConstantMultiple(arg0, h)) {
+						indexToExpand = i;
+						hTerm = arg0;
+						remainingTerm = arg1;
+						break;
+					} else if (isConstantMultiple(arg1, h)) {
+						indexToExpand = i;
+						hTerm = arg1;
+						remainingTerm = arg0;
+						break;
+					}
+				} else { // numArgs == 1
+					@SuppressWarnings("unchecked")
+					Iterable<NumericExpression> termList = (Iterable<NumericExpression>) arg
+							.argument(0);
+
+					for (NumericExpression term : termList) {
+						if (isConstantMultiple(term, h)) {
+							indexToExpand = i;
+							hTerm = term;
+							remainingTerm = universe.subtract(arg, hTerm);
+							break;
+						}
+					}
+				}
+			} else if (op == SymbolicOperator.SUBTRACT) {
+				// has 2 arguments
+				NumericExpression arg0 = (NumericExpression) arg.argument(0),
+						arg1 = (NumericExpression) arg.argument(1);
+
+				if (isConstantMultiple(arg0, h)) {
+					indexToExpand = i;
+					hTerm = arg0;
+					remainingTerm = universe.minus(arg1);
+					break;
+				} else if (isConstantMultiple(arg1, h)) {
+					indexToExpand = i;
+					hTerm = universe.minus(arg1);
+					remainingTerm = arg0;
+					break;
+				}
+			}
+		} // end loop over arguments
+		if (indexToExpand == -1)
+			return null;
+
+		int order = orders[indexToExpand];
+		NumericExpression result = universe.zeroReal();
+
+		if (order >= 1) {
+			IntObject indexObj = universe.intObject(indexToExpand);
+			int j = 0;
+			NumericExpression hPower = universe.oneReal(); // hTerm^j
+			int jFactorial = 1; // j!
+			List<NumericExpression> newArgs = new LinkedList<>();
+
+			for (int i = 0; i < n; i++)
+				newArgs.add(i == indexToExpand ? remainingTerm : point[i]);
+			while (true) {
+				SymbolicExpression deriv = j == 0 ? function
+						: universe.derivative(function, indexObj,
+								universe.intObject(j));
+				NumericExpression derivApplication = (NumericExpression) universe
+						.apply(deriv, newArgs);
+
+				result = universe.add(result,
+						universe.divide(
+								universe.multiply(derivApplication, hPower),
+								universe.rational(jFactorial)));
+				j++;
+				if (j == order)
+					break;
+				hPower = universe.multiply(hPower, hTerm);
+				jFactorial *= j;
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Attempts to find, in the context of the {@link #reasoner}, a clause which
+	 * states the differentiability of the given <code>function</code>. This is
+	 * a clause with operator {@link SymbolicOperator#DIFFERENTIABLE} and with
+	 * the function argument (argument 0) equal to <code>function</code>.
+	 * 
+	 * @param function
+	 *            the function for which a differentiability claim is sought
+	 * @return a clause in the context dealing with the differentiability of
+	 *         <code>function</code>, or <code>null</code> if no such clause is
+	 *         found.
+	 */
+	private BooleanExpression findDifferentiableClaim(
+			SymbolicExpression function) {
+		for (BooleanExpression clause : reasoner.getReducedContext()
+				.getClauses()) {
+			if (clause.operator() != SymbolicOperator.DIFFERENTIABLE)
+				continue;
+
+			if (clause.argument(0).equals(function))
+				return clause;
+		}
+		return null;
+	}
+
+	private NumericExpression[] toArray(SymbolicObject sequence, int length) {
+		int count = 0;
+		@SuppressWarnings("unchecked")
+		Iterable<? extends NumericExpression> iterable = (Iterable<? extends NumericExpression>) sequence;
+		NumericExpression[] result = new NumericExpression[length];
+
+		for (NumericExpression x : iterable) {
+			result[count] = x;
+			count++;
+		}
+		return result;
 	}
 
 	@Override
@@ -68,23 +325,36 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 
 		SymbolicFunctionType functionType = (SymbolicFunctionType) function
 				.type();
-
-		if (!functionType.outputType().isReal())
-			return expression;
-
 		SymbolicTypeSequence inputTypes = functionType.inputTypes();
 		int n = inputTypes.numTypes();
 
+		if (!functionType.outputType().isReal())
+			return expression;
 		for (int i = 0; i < n; i++) {
 			if (!inputTypes.getType(i).isReal())
 				return expression;
 		}
 
-		SymbolicSequence<SymbolicExpression> args = (SymbolicSequence<SymbolicExpression>) expression
-				.argument(1);
+		BooleanExpression diffClaim = findDifferentiableClaim(function);
+
+		// Arg0 is a function from R^n to R for some positive
+		// integer n. Arg1 is the degree, a nonnegative integer
+		// {@link IntObject} which tells the number of partial derivatives (of
+		// any combination) that exist and are continuous. Arg2 is a sequence of
+		// real-value expressions which are the lower bounds of the intervals in
+		// the domain; the length is n. Arg3 is a similar sequence of upper
+		// bounds.
+
+		if (diffClaim == null)
+			return expression;
+
+		int maxDegree = ((IntObject) diffClaim.argument(1)).getInt();
+		NumericExpression[] lowerBounds = toArray(diffClaim.argument(2), n);
+		NumericExpression[] upperBounds = toArray(diffClaim.argument(3), n);
+		NumericExpression[] argArray = toArray(expression.argument(1), n);
 
 		for (int i = 0; i < n; i++) {
-			NumericExpression arg = (NumericExpression) args.get(i);
+			NumericExpression arg = argArray[i];
 			BooleanExpression inDomain = universe.and(
 					universe.lessThanEquals(lowerBounds[i], arg),
 					universe.lessThanEquals(arg, upperBounds[i]));
@@ -93,21 +363,12 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 				return expression;
 		}
 
-		for (int i = 0; i < n; i++) {
-			NumericExpression arg = (NumericExpression) args.get(i);
-			SymbolicOperator op = arg.operator();
+		SymbolicExpression result = taylorExpansion(function, maxDegree,
+				argArray);
 
-			if (op == SymbolicOperator.ADD) {
-				// can have 1 or 2 arguments
-			} else if (op == SymbolicOperator.SUBTRACT) {
-				// has 2 arguments
-			}
-		}
-		// look for +/- constant*hi
-
-		// TODO: store differentiability information in type?
-
-		return null;
+		if (result == null)
+			result = expression;
+		return result;
 	}
 
 }

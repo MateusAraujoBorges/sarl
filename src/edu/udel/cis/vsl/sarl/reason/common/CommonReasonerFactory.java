@@ -23,24 +23,53 @@ import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 
 /**
- * Factory for producing instances of {@link CommonReasoner}.
+ * Basic factory for producing instances of {@link CommonReasoner}.
  * 
  * @author Stephen F. Siegel
  */
 public class CommonReasonerFactory implements ReasonerFactory {
 
+	/**
+	 * Cached results of previous creation of @{link Reasoner}s. The idea is to
+	 * have at most one {@link Reasoner} for each boolean expression
+	 * ("context").
+	 */
 	private Map<BooleanExpression, Reasoner> reasonerCache = new HashMap<>();
 
+	/**
+	 * The theorem prover factory associated to this reasoner factory. It will
+	 * be used by the {@link Reasoner}s produced by this factory to instantiate
+	 * new {@link TheoremProver}s as the need arises.
+	 */
 	private TheoremProverFactory proverFactory;
 
+	/**
+	 * The simplifier factory associated to this reasoner factory. It will be
+	 * used by the {@link Reasoner}s produced by this factory to instantiate new
+	 * {@link Simplifier}s as the need arises.
+	 */
 	private SimplifierFactory simplifierFactory;
 
+	/**
+	 * Produces a new {@link CommonReasonerFactory} based on the given
+	 * <code>simplifierFactory</code> and <code>proverFactory</code>.
+	 * 
+	 * @param simplifierFactory
+	 *            the factory that will be used by {@link Reasoner}s produced by
+	 *            this factory to create new {@link Simplifier}s when the need
+	 *            arises
+	 * @param proverFactory
+	 *            the factory that will be used by {@link Reasoner}s produced by
+	 *            this factory to create new {@link TheoremProver}s when the
+	 *            need arises
+	 */
 	public CommonReasonerFactory(SimplifierFactory simplifierFactory,
 			TheoremProverFactory proverFactory) {
 		this.proverFactory = proverFactory;
@@ -54,9 +83,14 @@ public class CommonReasonerFactory implements ReasonerFactory {
 		if (result == null) {
 			Simplifier simplifier = simplifierFactory.newSimplifier(context);
 
-			result = new CommonReasoner(simplifier, proverFactory);
+			result = new CommonReasoner(this, simplifier);
 			reasonerCache.put(context, result);
 		}
 		return result;
+	}
+
+	@Override
+	public TheoremProverFactory getTheoremProverFactory() {
+		return proverFactory;
 	}
 }

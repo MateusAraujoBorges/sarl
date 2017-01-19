@@ -1047,10 +1047,18 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * 
+	 * <p>
 	 * Assumes the given arguments are in CNF form and produces the conjunction
 	 * of the two.
+	 * </p>
 	 * 
+	 * <p>
+	 * 
+	 * <pre>
 	 * CNF form: true | false | AND set | e
+	 * </pre>
 	 * 
 	 * where set is a set of boolean expressions which are not true, false, or
 	 * AND expressions and set has cardinality at least 2. e is any boolean
@@ -1062,6 +1070,7 @@ public class CommonPreUniverse implements PreUniverse {
 	 * AND s1, e -> AND add(s1, e)
 	 * AND e1, e2-> if e1.equals(e2) then e1 else AND {e1,e2}
 	 * </pre>
+	 * </p>
 	 */
 	@Override
 	public BooleanExpression and(BooleanExpression arg0,
@@ -1677,38 +1686,6 @@ public class CommonPreUniverse implements PreUniverse {
 				boundVariable, expression);
 	}
 
-	/**
-	 * TODO make lambda support multiple parameters
-	 * 
-	 * @param boundVariables
-	 * @param expression
-	 * @return
-	 */
-	// @Override
-	// public SymbolicExpression lambda(
-	// Collection<SymbolicConstant> boundVariables,
-	// SymbolicExpression expression) {
-	// List<SymbolicType> paraTypes = new ArrayList<>();
-	// List<SymbolicObject> symbolicObjects = new ArrayList<>();
-	//
-	// for (SymbolicConstant var : boundVariables) {
-	// paraTypes.add(var.type());
-	// symbolicObjects.add(var);
-	// }
-	// symbolicObjects.add(expression);
-	// int size = symbolicObjects.size();
-	// SymbolicObject[] so = new SymbolicObject[size];
-	//
-	// symbolicObjects.toArray(so);
-	// return expression(SymbolicOperator.LAMBDA, functionType(
-	// typeFactory.sequence(paraTypes), expression.type()), so);
-	// }
-
-	// protected SymbolicExpression expression(SymbolicOperator operator,
-	// SymbolicType type, Iterable<SymbolicObject> arg0, SymbolicObject arg1) {
-	// return expressionFactory.expression(operator, type, arg0, arg1);
-	// }
-	// TODO change here
 	@Override
 	public SymbolicExpression apply(SymbolicExpression function,
 			Iterable<? extends SymbolicExpression> argumentSequence) {
@@ -1743,12 +1720,6 @@ public class CommonPreUniverse implements PreUniverse {
 		}
 		return result;
 	}
-
-	// public UnaryOperator<SymbolicExpression> simpleSubstituter(
-	// SymbolicConstant var, SymbolicExpression value) {
-	// return new SimpleSubstituter(this, objectFactory, typeFactory, var,
-	// value);
-	// }
 
 	@Override
 	public SymbolicExpression unionInject(SymbolicUnionType unionType,
@@ -2953,6 +2924,11 @@ public class CommonPreUniverse implements PreUniverse {
 		return objectFactory;
 	}
 
+	@Override
+	public SymbolicTypeFactory typeFactory() {
+		return typeFactory;
+	}
+
 	/**
 	 * Returns the result of bit-and operation for two given bit vectors, those
 	 * two vectors are in the form of {@link SymbolicExpression}.
@@ -3918,9 +3894,19 @@ public class CommonPreUniverse implements PreUniverse {
 		return result;
 	}
 
-	@Override
-	public SymbolicExpression derivative(SymbolicExpression function,
-			IntObject index, IntObject degree) {
+	/**
+	 * Checks that symbolic expression is a function from R^n to R for some
+	 * positive integer n.
+	 * 
+	 * @param function
+	 *            symbolic expression which has type function from R^n to R for
+	 *            some positive integer n
+	 * @return the dimension of the input space, n
+	 * @throws SARLException
+	 *             if <code>function</code>'s type is not function from R^n to R
+	 *             for some positive integer n
+	 */
+	private int checkRealFunction(SymbolicExpression function) {
 		SymbolicType theType = function.type();
 
 		if (!(theType instanceof SymbolicFunctionType))
@@ -3943,12 +3929,51 @@ public class CommonPreUniverse implements PreUniverse {
 			SymbolicType inputType = inputTypes.getType(i);
 
 			if (!inputType.isReal())
-				throw err(
-						"A differentiable function should only accept real inputs, but input type "
-								+ i + " is " + inputType);
+				throw err("Expected function from R^n, but input type " + i
+						+ " is " + inputType);
 		}
-		return expression(SymbolicOperator.DERIV, functionType, function, index,
-				degree);
+		return numInputs;
+	}
+
+	private void checkRealSequence(
+			SymbolicSequence<? extends NumericExpression> seq, int length) {
+		if (length != seq.size())
+			throw err("Expected sequence of length " + length + " but got "
+					+ seq.size());
+		for (int i = 0; i < length; i++) {
+			SymbolicType type = seq.get(i).type();
+
+			if (!type.isReal())
+				throw err("Expected real type, but element " + i
+						+ " of sequence has type " + type);
+		}
+	}
+
+	@Override
+	public SymbolicExpression derivative(SymbolicExpression function,
+			IntObject index, IntObject degree) {
+		checkRealFunction(function);
+		return expression(SymbolicOperator.DERIV, function.type(), function,
+				index, degree);
+	}
+
+	@Override
+	public BooleanExpression differentiable(SymbolicExpression function,
+			IntObject degree, Iterable<? extends NumericExpression> lowerBounds,
+			Iterable<? extends NumericExpression> upperBounds) {
+		int n = checkRealFunction(function);
+		SymbolicSequence<? extends NumericExpression> lowerSeq = objectFactory
+				.sequence(lowerBounds),
+				upperSeq = objectFactory.sequence(upperBounds);
+
+		checkRealSequence(lowerSeq, n);
+		checkRealSequence(upperSeq, n);
+		if (degree.isNegative())
+			throw err("Differentiable degree must be nonnegative but was "
+					+ degree);
+		return (BooleanExpression) expression(SymbolicOperator.DIFFERENTIABLE,
+				booleanType,
+				new SymbolicObject[] { function, degree, lowerSeq, upperSeq });
 	}
 
 }

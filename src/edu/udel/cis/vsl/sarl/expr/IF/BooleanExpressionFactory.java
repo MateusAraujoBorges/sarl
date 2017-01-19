@@ -182,5 +182,4 @@ public interface BooleanExpressionFactory {
 	 */
 	BooleanExpression exists(SymbolicConstant boundVariable,
 			BooleanExpression predicate);
-
 }

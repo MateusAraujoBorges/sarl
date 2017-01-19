@@ -221,8 +221,8 @@ public class CVCTranslator {
 			this.intDivMap = null;
 		this.cvcDeclarations = new FastList<>();
 		this.cvcTranslation = translate(theExpression).getResult();
-		//if (hasBitOp && supportBit)
-		//	this.cvcTranslation = translate_BV(theExpression).getResult();
+		// if (hasBitOp && supportBit)
+		// this.cvcTranslation = translate_BV(theExpression).getResult();
 	}
 
 	CVCTranslator(CVCTranslator startingContext,
@@ -246,8 +246,8 @@ public class CVCTranslator {
 			intDivMap = null;
 		this.cvcDeclarations = new FastList<>();
 		this.cvcTranslation = translate(theExpression).getResult();
-		//if (hasBitOp && supportBit)
-		//	this.cvcTranslation = translate_BV(theExpression).getResult();
+		// if (hasBitOp && supportBit)
+		// this.cvcTranslation = translate_BV(theExpression).getResult();
 	}
 
 	// Private methods...
@@ -288,6 +288,8 @@ public class CVCTranslator {
 	 * Creates a new CVC (ordinary) variable of given type with unique name;
 	 * increments {@link #cvcAuxVarCount}.
 	 * 
+	 * TODO: type is not used. Figure out why and correct this method.
+	 * 
 	 * @param type
 	 *            a CVC type; it is consumed, so cannot be used after invoking
 	 *            this method
@@ -295,6 +297,7 @@ public class CVCTranslator {
 	 */
 	private String newCvcAuxVar(FastList<String> type) {
 		String name = "t" + cvcAuxVarCount;
+
 		cvcAuxVarCount++;
 		return name;
 	}
@@ -2016,6 +2019,30 @@ public class CVCTranslator {
 		case NULL:
 			result = null;
 			break;
+		case DERIV: {
+			FastList<String> cvcType = translateType(expression.type());
+			String name = newCvcAuxVar(cvcType.clone());
+
+			cvcDeclarations.addAll(name, " : ");
+			cvcDeclarations.append(cvcType);
+			cvcDeclarations.add(";\n");
+			result = new Translation(new FastList<String>(name));
+			break;
+		}
+		case DIFFERENTIABLE: {
+			// TODO: introduce uninterpreted functions
+			// Need a different one for each n (dimension of domain)
+			// DIFFERENTIABLE_0, DIFFERENTIABLE_1, ...
+			// for now, just introduce a boolean variable
+			FastList<String> cvcType = translateType(expression.type());
+			String name = newCvcAuxVar(cvcType.clone());
+
+			cvcDeclarations.addAll(name, " : ");
+			cvcDeclarations.append(cvcType);
+			cvcDeclarations.add(";\n");
+			result = new Translation(new FastList<String>(name));
+			break;
+		}
 		default:
 			throw new SARLInternalException(
 					"unreachable: unknown operator: " + operator);

@@ -5,9 +5,11 @@ import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
 import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.CharObject;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
+import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
 /**
  * A {@link PreUniverse} provides most of the services of a
@@ -53,7 +55,23 @@ public interface PreUniverse extends CoreUniverse {
 	 */
 	SymbolicTypeSequence typeSequence(Iterable<? extends SymbolicType> types);
 
+	/**
+	 * Returns the {@link ObjectFactory} used by this universe. This is the
+	 * factory used for producing {@link SymbolicObject}s and performing basic
+	 * manipulations of them.
+	 * 
+	 * @return the object factory used by this universe
+	 */
 	ObjectFactory objectFactory();
+
+	/**
+	 * Returns the {@link SymbolicTypeFactory} used by this universe. This is
+	 * the factory used for producing {@link SymbolicType}s and performing basic
+	 * manipulations on them.
+	 * 
+	 * @return the type factory used by this universe
+	 */
+	SymbolicTypeFactory typeFactory();
 
 	/**
 	 * Changes the names of the bound variables in the expression so that every

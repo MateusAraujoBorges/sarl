@@ -71,7 +71,7 @@ public class ContextMinimizingReasonerFactory implements ReasonerFactory {
 	@Override
 	public ContextMinimizingReasoner getReasoner(BooleanExpression context) {
 		assert context.isCanonic();
-		
+
 		ContextMinimizingReasoner result = reasonerMap.get(context);
 
 		if (result == null) {
@@ -99,12 +99,8 @@ public class ContextMinimizingReasonerFactory implements ReasonerFactory {
 		return simplifierFactory;
 	}
 
-	/**
-	 * Returns the theorem prover factory associated to this factory.
-	 * 
-	 * @return the theorem prover factory associated to this factory
-	 */
-	TheoremProverFactory getProverFactory() {
+	@Override
+	public TheoremProverFactory getTheoremProverFactory() {
 		return proverFactory;
 	}
 

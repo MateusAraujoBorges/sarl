@@ -26,10 +26,12 @@ import edu.udel.cis.vsl.sarl.IF.ModelResult;
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
+import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
@@ -38,33 +40,70 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
+import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
-import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 
 /**
- * An implementation of Reasoner based on a given Simplifier and
- * TheoremProverFactory.
+ * A very basic implementation of {@link Reasoner} based on a given
+ * {@link Simplifier} and {@link TheoremProverFactory}. The context and other
+ * information is already in the {@link Simplifier} that is created before this
+ * {@link Reasoner} is created and becomes a field in this {@link Reasoner}. The
+ * validity reasoning basically works by attempting to simplify an expression to
+ * "true" or "false" and if that doesn't work then applying the prover.
  * 
  * @author Stephen F. Siegel
  */
 public class CommonReasoner implements Reasoner {
 
+	/**
+	 * The factory that was used to produce this {@link CommonReasoner}. It may
+	 * be used again to produce new instances of {@link CommonReasoner} with
+	 * different contexts if the need arises.
+	 */
+	private ReasonerFactory reasonerFactory;
+
+	/**
+	 * The theorem prover is created only if needed and once created will be
+	 * re-used for subsequence queries. It is stored in this variable.
+	 */
 	private TheoremProver prover = null;
 
+	/**
+	 * The simplifier, which must be non-<code>null</code> and is set at
+	 * initialization.
+	 */
 	private Simplifier simplifier;
 
-	private TheoremProverFactory factory;
-
-	// TODO: init me...
-	private SimplifierFactory simplifierFactory;
-
+	/**
+	 * The cached results of previous validity queries, i.e., calls to method
+	 * {@link #valid(BooleanExpression)},
+	 * {@link #validOrModel(BooleanExpression)}.
+	 */
 	private Map<BooleanExpression, ValidityResult> validityCache = new HashMap<>();
 
-	public CommonReasoner(Simplifier simplifier, TheoremProverFactory factory) {
+	/**
+	 * @param reasonerFactory
+	 *            the factory that created this {@link Reasoner}, and can be
+	 *            used to create more {@link Reasoner}s if they are needed by
+	 *            this one
+	 * @param simplifier
+	 *            a {@link Simplifier} formed from the context that undergirds
+	 *            this {@link Reasoner}; can be used by this {@link Reasoner}
+	 *            for simplifying expressions
+	 * @param factory
+	 *            a factory for producing new {@link TheoremProver}s
+	 */
+	public CommonReasoner(ReasonerFactory reasonerFactory,
+			Simplifier simplifier) {
+		this.reasonerFactory = reasonerFactory;
 		this.simplifier = simplifier;
-		this.factory = factory;
 	}
 
+	/**
+	 * Returns the symbolic universe used by this {@link Reasoner}.
+	 * 
+	 * @return the symbolic universe
+	 */
 	public PreUniverse universe() {
 		return simplifier.universe();
 	}
@@ -151,7 +190,8 @@ public class CommonReasoner implements Reasoner {
 					result = validityCache.get(simplifiedPredicate);
 					if (result == null) {
 						if (prover == null)
-							prover = factory.newProver(getReducedContext());
+							prover = reasonerFactory.getTheoremProverFactory()
+									.newProver(getReducedContext());
 						result = prover.valid(simplifiedPredicate);
 						validityCache.put(predicate, result);
 					}
@@ -184,7 +224,8 @@ public class CommonReasoner implements Reasoner {
 			if (result != null && result instanceof ModelResult)
 				return result;
 			if (prover == null)
-				prover = factory.newProver(getReducedContext());
+				prover = reasonerFactory.getTheoremProverFactory()
+						.newProver(getReducedContext());
 			result = prover.validOrModel(simplifiedPredicate);
 			validityCache.put(predicate, result);
 		}
@@ -272,36 +313,29 @@ public class CommonReasoner implements Reasoner {
 	 *         <code>false</code> result does not mean the O-claim is false, it
 	 *         just means it could not be proved
 	 */
-	public boolean validUniform(Interval[] realIntervals,
-			SymbolicConstant[] indexVars, BooleanExpression indexConstraint,
-			NumericExpression lhs, SymbolicConstant[] limitVars, int[] orders) {
-		// strategy:
-		// create new context and add index constraint to the assumption.
-		// look for function calls to an abstract function from R^m to R.
-		// Within such a function call, look for an index i such that argument
-		// i has the form term+hi. Taylor expand that call around parameter i.
-		// First check that all parameters are in the bounding interval.
-
-		// rename the indexConstraint and the limitVars if they conflict with
-		// any
-		// frees.
-
+	// TODO: get rid of lowerBounds and upperBounds.
+	// instead, when you encounter a function symbol used in an application
+	// in lhs, look in path condition to find out if it is DIFFERENTIABLE,
+	// get the intervals from there, and the degree.
+	public boolean checkBigOClaim(SymbolicConstant[] indexVars,
+			BooleanExpression indexConstraint, NumericExpression lhs,
+			NumericSymbolicConstant[] limitVars, int[] orders) {
+		// strategy: create new context and add index constraint to the
+		// assumption. Perform Taylor expansions where appropriate.
+		// TODO: rename the indexConstraint and the limitVars if they conflict
+		// with any free variables.
+		PreUniverse universe = universe();
 		BooleanExpression oldContext = simplifier.getFullContext();
-		BooleanExpression newContext = simplifier.universe().and(oldContext,
+		BooleanExpression newContext = universe.and(oldContext,
 				indexConstraint);
+		Reasoner newReasoner = reasonerFactory.getReasoner(newContext);
+		UnaryOperator<SymbolicExpression> taylorSubstituter = new TaylorSubstituter(
+				universe, universe.objectFactory(), universe.typeFactory(),
+				newReasoner, limitVars, orders);
+		NumericExpression newLhs = (NumericExpression) taylorSubstituter
+				.apply(lhs);
 
-		// would like whole new reasoner for the newContext.
-		// Simplifier newSimplifier =
-		// simplifierFactory.newSimplifier(newContext);
-
-		// need general expression substituter interface
-		// method:
-		// SymbolicObject replace(SymbolicObject o)
-
-		// need to extend ExpressionSubstituter
-
-		// need to use Ideal factory ?
-
-		return false;
+		return newReasoner
+				.isValid(universe.equals(newLhs, universe.zeroReal()));
 	}
 }

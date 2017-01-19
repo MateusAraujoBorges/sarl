@@ -144,7 +144,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 	private TheoremProver getProver() {
 		if (prover == null)
-			prover = factory.getProverFactory().newProver(getReducedContext());
+			prover = factory.getTheoremProverFactory()
+					.newProver(getReducedContext());
 		return prover;
 	}
 

@@ -20,6 +20,7 @@ package edu.udel.cis.vsl.sarl.reason.IF;
 
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 
 /**
  * <p>
@@ -54,5 +55,13 @@ public interface ReasonerFactory {
 	 * @return a {@link Reasoner} based on the given <code>context</code>
 	 */
 	Reasoner getReasoner(BooleanExpression context);
+
+	/**
+	 * Returns the theorem prover factory used by this reasoner factory. Every
+	 * reasoner factory has one.
+	 * 
+	 * @return the theorem prover factory used by this reasoner factory
+	 */
+	TheoremProverFactory getTheoremProverFactory();
 
 }

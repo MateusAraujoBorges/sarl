@@ -2287,4 +2287,26 @@ public interface CoreUniverse {
 	 */
 	SymbolicExpression derivative(SymbolicExpression function, IntObject index,
 			IntObject degree);
+
+	/**
+	 * Returns an expression of boolean type which encodes the claim that a
+	 * function is differentiable on a closed interval in R^n.
+	 * 
+	 * @see SymbolicOperator#DIFFERENTIABLE
+	 * @param function
+	 *            the function from R^n to R, for some n at least 1
+	 * @param degree
+	 *            the maximal degree of the derivatives which exist and are
+	 *            continuous, a nonnegative integer
+	 * @param lowerBounds
+	 *            lower bounds of the domain intervals; a sequence of
+	 *            real-valued expressions of length n
+	 * @param upperBounds
+	 *            upper bounds of the domain intervals; a sequence of
+	 *            real-valued expressions of length n
+	 * @return a boolean expression encoding the differentiability claim
+	 */
+	BooleanExpression differentiable(SymbolicExpression function,
+			IntObject degree, Iterable<? extends NumericExpression> lowerBounds,
+			Iterable<? extends NumericExpression> upperBounds);
 }

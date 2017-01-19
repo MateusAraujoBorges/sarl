@@ -19,6 +19,7 @@
 package edu.udel.cis.vsl.sarl.expr.common;
 
 import java.util.Arrays;
+import java.util.Iterator;
 
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
@@ -513,6 +514,46 @@ public class HomogeneousExpression<T extends SymbolicObject>
 				count++;
 			}
 			result.append(">");
+			return result;
+		}
+		case DERIV:
+			result.append("D[");
+			result.append(arguments[0].toStringBuffer(false));
+			result.append(",{");
+			result.append(arguments[1].toString());
+			result.append(",");
+			result.append(arguments[2].toString());
+			result.append("}]");
+			return result;
+		case DIFFERENTIABLE: {
+			result.append("DIFFERENTIABLE[");
+			result.append(arguments[0].toStringBuffer(false));
+			result.append(", ");
+			result.append(arguments[1].toString());
+			result.append(", ");
+
+			@SuppressWarnings("unchecked")
+			Iterator<NumericExpression> lows = ((Iterable<NumericExpression>) arguments[2])
+					.iterator();
+			@SuppressWarnings("unchecked")
+			Iterator<NumericExpression> highs = ((Iterable<NumericExpression>) arguments[3])
+					.iterator();
+			boolean first = true;
+
+			while (lows.hasNext()) {
+				NumericExpression low = lows.next(), high = highs.next();
+
+				if (first)
+					first = false;
+				else
+					result.append("x");
+				result.append("[");
+				result.append(low.toStringBuffer(false));
+				result.append(",");
+				result.append(high.toStringBuffer(false));
+				result.append("]");
+			}
+			result.append("]");
 			return result;
 		}
 		case DIVIDE:

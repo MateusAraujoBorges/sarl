@@ -455,5 +455,4 @@ public class CnfFactory implements BooleanExpressionFactory {
 		return booleanExpression(SymbolicOperator.EXISTS, boundVariable,
 				predicate);
 	}
-
 }
