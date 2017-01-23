@@ -6,19 +6,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.common.HomogeneousExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
-// interface BooleanExpression extends SymbolicExpression
-
-// every BooleanExpression is either a BooleanPrimitive or a
-// CompoundBooleanExpression
-
-// class CompoundBooleanExpression extends Homogeneous<BooleanExpression>
-// extends
-// BooleanExpression. Used for AND and OR and NOT.
-
-// class: BooleanPrimitive extends Homogeneous<SymbolicObject>:
-// used for any BooleanExpression that is not an AND or OR or NOT
-// true = Concrete(true), false =Concrete(false)
-
 public class CompoundBooleanExpression extends
 		HomogeneousExpression<BooleanExpression> implements BooleanExpression {
 

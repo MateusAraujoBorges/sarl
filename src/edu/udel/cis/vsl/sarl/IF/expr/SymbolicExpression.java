@@ -268,9 +268,9 @@ public interface SymbolicExpression extends SymbolicObject {
 		 */
 		DIVIDE,
 		/**
-		 * Operator for comparison of two values for equality. Two arguments,
-		 * both {@link NumericExpression}s. Result is a
-		 * {@link BooleanExpression}.
+		 * Operator for comparison of two values for equality. Two arguments of
+		 * any type or kind, not necessarily only {@link NumericExpression}s.
+		 * Result is a {@link BooleanExpression}.
 		 * 
 		 * @see #NEQ
 		 */
@@ -348,17 +348,8 @@ public interface SymbolicExpression extends SymbolicObject {
 		MODULO,
 		/**
 		 * Operator for an expression representing the numerical product of
-		 * symbolic expressions. Can have 1 or 2 arguments, like {@link #ADD}.
-		 * Takes 1 or 2 arguments. If 1, the argument is an instance of
-		 * <code>{@link Iterable}&lt;? extends
-		 * {@link NumericExpression}&gt;</code> with at least one element; the
-		 * {@link #MULTIPLY} expression represents the product of the elements
-		 * in the collection. The elements of the collection must all have the
-		 * same numeric (integer or real) type. If 2, then both arguments are
-		 * {@link NumericExpression}s and have the same numeric (integer or
-		 * real) type, and the {@link #MULTIPLY} expression represents the
-		 * product of the two arguments. Result is also a
-		 * {@link NumericExpression}.
+		 * symbolic expressions. Can have any number of arguments, all of same
+		 * numeric type. Result is also a {@link NumericExpression}.
 		 * 
 		 * @see #ADD
 		 */
@@ -393,14 +384,9 @@ public interface SymbolicExpression extends SymbolicObject {
 		 */
 		NULL,
 		/**
-		 * Operator for an expression representing the conjunction of symbolic
-		 * expressions of boolean type. Has 1 or 2 arguments, similar to
-		 * {@link #ADD}. If 1, the argument is an
-		 * <code>{@link Iterable}&lt;? extends
-		 * {@link BooleanExpression}&gt;</code>. All symbolic expressions in the
-		 * collection have boolean type. If there are 2 arguments, they are both
-		 * {@link BooleanExpression}s. Result is also a
-		 * {@link BooleanExpression}.
+		 * Operator for an expression representing the disjunction of symbolic
+		 * expressions of boolean type. Has any number of arguments, all of
+		 * boolean type. Result is also a {@link BooleanExpression}.
 		 * 
 		 * @see #AND
 		 * @see #ADD

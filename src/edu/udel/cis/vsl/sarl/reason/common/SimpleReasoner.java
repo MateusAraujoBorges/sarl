@@ -27,6 +27,7 @@ import edu.udel.cis.vsl.sarl.IF.ValidityResult;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
@@ -150,6 +151,13 @@ public class SimpleReasoner implements Reasoner {
 	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
 			SymbolicConstant expectedKey, boolean selfUpdate) {
 		return simplifier.substitutionMap(expectedKey, selfUpdate);
+	}
+
+	@Override
+	public boolean checkBigOClaim(BooleanExpression indexConstraint,
+			NumericExpression lhs, NumericSymbolicConstant[] limitVars,
+			int[] orders) {
+		return false;
 	}
 
 }

@@ -15,6 +15,7 @@ import edu.udel.cis.vsl.sarl.IF.ValidityResult;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
@@ -740,5 +741,28 @@ public class ContextMinimizingReasoner implements Reasoner {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public boolean checkBigOClaim(BooleanExpression indexConstraint,
+			NumericExpression lhs, NumericSymbolicConstant[] limitVars,
+			int[] orders) {
+		// strategy: create new context and add index constraint to the
+		// assumption. Perform Taylor expansions where appropriate.
+		// TODO: rename the indexConstraint and the limitVars if they conflict
+		// with any free variables.
+		PreUniverse universe = getSimplifier().universe();
+		BooleanExpression oldContext = simplifier.getFullContext();
+		BooleanExpression newContext = universe.and(oldContext,
+				indexConstraint);
+		Reasoner newReasoner = factory.getReasoner(newContext);
+		UnaryOperator<SymbolicExpression> taylorSubstituter = new TaylorSubstituter(
+				universe, universe.objectFactory(), universe.typeFactory(),
+				newReasoner, limitVars, orders);
+		NumericExpression newLhs = (NumericExpression) taylorSubstituter
+				.apply(lhs);
+
+		return newReasoner
+				.isValid(universe.equals(newLhs, universe.zeroReal()));
 	}
 }

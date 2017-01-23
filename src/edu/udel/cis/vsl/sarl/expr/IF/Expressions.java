@@ -76,8 +76,13 @@ public class Expressions {
 	 * @return the new boolean expression factory
 	 */
 	public static BooleanExpressionFactory newCnfFactory(
+			// NumericExpressionFactory numericFactory,
 			SymbolicTypeFactory typeFactory, ObjectFactory objectFactory) {
-		return new CnfFactory(typeFactory, objectFactory);
+		BooleanExpressionFactory result = new CnfFactory(typeFactory,
+				objectFactory);
+
+		// result.setNumericExpressionFactory(numericFactory);
+		return result;
 	}
 
 	/**
@@ -106,6 +111,7 @@ public class Expressions {
 		NumericExpressionFactory numericFactory = Ideal.newIdealFactory(
 				numberFactory, objectFactory, typeFactory, booleanFactory);
 
+		booleanFactory.setNumericExpressionFactory(numericFactory);
 		return newExpressionFactory(numericFactory);
 	}
 
@@ -134,6 +140,7 @@ public class Expressions {
 		NumericExpressionFactory numericFactory = Herbrand.newHerbrandFactory(
 				numberFactory, objectFactory, typeFactory, booleanFactory);
 
+		booleanFactory.setNumericExpressionFactory(numericFactory);
 		return newExpressionFactory(numericFactory);
 	}
 
@@ -165,6 +172,7 @@ public class Expressions {
 		NumericExpressionFactory numericFactory = new CommonNumericExpressionFactory(
 				idealFactory, herbrandFactory);
 
+		booleanFactory.setNumericExpressionFactory(numericFactory);
 		return newExpressionFactory(numericFactory);
 	}
 

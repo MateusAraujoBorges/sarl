@@ -271,55 +271,10 @@ public class CommonReasoner implements Reasoner {
 		return simplifier.substitutionMap(expectedKey, selfUpdate);
 	}
 
-	/**
-	 * Attempts to prove a uniform "Big-O" claim. The claim has the following
-	 * form:
-	 * 
-	 * <pre>
-	 * lhs = O(h1^n1) + ... + O(hk^nk)
-	 * </pre>
-	 * 
-	 * Here, lhs or "left hand side expression" is an expression of real type.
-	 * The h1, ..., hk or "limit variables" are symbolic constants of real type,
-	 * the variables that are tending towards 0. The n1, ..., nk the
-	 * corresponding "orders" of the limit variables; they are are concrete
-	 * nonnegative integers.
-	 * 
-	 * The lhs may involve the hi and also some integer-type symbolic constants
-	 * i1,...,im called the "index variables". The ij are assumed to satisfy
-	 * some "index constraint".
-	 * 
-	 * The real intervals defined a closed rectangular interval in R^m that
-	 * contain the "grid points". The grid points are not explicit here, but
-	 * they are functions of the index variables.
-	 * 
-	 * @param realIntervals
-	 *            intervals bounding the grid, an array of length m
-	 * @param indexVars
-	 *            the index variables, an array of length m of symbolic
-	 *            constants of integer type
-	 * @param indexConstraint
-	 *            the constraint on the index variables
-	 * @param lhs
-	 *            the left hand side expression, an expression of real type
-	 *            involving any or all of the symbolic constants mentioned, as
-	 *            well as others
-	 * @param limitVars
-	 *            the limit variables; an array of length k
-	 * @param orders
-	 *            the orders of the limit variables; the length must be the same
-	 *            as the length of <code>limitVars</code> (k)
-	 * @return <code>true</code> if the O-claim can be proved. A
-	 *         <code>false</code> result does not mean the O-claim is false, it
-	 *         just means it could not be proved
-	 */
-	// TODO: get rid of lowerBounds and upperBounds.
-	// instead, when you encounter a function symbol used in an application
-	// in lhs, look in path condition to find out if it is DIFFERENTIABLE,
-	// get the intervals from there, and the degree.
-	public boolean checkBigOClaim(SymbolicConstant[] indexVars,
-			BooleanExpression indexConstraint, NumericExpression lhs,
-			NumericSymbolicConstant[] limitVars, int[] orders) {
+	@Override
+	public boolean checkBigOClaim(BooleanExpression indexConstraint,
+			NumericExpression lhs, NumericSymbolicConstant[] limitVars,
+			int[] orders) {
 		// strategy: create new context and add index constraint to the
 		// assumption. Perform Taylor expansions where appropriate.
 		// TODO: rename the indexConstraint and the limitVars if they conflict

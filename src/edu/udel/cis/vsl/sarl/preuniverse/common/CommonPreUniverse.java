@@ -1525,32 +1525,36 @@ public class CommonPreUniverse implements PreUniverse {
 	 */
 	@Override
 	public BooleanExpression not(BooleanExpression arg) {
-		SymbolicOperator operator = arg.operator();
-
-		switch (operator) {
-		case LESS_THAN:
-			return numericFactory.notLessThan(
-					(NumericExpression) arg.argument(0),
-					(NumericExpression) arg.argument(1));
-		case LESS_THAN_EQUALS:
-			return numericFactory.notLessThanEquals(
-					(NumericExpression) arg.argument(0),
-					(NumericExpression) arg.argument(1));
-		default:
-			return booleanFactory.not(arg);
-		}
+		// SymbolicOperator operator = arg.operator();
+		//
+		// switch (operator) {
+		// case LESS_THAN:
+		// return numericFactory.notLessThan(
+		// (NumericExpression) arg.argument(0),
+		// (NumericExpression) arg.argument(1));
+		// case LESS_THAN_EQUALS:
+		// return numericFactory.notLessThanEquals(
+		// (NumericExpression) arg.argument(0),
+		// (NumericExpression) arg.argument(1));
+		// default:
+		return booleanFactory.not(arg);
+		// }
 	}
 
 	@Override
 	public BooleanExpression implies(BooleanExpression arg0,
 			BooleanExpression arg1) {
-		return booleanFactory.implies(arg0, arg1);
+		return or(not(arg0), arg1);
 	}
 
 	@Override
 	public BooleanExpression equiv(BooleanExpression arg0,
 			BooleanExpression arg1) {
-		return booleanFactory.equiv(arg0, arg1);
+		BooleanExpression result = implies(arg0, arg1);
+
+		if (result.isFalse())
+			return result;
+		return and(result, implies(arg1, arg0));
 	}
 
 	// @Override
@@ -3974,6 +3978,262 @@ public class CommonPreUniverse implements PreUniverse {
 		return (BooleanExpression) expression(SymbolicOperator.DIFFERENTIABLE,
 				booleanType,
 				new SymbolicObject[] { function, degree, lowerSeq, upperSeq });
+	}
+
+	/**
+	 * Decomposes an expression into a sum of terms, adding those terms to a
+	 * list.
+	 * 
+	 * @param expr
+	 *            an expression
+	 * @param accumulator
+	 *            list to which to add the terms
+	 */
+	private void getSummandsWork(NumericExpression expr,
+			List<NumericExpression> accumulator) {
+		SymbolicOperator op = expr.operator();
+
+		if (op == SymbolicOperator.ADD) {
+			@SuppressWarnings("unchecked")
+			Iterable<NumericExpression> args = (Iterable<NumericExpression>) expr
+					.getArguments();
+
+			for (NumericExpression arg : args)
+				getSummandsWork(arg, accumulator);
+		} else if (op == SymbolicOperator.SUBTRACT) {
+			getSummandsWork((NumericExpression) expr.argument(0), accumulator);
+
+			List<NumericExpression> temp = new LinkedList<>();
+
+			getSummandsWork((NumericExpression) expr.argument(1), temp);
+			for (NumericExpression x : temp)
+				accumulator.add(minus(x));
+		} else {
+			accumulator.add(expr);
+		}
+	}
+
+	@Override
+	public NumericExpression[] getSummands(NumericExpression expr) {
+		List<NumericExpression> list = new LinkedList<NumericExpression>();
+
+		getSummandsWork(expr, list);
+
+		NumericExpression[] result = new NumericExpression[list.size()];
+
+		list.toArray(result);
+		return result;
+	}
+
+	private class InequalitySolution {
+		boolean isUpper;
+		NumericExpression bound;
+	}
+
+	/**
+	 * Given a boolean expression and integer variable <code>v</code>, if that
+	 * expression is an inequality of the form
+	 * 
+	 * <pre>
+	 * [+/-]v [+/-]e [<=,>=] 0,
+	 * </pre>
+	 * 
+	 * where <code>e</code> is an integer expression that does not involve
+	 * <code>v</code>, this method will "solve" for <code>v</code> to return
+	 * either an upper or lower bound on <code>v</code>. That bound will be a
+	 * numeric expression, either <code>e</code> or <code>-e</code>.
+	 * 
+	 * @param var
+	 *            variable to "solve" for
+	 * @param inequality
+	 *            any non-<code>null</code> boolean expression, usually an
+	 *            inequality
+	 * @return the solution, which specifies the non-strict bound and whether it
+	 *         is upper or lower, or <code>null</code> if
+	 *         <code>inequality</code> is not an inequality or is not of the
+	 *         correct form.
+	 */
+	private InequalitySolution solveIntegerInequality(
+			NumericSymbolicConstant var, BooleanExpression inequality) {
+		SymbolicOperator op = inequality.operator();
+
+		if (op != SymbolicOperator.LESS_THAN_EQUALS)
+			return null;
+
+		NumericExpression arg0 = (NumericExpression) inequality.argument(0);
+		NumericExpression arg1 = (NumericExpression) inequality.argument(1);
+		NumericExpression expr;
+		boolean isUpper;
+
+		if (arg0.isZero()) { // 0 <= arg1 = v+e
+			expr = arg1;
+			isUpper = false;
+		} else if (arg1.isZero()) { // v+e = arg0 <= 0
+			expr = arg0;
+			isUpper = true;
+		} else { // 0 <= arg1 - arg0
+			expr = subtract(arg1, arg0);
+			isUpper = false;
+		}
+
+		NumericExpression[] terms = getSummands(expr);
+		int numTerms = terms.length;
+		NumericExpression negVar = minus(var);
+		int varIndex = -1;
+		boolean negateBound = true;
+
+		// looking for v or -v ...
+		for (int i = 0; i < numTerms; i++) {
+			NumericExpression term = terms[i];
+
+			if (term.equals(var)) {
+				varIndex = i;
+				break;
+			} else if (term.equals(negVar)) { // 0<=-v+e, -v+e<=0
+				varIndex = i;
+				negateBound = !negateBound;
+				isUpper = !isUpper;
+			}
+		}
+		if (varIndex < 0)
+			return null;
+
+		NumericExpression bound = zeroInt();
+
+		for (int i = 0; i < numTerms; i++) {
+			if (i != varIndex) {
+				NumericExpression term = terms[i];
+
+				if (getFreeSymbolicConstants(term).contains(var))
+					return null;
+				bound = add(bound, term);
+			}
+		}
+		if (negateBound)
+			bound = minus(bound);
+
+		InequalitySolution result = new InequalitySolution();
+
+		result.bound = bound;
+		result.isUpper = isUpper;
+		return result;
+	}
+
+	class ClauseAnalysis {
+		NumericExpression lower;
+		NumericExpression upper;
+		BooleanExpression remain;
+	}
+
+	/**
+	 * Given a boolean expression, interpreted as an disjunction
+	 * <code>p1||p2|| ... ||pn</code> of clauses, and integer variable
+	 * <code>var</code>, this method searches for a clause which gives an upper
+	 * bound on <code>var</code> and a clause which gives a lower bound on
+	 * <code>var</code>. Those two clauses are separated out and the disjunction
+	 * of the remaining clauses form the <code>remain</code> field of the object
+	 * returned.
+	 * 
+	 * @param var
+	 *            the variable of integer type
+	 * @param disjunct
+	 *            the boolean expression
+	 * @return the analysis object specifying the lower and upper bounds found
+	 *         and the disjunction of the remaining clauses, or
+	 *         <code>null</code> if a lower bound or upper bound clause was not
+	 *         found
+	 */
+	private ClauseAnalysis analyzeClause(NumericSymbolicConstant var,
+			BooleanExpression disjunct) {
+		if (disjunct.operator() != SymbolicOperator.OR)
+			return null;
+
+		int numClauses = disjunct.numArguments();
+
+		if (numClauses < 2)
+			return null;
+
+		@SuppressWarnings("unchecked")
+		Iterable<? extends BooleanExpression> clauses = (Iterable<? extends BooleanExpression>) disjunct
+				.getArguments();
+		NumericExpression upper = null, lower = null;
+		List<BooleanExpression> remainingClauses = new LinkedList<>();
+
+		for (BooleanExpression clause : clauses) {
+			if (upper == null || lower == null) {
+				InequalitySolution solution = solveIntegerInequality(var,
+						clause);
+
+				if (solution != null) {
+					if (solution.isUpper) {
+						if (upper == null) {
+							upper = solution.bound;
+							continue;
+						}
+					} else {
+						if (lower == null) {
+							lower = solution.bound;
+							continue;
+						}
+					}
+				}
+			}
+			remainingClauses.add(clause);
+		}
+		if (upper == null || lower == null)
+			return null;
+
+		ClauseAnalysis result = new ClauseAnalysis();
+
+		result.lower = lower;
+		result.upper = upper;
+		result.remain = or(remainingClauses);
+		return result;
+	}
+
+	@Override
+	public ForallStructure getForallStructure(BooleanExpression forallExpr) {
+		if (!((SymbolicExpression) forallExpr.argument(0)).type().isInteger())
+			return null;
+
+		NumericSymbolicConstant var = (NumericSymbolicConstant) forallExpr
+				.argument(0);
+		BooleanExpression[] disjuncts = ((BooleanExpression) forallExpr
+				.argument(1)).getClauses();
+		int numDisjuncts = disjuncts.length;
+
+		if (numDisjuncts == 0)
+			return null;
+
+		ClauseAnalysis analysis0 = analyzeClause(var, disjuncts[0]);
+
+		if (analysis0 == null)
+			return null;
+
+		List<BooleanExpression> newClauses = new LinkedList<>();
+
+		newClauses.add(analysis0.remain);
+		for (int i = 1; i < numDisjuncts; i++) {
+			BooleanExpression disjunct = disjuncts[i];
+			ClauseAnalysis analysis = analyzeClause(var, disjunct);
+
+			if (analysis == null)
+				return null;
+			if (!analysis0.lower.equals(analysis.lower))
+				return null;
+			if (!analysis0.upper.equals(analysis.upper))
+				return null;
+			newClauses.add(analysis.remain);
+		}
+
+		ForallStructure result = new ForallStructure();
+		NumericExpression one = oneInt();
+
+		result.boundVariable = var;
+		result.lowerBound = add(analysis0.upper, one);
+		result.upperBound = subtract(analysis0.lower, one);
+		result.body = and(newClauses);
+		return result;
 	}
 
 }

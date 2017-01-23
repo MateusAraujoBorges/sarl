@@ -2309,4 +2309,80 @@ public interface CoreUniverse {
 	BooleanExpression differentiable(SymbolicExpression function,
 			IntObject degree, Iterable<? extends NumericExpression> lowerBounds,
 			Iterable<? extends NumericExpression> upperBounds);
+
+	/**
+	 * The result of analyzing certain "forall" expressions. The expression must
+	 * be equivalent to
+	 * 
+	 * <pre>
+	 * forall int i . lowerBound <= i <= upperBound -> body
+	 * </pre>
+	 * 
+	 * @author siegel
+	 */
+	public class ForallStructure {
+		/**
+		 * The integer bound variable used in the forall expression.
+		 */
+		public NumericSymbolicConstant boundVariable;
+
+		/**
+		 * The lower bound (inclusive) of the bound variable.
+		 */
+		public NumericExpression lowerBound;
+
+		/**
+		 * The upper bound (inclusive) of the bound variable.
+		 */
+		public NumericExpression upperBound;
+
+		/**
+		 * The body of the expression: the boolean formula that is claimed to
+		 * hold if i is between the lower and upper bounds (inclusive).
+		 */
+		public BooleanExpression body;
+	}
+
+	/**
+	 * Attempts to find a boolean expression equivalent to
+	 * <code>forallExpr</code> but with the structure
+	 * 
+	 * <pre>
+	 * forall int i . a&le;i&le;b -> e
+	 * </pre>
+	 * 
+	 * where a and b are integer expressions that do not involve i, and e is
+	 * some boolean expression.
+	 * 
+	 * If the attempt succeeds, the result is returned as a structure with the
+	 * bound variable i, the lower bound a, the upper bound b, and the body e.
+	 * 
+	 * Note that the formula above is equivalent to
+	 * 
+	 * <pre>
+	 * forall int i . !(a&le;i) || !(i&le;b) || e
+	 * </pre>
+	 * 
+	 * i.e.,
+	 * 
+	 * <pre>
+	 * forall int i . i&le;a-1 || b+1&le;i || e
+	 * </pre>
+	 * 
+	 * @param forallExpr
+	 * @return a structure specifying the components above if the forall
+	 *         expression has the special form, else <code>null</code>
+	 */
+	ForallStructure getForallStructure(BooleanExpression forallExpr);
+
+	/**
+	 * Decomposes an expression as a sum of terms, returning those terms as an
+	 * array.
+	 * 
+	 * @param expr
+	 *            a numeric symbolic expression
+	 * @return an array of numeric expressions such that the sum of the elements
+	 *         of that array equals the given expression
+	 */
+	NumericExpression[] getSummands(NumericExpression expr);
 }

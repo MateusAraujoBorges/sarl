@@ -1,9 +1,12 @@
 package edu.udel.cis.vsl.sarl.reason.common;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
+import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
@@ -149,13 +152,98 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 		return false;
 	}
 
+	class ExpansionSpec {
+		/**
+		 * Index of the component in <code>point</code> (the function call
+		 * argument list). Indexed from 0
+		 */
+		int argumentIndex;
+
+		/**
+		 * Index in {@link #limitVars}, specifying the limiting variable that
+		 * occurs in the argument.
+		 */
+		int limitVarIndex;
+
+		/**
+		 * The actual summand in the argument which is a multiple of the
+		 * limiting variable h.
+		 */
+		NumericExpression hTerm;
+
+		/**
+		 * The argument minus <code>hTerm</code>. Hence the argument is the sum
+		 * of <code>remains</code> and <code>hTerm</code>.
+		 */
+		NumericExpression remains;
+	}
+
+	private ExpansionSpec findExpansionPoint(NumericExpression[] point,
+			int maxDegree) {
+		int n = point.length;
+		ExpansionSpec result;
+
+		for (int i = 0; i < n; i++) {// look for an index i that can be expanded
+			NumericExpression arg = point[i];
+			SymbolicOperator op = arg.operator();
+
+			if (op == SymbolicOperator.ADD) {
+				@SuppressWarnings("unchecked")
+				Iterable<NumericExpression> termList = (Iterable<NumericExpression>) arg
+						.getArguments();
+
+				for (NumericExpression term : termList) {
+					for (int j = 0; j < limitVars.length; j++) {
+						if (orders[j] <= maxDegree
+								&& isConstantMultiple(term, limitVars[j])) {
+							result = new ExpansionSpec();
+							result.argumentIndex = i;
+							result.limitVarIndex = j;
+							result.hTerm = term;
+							result.remains = universe.subtract(arg, term);
+							return result;
+						}
+					}
+				}
+			} else if (op == SymbolicOperator.SUBTRACT) {
+				NumericExpression arg0 = (NumericExpression) arg.argument(0),
+						arg1 = (NumericExpression) arg.argument(1);
+
+				for (int j = 0; j < limitVars.length; j++) {
+					if (orders[j] > maxDegree)
+						continue;
+
+					NumericSymbolicConstant h = limitVars[j];
+
+					if (isConstantMultiple(arg0, h)) {
+						result = new ExpansionSpec();
+						result.argumentIndex = i;
+						result.limitVarIndex = j;
+						result.hTerm = arg0;
+						result.remains = universe.minus(arg1);
+						return result;
+					} else if (isConstantMultiple(arg1, h)) {
+						result = new ExpansionSpec();
+						result.argumentIndex = i;
+						result.limitVarIndex = j;
+						result.hTerm = universe.minus(arg1);
+						result.remains = arg0;
+						return result;
+					}
+				}
+			}
+		} // end loop over arguments
+		return null;
+	}
+
 	/**
 	 * Attempts to perform a Taylor expansion of the given function evaluated at
 	 * a point in R^n. This method looks for an appropriate component to expand.
-	 * If i-th argument is a sum in which a term is a constant multiple of the
-	 * i-th accuracy variable, it satisfies the heuristic. The least such is
-	 * chosen. The expansion is truncated according to the degree
-	 * {@link #orders}[i]. If no such i is found, returns <code>null</code>.
+	 * If i-th argument is a sum in which a term is a constant multiple of one
+	 * of the accuracy variables (limitVars), it satisfies the heuristic. The
+	 * least such is chosen. The expansion is truncated according to the degree
+	 * of that limit variable. {@link #orders}. If no such i is found, returns
+	 * <code>null</code>.
 	 * 
 	 * @param function
 	 *            a function which accepts n real inputs (for some positive
@@ -171,87 +259,24 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 	 */
 	private NumericExpression taylorExpansion(SymbolicExpression function,
 			int maxDegree, NumericExpression[] point) {
-		int n = point.length; // the dimension of the domain
-		int indexToExpand = -1;
-		NumericExpression hTerm = null;
-		NumericExpression remainingTerm = null;
+		ExpansionSpec spec = findExpansionPoint(point, maxDegree);
 
-		// look for an index i that can be expanded
-		for (int i = 0; i < n; i++) { // loop over arguments
-			// it won't help if we can't expand as far as we need to
-			// to prove O(order)...
-			if (orders[i] > maxDegree)
-				continue;
-
-			NumericExpression arg = point[i];
-			SymbolicOperator op = arg.operator();
-			NumericSymbolicConstant h = limitVars[i];
-			int numArgs = arg.numArguments();
-
-			if (op == SymbolicOperator.ADD) {
-				if (numArgs == 2) {
-					NumericExpression arg0 = (NumericExpression) arg
-							.argument(0),
-							arg1 = (NumericExpression) arg.argument(1);
-
-					if (isConstantMultiple(arg0, h)) {
-						indexToExpand = i;
-						hTerm = arg0;
-						remainingTerm = arg1;
-						break;
-					} else if (isConstantMultiple(arg1, h)) {
-						indexToExpand = i;
-						hTerm = arg1;
-						remainingTerm = arg0;
-						break;
-					}
-				} else { // numArgs == 1
-					@SuppressWarnings("unchecked")
-					Iterable<NumericExpression> termList = (Iterable<NumericExpression>) arg
-							.argument(0);
-
-					for (NumericExpression term : termList) {
-						if (isConstantMultiple(term, h)) {
-							indexToExpand = i;
-							hTerm = term;
-							remainingTerm = universe.subtract(arg, hTerm);
-							break;
-						}
-					}
-				}
-			} else if (op == SymbolicOperator.SUBTRACT) {
-				// has 2 arguments
-				NumericExpression arg0 = (NumericExpression) arg.argument(0),
-						arg1 = (NumericExpression) arg.argument(1);
-
-				if (isConstantMultiple(arg0, h)) {
-					indexToExpand = i;
-					hTerm = arg0;
-					remainingTerm = universe.minus(arg1);
-					break;
-				} else if (isConstantMultiple(arg1, h)) {
-					indexToExpand = i;
-					hTerm = universe.minus(arg1);
-					remainingTerm = arg0;
-					break;
-				}
-			}
-		} // end loop over arguments
-		if (indexToExpand == -1)
+		if (spec == null)
 			return null;
 
-		int order = orders[indexToExpand];
+		int order = orders[spec.limitVarIndex];
 		NumericExpression result = universe.zeroReal();
+		int n = point.length;
 
 		if (order >= 1) {
-			IntObject indexObj = universe.intObject(indexToExpand);
+			IntObject indexObj = universe.intObject(spec.argumentIndex);
 			int j = 0;
 			NumericExpression hPower = universe.oneReal(); // hTerm^j
 			int jFactorial = 1; // j!
 			List<NumericExpression> newArgs = new LinkedList<>();
 
 			for (int i = 0; i < n; i++)
-				newArgs.add(i == indexToExpand ? remainingTerm : point[i]);
+				newArgs.add(i == spec.argumentIndex ? spec.remains : point[i]);
 			while (true) {
 				SymbolicExpression deriv = j == 0 ? function
 						: universe.derivative(function, indexObj,
@@ -266,7 +291,7 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 				j++;
 				if (j == order)
 					break;
-				hPower = universe.multiply(hPower, hTerm);
+				hPower = universe.multiply(hPower, spec.hTerm);
 				jFactorial *= j;
 			}
 		}
@@ -314,14 +339,23 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 	@Override
 	protected SymbolicExpression substituteExpression(
 			SymbolicExpression expression, SubstituterState state) {
+		SymbolicExpression result = tryToExpand(expression, state);
+
+		if (result == null)
+			result = super.substituteExpression(expression, state);
+		return result;
+	}
+
+	private SymbolicExpression tryToExpand(SymbolicExpression expression,
+			SubstituterState state) {
 		if (expression.operator() != SymbolicOperator.APPLY)
-			return expression;
+			return null;
 
 		SymbolicExpression function = (SymbolicExpression) expression
 				.argument(0);
 
 		if (function.operator() != SymbolicOperator.SYMBOLIC_CONSTANT)
-			return expression;
+			return null;
 
 		SymbolicFunctionType functionType = (SymbolicFunctionType) function
 				.type();
@@ -329,10 +363,10 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 		int n = inputTypes.numTypes();
 
 		if (!functionType.outputType().isReal())
-			return expression;
+			return null;
 		for (int i = 0; i < n; i++) {
 			if (!inputTypes.getType(i).isReal())
-				return expression;
+				return null;
 		}
 
 		BooleanExpression diffClaim = findDifferentiableClaim(function);
@@ -341,33 +375,48 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 		// integer n. Arg1 is the degree, a nonnegative integer
 		// {@link IntObject} which tells the number of partial derivatives (of
 		// any combination) that exist and are continuous. Arg2 is a sequence of
-		// real-value expressions which are the lower bounds of the intervals in
+		// real-valued expressions which are the lower bounds of the intervals
+		// in
 		// the domain; the length is n. Arg3 is a similar sequence of upper
 		// bounds.
 
 		if (diffClaim == null)
-			return expression;
+			return null;
 
 		int maxDegree = ((IntObject) diffClaim.argument(1)).getInt();
 		NumericExpression[] lowerBounds = toArray(diffClaim.argument(2), n);
 		NumericExpression[] upperBounds = toArray(diffClaim.argument(3), n);
 		NumericExpression[] argArray = toArray(expression.argument(1), n);
 
+		// need to substitute 0 for all limitVars in the argArray
+		// before checking the arguments are in range. Otherwise, without
+		// any restriction on limitVars, who knows.
+		// Actually you should be taking limit as h->0, but for now...
+
+		Map<SymbolicExpression, SymbolicExpression> zeroMap = new HashMap<>();
+		NumericExpression zero = universe.zeroReal();
+
+		for (NumericSymbolicConstant limitVar : limitVars) {
+			zeroMap.put(limitVar, zero);
+		}
+
+		UnaryOperator<SymbolicExpression> zeroSubber = universe
+				.mapSubstituter(zeroMap);
+
 		for (int i = 0; i < n; i++) {
-			NumericExpression arg = argArray[i];
+			NumericExpression arg = (NumericExpression) zeroSubber
+					.apply(argArray[i]);
 			BooleanExpression inDomain = universe.and(
-					universe.lessThanEquals(lowerBounds[i], arg),
-					universe.lessThanEquals(arg, upperBounds[i]));
+					universe.lessThan(lowerBounds[i], arg),
+					universe.lessThan(arg, upperBounds[i]));
 
 			if (!reasoner.isValid(inDomain))
-				return expression;
+				return null;
 		}
 
 		SymbolicExpression result = taylorExpansion(function, maxDegree,
 				argArray);
 
-		if (result == null)
-			result = expression;
 		return result;
 	}
 

@@ -29,6 +29,15 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 public interface BooleanExpressionFactory {
 
 	/**
+	 * The boolean factory needs a numeric expression factory in order to negate
+	 * expressions like "a<b" or "a<=b".
+	 * 
+	 * @param numericFactory
+	 */
+	void setNumericExpressionFactory(
+			NumericExpressionFactory numericExpressionFactory);
+
+	/**
 	 * Allows CnfFactory to simplify expensive (p || !p) expressions as they are
 	 * created. Default is false. Setting to true will decrease performance in
 	 * certain CnfFactory methods.
@@ -136,28 +145,30 @@ public interface BooleanExpressionFactory {
 	 */
 	BooleanExpression not(BooleanExpression arg);
 
-	/**
-	 * Returns a symbolic expression representing "p implies q", i.e., p=>q.
-	 * 
-	 * @param arg0
-	 *            a symbolic expression of boolean type (p)
-	 * @param arg1
-	 *            a symbolic expression of boolean type (q)
-	 * @return p=>q
-	 */
-	BooleanExpression implies(BooleanExpression arg0, BooleanExpression arg1);
-
-	/**
-	 * Returns a symbolic expression representing "p is equivalent to q", i.e.,
-	 * p<=>q.
-	 * 
-	 * @param arg0
-	 *            a symbolic expression of boolean type (p)
-	 * @param arg1
-	 *            a symbolic expression of boolean type (q)
-	 * @return p<=>q
-	 */
-	BooleanExpression equiv(BooleanExpression arg0, BooleanExpression arg1);
+	// /**
+	// * Returns a symbolic expression representing "p implies q", i.e., p=>q.
+	// *
+	// * @param arg0
+	// * a symbolic expression of boolean type (p)
+	// * @param arg1
+	// * a symbolic expression of boolean type (q)
+	// * @return p=>q
+	// */
+	// BooleanExpression implies(BooleanExpression arg0, BooleanExpression
+	// arg1);
+	//
+	// /**
+	// * Returns a symbolic expression representing "p is equivalent to q",
+	// i.e.,
+	// * p<=>q.
+	// *
+	// * @param arg0
+	// * a symbolic expression of boolean type (p)
+	// * @param arg1
+	// * a symbolic expression of boolean type (q)
+	// * @return p<=>q
+	// */
+	// BooleanExpression equiv(BooleanExpression arg0, BooleanExpression arg1);
 
 	/**
 	 * Returns the universally quantified expression forall(x).e.

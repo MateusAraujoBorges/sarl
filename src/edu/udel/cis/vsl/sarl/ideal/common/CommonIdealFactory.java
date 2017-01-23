@@ -867,7 +867,7 @@ public class CommonIdealFactory implements IdealFactory {
 	/**
 	 * Given a {@link Monomial} <i>m</i>, returns an expression equivalent to
 	 * <i>m</i>&gt;0. Basic simplifications are performed, e.g., if
-	 * <code>polynomial</code> is concrete, a concrete boolean expression is
+	 * <code>monomial</code> is concrete, a concrete boolean expression is
 	 * returned.
 	 * 
 	 * @param monomial
@@ -1969,11 +1969,11 @@ public class CommonIdealFactory implements IdealFactory {
 		// TODO: probably going to get rid of this and handle in Simplifier...
 
 		// zirkel: A constant times big-O is just big-O
-		if (monic.operator() == SymbolicOperator.APPLY
-				&& ((SymbolicConstant) monic.argument(0)).name().toString()
-						.equals("BIG_O")) {
-			return monic;
-		}
+		// if (monic.operator() == SymbolicOperator.APPLY
+		// && ((SymbolicConstant) monic.argument(0)).name().toString()
+		// .equals("BIG_O")) {
+		// return monic;
+		// }
 		return ntMonomial(constant, monic);
 	}
 

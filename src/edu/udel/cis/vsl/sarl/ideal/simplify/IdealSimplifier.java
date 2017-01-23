@@ -24,13 +24,16 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import edu.udel.cis.vsl.sarl.IF.CoreUniverse.ForallStructure;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
@@ -41,6 +44,8 @@ import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
@@ -229,6 +234,8 @@ public class IdealSimplifier extends CommonSimplifier {
 		this.assumption = (BooleanExpression) boundCleaner.apply(assumption);
 		this.boundMap = new BoundMap(info);
 		initialize();
+		// TODO: is there a way to "trim" all the maps since after this point
+		// they are read-only?
 	}
 
 	// private methods...
@@ -354,10 +361,9 @@ public class IdealSimplifier extends CommonSimplifier {
 					BooleanExpression simplifiedPrimitive = (BooleanExpression) worker
 							.simplifyExpressionGeneric(primitive);
 
-					newAssumption = info.booleanFactory.and(newAssumption,
+					newAssumption = universe.and(newAssumption,
 							entry.getValue() ? simplifiedPrimitive
-									: info.booleanFactory
-											.not(simplifiedPrimitive));
+									: universe.not(simplifiedPrimitive));
 				}
 			}
 
@@ -502,101 +508,421 @@ public class IdealSimplifier extends CommonSimplifier {
 
 	private boolean extractBoundsOr(BooleanExpression or, BoundMap aBoundMap,
 			Map<BooleanExpression, Boolean> aBooleanMap) {
-		SymbolicOperator op = or.operator();
+		if (or.operator() != SymbolicOperator.OR)
+			return extractBoundsFromClause(or, aBoundMap, aBooleanMap);
 
-		if (op == SymbolicOperator.OR) {
-			// p & (q0 | ... | qn) = (p & q0) | ... | (p & qn)
-			// copies of original maps, corresponding to p. these never
-			// change...
-			BoundMap originalBoundMap = aBoundMap.clone();
-			Map<BooleanExpression, Boolean> originalBooleanMap = copyBooleanMap(
-					aBooleanMap);
-			Iterator<? extends SymbolicObject> clauses = or.getArguments()
-					.iterator();
-			boolean satisfiable = extractBoundsBasic(
-					(BooleanExpression) clauses.next(), aBoundMap, aBooleanMap);
+		// p & (q0 | ... | qn) = (p & q0) | ... | (p & qn)
+		// copies of original maps, corresponding to p. these never
+		// change...
+		BoundMap originalBoundMap = aBoundMap.clone();
+		Map<BooleanExpression, Boolean> originalBooleanMap = copyBooleanMap(
+				aBooleanMap);
+		Iterator<? extends SymbolicObject> clauses = or.getArguments()
+				.iterator();
+		boolean satisfiable = extractBoundsBasic(
+				(BooleanExpression) clauses.next(), aBoundMap, aBooleanMap);
 
-			// result <- p & q0:
-			// result <- result | ((p & q1) | ... | (p & qn)) :
-			while (clauses.hasNext()) {
-				BooleanExpression clause = (BooleanExpression) clauses.next();
-				BoundMap newBoundMap = originalBoundMap.clone();
-				Map<BooleanExpression, Boolean> newBooleanMap = copyBooleanMap(
-						originalBooleanMap);
-				// compute p & q_i:
-				boolean newSatisfiable = extractBoundsBasic(clause, newBoundMap,
-						newBooleanMap);
+		// result <- p & q0:
+		// result <- result | ((p & q1) | ... | (p & qn)) :
+		while (clauses.hasNext()) {
+			BooleanExpression clause = (BooleanExpression) clauses.next();
+			BoundMap newBoundMap = originalBoundMap.clone();
+			Map<BooleanExpression, Boolean> newBooleanMap = copyBooleanMap(
+					originalBooleanMap);
+			// compute p & q_i:
+			boolean newSatisfiable = extractBoundsBasic(clause, newBoundMap,
+					newBooleanMap);
 
-				// result <- result | (p & q_i) where result is (aBoundMap,
-				// aBooleanMap)....
-				satisfiable = satisfiable || newSatisfiable;
-				if (newSatisfiable) {
-					LinkedList<Monic> boundRemoveList = new LinkedList<>();
-					LinkedList<BooleanExpression> booleanRemoveList = new LinkedList<>();
+			// result <- result | (p & q_i) where result is (aBoundMap,
+			// aBooleanMap)....
+			satisfiable = satisfiable || newSatisfiable;
+			if (newSatisfiable) {
+				LinkedList<Monic> boundRemoveList = new LinkedList<>();
+				LinkedList<BooleanExpression> booleanRemoveList = new LinkedList<>();
 
-					for (Entry<Monic, Interval> entry : aBoundMap.entrySet()) {
-						Monic primitive = entry.getKey();
-						Interval oldBound = entry.getValue();
-						Interval newBound = newBoundMap.get(primitive);
+				for (Entry<Monic, Interval> entry : aBoundMap.entrySet()) {
+					Monic primitive = entry.getKey();
+					Interval oldBound = entry.getValue();
+					Interval newBound = newBoundMap.get(primitive);
 
-						if (newBound == null) {
-							boundRemoveList.add(primitive);
-						} else {
-							newBound = info.numberFactory.join(oldBound,
-									newBound);
-							if (!oldBound.equals(newBound)) {
-								if (newBound.isUniversal())
-									boundRemoveList.add(primitive);
-								else
-									entry.setValue(newBound);
-							}
+					if (newBound == null) {
+						boundRemoveList.add(primitive);
+					} else {
+						newBound = info.numberFactory.join(oldBound, newBound);
+						if (!oldBound.equals(newBound)) {
+							if (newBound.isUniversal())
+								boundRemoveList.add(primitive);
+							else
+								entry.setValue(newBound);
 						}
 					}
-					for (Monic primitive : boundRemoveList)
-						aBoundMap.remove(primitive);
-					for (Entry<BooleanExpression, Boolean> entry : aBooleanMap
-							.entrySet()) {
-						BooleanExpression primitive = entry.getKey();
-						Boolean oldValue = entry.getValue();
-						Boolean newValue = newBooleanMap.get(primitive);
+				}
+				for (Monic primitive : boundRemoveList)
+					aBoundMap.remove(primitive);
+				for (Entry<BooleanExpression, Boolean> entry : aBooleanMap
+						.entrySet()) {
+					BooleanExpression primitive = entry.getKey();
+					Boolean oldValue = entry.getValue();
+					Boolean newValue = newBooleanMap.get(primitive);
 
-						if (newValue == null || !newValue.equals(oldValue))
-							booleanRemoveList.add(primitive);
-					}
-					for (BooleanExpression primitive : booleanRemoveList)
-						aBooleanMap.remove(primitive);
-				} // end if newSatisfiable
-			} // end while (clauses.hasNext())
-			return satisfiable;
-		} else { // 1 clause
-			// if this is of the form EQ x,y where y is a constant and
-			// x and y are not-numeric, add to otherConstantMap
-			if (op == SymbolicOperator.EQUALS) {
-				SymbolicExpression arg0 = (SymbolicExpression) or.argument(0),
-						arg1 = (SymbolicExpression) or.argument(1);
-				SymbolicType type = arg0.type();
+					if (newValue == null || !newValue.equals(oldValue))
+						booleanRemoveList.add(primitive);
+				}
+				for (BooleanExpression primitive : booleanRemoveList)
+					aBooleanMap.remove(primitive);
+			} // end if newSatisfiable
+		} // end while (clauses.hasNext())
+		return satisfiable;
+	}
 
-				if (!type.isNumeric()) {
-					boolean const0 = arg0
-							.operator() == SymbolicOperator.CONCRETE;
-					boolean const1 = (arg1
-							.operator() == SymbolicOperator.CONCRETE);
+	/**
+	 * Extracts bounds from a conjunctive clause which is not an "or"
+	 * expression.
+	 * 
+	 * @param clause
+	 *            a clause in the context which is not an "or" expression
+	 * @param aBoundMap
+	 *            a bound map
+	 * @param aBooleanMap
+	 *            a boolean map
+	 * @return <code>true</code> unless an inconsistency was discovered
+	 */
+	private boolean extractBoundsFromClause(BooleanExpression clause,
+			BoundMap aBoundMap, Map<BooleanExpression, Boolean> aBooleanMap) {
+		SymbolicOperator op = clause.operator();
 
-					if (const1 && !const0) {
-						otherConstantMap.put(arg0, arg1);
-						return true;
-					} else if (const0 && !const1) {
-						otherConstantMap.put(arg1, arg0);
-						return true;
-					} else if (const0 && const1) {
-						return arg0.equals(arg1);
-					} else {
-						return true;
-					}
+		// if this is of the form EQ x,y where y is a constant and
+		// x and y are not-numeric, add to otherConstantMap
+		if (op == SymbolicOperator.EQUALS) {
+			SymbolicExpression arg0 = (SymbolicExpression) clause.argument(0),
+					arg1 = (SymbolicExpression) clause.argument(1);
+			SymbolicType type = arg0.type();
+
+			if (!type.isNumeric()) {
+				boolean const0 = arg0.operator() == SymbolicOperator.CONCRETE;
+				boolean const1 = (arg1.operator() == SymbolicOperator.CONCRETE);
+
+				if (const1 && !const0) {
+					otherConstantMap.put(arg0, arg1);
+					return true;
+				} else if (const0 && !const1) {
+					otherConstantMap.put(arg1, arg0);
+					return true;
+				} else if (const0 && const1) {
+					return arg0.equals(arg1);
+				} else {
+					return true;
 				}
 			}
-			return extractBoundsBasic(or, aBoundMap, aBooleanMap);
 		}
+		// look for the pattern:
+		// forall int i . 0<=i<=n-1 -> a[i]=expr
+		// In such cases, add to otherConstantMap:
+		// a = (T[n])arraylambda i . expr
+		if (op == SymbolicOperator.FORALL) {
+			ArrayDefinition defn = extractArrayDefinition(clause);
+
+			if (defn != null && defn.array
+					.operator() == SymbolicOperator.SYMBOLIC_CONSTANT) {
+				// SymbolicExpression oldValue =
+				// otherConstantMap.get(defn.array);
+
+				// TODO: further checking neeed here: make sure no free
+				// variables
+				// if (oldValue == null) {
+				otherConstantMap.put(defn.array, defn.lambda);
+				// }
+			}
+		}
+		return extractBoundsBasic(clause, aBoundMap, aBooleanMap);
+	}
+
+	// Begin array term analysis....
+
+	class ArrayTermOut {
+		SymbolicExpression array;
+		boolean isNegative;
+	}
+
+	/**
+	 * If <code>constantExpr</code> is +1 or -1 and <code>arrayReadExpr</code>
+	 * is equivalent to +/- an array read expression in which the index argument
+	 * is <code>index</code>, this method will return a structure giving the
+	 * sign and array expression used in the array-read. Else <code>null</code>
+	 * 
+	 * @param constantExpr
+	 *            a numeric expression, non-<code>null</code>; if not a
+	 *            constant, this method will return <code>null</code>
+	 * @param arrayReadExpr
+	 *            a numeric expression, non-<code>null</code>; if not an
+	 *            array-read expression, this method will return
+	 *            <code>null</code>
+	 * @param index
+	 *            the index expression of the array read expression
+	 * @return structure as specified above or <code>null</code>
+	 */
+	private ArrayTermOut arrayTermOfProductHelper(
+			NumericExpression constantExpr, NumericExpression arrayReadExpr,
+			NumericSymbolicConstant index) {
+		ArrayTermOut result = arrayTerm(arrayReadExpr, index);
+
+		if (result != null) {
+			Number constant = universe.extractNumber(constantExpr);
+
+			if (constant != null) {
+				if (constant.isOne()) {
+					return result;
+				} else if (info.numberFactory.negate(constant).isOne()) {
+					result.isNegative = !result.isNegative;
+					return result;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Attempts to determine if one of the two given arguments is the constant 1
+	 * or -1 and the other is + or - an array-read expression with the given
+	 * index.
+	 * 
+	 * @param arg0
+	 * @param arg1
+	 * @param index
+	 * @return
+	 */
+	private ArrayTermOut arrayTermOfBinaryProduct(NumericExpression arg0,
+			NumericExpression arg1, NumericSymbolicConstant index) {
+		ArrayTermOut result = arrayTermOfProductHelper(arg0, arg1, index);
+
+		if (result != null)
+			return result;
+		result = arrayTermOfProductHelper(arg1, arg0, index);
+		return result;
+	}
+
+	/**
+	 * Given an expression in which the operator is
+	 * {@link SymbolicOperator#MULTIPLY} and an integer variable i, attempts to
+	 * determine whether the expression is equivalent to a[i] or -a[i] for some
+	 * array expression a.
+	 * 
+	 * @param product
+	 *            the expression with operator {@link SymbolicOperator#MULTIPLY}
+	 * @param index
+	 *            the integer index variable i
+	 * @return a structure with the array a and sign or <code>null</code> if
+	 *         <code>product</code> does not have the desired form
+	 */
+	private ArrayTermOut arrayTermOfProduct(NumericExpression product,
+			NumericSymbolicConstant index) {
+		// if (product.numArguments() == 2) {
+		// return arrayTermOfBinaryProduct(
+		// (NumericExpression) product.argument(0),
+		// (NumericExpression) product.argument(1), index);
+		// }
+
+		@SuppressWarnings("unchecked")
+		Iterable<? extends NumericExpression> iterable = (Iterable<? extends NumericExpression>) product
+				.getArguments();
+		Iterator<? extends NumericExpression> iter = iterable.iterator();
+
+		if (!iter.hasNext())
+			return null;
+
+		NumericExpression arg0 = iter.next();
+
+		if (!iter.hasNext()) {
+			return arrayTerm(arg0, index);
+		}
+
+		NumericExpression arg1 = iter.next();
+
+		if (!iter.hasNext()) {
+			return arrayTermOfBinaryProduct(arg0, arg1, index);
+		}
+		return null;
+	}
+
+	/**
+	 * Determines whether the given expression has the form a[i] or -a[i] for
+	 * some array a.
+	 * 
+	 * @param term
+	 *            the given expression
+	 * @param index
+	 *            the index variable i
+	 * @return structure specifying the array a and whether or not it is
+	 *         negated, or <code>null</code> if <code>term</code> is not in that
+	 *         form
+	 */
+	private ArrayTermOut arrayTerm(NumericExpression term,
+			NumericSymbolicConstant index) {
+		ArrayTermOut result = null;
+
+		switch (term.operator()) {
+		case ARRAY_READ:
+			if (term.argument(1).equals(index)) {
+				result = new ArrayTermOut();
+				result.isNegative = false;
+				result.array = (SymbolicExpression) term.argument(0);
+			}
+			break;
+		case NEGATIVE:
+			result = arrayTerm((NumericExpression) term.argument(0), index);
+			if (result != null)
+				result.isNegative = !result.isNegative;
+			break;
+		case MULTIPLY:
+			result = arrayTermOfProduct(term, index);
+			break;
+		default:
+		}
+		return result;
+	}
+
+	class ArrayEquationSolution {
+		SymbolicExpression array;
+		SymbolicExpression rhs;
+	}
+
+	/**
+	 * Given an equation a=b, where a and b are symbolic expressions, and an
+	 * integer symbolic constant i, attempts to find an equivalent equation of
+	 * the form e[i]=f. If this equivalent form is found, the result is returned
+	 * as a structure with the <code>array</code> field e and the
+	 * <code>rhs</code> field f.
+	 * 
+	 * @param equation
+	 *            the boolean expression which is an equality
+	 * @return a structure as specified above if the equation can be solved, or
+	 *         <code>null</code> if <code>equation</code> is not an equality or
+	 *         could not be put into that form
+	 */
+	private ArrayEquationSolution solveArrayEquation(SymbolicExpression arg0,
+			SymbolicExpression arg1, NumericSymbolicConstant index) {
+		ArrayEquationSolution result;
+
+		if (arg0.operator() == SymbolicOperator.ARRAY_READ
+				&& arg0.argument(1).equals(index)) {
+			result = new ArrayEquationSolution();
+			result.array = (SymbolicExpression) arg0.argument(0);
+			result.rhs = arg1;
+			return result;
+		}
+		if (arg1.operator() == SymbolicOperator.ARRAY_READ
+				&& arg1.argument(1).equals(index)) {
+			result = new ArrayEquationSolution();
+			result.array = (SymbolicExpression) arg1.argument(0);
+			result.rhs = arg0;
+			return result;
+		}
+		if (arg0.type().isNumeric()) {
+			NumericExpression diff = universe().subtract(
+					(NumericExpression) arg1, (NumericExpression) arg0);
+			NumericExpression[] terms = universe().getSummands(diff);
+			List<NumericExpression> otherTerms = new LinkedList<>();
+			SymbolicExpression array = null;
+			boolean negate = false;
+
+			for (int i = 0; i < terms.length; i++) {
+				NumericExpression term = terms[i];
+				ArrayTermOut termAnalysis = arrayTerm(term, index);
+
+				if (termAnalysis != null) {
+					if (array != null)
+						return null;
+					array = termAnalysis.array;
+					negate = !termAnalysis.isNegative;
+				} else {
+					otherTerms.add(term);
+				}
+			}
+			if (array == null)
+				return null;
+
+			NumericExpression rhs = universe().add(otherTerms);
+
+			if (negate)
+				rhs = universe().minus(rhs);
+			result = new ArrayEquationSolution();
+			result.array = array;
+			result.rhs = rhs;
+			return result;
+		}
+		return null;
+	}
+
+	class ArrayDefinition {
+		SymbolicExpression array;
+		SymbolicExpression lambda;
+	}
+
+	/**
+	 * If the boolean expression has the form
+	 * 
+	 * <pre>
+	 * forall int i in [0,n-1] . e[i]=f
+	 * </pre>
+	 * 
+	 * where n is an integer expressions not involving i, e has type
+	 * "array of length n of T" for some type T, and f is some expression, then
+	 * return a structure in which the array field is e and the lambda field is
+	 * the expression <code>arraylambda i . f</code>.
+	 * 
+	 * @param forallExpr
+	 *            a boolean expression with operator
+	 *            {@link SymbolicOperator#FORALL}
+	 * @return if the given boolean expression is a forall expression in the
+	 *         form described above, the structure containing the array and the
+	 *         array-lambda expression, else <code>null</code>
+	 */
+	private ArrayDefinition extractArrayDefinition(
+			BooleanExpression forallExpr) {
+		ForallStructure structure = universe.getForallStructure(forallExpr);
+
+		if (structure == null || !structure.lowerBound.isZero())
+			return null;
+
+		NumericExpression length = universe.add(structure.upperBound,
+				universe.oneInt());
+		BooleanExpression body = structure.body;
+		NumericSymbolicConstant var = structure.boundVariable;
+		ArrayEquationSolution solution;
+
+		if (body.operator() == SymbolicOperator.FORALL) {
+			ArrayDefinition innerDefn = extractArrayDefinition(body);
+
+			if (innerDefn == null)
+				return null;
+			solution = solveArrayEquation(innerDefn.array, innerDefn.lambda,
+					var);
+		} else if (body.operator() == SymbolicOperator.EQUALS) {
+			solution = solveArrayEquation((SymbolicExpression) body.argument(0),
+					(SymbolicExpression) body.argument(1), var);
+		} else {
+			return null;
+		}
+
+		SymbolicArrayType arrayType = (SymbolicArrayType) solution.array.type();
+
+		if (!arrayType.isComplete())
+			return null;
+
+		SymbolicCompleteArrayType completeType = (SymbolicCompleteArrayType) arrayType;
+
+		// could get more precise here and simplify this...
+		if (!universe.equals(length, completeType.extent()).isTrue())
+			return null;
+
+		SymbolicExpression lambda = universe().arrayLambda(completeType,
+				universe().lambda(var, solution.rhs));
+
+		ArrayDefinition result = new ArrayDefinition();
+
+		result.array = solution.array;
+		result.lambda = lambda;
+		return result;
 	}
 
 	/**

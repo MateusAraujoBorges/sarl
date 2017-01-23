@@ -22,6 +22,7 @@ import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanSymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
@@ -30,6 +31,7 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
+import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 import edu.udel.cis.vsl.sarl.util.SetFactory;
@@ -94,7 +96,7 @@ public class CnfFactory implements BooleanExpressionFactory {
 
 	// Fields ...
 
-	// private CollectionFactory collectionFactory;
+	private NumericExpressionFactory numericExpressionFactory;
 
 	private SymbolicType _booleanType;
 
@@ -394,6 +396,16 @@ public class CnfFactory implements BooleanExpressionFactory {
 						(SymbolicExpression) expr.argument(0),
 						(SymbolicExpression) expr.argument(1));
 				break;
+			case LESS_THAN:
+				result = numericExpressionFactory.notLessThan(
+						(NumericExpression) expr.argument(0),
+						(NumericExpression) expr.argument(1));
+				break;
+			case LESS_THAN_EQUALS:
+				result = numericExpressionFactory.notLessThanEquals(
+						(NumericExpression) expr.argument(0),
+						(NumericExpression) expr.argument(1));
+				break;
 			default:
 				result = notExpr(expr);
 				break;
@@ -404,21 +416,21 @@ public class CnfFactory implements BooleanExpressionFactory {
 		return result;
 	}
 
-	@Override
-	public BooleanExpression implies(BooleanExpression arg0,
-			BooleanExpression arg1) {
-		return or(not(arg0), arg1);
-	}
-
-	@Override
-	public BooleanExpression equiv(BooleanExpression arg0,
-			BooleanExpression arg1) {
-		BooleanExpression result = implies(arg0, arg1);
-
-		if (result.isFalse())
-			return result;
-		return and(result, implies(arg1, arg0));
-	}
+	// @Override
+	// public BooleanExpression implies(BooleanExpression arg0,
+	// BooleanExpression arg1) {
+	// return or(not(arg0), arg1);
+	// }
+	//
+	// @Override
+	// public BooleanExpression equiv(BooleanExpression arg0,
+	// BooleanExpression arg1) {
+	// BooleanExpression result = implies(arg0, arg1);
+	//
+	// if (result.isFalse())
+	// return result;
+	// return and(result, implies(arg1, arg0));
+	// }
 
 	@Override
 	public BooleanExpression forall(SymbolicConstant boundVariable,
@@ -454,5 +466,11 @@ public class CnfFactory implements BooleanExpressionFactory {
 		}
 		return booleanExpression(SymbolicOperator.EXISTS, boundVariable,
 				predicate);
+	}
+
+	@Override
+	public void setNumericExpressionFactory(
+			NumericExpressionFactory numericExpressionFactory) {
+		this.numericExpressionFactory = numericExpressionFactory;
 	}
 }

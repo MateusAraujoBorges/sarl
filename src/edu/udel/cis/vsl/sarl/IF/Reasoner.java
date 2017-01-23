@@ -22,6 +22,7 @@ import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
@@ -308,4 +309,46 @@ public interface Reasoner {
 	 * @return the concrete (Number) numeric value of that expression or null
 	 */
 	Number extractNumber(NumericExpression expression);
+
+	/**
+	 * EXPERIMENTAL: Attempts to prove a uniform "Big-O" claim. The claim has
+	 * the following form:
+	 * 
+	 * <pre>
+	 * lhs = O(h1^n1) + ... + O(hk^nk)
+	 * </pre>
+	 * 
+	 * Here, lhs or "left hand side expression" is an expression of real type.
+	 * The h1, ..., hk or "limit variables" are symbolic constants of real type,
+	 * the variables that are tending towards 0. The n1, ..., nk the
+	 * corresponding "orders" of the limit variables; they are are concrete
+	 * nonnegative integers.
+	 * 
+	 * The lhs may involve the hi and also some integer-type symbolic constants
+	 * i1,...,im called the "index variables". The ij are assumed to satisfy
+	 * some "index constraint".
+	 * 
+	 * The real intervals defined a closed rectangular interval in R^m that
+	 * contain the "grid points". The grid points are not explicit here, but
+	 * they are functions of the index variables.
+	 * 
+	 * 
+	 * @param indexConstraint
+	 *            the constraint on the index variables
+	 * @param lhs
+	 *            the left hand side expression, an expression of real type
+	 *            involving any or all of the symbolic constants mentioned, as
+	 *            well as others
+	 * @param limitVars
+	 *            the limit variables; an array of length k
+	 * @param orders
+	 *            the orders of the limit variables; the length must be the same
+	 *            as the length of <code>limitVars</code> (k)
+	 * @return <code>true</code> if the O-claim can be proved. A
+	 *         <code>false</code> result does not mean the O-claim is false, it
+	 *         just means it could not be proved
+	 */
+	boolean checkBigOClaim(BooleanExpression indexConstraint,
+			NumericExpression lhs, NumericSymbolicConstant[] limitVars,
+			int[] orders);
 }
