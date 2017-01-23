@@ -17,7 +17,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
-import edu.udel.cis.vsl.sarl.ideal.simplify.IdealSimplifier;
 
 /**
  * Testing on IdealSimplifier based on Polynomials using methods -
