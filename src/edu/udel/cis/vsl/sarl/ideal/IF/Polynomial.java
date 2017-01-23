@@ -55,4 +55,18 @@ public interface Polynomial extends Primitive {
 	 *         polynomial, i.e., the maximum degree of its terms
 	 */
 	IntegerNumber polynomialDegree(NumberFactory factory);
+
+	/**
+	 * Does this polynomial contain a term with a nontrivial factorization? This
+	 * is stronger than asking if the polynomial has a nontrivial factorization.
+	 * A polynomial with more than one term always has a nontrivial
+	 * factorization.
+	 * 
+	 * @param factory
+	 *            the ideal factory owning this polynomial
+	 * @return <code>true</code> if at least one term has a nontrivial expansion
+	 * 
+	 * @see #hasNontrivialExpansion(IdealFactory)
+	 */
+	boolean hasTermWithNontrivialExpansion(IdealFactory factory);
 }

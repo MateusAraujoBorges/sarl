@@ -389,7 +389,6 @@ public interface SymbolicExpression extends SymbolicObject {
 		 * boolean type. Result is also a {@link BooleanExpression}.
 		 * 
 		 * @see #AND
-		 * @see #ADD
 		 */
 		OR,
 		/**

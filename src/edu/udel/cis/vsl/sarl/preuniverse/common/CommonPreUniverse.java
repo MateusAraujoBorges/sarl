@@ -795,6 +795,9 @@ public class CommonPreUniverse implements PreUniverse {
 	 * SymbolicConstantExpressionIF as arg0. Cannot be applied to make concrete
 	 * expressions or SymbolicConstantExpressionIF. There are separate methods
 	 * for those.
+	 * 
+	 * TODO: It seems that this is expecting {@link SymbolicSequence}s for
+	 * iterable arguments. Why?
 	 */
 	@Override
 	public SymbolicExpression make(SymbolicOperator operator, SymbolicType type,
@@ -851,6 +854,18 @@ public class CommonPreUniverse implements PreUniverse {
 		case DENSE_TUPLE_WRITE:
 			return denseTupleWrite((SymbolicExpression) args[0],
 					(SymbolicSequence<?>) args[1]);
+		case DERIV:
+			return derivative((SymbolicExpression) args[0], (IntObject) args[1],
+					(IntObject) args[2]);
+		case DIFFERENTIABLE: {
+			@SuppressWarnings("unchecked")
+			Iterable<? extends NumericExpression> lowers = (Iterable<? extends NumericExpression>) args[2];
+			@SuppressWarnings("unchecked")
+			Iterable<? extends NumericExpression> uppers = (Iterable<? extends NumericExpression>) args[3];
+
+			return differentiable((SymbolicExpression) args[0],
+					(IntObject) args[1], lowers, uppers);
+		}
 		case DIVIDE:
 			return divide((NumericExpression) args[0],
 					(NumericExpression) args[1]);
@@ -866,17 +881,9 @@ public class CommonPreUniverse implements PreUniverse {
 		case INT_DIVIDE:
 			return divide((NumericExpression) args[0],
 					(NumericExpression) args[1]);
-		case LAMBDA: {
-			// TODO change
-			// int len = args.length;
-			// List<SymbolicConstant> vars = new ArrayList<>();
-			//
-			// for (int i = 0; i < len - 1; i++) {
-			// vars.add((SymbolicConstant) args[i]);
-			// }
+		case LAMBDA:
 			return lambda((SymbolicConstant) args[0],
 					(SymbolicExpression) args[1]);
-		}
 		case LENGTH:
 			return length((SymbolicExpression) args[0]);
 		case LESS_THAN:
@@ -921,11 +928,9 @@ public class CommonPreUniverse implements PreUniverse {
 		case TUPLE_WRITE:
 			return tupleWrite((SymbolicExpression) args[0], (IntObject) args[1],
 					(SymbolicExpression) args[2]);
-		case UNION_EXTRACT: {
-			SymbolicExpression expression = (SymbolicExpression) args[1];
-
-			return unionExtract((IntObject) args[0], expression);
-		}
+		case UNION_EXTRACT:
+			return unionExtract((IntObject) args[0],
+					(SymbolicExpression) args[1]);
 		case UNION_INJECT: {
 			SymbolicExpression expression = (SymbolicExpression) args[1];
 			SymbolicUnionType unionType = (SymbolicUnionType) type;

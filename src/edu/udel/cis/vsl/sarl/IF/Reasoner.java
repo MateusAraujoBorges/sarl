@@ -311,8 +311,9 @@ public interface Reasoner {
 	Number extractNumber(NumericExpression expression);
 
 	/**
-	 * EXPERIMENTAL: Attempts to prove a uniform "Big-O" claim. The claim has
-	 * the following form:
+	 * <p>
+	 * Attempts to prove a uniform "Big-O" claim. The claim has the following
+	 * form:
 	 * 
 	 * <pre>
 	 * lhs = O(h1^n1) + ... + O(hk^nk)
@@ -323,18 +324,18 @@ public interface Reasoner {
 	 * the variables that are tending towards 0. The n1, ..., nk the
 	 * corresponding "orders" of the limit variables; they are are concrete
 	 * nonnegative integers.
+	 * </p>
 	 * 
-	 * The lhs may involve the hi and also some integer-type symbolic constants
-	 * i1,...,im called the "index variables". The ij are assumed to satisfy
-	 * some "index constraint".
+	 * <p>
+	 * The lhs may involve the hi and also other free variables; typically these
+	 * will be index variables for indexing into arrays. Assumptions on any of
+	 * these can be included in the <code>constraint</code> argument.
+	 * </p>
 	 * 
-	 * The real intervals defined a closed rectangular interval in R^m that
-	 * contain the "grid points". The grid points are not explicit here, but
-	 * they are functions of the index variables.
-	 * 
-	 * 
-	 * @param indexConstraint
-	 *            the constraint on the index variables
+	 * @param constraint
+	 *            any additional constraint (beyond the context) you want to
+	 *            assume when checking the claim; typically range constraints on
+	 *            index variables
 	 * @param lhs
 	 *            the left hand side expression, an expression of real type
 	 *            involving any or all of the symbolic constants mentioned, as
@@ -348,7 +349,6 @@ public interface Reasoner {
 	 *         <code>false</code> result does not mean the O-claim is false, it
 	 *         just means it could not be proved
 	 */
-	boolean checkBigOClaim(BooleanExpression indexConstraint,
-			NumericExpression lhs, NumericSymbolicConstant[] limitVars,
-			int[] orders);
+	boolean checkBigOClaim(BooleanExpression constraint, NumericExpression lhs,
+			NumericSymbolicConstant[] limitVars, int[] orders);
 }

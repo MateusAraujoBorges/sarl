@@ -888,7 +888,7 @@ public class IdealSimplifier extends CommonSimplifier {
 				universe.oneInt());
 		BooleanExpression body = structure.body;
 		NumericSymbolicConstant var = structure.boundVariable;
-		ArrayEquationSolution solution;
+		ArrayEquationSolution solution = null;
 
 		if (body.operator() == SymbolicOperator.FORALL) {
 			ArrayDefinition innerDefn = extractArrayDefinition(body);
@@ -900,9 +900,9 @@ public class IdealSimplifier extends CommonSimplifier {
 		} else if (body.operator() == SymbolicOperator.EQUALS) {
 			solution = solveArrayEquation((SymbolicExpression) body.argument(0),
 					(SymbolicExpression) body.argument(1), var);
-		} else {
-			return null;
 		}
+		if (solution == null)
+			return null;
 
 		SymbolicArrayType arrayType = (SymbolicArrayType) solution.array.type();
 

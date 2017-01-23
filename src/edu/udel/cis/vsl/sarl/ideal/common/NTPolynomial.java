@@ -88,10 +88,11 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	private PrimitivePower[] monicFactors = null;
 
 	/**
-	 * Cached result for method {@link #hasNontrivialExpansion(IdealFactory)}.
-	 * -1 means this has not yet been computed. 0 means false. 1 means true.
+	 * Cached result for method
+	 * {@link #hasTermWithNontrivialExpansion(IdealFactory)}. -1 means this has
+	 * not yet been computed. 0 means false. 1 means true.
 	 */
-	byte hasNTE = -1;
+	byte hasTermWithNTE = -1;
 
 	/**
 	 * <p>
@@ -156,7 +157,7 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 		if (expansion == null) {
 			Monomial[] termMap = termMap();
 
-			if (hasNontrivialExpansion(factory)) {
+			if (hasTermWithNontrivialExpansion(factory)) {
 				if (debug) {
 					out.println("Starting expansion of "
 							+ shortString(factory.numberFactory()));
@@ -182,16 +183,11 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 
 	@Override
 	public boolean hasNontrivialExpansion(IdealFactory factory) {
-		if (hasNTE < 0) {
-			hasNTE = 0;
-			for (Monomial m : arguments) {
-				if (m.hasNontrivialExpansion(factory)) {
-					hasNTE = 1;
-					break;
-				}
-			}
+		if (arguments.length > 1) {
+			return true;
+		} else {
+			return hasTermWithNontrivialExpansion(factory);
 		}
-		return hasNTE == 1;
 	}
 
 	/**
@@ -343,5 +339,19 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 				result = d;
 		}
 		return result;
+	}
+
+	@Override
+	public boolean hasTermWithNontrivialExpansion(IdealFactory factory) {
+		if (hasTermWithNTE < 0) {
+			hasTermWithNTE = 0;
+			for (Monomial m : arguments) {
+				if (m.hasNontrivialExpansion(factory)) {
+					hasTermWithNTE = 1;
+					break;
+				}
+			}
+		}
+		return hasTermWithNTE == 1;
 	}
 }

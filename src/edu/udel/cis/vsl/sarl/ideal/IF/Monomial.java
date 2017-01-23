@@ -87,12 +87,13 @@ public interface Monomial extends RationalExpression {
 	Monomial[] expand(IdealFactory factory);
 
 	/**
-	 * Determines whether or not this monomial has a non-trivial expansion. A
-	 * trivial expansion is one consisting of exactly one term.
+	 * Determines whether or not this monomial could possibly have a non-trivial
+	 * expansion. A trivial expansion is one consisting of exactly one term.
 	 * 
 	 * @param factory
 	 *            the ideal factory responsible for this monomial
-	 * @return <code>true</code> iff this monomial has a non-trivial expansion
+	 * @return if <code>false</code> is returned then this monomial has only a
+	 *         trivial expansion, otherwise is might have a nontrivial one
 	 */
 	boolean hasNontrivialExpansion(IdealFactory factory);
 

@@ -69,6 +69,10 @@ public class OrderOfAccuracyTest {
 	public void arraySolution1() {
 		// n>=0
 		// assume forall i in [0..n-1] a[i] = f(i*h,i*h)
+		
+		universe.setShowQueries(true);
+		universe.setShowProverQueries(true);
+		
 		NumericSymbolicConstant h = (NumericSymbolicConstant) universe
 				.symbolicConstant(universe.stringObject("h"), real);
 		NumericSymbolicConstant n = (NumericSymbolicConstant) universe
@@ -160,6 +164,11 @@ public class OrderOfAccuracyTest {
 		// f:R^2 -> R
 		// f(x+h,y) = f(x,y) + f'(x,y)h + f''(x,y)h^2/2 +O(h^3)
 		// assume h as 3 derivs in [0,1]x[0,1]
+		
+		universe.setShowQueries(true);
+		universe.setShowProverQueries(true);
+	
+		
 		NumericExpression a = universe.zeroReal();
 		NumericExpression b = universe.oneReal();
 		NumericExpression a1 = universe.rational(0.01);

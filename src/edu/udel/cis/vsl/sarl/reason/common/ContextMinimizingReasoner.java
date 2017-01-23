@@ -761,6 +761,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 				newReasoner, limitVars, orders);
 		NumericExpression newLhs = (NumericExpression) taylorSubstituter
 				.apply(lhs);
+		
+		// TODO: not just 0, but anything bounded*h^i...
 
 		return newReasoner
 				.isValid(universe.equals(newLhs, universe.zeroReal()));

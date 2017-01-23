@@ -336,16 +336,6 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 		return result;
 	}
 
-	@Override
-	protected SymbolicExpression substituteExpression(
-			SymbolicExpression expression, SubstituterState state) {
-		SymbolicExpression result = tryToExpand(expression, state);
-
-		if (result == null)
-			result = super.substituteExpression(expression, state);
-		return result;
-	}
-
 	private SymbolicExpression tryToExpand(SymbolicExpression expression,
 			SubstituterState state) {
 		if (expression.operator() != SymbolicOperator.APPLY)
@@ -417,6 +407,22 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 		SymbolicExpression result = taylorExpansion(function, maxDegree,
 				argArray);
 
+		// TODO: debugging:
+		System.out.println("Taylor: expression   : " + expression);
+		System.out.println("Taylor: result       : " + result);
+		System.out.println();
+		System.out.flush();
+
+		return result;
+	}
+
+	@Override
+	protected SymbolicExpression substituteExpression(
+			SymbolicExpression expression, SubstituterState state) {
+		SymbolicExpression result = tryToExpand(expression, state);
+
+		if (result == null)
+			result = super.substituteExpression(expression, state);
 		return result;
 	}
 
