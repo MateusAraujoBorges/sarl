@@ -2219,4 +2219,18 @@ public class CommonIdealFactory implements IdealFactory {
 	public KeySetFactory<Primitive, PrimitivePower> monicFactory() {
 		return monicFactory;
 	}
+
+	@Override
+	public NumericExpression[] expand(NumericExpression expr) {
+		if (expr instanceof Monomial) {
+			Monomial[] monomials = ((Monomial) expr).expand(this);
+			int n = monomials.length;
+			NumericExpression[] result = new NumericExpression[n];
+
+			System.arraycopy(monomials, 0, result, 0, n);
+			return result;
+		} else {
+			return new NumericExpression[] { expr };
+		}
+	}
 }

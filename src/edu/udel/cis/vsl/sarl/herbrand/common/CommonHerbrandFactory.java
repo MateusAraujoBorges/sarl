@@ -558,4 +558,9 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 		return booleanFactory.booleanExpression(SymbolicOperator.NEQ, arg0,
 				arg1);
 	}
+
+	@Override
+	public NumericExpression[] expand(NumericExpression expr) {
+		return new NumericExpression[] { expr };
+	}
 }

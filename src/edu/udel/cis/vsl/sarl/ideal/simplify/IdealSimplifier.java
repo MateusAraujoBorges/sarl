@@ -1408,4 +1408,33 @@ public class IdealSimplifier extends CommonSimplifier {
 			return substitutionMap(selfupdate);
 		}
 	}
+
+	/**
+	 * Attempts to find, in the context, a clause which states the
+	 * differentiability of the given <code>function</code>. This is a clause
+	 * with operator {@link SymbolicOperator#DIFFERENTIABLE} and with the
+	 * function argument (argument 0) equal to <code>function</code>.
+	 * 
+	 * @param function
+	 *            the function for which a differentiability claim is sought
+	 * @return a clause in the context dealing with the differentiability of
+	 *         <code>function</code>, or <code>null</code> if no such clause is
+	 *         found.
+	 */
+	BooleanExpression findDifferentiableClaim(SymbolicExpression function) {
+		for (Entry<BooleanExpression, Boolean> entry : booleanMap.entrySet()) {
+			if (!entry.getValue())
+				continue;
+
+			BooleanExpression clause = entry.getKey();
+
+			if (clause.operator() != SymbolicOperator.DIFFERENTIABLE)
+				continue;
+
+			if (clause.argument(0).equals(function))
+				return clause;
+		}
+		return null;
+	}
+
 }

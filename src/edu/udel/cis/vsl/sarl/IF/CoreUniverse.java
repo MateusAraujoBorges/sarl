@@ -2385,4 +2385,14 @@ public interface CoreUniverse {
 	 *         of that array equals the given expression
 	 */
 	NumericExpression[] getSummands(NumericExpression expr);
+
+	/**
+	 * Attempts to expand an expression as a sum of simpler expressions.
+	 * 
+	 * @param expr
+	 *            a numeric expression, non-<code>null</code>
+	 * @return an array of expressions whose sum is equivalent to
+	 *         <code>expr</code>
+	 */
+	NumericExpression[] expand(NumericExpression expr);
 }

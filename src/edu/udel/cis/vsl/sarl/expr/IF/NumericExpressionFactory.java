@@ -302,4 +302,6 @@ public interface NumericExpressionFactory {
 	 */
 	BooleanExpression neq(NumericExpression arg0, NumericExpression arg1);
 
+	NumericExpression[] expand(NumericExpression expr);
+
 }

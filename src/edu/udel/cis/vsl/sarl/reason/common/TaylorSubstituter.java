@@ -10,12 +10,14 @@ import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
@@ -336,6 +338,201 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 		return result;
 	}
 
+	/**
+	 * Determines whether this is a function from R^n (for some n) to R.
+	 * 
+	 * @param function
+	 *            a symbolic expression, non-<code>null</code>
+	 * @return the number of inputs n, if <code>function</code> is a function
+	 *         from R^n to R, else -1
+	 */
+	private int getNumRealFunctionInputs(SymbolicExpression function) {
+		if (function.type().typeKind() != SymbolicTypeKind.FUNCTION)
+			return -1;
+
+		SymbolicFunctionType functionType = (SymbolicFunctionType) function
+				.type();
+		SymbolicTypeSequence inputTypes = functionType.inputTypes();
+		int n = inputTypes.numTypes();
+
+		if (!functionType.outputType().isReal())
+			return -1;
+		for (int i = 0; i < n; i++) {
+			if (!inputTypes.getType(i).isReal())
+				return -1;
+		}
+		return n;
+	}
+
+	/**
+	 * Checks that the point is in the domain defined by the given bounds.
+	 * 
+	 * @param point
+	 *            a point (x_i) in R^n
+	 * @param lowerBounds
+	 *            a point (a_i) in R^n
+	 * @param upperBounds
+	 *            a point (b_i) in R^n
+	 * @return true if it can be proved a_i<x_i<b_i for all i.
+	 */
+	private boolean checkDomain(NumericExpression[] point,
+			NumericExpression[] lowerBounds, NumericExpression[] upperBounds) {
+		// need to substitute 0 for all limitVars in the argArray
+		// before checking the arguments are in range. Otherwise, without
+		// any restriction on limitVars, who knows.
+		// Actually you should be taking limit as h->0, but for now...
+		int n = point.length;
+		Map<SymbolicExpression, SymbolicExpression> zeroMap = new HashMap<>();
+		NumericExpression zero = universe.zeroReal();
+
+		for (NumericSymbolicConstant limitVar : limitVars) {
+			zeroMap.put(limitVar, zero);
+		}
+
+		UnaryOperator<SymbolicExpression> zeroSubber = universe
+				.mapSubstituter(zeroMap);
+
+		for (int i = 0; i < n; i++) {
+			NumericExpression arg = (NumericExpression) zeroSubber
+					.apply(point[i]);
+			BooleanExpression inDomain = universe.and(
+					universe.lessThan(lowerBounds[i], arg),
+					universe.lessThan(arg, upperBounds[i]));
+
+			if (!reasoner.isValid(inDomain))
+				return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Given a function from R^n to R for some n, and a nonnegative integer d,
+	 * and point x in R^n, determines if the application of a d-th derivative of
+	 * f to x is bounded.
+	 * 
+	 * @param function
+	 * @param degree
+	 * @param point
+	 * @return
+	 */
+	private boolean isBoundedApplicationOfDeriv(SymbolicExpression function,
+			int degree, NumericExpression[] point) {
+		BooleanExpression claim = this.findDifferentiableClaim(function);
+
+		if (claim == null)
+			return false;
+
+		int degree1 = ((IntObject) claim.argument(1)).getInt();
+
+		if (degree > degree1)
+			return false;
+
+		int n = point.length;
+		NumericExpression[] lowerBounds = toArray(claim.argument(2), n);
+		NumericExpression[] upperBounds = toArray(claim.argument(3), n);
+
+		return checkDomain(point, lowerBounds, upperBounds);
+	}
+
+	/**
+	 * Given a function from R^n to R, and a point in R^n, determines if this is
+	 * a bounded application of the function.
+	 * 
+	 * @param function
+	 *            function from R^n to R
+	 * @param point
+	 *            in R^n
+	 * @return
+	 */
+	private boolean isBoundedApplication(SymbolicExpression function,
+			NumericExpression[] point) {
+		SymbolicOperator op = function.operator();
+
+		if (op == SymbolicOperator.DERIV) {
+			SymbolicExpression f0 = (SymbolicExpression) function.argument(0);
+			int degree0 = ((IntObject) function.argument(2)).getInt();
+
+			return isBoundedApplicationOfDeriv(f0, degree0, point);
+		} else if (op == SymbolicOperator.SYMBOLIC_CONSTANT) {
+			return isBoundedApplicationOfDeriv(function, 0, point);
+		} else {
+			return false;
+		}
+	}
+
+	private boolean isBounded(NumericExpression expr) {
+		switch (expr.operator()) {
+		case ADD:
+		case SUBTRACT:
+		case MULTIPLY:
+		case NEGATIVE: {
+			int n = expr.numArguments();
+
+			for (int i = 0; i < n; i++) {
+				if (!isBounded((NumericExpression) expr.argument(i)))
+					return false;
+			}
+			return true;
+		}
+		case DIVIDE: {
+			if (!isBounded((NumericExpression) expr.argument(0)))
+				return false;
+			return ((NumericExpression) expr.argument(1))
+					.operator() == SymbolicOperator.CONCRETE;
+		}
+		case CONCRETE:
+			return true;
+		case SYMBOLIC_CONSTANT: {
+			for (SymbolicConstant h : limitVars)
+				if (h.equals(expr))
+					return true;
+		}
+		case APPLY: {
+			// is this a function from R^n to R?
+			SymbolicExpression f = (SymbolicExpression) expr.argument(0);
+			int n = getNumRealFunctionInputs(f);
+
+			if (n < 0)
+				return false;
+			return isBoundedApplication(f, toArray(expr.argument(1), n));
+		}
+		default:
+			return false;
+		}
+	}
+
+	public NumericExpression reduceModLimits(NumericExpression expr) {
+		NumericExpression[] terms = universe.expand(expr);
+		int numVars = limitVars.length;
+		boolean change = false;
+
+		for (NumericExpression term : terms) {
+			for (int i = 0; i < numVars; i++) {
+				NumericSymbolicConstant h = limitVars[i];
+				int order = orders[i];
+				NumericExpression hton = universe.power(h, order);
+				NumericExpression q = universe.divide(term, hton);
+
+				if (isBounded(q)) {
+					change = true;
+					terms[i] = null;
+					break;
+				}
+			}
+		}
+		if (change) {
+			NumericExpression result = universe.zeroReal();
+
+			for (NumericExpression term : terms) {
+				if (term != null)
+					result = universe.add(result, term);
+			}
+			return result;
+		} else {
+			return expr;
+		}
+	}
+
 	private SymbolicExpression tryToExpand(SymbolicExpression expression,
 			SubstituterState state) {
 		if (expression.operator() != SymbolicOperator.APPLY)
@@ -366,44 +563,20 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 		// {@link IntObject} which tells the number of partial derivatives (of
 		// any combination) that exist and are continuous. Arg2 is a sequence of
 		// real-valued expressions which are the lower bounds of the intervals
-		// in
-		// the domain; the length is n. Arg3 is a similar sequence of upper
+		// in the domain; the length is n. Arg3 is a similar sequence of upper
 		// bounds.
 
 		if (diffClaim == null)
 			return null;
 
-		int maxDegree = ((IntObject) diffClaim.argument(1)).getInt();
+		NumericExpression[] argArray = toArray(expression.argument(1), n);
 		NumericExpression[] lowerBounds = toArray(diffClaim.argument(2), n);
 		NumericExpression[] upperBounds = toArray(diffClaim.argument(3), n);
-		NumericExpression[] argArray = toArray(expression.argument(1), n);
 
-		// need to substitute 0 for all limitVars in the argArray
-		// before checking the arguments are in range. Otherwise, without
-		// any restriction on limitVars, who knows.
-		// Actually you should be taking limit as h->0, but for now...
+		if (!checkDomain(argArray, lowerBounds, upperBounds))
+			return null;
 
-		Map<SymbolicExpression, SymbolicExpression> zeroMap = new HashMap<>();
-		NumericExpression zero = universe.zeroReal();
-
-		for (NumericSymbolicConstant limitVar : limitVars) {
-			zeroMap.put(limitVar, zero);
-		}
-
-		UnaryOperator<SymbolicExpression> zeroSubber = universe
-				.mapSubstituter(zeroMap);
-
-		for (int i = 0; i < n; i++) {
-			NumericExpression arg = (NumericExpression) zeroSubber
-					.apply(argArray[i]);
-			BooleanExpression inDomain = universe.and(
-					universe.lessThan(lowerBounds[i], arg),
-					universe.lessThan(arg, upperBounds[i]));
-
-			if (!reasoner.isValid(inDomain))
-				return null;
-		}
-
+		int maxDegree = ((IntObject) diffClaim.argument(1)).getInt();
 		SymbolicExpression result = taylorExpansion(function, maxDegree,
 				argArray);
 

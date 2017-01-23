@@ -739,6 +739,11 @@ public class CommonNumericExpressionFactory
 			NumericExpression arg1) {
 		return idealFactory.neq(castToIdeal(arg0), castToIdeal(arg1));
 	}
+
+	@Override
+	public NumericExpression[] expand(NumericExpression expr) {
+		return idealFactory.expand(expr);
+	}
 }
 
 /**

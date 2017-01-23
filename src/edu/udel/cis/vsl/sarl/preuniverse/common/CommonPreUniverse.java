@@ -4241,4 +4241,9 @@ public class CommonPreUniverse implements PreUniverse {
 		return result;
 	}
 
+	@Override
+	public NumericExpression[] expand(NumericExpression expr) {
+		return numericFactory.expand(expr);
+	}
+
 }

@@ -756,14 +756,13 @@ public class ContextMinimizingReasoner implements Reasoner {
 		BooleanExpression newContext = universe.and(oldContext,
 				indexConstraint);
 		Reasoner newReasoner = factory.getReasoner(newContext);
-		UnaryOperator<SymbolicExpression> taylorSubstituter = new TaylorSubstituter(
-				universe, universe.objectFactory(), universe.typeFactory(),
-				newReasoner, limitVars, orders);
+		TaylorSubstituter taylorSubstituter = new TaylorSubstituter(universe,
+				universe.objectFactory(), universe.typeFactory(), newReasoner,
+				limitVars, orders);
 		NumericExpression newLhs = (NumericExpression) taylorSubstituter
 				.apply(lhs);
-		
-		// TODO: not just 0, but anything bounded*h^i...
 
+		newLhs = taylorSubstituter.reduceModLimits(newLhs);
 		return newReasoner
 				.isValid(universe.equals(newLhs, universe.zeroReal()));
 	}
