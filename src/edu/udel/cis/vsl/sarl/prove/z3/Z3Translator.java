@@ -1413,6 +1413,16 @@ public class Z3Translator {
 		case NULL:
 			result = null;
 			break;
+		case DERIV:
+		case DIFFERENTIABLE: {
+			// just create fresh symbolic constants
+			FastList<String> z3Type = translateType(expression.type());
+			String name = newZ3AuxVar(z3Type.clone());
+
+			// the call to newZ3AuxVar added the declaration
+			result = new FastList<String>(name);
+			break;
+		}
 		default:
 			throw new SARLInternalException(
 					"unreachable: unknown operator: " + operator);
