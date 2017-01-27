@@ -210,15 +210,10 @@ public class OrderOfAccuracyTest {
 		int[] orders = new int[] { 3 };
 
 		out.println(reasoner.getReducedContext());
+		
 		boolean result = reasoner.checkBigOClaim(indexConstraint, lhs,
 				limitVars, orders);
 		assertTrue(result);
-
-		// checkBigOClaim(
-		// BooleanExpression indexConstraint : a1<=x,y<=b1
-		// NumericExpression lhs : f(x,y) + f'(x,y)h + f''(x,y)h^2/2 - f(x+h,y)
-		// NumericSymbolicConstant[] limitVars: { h }
-		// int[] orders : { 3 }
 	}
 
 }

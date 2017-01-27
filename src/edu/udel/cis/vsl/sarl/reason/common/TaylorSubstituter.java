@@ -187,53 +187,48 @@ public class TaylorSubstituter extends ExpressionSubstituter {
 
 		for (int i = 0; i < n; i++) {// look for an index i that can be expanded
 			NumericExpression arg = point[i];
-			SymbolicOperator op = arg.operator();
+			NumericExpression[] terms = universe.expand(arg);
 
-			if (op == SymbolicOperator.ADD) {
-				@SuppressWarnings("unchecked")
-				Iterable<NumericExpression> termList = (Iterable<NumericExpression>) arg
-						.getArguments();
-
-				for (NumericExpression term : termList) {
-					for (int j = 0; j < limitVars.length; j++) {
-						if (orders[j] <= maxDegree
-								&& isConstantMultiple(term, limitVars[j])) {
-							result = new ExpansionSpec();
-							result.argumentIndex = i;
-							result.limitVarIndex = j;
-							result.hTerm = term;
-							result.remains = universe.subtract(arg, term);
-							return result;
-						}
-					}
-				}
-			} else if (op == SymbolicOperator.SUBTRACT) {
-				NumericExpression arg0 = (NumericExpression) arg.argument(0),
-						arg1 = (NumericExpression) arg.argument(1);
-
+			for (NumericExpression term : terms) {
 				for (int j = 0; j < limitVars.length; j++) {
-					if (orders[j] > maxDegree)
-						continue;
-
-					NumericSymbolicConstant h = limitVars[j];
-
-					if (isConstantMultiple(arg0, h)) {
+					if (orders[j] <= maxDegree
+							&& isConstantMultiple(term, limitVars[j])) {
 						result = new ExpansionSpec();
 						result.argumentIndex = i;
 						result.limitVarIndex = j;
-						result.hTerm = arg0;
-						result.remains = universe.minus(arg1);
-						return result;
-					} else if (isConstantMultiple(arg1, h)) {
-						result = new ExpansionSpec();
-						result.argumentIndex = i;
-						result.limitVarIndex = j;
-						result.hTerm = universe.minus(arg1);
-						result.remains = arg0;
+						result.hTerm = term;
+						result.remains = universe.subtract(arg, term);
 						return result;
 					}
 				}
 			}
+			// } else if (op == SymbolicOperator.SUBTRACT) {
+			// NumericExpression arg0 = (NumericExpression) arg.argument(0),
+			// arg1 = (NumericExpression) arg.argument(1);
+			//
+			// for (int j = 0; j < limitVars.length; j++) {
+			// if (orders[j] > maxDegree)
+			// continue;
+			//
+			// NumericSymbolicConstant h = limitVars[j];
+			//
+			// if (isConstantMultiple(arg0, h)) {
+			// result = new ExpansionSpec();
+			// result.argumentIndex = i;
+			// result.limitVarIndex = j;
+			// result.hTerm = arg0;
+			// result.remains = universe.minus(arg1);
+			// return result;
+			// } else if (isConstantMultiple(arg1, h)) {
+			// result = new ExpansionSpec();
+			// result.argumentIndex = i;
+			// result.limitVarIndex = j;
+			// result.hTerm = universe.minus(arg1);
+			// result.remains = arg0;
+			// return result;
+			// }
+			// }
+			// }
 		} // end loop over arguments
 		return null;
 	}
