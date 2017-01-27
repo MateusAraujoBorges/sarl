@@ -770,33 +770,24 @@ public class CVCTranslator {
 	 * Syntax example:
 	 * 
 	 * <pre>
-	 * LAMBDA (x: REAL, i:INT): x + i - 1
-	 * LAMBDA (x,i: INT): i*x - 1 > 0
+	 * LAMBDA (x: INT): x * x - 1
 	 * </pre>
 	 * 
 	 * @param expr
-	 * @return
+	 *            The lambda expression that is being translated.
+	 * @return The translation result.
 	 */
 	private Translation translateLambda(SymbolicExpression expr) {
 		Translation res;
 		List<Translation> translations = new ArrayList<Translation>();
 		Translation tempTranslation;
 		Boolean involveDivOrModulo = false;
-		int argNum = expr.numArguments();
-		FastList<String> result = new FastList<>("LAMBDA (");
+		FastList<String> result = new FastList<>("LAMBDA (",
+				((SymbolicConstant) expr.argument(0)).name().getString(), ":");
 
-		for (int i = 0; i < argNum - 1; i++) {
-			result.add(((SymbolicConstant) expr.argument(0)).name().getString()
-					+ ":");
-			result.append(translateType(
-					((SymbolicConstant) expr.argument(0)).type()));
-			if (i != argNum - 2)
-				result.add(", ");
-		}
 		result.append(translateType(expr.type()));
 		result.add("):");
-		tempTranslation = translate(
-				(SymbolicExpression) expr.argument(argNum - 1));
+		tempTranslation = translate((SymbolicExpression) expr.argument(1));
 		if (tempTranslation.getIsDivOrModulo()) {
 			translations.add(tempTranslation);
 			involveDivOrModulo = true;
