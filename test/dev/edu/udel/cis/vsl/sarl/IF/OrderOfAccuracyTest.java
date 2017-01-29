@@ -69,10 +69,10 @@ public class OrderOfAccuracyTest {
 	public void arraySolution1() {
 		// n>=0
 		// assume forall i in [0..n-1] a[i] = f(i*h,i*h)
-		
+
 		universe.setShowQueries(true);
 		universe.setShowProverQueries(true);
-		
+
 		NumericSymbolicConstant h = (NumericSymbolicConstant) universe
 				.symbolicConstant(universe.stringObject("h"), real);
 		NumericSymbolicConstant n = (NumericSymbolicConstant) universe
@@ -164,11 +164,10 @@ public class OrderOfAccuracyTest {
 		// f:R^2 -> R
 		// f(x+h,y) = f(x,y) + f'(x,y)h + f''(x,y)h^2/2 +O(h^3)
 		// assume h as 3 derivs in [0,1]x[0,1]
-		
+
 		universe.setShowQueries(true);
 		universe.setShowProverQueries(true);
-	
-		
+
 		NumericExpression a = universe.zeroReal();
 		NumericExpression b = universe.oneReal();
 		NumericExpression a1 = universe.rational(0.01);
@@ -210,10 +209,120 @@ public class OrderOfAccuracyTest {
 		int[] orders = new int[] { 3 };
 
 		out.println(reasoner.getReducedContext());
-		
+
 		boolean result = reasoner.checkBigOClaim(indexConstraint, lhs,
 				limitVars, orders);
 		assertTrue(result);
+	}
+
+	@Test
+	public void derivativeProve() {
+		// $abstract $differentiable(3, [-1.0,1.0]) $real rho($real x);
+		SymbolicFunctionType functionType = universe.functionType(
+				Arrays.asList(universe.realType()), universe.realType());
+		SymbolicConstant rho = universe
+				.symbolicConstant(universe.stringObject("rho"), functionType);
+		BooleanExpression context = universe.differentiable(rho,
+				universe.intObject(3),
+				Arrays.asList(universe.minus(universe.oneReal())),
+				Arrays.asList(universe.oneReal()));
+		// result[] array:
+		SymbolicConstant result = universe.symbolicConstant(
+				universe.stringObject("Y3"),
+				universe.arrayType(universe.realType()));
+		// dx constant:
+		NumericSymbolicConstant dx = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X_dx"),
+						universe.realType());
+		// 0 < dx < 1:
+		context = universe.and(context,
+				universe.and(universe.lessThan(universe.zeroReal(), dx),
+						universe.lessThan(dx, universe.oneReal())));
+		// forall j : int . ((0 == Y3[j]*X_dx + (1/2)*rho(((real)j - 1)*X_dx) +
+		// (-1/2)*rho(((real)j + 1)*X_dx)) || (Y2 - 1*j <= 0) || (j <= 0))
+		NumericSymbolicConstant j = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("j"),
+						universe.integerType());
+		NumericSymbolicConstant Y2 = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("Y2"),
+						universe.integerType());
+
+		NumericExpression Y3_j_dx = universe.multiply(
+				(NumericExpression) universe.arrayRead(result, j), dx);
+		NumericExpression j_minus_1_dx = universe.multiply(universe.subtract(
+				(NumericExpression) universe.cast(universe.realType(), j),
+				universe.oneReal()), dx);
+		NumericExpression j_add_1_dx = universe.multiply(universe.add(
+				(NumericExpression) universe.cast(universe.realType(), j),
+				universe.oneReal()), dx);
+		NumericExpression one_over_2 = universe.divide(universe.oneReal(),
+				universe.number(universe.numberFactory().number("2.0")));
+		NumericExpression sum = Y3_j_dx;
+
+		sum = universe.add(sum,
+				universe.multiply(one_over_2, (NumericExpression) universe
+						.apply(rho, Arrays.asList(j_minus_1_dx))));
+		sum = universe.add(sum,
+				universe.multiply(universe.minus(one_over_2),
+						(NumericExpression) universe.apply(rho,
+								Arrays.asList(j_add_1_dx))));
+
+		BooleanExpression clause = universe.equals(universe.zeroReal(), sum);
+
+		clause = universe.or(clause, universe.lessThanEquals(Y2, j));
+		clause = universe.or(clause,
+				universe.lessThanEquals(j, universe.zeroInt()));
+		context = universe.and(context, universe.forall(j, clause));
+
+		// 0==(X_num_elements - 1*Y2 - 1) &&
+		// 0<=(X_num_elements-2) &&
+		// (((real)X_num_elements*X_dx)-1)<=0
+		NumericSymbolicConstant X_num_elements = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X_num_elements"),
+						universe.integerType());
+
+		context = universe.and(context, universe.equals(Y2,
+				universe.subtract(X_num_elements, universe.oneInt())));
+		context = universe.and(context,
+				universe.lessThanEquals(universe.integer(2), X_num_elements));
+		context = universe.and(context, universe.lessThanEquals(
+				universe.multiply((NumericExpression) universe
+						.cast(universe.realType(), X_num_elements), dx),
+				universe.oneReal()));
+
+		Reasoner reasoner = universe.reasoner(context);
+		NumericSymbolicConstant boundVar = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("i"),
+						universe.integerType());
+		SymbolicExpression derivative = universe.derivative(rho,
+				universe.intObject(0), universe.intObject(1));
+
+		// $D[rho, {x,1}]((($real) i*h))
+		SymbolicExpression derivativeApplicaiton = universe
+				.apply(derivative,
+						Arrays.asList(universe.multiply(
+								(NumericExpression) universe
+										.cast(universe.realType(), boundVar),
+								dx)));
+		NumericExpression lhs = universe.subtract(
+				(NumericExpression) universe.arrayRead(result, boundVar),
+				(NumericExpression) derivativeApplicaiton);
+		// int i: 1 .. n-2
+		BooleanExpression constraint = universe.and(
+				universe.lessThanEquals(universe.oneInt(), boundVar),
+				universe.lessThanEquals(boundVar, universe
+						.subtract(X_num_elements, universe.integer(2))));
+		NumericSymbolicConstant limitVars[] = { dx };
+		int[] orders = { 2 };
+		boolean valid = reasoner.checkBigOClaim(constraint, lhs, limitVars,
+				orders);
+
+		System.out.println("Context: " + context);
+		System.out.println("Constraint: " + constraint);
+		System.out.println("Lhs: " + lhs);
+		System.out.println("limitVars: " + limitVars[0]);
+		System.out.println("orders: " + orders[0]);
+		assertEquals(valid, true);
 	}
 
 }
