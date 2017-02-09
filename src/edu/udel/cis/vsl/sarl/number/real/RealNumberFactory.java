@@ -605,10 +605,11 @@ public class RealNumberFactory implements NumberFactory {
 	 * negates the numerator of a rational number
 	 */
 	public RationalNumber negate(RationalNumber arg0) {
-		RealRational x = (RealRational) arg0;
-
 		if (arg0.isInfinite())
 			return infiniteRational(arg0.signum() < 0);
+
+		RealRational x = (RealRational) arg0;
+
 		return rational(x.numerator().negate(), x.denominator());
 	}
 
@@ -617,10 +618,11 @@ public class RealNumberFactory implements NumberFactory {
 	 * negates an integer
 	 */
 	public IntegerNumber negate(IntegerNumber arg0) {
-		RealInteger x = (RealInteger) arg0;
-
 		if (arg0.isInfinite())
 			return infiniteInteger(arg0.signum() < 0);
+
+		RealInteger x = (RealInteger) arg0;
+
 		return integer(x.value().negate());
 	}
 
@@ -2459,9 +2461,9 @@ public class RealNumberFactory implements NumberFactory {
 		lo = multiply(lo, num);
 		up = multiply(up, num);
 		if (sign > 0)
-			return newInterval(isIntegral, up, sl, lo, su);
-		else
 			return newInterval(isIntegral, lo, sl, up, su);
+		else
+			return newInterval(isIntegral, up, su, lo, sl);
 	}
 
 	@Override

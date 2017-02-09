@@ -1175,4 +1175,18 @@ public class IntervalTest {
 		assertEquals(expectedResult1, actualResult1);
 		assertEquals(expectedResult2, actualResult2);
 	}
+
+
+	@Test
+	public void intervalNegation() {
+		IntegerNumber one = numFactory.oneInteger();
+		IntegerNumber infi = numFactory.infiniteInteger(true);
+		Interval interval = numFactory.newInterval(true, one,
+				false, infi, true);
+		IntegerNumber negOne = numFactory.negate(one);
+		Interval result = numFactory.multiply(negOne, interval);
+		Interval negInterval = numFactory.negate(interval);
+
+		assertEquals(result, negInterval);
+	}
 }
