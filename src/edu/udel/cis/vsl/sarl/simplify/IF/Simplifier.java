@@ -143,33 +143,34 @@ public interface Simplifier extends UnaryOperator<SymbolicExpression> {
 			SymbolicConstant expectedKey, boolean selfupdate);
 
 	/**
-	 * Returns the reduced context associated to this Reasoner. This expression
-	 * may differ from the original one used to create the Reasoner because it
-	 * was simplified or put into a canonical form. Moreover, symbolic constants
-	 * which have been "solved" may be removed from the context. (For the
-	 * context with additional equations giving those solved values, use method
-	 * {@link #getFullContext}). This context will not change after creation.
+	 * Returns the reduced context associated to this {@link Simplifier}. This
+	 * expression may differ from the original one used to create the
+	 * {@link Simplifier} because it was simplified or put into a canonical
+	 * form. Moreover, symbolic constants which have been "solved" may be
+	 * removed from the context. (For the context with additional equations
+	 * giving those solved values, use method {@link #getFullContext()}). This
+	 * context will not change after creation.
 	 * 
-	 * @return the reduced context associated to this Reasoner
+	 * @return the reduced context associated to this {@link Simplifier}
 	 */
 	BooleanExpression getReducedContext();
 
 	/**
 	 * <p>
-	 * Returns the full context associated to this Reasoner. This expression may
-	 * differ from the original one used to create the Reasoner because it was
-	 * simplified or put into a canonical form. The full context includes
-	 * equations where one side is a symbolic constant and the other is the
-	 * solved value. (For the context without those equations, use method
-	 * {@link #getReducedContext}). Hence the expression returned is equivalent
-	 * to the original given expression.
+	 * Returns the full context associated to this {@link Simplifier}. This
+	 * expression may differ from the original one used to create the
+	 * {@link Simplifier} because it was simplified or put into a canonical
+	 * form. The full context includes equations where one side is a symbolic
+	 * constant and the other is the solved value. (For the context without
+	 * those equations, use method {@link #getReducedContext}). Hence the
+	 * expression returned is equivalent to the original given expression.
 	 * </p>
 	 * 
 	 * <p>
 	 * This context will not change after creation.
 	 * </p>
 	 * 
-	 * @return the reduced context associated to this Reasoner
+	 * @return the reduced context associated to this {@link Simplifier}
 	 */
 	BooleanExpression getFullContext();
 

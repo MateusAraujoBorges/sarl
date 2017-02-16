@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.expr.IF;
 
+import java.util.Comparator;
+
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
@@ -193,4 +195,13 @@ public interface BooleanExpressionFactory {
 	 */
 	BooleanExpression exists(SymbolicConstant boundVariable,
 			BooleanExpression predicate);
+
+	/**
+	 * Returns a {@link Comparator} on {@link BooleanExpression}s produced by
+	 * this factory.
+	 * 
+	 * @return the {@link Comparator} for the boolean expressions produced by
+	 *         this factory
+	 */
+	Comparator<BooleanExpression> getBooleanComparator();
 }

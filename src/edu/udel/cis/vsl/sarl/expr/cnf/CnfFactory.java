@@ -473,4 +473,9 @@ public class CnfFactory implements BooleanExpressionFactory {
 			NumericExpressionFactory numericExpressionFactory) {
 		this.numericExpressionFactory = numericExpressionFactory;
 	}
+
+	@Override
+	public Comparator<BooleanExpression> getBooleanComparator() {
+		return booleanComparator;
+	}
 }

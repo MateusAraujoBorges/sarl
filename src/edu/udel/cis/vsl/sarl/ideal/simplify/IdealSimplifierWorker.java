@@ -41,8 +41,12 @@ import edu.udel.cis.vsl.sarl.util.SingletonMap;
 
 public class IdealSimplifierWorker extends CommonSimplifierWorker {
 
-	public IdealSimplifierWorker(IdealSimplifier simplifier) {
+	private AbstractInterpretation ai;
+
+	public IdealSimplifierWorker(IdealSimplifier simplifier,
+			AbstractInterpretation ai) {
 		super(simplifier);
+		this.ai = ai;
 	}
 
 	private IdealFactory idealFactory() {
@@ -71,22 +75,6 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 
 	private AffineFactory affineFactory() {
 		return ((IdealSimplifier) simplifier).info.affineFactory;
-	}
-
-	private BoundMap boundMap() {
-		return ((IdealSimplifier) simplifier).boundMap;
-	}
-
-	private Map<BooleanExpression, Boolean> booleanMap() {
-		return ((IdealSimplifier) simplifier).booleanMap;
-	}
-
-	private Map<Monic, Number> constantMap() {
-		return ((IdealSimplifier) simplifier).constantMap;
-	}
-
-	private Map<SymbolicExpression, SymbolicExpression> otherConstantMap() {
-		return ((IdealSimplifier) simplifier).otherConstantMap;
 	}
 
 	// ****************************************************************
@@ -231,7 +219,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 	private Monomial simplifyMonic(Monic monic) {
 		assert !(monic instanceof Polynomial);
 
-		Number constant = constantMap().get(monic);
+		Number constant = ai.getConstantValue(monic);
 
 		if (constant != null)
 			return idealFactory().constant(constant);
@@ -242,7 +230,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 	private Monomial simplifyPolynomial2(Polynomial poly) {
 		IdealFactory id = idealFactory();
 
-		Number constant = constantMap().get(poly);
+		Number constant = ai.getConstantValue(poly);
 
 		if (constant != null)
 			return id.constant(constant);
@@ -251,7 +239,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		AffineExpression affine = affineFactory().affine(poly);
 
 		if (!affine.coefficient().isOne() || !affine.offset().isZero()) {
-			constant = constantMap().get(affine.pseudo());
+			constant = ai.getConstantValue(affine.pseudo());
 			if (constant != null)
 				return id.constant(
 						affineFactory().affineValue(affine, constant));
@@ -330,7 +318,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		IdealFactory id = idealFactory();
 
 		while (true) { // repeat until stabilization
-			Number constant = constantMap().get(poly);
+			Number constant = ai.getConstantValue(poly);
 
 			if (constant != null)
 				return id.constant(constant);
@@ -339,7 +327,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 			AffineExpression affine = affineFactory().affine(poly);
 
 			if (!affine.coefficient().isOne() || !affine.offset().isZero()) {
-				constant = constantMap().get(affine.pseudo());
+				constant = ai.getConstantValue(affine.pseudo());
 				if (constant != null)
 					return id.constant(
 							affineFactory().affineValue(affine, constant));
@@ -613,7 +601,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 	 *         <code>monic</code>
 	 */
 	private Interval intervalMonic(Monic monic) {
-		Interval result = boundMap().get(monic);
+		Interval result = ai.getBound(monic);
 
 		if (result == null) {
 			BoundType type = getBoundTypeMonic(monic);
@@ -759,7 +747,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		if (monic.isOne())
 			return BoundType.GT0;
 
-		Interval monicBound = boundMap().get(monic);
+		Interval monicBound = ai.getBound(monic);
 
 		if (monicBound != null)
 			return boundType(monicBound);
@@ -925,7 +913,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 			boolean strict) {
 		AffineExpression affine = affineFactory().affine(poly);
 		Monic pseudo = affine.pseudo(); // non-null since zep non-constant
-		Number pseudoValue = constantMap().get(pseudo);
+		Number pseudoValue = ai.getConstantValue(pseudo);
 		AffineFactory af = affineFactory();
 
 		if (pseudoValue != null) {
@@ -944,7 +932,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 			return result;
 		}
 
-		Interval pseudoBound = boundMap().get(pseudo);
+		Interval pseudoBound = ai.getBound(pseudo);
 
 		if (pseudoBound == null)
 			return null;
@@ -977,7 +965,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 	 *         <code>primitive</code>=0
 	 */
 	private BooleanExpression simplifyEQ0(Primitive primitive) {
-		Interval interval = boundMap().get(primitive);
+		Interval interval = ai.getBound(primitive);
 
 		if (interval != null) {
 			Number lo = interval.lower();
@@ -1039,7 +1027,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 					.isZero())
 				return falseExpr();
 
-			Interval interval = boundMap().get(pseudo);
+			Interval interval = ai.getBound(pseudo);
 
 			if (interval == null)
 				return null;
@@ -1243,7 +1231,8 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 				if (expression.isTrue() || expression.isFalse())
 					return expression;
 
-				Boolean booleanResult = booleanMap().get(expression);
+				Boolean booleanResult = ai
+						.getTruth((BooleanExpression) expression);
 
 				if (booleanResult != null) {
 					SymbolicExpression result = booleanResult ? trueExpr()
@@ -1257,9 +1246,9 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 				}
 				if (IdealSimplifier.isNumericRelational(expression))
 					return simplifyRelational((BooleanExpression) expression);
-			} else if (!type.isNumeric()) {
-				SymbolicExpression constant = otherConstantMap()
-						.get(expression);
+			} else {
+				// if (!type.isNumeric()) {
+				SymbolicExpression constant = ai.getOtherValue(expression);
 
 				if (constant != null) {
 					if (debugSimps) {
