@@ -34,68 +34,186 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
-import edu.udel.cis.vsl.sarl.ideal.simplify.IdealSimplifier.BoundType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifierWorker;
 import edu.udel.cis.vsl.sarl.util.SingletonMap;
 
+/**
+ * An ideal simplifier worker is created by an {@link IdealSimplifier} to
+ * simplify one symbolic expression. It disappears once that task has completed.
+ * The {@link IdealSimplifier} is persistent and will usually continue to live
+ * through the lifetime of the JVM.
+ * 
+ * @author siegel
+ */
 public class IdealSimplifierWorker extends CommonSimplifierWorker {
 
-	private AbstractInterpretation ai;
+	// static members...
 
-	public IdealSimplifierWorker(IdealSimplifier simplifier,
-			AbstractInterpretation ai) {
-		super(simplifier);
-		this.ai = ai;
+	/**
+	 * A categorization of intervals based on their relationship to 0. Every
+	 * interval falls into exactly one of these categories.
+	 * 
+	 * @author siegel
+	 */
+	private static enum BoundType {
+		/**
+		 * Every element of the interval is less than 0 and the interval is not
+		 * empty.
+		 */
+		LT0,
+		/**
+		 * Every element of the interval is less than or equal to 0 and the
+		 * interval contains 0 and a negative number.
+		 */
+		LE0,
+		/** The interval consists exactly of 0 and nothing else. */
+		EQ0,
+		/**
+		 * The interval contains 0 and a positive number and every element of
+		 * the interval is greater than or equal to 0.
+		 */
+		GE0,
+		/**
+		 * Every element of the interval is greater than 0 and the interval is
+		 * non-empty.
+		 */
+		GT0,
+		/** The interval is empty */
+		EMPTY,
+		/** The interval contains a negative number, 0, and a positive number */
+		ALL
+	};
+
+	/**
+	 * Determines if the operator is one of the relation operators
+	 * {@link SymbolicOperator#LESS_THAN},
+	 * {@link SymbolicOperator#LESS_THAN_EQUALS},
+	 * {@link SymbolicOperator#EQUALS}, or {@link SymbolicOperator#NEQ}.
+	 * 
+	 * @param operator
+	 *            a non-<code>null</code> symbolic operator
+	 * @return <code>true</code> iff <code>operator</code> is one of the four
+	 *         relational operators
+	 */
+	private static boolean isRelational(SymbolicOperator operator) {
+		switch (operator) {
+		case LESS_THAN:
+		case LESS_THAN_EQUALS:
+		case EQUALS:
+		case NEQ:
+			return true;
+		default:
+			return false;
+		}
 	}
 
+	/**
+	 * Determines whether the expression is a numeric relational expression,
+	 * i.e., the operator is one of the four relation operators and argument 0
+	 * has numeric type.
+	 * 
+	 * @param expression
+	 *            any non-<code>null</code> symbolic expression
+	 * @return <code>true</code> iff the expression is relational with numeric
+	 *         arguments
+	 */
+	private static boolean isNumericRelational(SymbolicExpression expression) {
+		return isRelational(expression.operator())
+				&& ((SymbolicExpression) expression.argument(0)).isNumeric();
+	}
+
+	// Instance fields...
+
+	/**
+	 * The context which represents the assumptions under which simplification
+	 * is taking place. It is a structured representation of a boolean
+	 * expression.
+	 */
+	private Context theContext;
+
+	/**
+	 * Structure which includes references to commonly used factories and other
+	 * objects, for convenience.
+	 */
+	private SimplifierInfo info;
+
+	// Constructors ...
+
+	/**
+	 * Creates new simplifier worker from given info object and context
+	 * (assumption). Does not do anything.
+	 * 
+	 * @param info
+	 *            the info object to use
+	 * @param context
+	 *            the assumption under which simplification is taking place
+	 */
+	public IdealSimplifierWorker(SimplifierInfo info, Context context) {
+		super(info.universe);
+		this.theContext = context;
+		this.info = info;
+	}
+
+	// Private methods ...
+
 	private IdealFactory idealFactory() {
-		return ((IdealSimplifier) simplifier).info.idealFactory;
+		return info.idealFactory;
 	}
 
 	private NumberFactory numberFactory() {
-		return ((IdealSimplifier) simplifier).info.numberFactory;
+		return info.numberFactory;
 	}
 
 	private PreUniverse universe() {
-		return ((IdealSimplifier) simplifier).info.universe;
+		return info.universe;
 	}
 
 	private BooleanExpressionFactory booleanFactory() {
-		return ((IdealSimplifier) simplifier).info.booleanFactory;
+		return info.booleanFactory;
 	}
 
 	private BooleanExpression falseExpr() {
-		return ((IdealSimplifier) simplifier).info.falseExpr;
+		return info.falseExpr;
 	}
 
 	private BooleanExpression trueExpr() {
-		return ((IdealSimplifier) simplifier).info.trueExpr;
+		return info.trueExpr;
 	}
 
 	private AffineFactory affineFactory() {
-		return ((IdealSimplifier) simplifier).info.affineFactory;
+		return info.affineFactory;
 	}
 
-	// ****************************************************************
-	// * ................. Simplification Routines................... *
-	// ****************************************************************
-
 	/**
-	 * Build up entries in power map from the monic factors.
+	 * Build up entries in power map from the monic factors of a {@link Monic}.
+	 * This method modifies two given {@link Map}s. The first map encodes a set
+	 * of power expressions in which the base is a {@link Primitive} (in
+	 * particular, is not concrete) and the second map encodes a set of power
+	 * expressions in which the base is a concrete number. The final values of
+	 * the maps is essentially the original value multiplied by the factors of
+	 * the {@link Monic} (if <code>positive</code> is <code>true</code>)) or
+	 * divided by the factors of the {@link Monic} (if <code>positive</code> is
+	 * <code>false</code>). Simplifications are performed under the assumptions
+	 * of {@link #theContext}).
 	 * 
-	 * @param powerMap
+	 * @param powerMap1
 	 *            map from the primitives to the exponent assigned to that
-	 *            primitive in the final result
+	 *            primitive; this is an input/output variable
 	 * @param powerMap2
+	 *            like <code>powerMap1</code>, but for expressions in which the
+	 *            base is {@link Constant}; this is an input/output variable
 	 * @param positive
-	 *            if true, exponents should be added to the entries in powerMap,
-	 *            otherwise they should be subtracted from entries
+	 *            if true, exponents should be added to the entries in the
+	 *            powerMaps, otherwise they should be subtracted from entries;
+	 *            an input
 	 * @param monic
+	 *            the {@link Monic} expression that is being simplified and
+	 *            decomposed into a product of powers; this is an input
 	 * 
 	 * @return true iff change occurred
 	 */
-	private boolean simplifyPowers(Map<Primitive, RationalExpression> powerMap,
+	private boolean simplifyPowers(Map<Primitive, RationalExpression> powerMap1,
 			Map<Constant, RationalExpression> powerMap2, boolean positive,
 			Monic monic) {
 		IdealFactory idf = idealFactory();
@@ -130,7 +248,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 
 					if (oldExponent == null) {
 						powerMap2.put(baseConst, newExp);
-						powerMap.remove(primitive);
+						powerMap1.remove(primitive);
 					} else {
 						powerMap2.put(baseConst, idf.add(oldExponent, newExp));
 						change = true;
@@ -139,7 +257,6 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 			} else {
 				if (primitive.operator() == SymbolicOperator.POWER) {
 					base = (Primitive) primitive.argument(0);
-
 					newExp = idf.multiply(realSignedOuterExp,
 							(RationalExpression) primitive.argument(1));
 					change = change || outerExp.numericalCompareTo(
@@ -149,12 +266,12 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 					newExp = realSignedOuterExp;
 				}
 
-				NumericExpression oldExponent = powerMap.get(base);
+				NumericExpression oldExponent = powerMap1.get(base);
 
 				if (oldExponent == null) {
-					powerMap.put(base, newExp);
+					powerMap1.put(base, newExp);
 				} else {
-					powerMap.put(base, idf.add(oldExponent, newExp));
+					powerMap1.put(base, idf.add(oldExponent, newExp));
 					change = true;
 				}
 			}
@@ -219,7 +336,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 	private Monomial simplifyMonic(Monic monic) {
 		assert !(monic instanceof Polynomial);
 
-		Number constant = ai.getConstantValue(monic);
+		Number constant = theContext.getConstantValue(monic);
 
 		if (constant != null)
 			return idealFactory().constant(constant);
@@ -230,7 +347,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 	private Monomial simplifyPolynomial2(Polynomial poly) {
 		IdealFactory id = idealFactory();
 
-		Number constant = ai.getConstantValue(poly);
+		Number constant = theContext.getConstantValue(poly);
 
 		if (constant != null)
 			return id.constant(constant);
@@ -239,7 +356,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		AffineExpression affine = affineFactory().affine(poly);
 
 		if (!affine.coefficient().isOne() || !affine.offset().isZero()) {
-			constant = ai.getConstantValue(affine.pseudo());
+			constant = theContext.getConstantValue(affine.pseudo());
 			if (constant != null)
 				return id.constant(
 						affineFactory().affineValue(affine, constant));
@@ -318,7 +435,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		IdealFactory id = idealFactory();
 
 		while (true) { // repeat until stabilization
-			Number constant = ai.getConstantValue(poly);
+			Number constant = theContext.getConstantValue(poly);
 
 			if (constant != null)
 				return id.constant(constant);
@@ -327,7 +444,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 			AffineExpression affine = affineFactory().affine(poly);
 
 			if (!affine.coefficient().isOne() || !affine.offset().isZero()) {
-				constant = ai.getConstantValue(affine.pseudo());
+				constant = theContext.getConstantValue(affine.pseudo());
 				if (constant != null)
 					return id.constant(
 							affineFactory().affineValue(affine, constant));
@@ -408,7 +525,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 
 		if (result2 != null)
 			return result2;
-		if (IdealSimplifier.isRelational(result1.operator()))
+		if (isRelational(result1.operator()))
 			return simplifyRelationalWork(result1);
 		return (BooleanExpression) simplifyExpressionGeneric(result1);
 	}
@@ -601,7 +718,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 	 *         <code>monic</code>
 	 */
 	private Interval intervalMonic(Monic monic) {
-		Interval result = ai.getBound(monic);
+		Interval result = theContext.getBound(monic);
 
 		if (result == null) {
 			BoundType type = getBoundTypeMonic(monic);
@@ -655,55 +772,6 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		throw new SARLInternalException("unreachable");
 	}
 
-	/**
-	 * Produces an expression equivalent to the claim that <code>monic</code>
-	 * lies in <code>interval</code>, using simplifications supported by the
-	 * current {@link #assumption}. Returns <code>null</code> if
-	 * <code>interval</code> is (-&infin;,&infin;). Note that the "variable" (
-	 * <code>monic</code>) is simplified using method
-	 * {@link #apply(SymbolicExpression)}.
-	 * 
-	 * @param monic
-	 *            a non-<code>null</code> {@link Monic}
-	 * @param interval
-	 *            a non-<code>null</code> {@link Interval} of same type as
-	 *            <code>monic</code>
-	 * @return <code>null</code> if <code>interval</code> is (-&infin;,&infin;),
-	 *         else a {@link BooleanExpression} equivalent to the statement that
-	 *         <code>monic</code> lies in <code>interval</code>
-	 */
-
-	// this should only be done in the context of a worker because it
-	// calls apply (simplification) and therefore you must know what is bound...
-
-	protected BooleanExpression boundToIdeal(Monic monic, Interval interval) {
-		Number lower = interval.lower(), upper = interval.upper();
-		BooleanExpression result = null;
-		// this was apply():
-		Monomial ideal = (Monomial) simplifyExpressionWork(monic);
-		IdealFactory idf = idealFactory();
-
-		if (!lower.isInfinite()) {
-			if (interval.strictLower())
-				result = idf.lessThan(idf.constant(lower), ideal);
-			else
-				result = idf.lessThanEquals(idf.constant(lower), ideal);
-		}
-		if (!upper.isInfinite()) {
-			BooleanExpression upperResult;
-
-			if (interval.strictUpper())
-				upperResult = idf.lessThan(ideal, idf.constant(upper));
-			else
-				upperResult = idf.lessThanEquals(ideal, idf.constant(upper));
-			if (result == null)
-				result = upperResult;
-			else
-				result = booleanFactory().and(result, upperResult);
-		}
-		return result;
-	}
-
 	private BoundType getBoundTypePower(Primitive powerExpr) {
 		IdealFactory idf = idealFactory();
 		RationalExpression base = (RationalExpression) powerExpr.argument(0);
@@ -747,7 +815,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		if (monic.isOne())
 			return BoundType.GT0;
 
-		Interval monicBound = ai.getBound(monic);
+		Interval monicBound = theContext.getBound(monic);
 
 		if (monicBound != null)
 			return boundType(monicBound);
@@ -913,7 +981,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 			boolean strict) {
 		AffineExpression affine = affineFactory().affine(poly);
 		Monic pseudo = affine.pseudo(); // non-null since zep non-constant
-		Number pseudoValue = ai.getConstantValue(pseudo);
+		Number pseudoValue = theContext.getConstantValue(pseudo);
 		AffineFactory af = affineFactory();
 
 		if (pseudoValue != null) {
@@ -932,7 +1000,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 			return result;
 		}
 
-		Interval pseudoBound = ai.getBound(pseudo);
+		Interval pseudoBound = theContext.getBound(pseudo);
 
 		if (pseudoBound == null)
 			return null;
@@ -965,7 +1033,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 	 *         <code>primitive</code>=0
 	 */
 	private BooleanExpression simplifyEQ0(Primitive primitive) {
-		Interval interval = ai.getBound(primitive);
+		Interval interval = theContext.getBound(primitive);
 
 		if (interval != null) {
 			Number lo = interval.lower();
@@ -1027,7 +1095,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 					.isZero())
 				return falseExpr();
 
-			Interval interval = ai.getBound(pseudo);
+			Interval interval = theContext.getBound(pseudo);
 
 			if (interval == null)
 				return null;
@@ -1093,7 +1161,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 	 * @param expr
 	 * @return
 	 */
-	Primitive findATruePrimitive(Monomial m) {
+	private Primitive findATruePrimitive(Monomial m) {
 		if (m instanceof Primitive && !(m instanceof Polynomial))
 			return (Primitive) m;
 		switch (m.operator()) {
@@ -1195,6 +1263,82 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		return (RationalExpression) simplifyExpression(result2);
 	}
 
+	// Package-private methods...
+
+	/**
+	 * Produces an expression equivalent to the claim that <code>monic</code>
+	 * lies in <code>interval</code>, using simplifications supported by the
+	 * current {@link #assumption}. Returns <code>null</code> if
+	 * <code>interval</code> is (-&infin;,&infin;). Note that the "variable" (
+	 * <code>monic</code>) is simplified using method
+	 * {@link #apply(SymbolicExpression)}.
+	 * 
+	 * @param monic
+	 *            a non-<code>null</code> {@link Monic}
+	 * @param interval
+	 *            a non-<code>null</code> {@link Interval} of same type as
+	 *            <code>monic</code>
+	 * @return <code>null</code> if <code>interval</code> is (-&infin;,&infin;),
+	 *         else a {@link BooleanExpression} equivalent to the statement that
+	 *         <code>monic</code> lies in <code>interval</code>
+	 */
+	BooleanExpression boundToIdeal(Monic monic, Interval interval) {
+		Number lower = interval.lower(), upper = interval.upper();
+		BooleanExpression result = null;
+		// this was apply():
+		Monomial ideal = (Monomial) simplifyExpressionWork(monic);
+		IdealFactory idf = idealFactory();
+
+		if (!lower.isInfinite()) {
+			if (interval.strictLower())
+				result = idf.lessThan(idf.constant(lower), ideal);
+			else
+				result = idf.lessThanEquals(idf.constant(lower), ideal);
+		}
+		if (!upper.isInfinite()) {
+			BooleanExpression upperResult;
+
+			if (interval.strictUpper())
+				upperResult = idf.lessThan(ideal, idf.constant(upper));
+			else
+				upperResult = idf.lessThanEquals(ideal, idf.constant(upper));
+			if (result == null)
+				result = upperResult;
+			else
+				result = booleanFactory().and(result, upperResult);
+		}
+		return result;
+	}
+
+	Interval intervalApproximation(NumericExpression expr) {
+		if (expr instanceof Monic)
+			return intervalMonic((Monic) expr);
+		if (expr instanceof Monomial)
+			return intervalMonomial((Monomial) expr);
+
+		Monomial numerator = ((RationalExpression) expr)
+				.numerator(idealFactory());
+		Monomial denominator = ((RationalExpression) expr)
+				.denominator(idealFactory());
+		Interval i1 = intervalMonomial(numerator),
+				i2 = intervalMonomial(denominator);
+
+		return numberFactory().divide(i1, i2);
+	}
+
+	// Methods specified in CommonSimplifierWorker...
+
+	@Override
+	protected SymbolicObject getCachedSimplification(SymbolicObject object) {
+		return theContext.getSimplification(object);
+	}
+
+	@Override
+	protected void cacheSimplification(SymbolicObject object,
+			SymbolicObject result) {
+		theContext.cacheSimplification(object, result);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -1231,7 +1375,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 				if (expression.isTrue() || expression.isFalse())
 					return expression;
 
-				Boolean booleanResult = ai
+				Boolean booleanResult = theContext
 						.getTruth((BooleanExpression) expression);
 
 				if (booleanResult != null) {
@@ -1244,11 +1388,12 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 					}
 					return result;
 				}
-				if (IdealSimplifier.isNumericRelational(expression))
+				if (isNumericRelational(expression))
 					return simplifyRelational((BooleanExpression) expression);
 			} else {
 				// if (!type.isNumeric()) {
-				SymbolicExpression constant = ai.getOtherValue(expression);
+				SymbolicExpression constant = theContext
+						.getOtherValue(expression);
 
 				if (constant != null) {
 					if (debugSimps) {
@@ -1260,22 +1405,6 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 			}
 		}
 		return simplifyExpressionGeneric(expression);
-	}
-
-	protected Interval intervalApproximation(NumericExpression expr) {
-		if (expr instanceof Monic)
-			return intervalMonic((Monic) expr);
-		if (expr instanceof Monomial)
-			return intervalMonomial((Monomial) expr);
-
-		Monomial numerator = ((RationalExpression) expr)
-				.numerator(idealFactory());
-		Monomial denominator = ((RationalExpression) expr)
-				.denominator(idealFactory());
-		Interval i1 = intervalMonomial(numerator),
-				i2 = intervalMonomial(denominator);
-
-		return numberFactory().divide(i1, i2);
 	}
 
 }

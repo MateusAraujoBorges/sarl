@@ -62,17 +62,14 @@ public abstract class CommonSimplifierWorker {
 
 	// Instance fields...
 
-	/**
-	 * The simplifier that spawned this worker.
-	 */
-	protected CommonSimplifier simplifier;
+	protected PreUniverse universe;
 
 	protected int quantificationDepth = 0;
 
 	// Constructors...
 
-	protected CommonSimplifierWorker(CommonSimplifier simplifier) {
-		this.simplifier = simplifier;
+	protected CommonSimplifierWorker(PreUniverse universe) {
+		this.universe = universe;
 	}
 
 	// Abstract methods...
@@ -90,8 +87,6 @@ public abstract class CommonSimplifierWorker {
 	protected abstract SymbolicExpression simplifyExpressionWork(
 			SymbolicExpression expression);
 
-	// Non-abstract methods...
-
 	/**
 	 * Retrieves a simplification result from the cache. The simplification
 	 * methods of the {@link Simplifier} will cache the results of
@@ -102,9 +97,13 @@ public abstract class CommonSimplifierWorker {
 	 * @return the result of a previous simplification of that object, or
 	 *         <code>null</code> is no result has been cached for that object
 	 */
-	protected SymbolicObject getCachedSimplification(SymbolicObject object) {
-		return simplifier.getCachedSimplification(object);
-	}
+	protected abstract SymbolicObject getCachedSimplification(
+			SymbolicObject object);
+
+	protected abstract void cacheSimplification(SymbolicObject object,
+			SymbolicObject result);
+
+	// Non-abstract methods...
 
 	/**
 	 * Performs the work required to simplify a symbolic type. A primitive type
@@ -137,12 +136,12 @@ public abstract class CommonSimplifierWorker {
 
 				if (elementType != simplifiedElementType
 						|| extent != simplifiedExtent)
-					return simplifier.universe.arrayType(simplifiedElementType,
+					return universe.arrayType(simplifiedElementType,
 							simplifiedExtent);
 				return arrayType;
 			} else {
 				if (elementType != simplifiedElementType)
-					return simplifier.universe.arrayType(simplifiedElementType);
+					return universe.arrayType(simplifiedElementType);
 				return arrayType;
 			}
 		}
@@ -155,7 +154,7 @@ public abstract class CommonSimplifierWorker {
 			SymbolicType simplifiedOutput = simplifyType(output);
 
 			if (inputs != simplifiedInputs || output != simplifiedOutput)
-				return simplifier.universe.functionType(simplifiedInputs,
+				return universe.functionType(simplifiedInputs,
 						simplifiedOutput);
 			return type;
 		}
@@ -166,8 +165,8 @@ public abstract class CommonSimplifierWorker {
 					sequence);
 
 			if (simplifiedSequence != sequence)
-				return simplifier.universe.tupleType(
-						((SymbolicTupleType) type).name(), simplifiedSequence);
+				return universe.tupleType(((SymbolicTupleType) type).name(),
+						simplifiedSequence);
 			return type;
 		}
 		case UNION: {
@@ -177,8 +176,8 @@ public abstract class CommonSimplifierWorker {
 					sequence);
 
 			if (simplifiedSequence != sequence)
-				return simplifier.universe.unionType(
-						((SymbolicUnionType) type).name(), simplifiedSequence);
+				return universe.unionType(((SymbolicUnionType) type).name(),
+						simplifiedSequence);
 			return type;
 		}
 		default:
@@ -212,8 +211,7 @@ public abstract class CommonSimplifierWorker {
 				for (int j = i + 1; j < size; j++)
 					newTypes[j] = simplifyType(sequence.getType(j));
 
-				return simplifier.universe
-						.typeSequence(Arrays.asList(newTypes));
+				return universe.typeSequence(Arrays.asList(newTypes));
 			}
 		}
 		return sequence;
@@ -244,7 +242,7 @@ public abstract class CommonSimplifierWorker {
 				i++;
 				for (; i < size; i++)
 					newElements[i] = simplifyExpression(sequence.get(i));
-				result = simplifier.objectFactory.sequence(newElements);
+				result = universe.objectFactory().sequence(newElements);
 				break;
 			}
 		}
@@ -292,78 +290,77 @@ public abstract class CommonSimplifierWorker {
 	 * @return result of simplification of <code>object</code>
 	 */
 	protected SymbolicObject simplifyObject(SymbolicObject object) {
-		object = simplifier.universe.canonic(object);
+		object = universe.canonic(object);
 
-		SymbolicObject result = simplifier.getCachedSimplification(object);
+		SymbolicObject result = getCachedSimplification(object);
 
 		if (result == null) {
 			result = simplifyObjectWork(object);
-			result = simplifier.universe.canonic(result);
+			result = universe.canonic(result);
 			if (quantificationDepth == 0)
-				simplifier.cacheSimplification(object, result);
+				cacheSimplification(object, result);
 		}
 		return result;
 	}
 
 	protected SymbolicType simplifyType(SymbolicType type) {
-		type = (SymbolicType) simplifier.universe.canonic(type);
+		type = (SymbolicType) universe.canonic(type);
 
-		SymbolicType result = (SymbolicType) simplifier
-				.getCachedSimplification(type);
+		SymbolicType result = (SymbolicType) getCachedSimplification(type);
 
 		if (result == null) {
 			result = simplifyTypeWork(type);
-			result = (SymbolicType) simplifier.universe.canonic(result);
+			result = (SymbolicType) universe.canonic(result);
 			if (quantificationDepth == 0)
-				simplifier.cacheSimplification(type, result);
+				cacheSimplification(type, result);
 		}
 		return result;
 	}
 
 	protected SymbolicTypeSequence simplifyTypeSequence(
 			SymbolicTypeSequence seq) {
-		seq = (SymbolicTypeSequence) simplifier.universe.canonic(seq);
+		seq = (SymbolicTypeSequence) universe.canonic(seq);
 
-		SymbolicTypeSequence result = (SymbolicTypeSequence) simplifier
-				.getCachedSimplification(seq);
+		SymbolicTypeSequence result = (SymbolicTypeSequence) getCachedSimplification(
+				seq);
 
 		if (result == null) {
 			result = simplifyTypeSequenceWork(seq);
-			result = (SymbolicTypeSequence) simplifier.universe.canonic(result);
+			result = (SymbolicTypeSequence) universe.canonic(result);
 			if (quantificationDepth == 0)
-				simplifier.cacheSimplification(seq, result);
+				cacheSimplification(seq, result);
 		}
 		return result;
 	}
 
 	protected SymbolicSequence<?> simplifySequence(
 			SymbolicSequence<?> sequence) {
-		sequence = (SymbolicSequence<?>) simplifier.universe.canonic(sequence);
+		sequence = (SymbolicSequence<?>) universe.canonic(sequence);
 
-		SymbolicSequence<?> result = (SymbolicSequence<?>) simplifier
-				.getCachedSimplification(sequence);
+		SymbolicSequence<?> result = (SymbolicSequence<?>) getCachedSimplification(
+				sequence);
 
 		if (result == null) {
 			result = simplifySequenceWork(sequence);
-			result = (SymbolicSequence<?>) simplifier.universe.canonic(result);
+			result = (SymbolicSequence<?>) universe.canonic(result);
 			if (quantificationDepth == 0)
-				simplifier.cacheSimplification(sequence, result);
+				cacheSimplification(sequence, result);
 		}
 		return result;
 	}
 
 	public SymbolicExpression simplifyExpression(
 			SymbolicExpression expression) {
-		expression = simplifier.universe.canonic(expression);
+		expression = universe.canonic(expression);
 
-		SymbolicExpression result = (SymbolicExpression) simplifier
-				.getCachedSimplification(expression);
+		SymbolicExpression result = (SymbolicExpression) getCachedSimplification(
+				expression);
 
 		if (result == null) {
 			result = simplifyExpressionWork(expression);
-			result = simplifier.universe.canonic(result);
+			result = universe.canonic(result);
 			if (quantificationDepth == 0)
-				simplifier.cacheSimplification(expression, result);
+				cacheSimplification(expression, result);
 		}
 		return result;
 	}
@@ -451,7 +448,6 @@ public abstract class CommonSimplifierWorker {
 			quantificationDepth--;
 		if (simplifiedArgs == null)
 			return expression;
-		return simplifier.universe.make(operator, simplifiedType,
-				simplifiedArgs);
+		return universe.make(operator, simplifiedType, simplifiedArgs);
 	}
 }

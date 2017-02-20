@@ -13,36 +13,11 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.util.EmptyMap;
-
-/*
- * Plan:
- * 
- * Rename AbstractInterpretation Context.
- * 
- * Add to Context a simplification cache.
- * 
- * Get Methods in Context must all be re-wired to look in parent context. It can
- * be assumed that if a bound for x appears in the Context, there is no need to
- * look in the parent, because the bound in the child must necessarily be more
- * strict than the one in the parent (this is an invariant). [But what about
- * "or" which widens intervals? This does not use a parent context. It clones a
- * context and then modifies the clone.]
- * 
- * Create a new class, ContextBuilder. An instance is used to create a new
- * Context from a parent Context and a boolean expression. This class may create
- * new SimplifierWorkers to simplify things. It does not reference any
- * Simplifier, but may reference universe and other "info".
- * 
- * SimplifierWorker has reference to a Context, but not any Simplifier. It is
- * wants to cache things, it can cache in the Context. If it wants to create a
- * new Context, it can create a ContextBuilder.
- *
- * Simplifier becomes just a shell of its former self.
- */
 
 /**
  * A structured representation of a boolean formula (assumption), suitable for
@@ -51,7 +26,7 @@ import edu.udel.cis.vsl.sarl.util.EmptyMap;
  * @author Stephen F. Siegel (siegel)
  *
  */
-public class AbstractInterpretation {
+public class Context {
 
 	// Static fields...
 
@@ -65,18 +40,18 @@ public class AbstractInterpretation {
 	 * tightened, a variable may get solved, etc. To find the bounds on a monic,
 	 * look here first, then look in the parent.
 	 */
-	AbstractInterpretation parent;
+	private Context parent;
 
 	/**
 	 * A map that assigns concrete boolean values to boolean primitive
 	 * expressions.
 	 */
-	Map<BooleanExpression, Boolean> booleanMap;
+	private Map<BooleanExpression, Boolean> booleanMap;
 
 	/**
 	 * Map assigning concrete numerical values to certain {@link Monic}s.
 	 */
-	Map<Monic, Number> constantMap;
+	private Map<Monic, Number> constantMap;
 
 	/**
 	 * General Map for replacing equivalent {@link Monic}s. This map is built at
@@ -84,7 +59,7 @@ public class AbstractInterpretation {
 	 * {@link #updateConstantMap()}. It is obtained by performing back
 	 * substitution after Gaussian elimination completes.
 	 */
-	Map<Monic, Monic> reduceMap;
+	private Map<Monic, Monic> reduceMap;
 
 	/**
 	 * <p>
@@ -127,6 +102,12 @@ public class AbstractInterpretation {
 	private Map<Monic, Interval> boundMap;
 
 	/**
+	 * A cache of all simplifications computed under this {@link Context}. For
+	 * any entry (x,y), the following formula must be valid: context -> x=y.
+	 */
+	private Map<SymbolicObject, SymbolicObject> simplificationCache;
+
+	/**
 	 * An object that gathers together references to various tools that are
 	 * needed for this class to do its work.
 	 */
@@ -138,7 +119,34 @@ public class AbstractInterpretation {
 	private boolean change = false;
 
 	/**
-	 * An ordering on symbolic constants.  [Could put this in info.]
+	 * The full boolean expression upon which this context is based, including
+	 * the equalities defining solved variables. This expression is equivalent
+	 * to, but not necessarily equal to, the given assumption. It may have been
+	 * simplified or put into a canonical form.
+	 */
+	private BooleanExpression fullAssumption;
+
+	/**
+	 * The boolean expression upon which this context is based, but excluding
+	 * the solved variables.
+	 */
+	private BooleanExpression reducedAssumption;
+
+	/**
+	 * 
+	 * This assumption upon which this context is based, but excluding the
+	 * solved variables and excluding all information from the {@link #boundMap}
+	 * , {@link #booleanMap}, {@link #constantMap}, and
+	 * {@link #otherConstantMap} thrown in. I.e., reducedAssumption =
+	 * rawAssumption + boundMap + booleanMap + constantMap + otherConstantMap.
+	 * Currently it is used only to implement the method
+	 * {@link #assumptionAsInterval()}. Should probably get rid of that method
+	 * and this field.
+	 */
+	private BooleanExpression rawAssumption;
+
+	/**
+	 * An ordering on symbolic constants. [Could put this in info.]
 	 */
 	private Comparator<SymbolicConstant> variableComparator;
 
@@ -154,18 +162,22 @@ public class AbstractInterpretation {
 
 	// Constructors ...
 
-	private AbstractInterpretation(SimplifierInfo info,
+	private Context(SimplifierInfo info, Context parent,
 			Map<BooleanExpression, Boolean> booleanMap,
 			Map<Monic, Interval> boundMap, Map<Monic, Number> constantMap,
 			Map<SymbolicExpression, SymbolicExpression> otherConstantMap) {
 		this.info = info;
+		this.parent = parent;
 		this.booleanMap = booleanMap;
 		this.boundMap = boundMap;
 		this.constantMap = constantMap;
 		this.otherConstantMap = otherConstantMap;
 		this.reduceMap = new TreeMap<Monic, Monic>(
 				info.idealFactory.monicComparator());
+		this.simplificationCache = new TreeMap<SymbolicObject, SymbolicObject>(
+				info.universe.comparator());
 		this.parent = null;
+		// do this once and put it in universe...
 		this.variableComparator = new Comparator<SymbolicConstant>() {
 			Comparator<SymbolicType> typeComparator = info.universe
 					.typeFactory().typeComparator();
@@ -181,22 +193,28 @@ public class AbstractInterpretation {
 		};
 	}
 
-	public AbstractInterpretation(SimplifierInfo info) {
-		this(info, new TreeMap<>(info.booleanFactory.getBooleanComparator()),
+	/**
+	 * Constructs new {@link Context} will all empty maps.
+	 * 
+	 * @param info
+	 *            info structure with references to commonly-used factories and
+	 *            other objects
+	 * @param parent
+	 *            the {@link Context} that should be the parent of this context;
+	 *            this context is essentially a sub-context of its parent, i.e.,
+	 *            everything that holds in the parent also holds in this
+	 *            context. The parent will never be modified by methods in this
+	 *            {@link Context}.
+	 */
+	public Context(SimplifierInfo info, Context parent) {
+		this(info, parent,
+				new TreeMap<>(info.booleanFactory.getBooleanComparator()),
 				new TreeMap<>(info.idealFactory.monicComparator()),
 				new TreeMap<>(info.idealFactory.monicComparator()),
 				new TreeMap<>(info.universe.comparator()));
 	}
 
-	public AbstractInterpretation(AbstractInterpretation that) {
-		this(that.info, cloneTreeMap(that.booleanMap),
-				cloneTreeMap(that.boundMap), cloneTreeMap(that.constantMap),
-				cloneTreeMap(that.otherConstantMap));
-		info.out.println("I am cloned.\n");
-		info.out.flush();
-	}
-
-	// Helper methods ...
+	// Private methods ...
 
 	/**
 	 * If <code>monomial</code> is a cast of x from Herbrand integer to integer
@@ -239,11 +257,68 @@ public class AbstractInterpretation {
 		out.flush();
 	}
 
+	private void addBoundsToMap(Map<Monic, Interval> map) {
+		if (parent != null)
+			parent.addBoundsToMap(map);
+		map.putAll(boundMap);
+	}
+
+	// Package-private methods ...
+
+	/**
+	 * Attempts to find, in the context, a clause which states the
+	 * differentiability of the given <code>function</code>. This is a clause
+	 * with operator {@link SymbolicOperator#DIFFERENTIABLE} and with the
+	 * function argument (argument 0) equal to <code>function</code>.
+	 * 
+	 * @param function
+	 *            the function for which a differentiability claim is sought
+	 * @return a clause in the context dealing with the differentiability of
+	 *         <code>function</code>, or <code>null</code> if no such clause is
+	 *         found.
+	 */
+	BooleanExpression findDifferentiableClaim(SymbolicExpression function) {
+		for (Entry<BooleanExpression, Boolean> entry : booleanMap.entrySet()) {
+			if (!entry.getValue())
+				continue;
+
+			BooleanExpression clause = entry.getKey();
+
+			if (clause.operator() != SymbolicOperator.DIFFERENTIABLE)
+				continue;
+			if (clause.argument(0).equals(function))
+				return clause;
+		}
+		return null;
+	}
+
+	/**
+	 * Sets {@link #reducedAssumption}.
+	 * 
+	 * @param new
+	 *            value for {@link #reducedAssumption}
+	 */
+	void setReducedAssumption(BooleanExpression p) {
+		this.reducedAssumption = p;
+	}
+
+	/**
+	 * Sets {@link #rawAssumption}.
+	 * 
+	 * @param p
+	 *            new value for {@link #rawAssumption}
+	 */
+	void setRawAssumption(BooleanExpression p) {
+		this.rawAssumption = p;
+	}
+
 	// Public methods...
 
 	@Override
-	public AbstractInterpretation clone() {
-		return new AbstractInterpretation(this);
+	public Context clone() {
+		return new Context(info, parent, cloneTreeMap(booleanMap),
+				cloneTreeMap(boundMap), cloneTreeMap(constantMap),
+				cloneTreeMap(otherConstantMap));
 	}
 
 	/**
@@ -279,6 +354,12 @@ public class AbstractInterpretation {
 	 *            <code>key</code>, the new interval bound
 	 */
 	public void setBound(Monic key, Interval bound) {
+		if (parent != null) {
+			Interval bound0 = getBound(key);
+
+			if (bound0 != null)
+				bound = info.numberFactory.intersection(bound0, bound);
+		}
 		change = !bound.equals(boundMap.put(key, bound));
 	}
 
@@ -307,6 +388,8 @@ public class AbstractInterpretation {
 	public Interval getBound(Monic key) {
 		Interval result = boundMap.get(key);
 
+		if (parent != null && result == null)
+			result = parent.getBound(key);
 		return result;
 	}
 
@@ -320,7 +403,14 @@ public class AbstractInterpretation {
 	 *         interval bounds on {@link Monic}s
 	 */
 	public Set<Entry<Monic, Interval>> getBounds() {
-		return boundMap.entrySet();
+		if (parent == null)
+			return boundMap.entrySet();
+
+		Map<Monic, Interval> map = new TreeMap<Monic, Interval>(
+				info.idealFactory.monicComparator());
+
+		addBoundsToMap(map);
+		return map.entrySet();
 	}
 
 	/**
@@ -341,25 +431,6 @@ public class AbstractInterpretation {
 	}
 
 	/**
-	 * Is the bound mapping empty? I.e., are there no {@link Monic}s with an
-	 * associated interval bound in this AI?
-	 * 
-	 * @return <code>true</code> iff the bound mapping is empty
-	 */
-	public boolean hasNoBounds() {
-		return boundMap.isEmpty();
-	}
-
-	/**
-	 * Returns the number of entries in the bound map.
-	 * 
-	 * @return the number of entries in the bound map
-	 */
-	public int getNumBounds() {
-		return boundMap.size();
-	}
-
-	/**
 	 * Declares that <code>key</code> is bounded by <code>bound</code>, hence
 	 * any existing bound I associated to <code>key</code> will be replaced by
 	 * the intersection of I and <code>bound</code>. If this results in a change
@@ -376,48 +447,14 @@ public class AbstractInterpretation {
 	public Interval restrictBound(Monic key, Interval bound) {
 		Interval original = boundMap.get(key), result;
 
+		if (parent != null && original == null)
+			original = parent.getBound(key);
 		if (original == null) {
 			result = bound;
 			boundMap.put(key, result);
 			change = true;
 		} else {
 			result = info.numberFactory.intersection(original, bound);
-			if (!result.equals(original)) {
-				boundMap.put(key, result);
-				change = true;
-			}
-		}
-		return result;
-	}
-
-	/**
-	 * Enlarges the bound associated to <code>key</code> if necessary so that it
-	 * includes <code>bound</bound>.  Specifically, if there
-	 * is no existing bound associated to <code>key</code>, then the given
-	 * <code>bound</code> becomes the bound associated to <code>key</code>. If
-	 * there is an existing bound I associated to <code>key</code>, then that
-	 * bound is replaced by the smallest interval containing I and
-	 * <code>bound</code>.
-	 * 
-	 * If this results in a change to the bound associated to <code>key</code>,
-	 * the change flag is raised.
-	 * 
-	 * @param key
-	 *            a non-<code>null</code> {@link Monic}
-	 * @param bound
-	 *            an interval of the same type as <code>key</code>
-	 * @return the old bound associated to <code>key</code>, or
-	 *         <code>null</code> if there was none
-	 */
-	public Interval enlargeBound(Monic key, Interval bound) {
-		Interval original = boundMap.get(key), result;
-
-		if (original == null) {
-			result = bound;
-			boundMap.put(key, result);
-			change = true;
-		} else {
-			result = info.numberFactory.join(original, bound);
 			if (!result.equals(original)) {
 				boundMap.put(key, result);
 				change = true;
@@ -473,10 +510,23 @@ public class AbstractInterpretation {
 		return result;
 	}
 
+	/**
+	 * Associated <code>value</code> to <code>formula</code> in this context's
+	 * boolean map.
+	 * 
+	 * @param formula
+	 *            the key
+	 * @param value
+	 *            the truth value
+	 * @return the old value associated to <code>formula</code>
+	 */
 	public Boolean setTruth(BooleanExpression formula, boolean value) {
-		formula = (BooleanExpression) info.universe.canonic(formula);
-
 		Boolean theValue = value ? Boolean.TRUE : Boolean.FALSE;
+
+		formula = (BooleanExpression) info.universe.canonic(formula);
+		if (parent != null && parent.getTruth(formula) == theValue)
+			return theValue;
+
 		Boolean result = booleanMap.put(formula, theValue);
 
 		if (result != theValue)
@@ -484,10 +534,33 @@ public class AbstractInterpretation {
 		return result;
 	}
 
+	/**
+	 * Returns the value associated to the given key in this context's boolean
+	 * map, or, if there is no entry with that key, in the parent's boolean map,
+	 * or <code>null</code> if no entry anywhere.
+	 * 
+	 * @param formula
+	 *            the key
+	 * @return value corresponding to that key in this context or an ancestor
+	 *         context, or <code>null</code>
+	 */
 	public Boolean getTruth(BooleanExpression formula) {
-		return booleanMap.get(formula);
+		Boolean result = booleanMap.get(formula);
+
+		if (result == null && parent != null)
+			result = parent.getTruth(formula);
+		return result;
 	}
 
+	/**
+	 * Removes entry with given key from this context's boolean map. The parent
+	 * context is never modified or even read.
+	 * 
+	 * @param formula
+	 *            the key
+	 * @return the old value corresponding to this key in this context proper,
+	 *         or <code>null</code> if there was no entry with this key
+	 */
 	public Boolean removeTruth(BooleanExpression formula) {
 		Boolean result = booleanMap.remove(formula);
 
@@ -498,17 +571,29 @@ public class AbstractInterpretation {
 
 	public SymbolicExpression setOtherValue(SymbolicExpression expr,
 			SymbolicExpression value) {
+		SymbolicExpression result;
+
 		expr = info.universe.canonic(expr);
 		value = info.universe.canonic(value);
-
-		SymbolicExpression result = otherConstantMap.put(expr, value);
-
-		change = change || result != value;
+		if (parent != null) {
+			result = getOtherValue(expr);
+			if (result != value) {
+				otherConstantMap.put(expr, value);
+				change = true;
+			}
+		} else {
+			result = otherConstantMap.put(expr, value);
+			change = change || result != value;
+		}
 		return result;
 	}
 
 	public SymbolicExpression getOtherValue(SymbolicExpression expr) {
-		return otherConstantMap.get(expr);
+		SymbolicExpression result = otherConstantMap.get(expr);
+
+		if (parent != null && result == null)
+			result = parent.getOtherValue(expr);
+		return result;
 	}
 
 	public Set<Entry<Monic, Interval>> getMonicBoundEntries() {
@@ -585,6 +670,8 @@ public class AbstractInterpretation {
 	}
 
 	public Interval assumptionAsInterval(SymbolicConstant symbolicConstant) {
+		if (!rawAssumption.isTrue())
+			return null;
 		if (!booleanMap.isEmpty() || !otherConstantMap.isEmpty())
 			return null;
 		if (!constantMap.isEmpty()) {
@@ -681,9 +768,11 @@ public class AbstractInterpretation {
 	}
 
 	/**
-	 * This method changes the {@link #reduceMap}.
+	 * Computes a substitution map using Gaussian elimination followed by back
+	 * substitution. This method changes the {@link #reduceMap}.
 	 * 
 	 * @param expectedKey
+	 *            a variable you want to solve for
 	 * @param selfupdate
 	 * @return
 	 */
@@ -701,30 +790,37 @@ public class AbstractInterpretation {
 		}
 	}
 
-	/**
-	 * Attempts to find, in the context, a clause which states the
-	 * differentiability of the given <code>function</code>. This is a clause
-	 * with operator {@link SymbolicOperator#DIFFERENTIABLE} and with the
-	 * function argument (argument 0) equal to <code>function</code>.
-	 * 
-	 * @param function
-	 *            the function for which a differentiability claim is sought
-	 * @return a clause in the context dealing with the differentiability of
-	 *         <code>function</code>, or <code>null</code> if no such clause is
-	 *         found.
-	 */
-	BooleanExpression findDifferentiableClaim(SymbolicExpression function) {
-		for (Entry<BooleanExpression, Boolean> entry : booleanMap.entrySet()) {
-			if (!entry.getValue())
-				continue;
-
-			BooleanExpression clause = entry.getKey();
-
-			if (clause.operator() != SymbolicOperator.DIFFERENTIABLE)
-				continue;
-			if (clause.argument(0).equals(function))
-				return clause;
-		}
-		return null;
+	public void cacheSimplification(SymbolicObject key, SymbolicObject value) {
+		simplificationCache.put(key, value);
 	}
+
+	public SymbolicObject getSimplification(SymbolicObject key) {
+		return simplificationCache.get(key);
+	}
+
+	public void clearSimplificationCache() {
+		simplificationCache.clear();
+	}
+
+	public BooleanExpression getReducedAssumption() {
+		return reducedAssumption;
+	}
+
+	public BooleanExpression getFullAssumption() {
+		if (fullAssumption == null) {
+			Map<SymbolicConstant, SymbolicExpression> map = getSolvedVariables();
+
+			fullAssumption = getReducedAssumption();
+			for (Entry<SymbolicConstant, SymbolicExpression> entry : map
+					.entrySet()) {
+				SymbolicConstant key = entry.getKey();
+				SymbolicExpression value = entry.getValue();
+				BooleanExpression equation = info.universe.equals(key, value);
+
+				fullAssumption = info.universe.and(fullAssumption, equation);
+			}
+		}
+		return fullAssumption;
+	}
+
 }

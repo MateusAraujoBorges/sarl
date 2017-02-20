@@ -23,10 +23,31 @@ import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 
+/**
+ * A factory for producing new instances of {@link IdealSimplifier}.
+ * 
+ * @author Stephen F. Siegel (siegel)
+ */
 public class IdealSimplifierFactory implements SimplifierFactory {
 
+	/**
+	 * A structure which packages references to several other factories and
+	 * commonly-used objects that will be used by the {@link IdealSimplifier}s
+	 * produced by this factory.
+	 */
 	private SimplifierInfo info;
 
+	/**
+	 * Constructs new {@link IdealSimplifierFactory} based on the given
+	 * {@link IdealFactory} and {@link PreUniverse}.
+	 * 
+	 * @param idealFactory
+	 *            the factory used for producing "ideal" mathematical symbolic
+	 *            expressions
+	 * @param universe
+	 *            the symbolic universe for producing general symbolic
+	 *            expressions
+	 */
 	public IdealSimplifierFactory(IdealFactory idealFactory,
 			PreUniverse universe) {
 		info = new SimplifierInfo();
