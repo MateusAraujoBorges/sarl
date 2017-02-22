@@ -82,8 +82,6 @@ public class ContextBuilder {
 	 */
 	private PreUniverse universe;
 
-
-
 	/**
 	 * Determines if the operator is one of the relation operators
 	 * {@link SymbolicOperator#LESS_THAN},
@@ -122,6 +120,24 @@ public class ContextBuilder {
 				&& ((SymbolicExpression) expression.argument(0)).isNumeric();
 	}
 
+	/**
+	 * Constructs a new {@link Context} with given parameters. The
+	 * <code>assumption</code> is analyzed and the context fields updated
+	 * accordingly. The resulting {@link Context} can then be obtained by method
+	 * {@link #getClass()}.
+	 * 
+	 * @param info
+	 *            simple structure with fields for all required factories and
+	 *            other commonly-used objects needed by this builder
+	 * @param parent
+	 *            the {@link Context} that should become the parent of the new
+	 *            context being constructed; everything that holds in the parent
+	 *            also holds in the child
+	 * @param assumption
+	 *            the boolean expression which is being analyze and converted
+	 *            into an abstract representation which is an instance of
+	 *            {@link Context}
+	 */
 	public ContextBuilder(SimplifierInfo info, Context parent,
 			BooleanExpression assumption) {
 		theContext = new Context(info, parent);
@@ -135,6 +151,13 @@ public class ContextBuilder {
 
 	// private methods...
 
+	/**
+	 * Creates a new simplifier worker for carrying out a simplification task
+	 * under the assumption of {@link #theContext}.
+	 * 
+	 * @return new instance of {@link IdealSimplifierWorker} with the context
+	 *         {@link #theContext}
+	 */
 	private IdealSimplifierWorker newWorker() {
 		return new IdealSimplifierWorker(info, theContext);
 	}
@@ -295,9 +318,9 @@ public class ContextBuilder {
 	/**
 	 * Attempts to determine bounds (upper and lower) on {@link Monic}
 	 * expressions by examining the {@link #assumption}. Returns
-	 * <code>false</code> if {@link assumption} is determined to be
-	 * unsatisfiable. Updates {@link #boundMap}, {@link #booleanMap},
-	 * {@link #constantMap}, and {@link #otherConstantMap}.
+	 * <code>false</code> if {@link #assumption} is determined to be
+	 * unsatisfiable. Updates boundMap, booleanMap, constantMap, and
+	 * otherConstantMap.
 	 */
 	private boolean extractBounds() {
 		if (assumption.operator() == SymbolicOperator.AND) {
@@ -312,18 +335,18 @@ public class ContextBuilder {
 		return theContext.updateConstantMap();
 	}
 
-	private boolean extractBoundsOr(BooleanExpression or, Context anAI) {
+	private boolean extractBoundsOr(BooleanExpression or, Context context) {
 		if (or.operator() != SymbolicOperator.OR)
-			return extractBoundsFromClause(or, anAI);
+			return extractBoundsFromClause(or, context);
 
 		// p & (q0 | ... | qn) = (p & q0) | ... | (p & qn)
 		// copies of original maps, corresponding to p. these never
 		// change...
-		Context originalAI = anAI.clone();
+		Context originalAI = context.clone();
 		Iterator<? extends SymbolicObject> clauses = or.getArguments()
 				.iterator();
 		boolean satisfiable = extractBoundsBasic(
-				(BooleanExpression) clauses.next(), anAI);
+				(BooleanExpression) clauses.next(), context);
 
 		// result <- p & q0:
 		// result <- result | ((p & q1) | ... | (p & qn)) :
@@ -340,7 +363,7 @@ public class ContextBuilder {
 				LinkedList<Monic> boundRemoveList = new LinkedList<>();
 				LinkedList<BooleanExpression> booleanRemoveList = new LinkedList<>();
 
-				for (Entry<Monic, Interval> entry : anAI
+				for (Entry<Monic, Interval> entry : context
 						.getMonicBoundEntries()) {
 					Monic primitive = entry.getKey();
 					Interval oldBound = entry.getValue();
@@ -359,8 +382,8 @@ public class ContextBuilder {
 					}
 				}
 				for (Monic primitive : boundRemoveList)
-					anAI.removeBound(primitive);
-				for (Entry<BooleanExpression, Boolean> entry : anAI
+					context.removeBound(primitive);
+				for (Entry<BooleanExpression, Boolean> entry : context
 						.getBooleanEntries()) {
 					BooleanExpression primitive = entry.getKey();
 					Boolean oldValue = entry.getValue();
@@ -370,7 +393,7 @@ public class ContextBuilder {
 						booleanRemoveList.add(primitive);
 				}
 				for (BooleanExpression primitive : booleanRemoveList)
-					anAI.removeTruth(primitive);
+					context.removeTruth(primitive);
 			} // end if newSatisfiable
 		} // end while (clauses.hasNext())
 		return satisfiable;
@@ -389,7 +412,7 @@ public class ContextBuilder {
 	 * @return <code>true</code> unless an inconsistency was discovered
 	 */
 	private boolean extractBoundsFromClause(BooleanExpression clause,
-			Context anAI) {
+			Context context) {
 		SymbolicOperator op = clause.operator();
 
 		// if this is of the form EQ x,y where y is a constant and
@@ -404,10 +427,10 @@ public class ContextBuilder {
 				boolean const1 = (arg1.operator() == SymbolicOperator.CONCRETE);
 
 				if (const1 && !const0) {
-					anAI.setOtherValue(arg0, arg1);
+					context.setOtherValue(arg0, arg1);
 					return true;
 				} else if (const0 && !const1) {
-					anAI.setOtherValue(arg1, arg0);
+					context.setOtherValue(arg1, arg0);
 					return true;
 				} else if (const0 && const1) {
 					return arg0.equals(arg1);
@@ -427,10 +450,10 @@ public class ContextBuilder {
 					.operator() == SymbolicOperator.SYMBOLIC_CONSTANT) {
 				// TODO: further checking needed here: make sure no free
 				// variables
-				anAI.setOtherValue(defn.array, defn.lambda);
+				context.setOtherValue(defn.array, defn.lambda);
 			}
 		}
-		return extractBoundsBasic(clause, anAI);
+		return extractBoundsBasic(clause, context);
 	}
 
 	// Begin array term analysis....
@@ -694,7 +717,8 @@ public class ContextBuilder {
 	 * 0!=Primitive), a quantified expression, or a "not" expression (!
 	 * Primitive).
 	 */
-	private boolean extractBoundsBasic(BooleanExpression basic, Context anAI) {
+	private boolean extractBoundsBasic(BooleanExpression basic,
+			Context context) {
 		SymbolicOperator operator = basic.operator();
 
 		if (operator == SymbolicOperator.CONCRETE)
@@ -709,17 +733,17 @@ public class ContextBuilder {
 			if (arg0.type().isNumeric()) {
 				switch (operator) {
 				case EQUALS: // 0==x
-					return extractEQ0Bounds((Primitive) arg1, anAI);
+					return extractEQ0Bounds((Primitive) arg1, context);
 				case NEQ:
-					return extractNEQ0Bounds((Primitive) arg1, anAI);
+					return extractNEQ0Bounds((Primitive) arg1, context);
 				case LESS_THAN: // 0<x or x<0
 				case LESS_THAN_EQUALS: // 0<=x or x<=0
 					if (arg0.isZero()) {
 						return extractIneqBounds((Monic) arg1, true,
-								operator == LESS_THAN, anAI);
+								operator == LESS_THAN, context);
 					} else {
 						return extractIneqBounds((Monic) arg0, false,
-								operator == LESS_THAN, anAI);
+								operator == LESS_THAN, context);
 					}
 				default:
 					throw new SARLInternalException(
@@ -736,28 +760,28 @@ public class ContextBuilder {
 			return true;
 		} else if (operator == SymbolicOperator.NOT) {
 			BooleanExpression primitive = (BooleanExpression) basic.argument(0);
-			Boolean value = anAI.getTruth(primitive);
+			Boolean value = context.getTruth(primitive);
 
 			if (value != null)
 				return !value;
-			anAI.setTruth(primitive, false);
+			context.setTruth(primitive, false);
 			return true;
 		}
 
-		Boolean value = anAI.getTruth(basic);
+		Boolean value = context.getTruth(basic);
 
 		if (value != null)
 			return value;
-		anAI.setTruth(basic, true);
+		context.setTruth(basic, true);
 		return true;
 	}
 
-	private boolean extractEQ0Bounds(Primitive primitive, Context anAI) {
+	private boolean extractEQ0Bounds(Primitive primitive, Context context) {
 		if (primitive instanceof Polynomial)
-			return extractEQ0BoundsPoly((Polynomial) primitive, anAI);
+			return extractEQ0BoundsPoly((Polynomial) primitive, context);
 
 		NumberFactory nf = info.numberFactory;
-		Interval bound = anAI.getBound(primitive);
+		Interval bound = context.getBound(primitive);
 		SymbolicType type = primitive.type();
 		Number zero = type.isInteger() ? nf.zeroInteger() : nf.zeroRational();
 
@@ -767,11 +791,11 @@ public class ContextBuilder {
 		BooleanExpression neq0 = info.booleanFactory.booleanExpression(
 				SymbolicOperator.NEQ, info.idealFactory.zero(primitive.type()),
 				primitive);
-		Boolean neq0Truth = anAI.getTruth(neq0);
+		Boolean neq0Truth = context.getTruth(neq0);
 
 		if (neq0Truth != null && neq0Truth.booleanValue())
 			return false;
-		anAI.setMonicValue(primitive, zero);
+		context.setMonicValue(primitive, zero);
 		return true;
 	}
 
@@ -791,7 +815,7 @@ public class ContextBuilder {
 	 *         is inconsistent with the information in the bound map and boolean
 	 *         map; else <code>true</code>
 	 */
-	private boolean extractEQ0BoundsPoly(Polynomial poly, Context anAI) {
+	private boolean extractEQ0BoundsPoly(Polynomial poly, Context context) {
 		NumberFactory nf = info.numberFactory;
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Monic pseudo = affine.pseudo();
@@ -799,9 +823,9 @@ public class ContextBuilder {
 		RationalNumber offset = nf.rational(affine.offset());
 		RationalNumber rationalValue = nf
 				.negate(info.numberFactory.divide(offset, coefficient));
-		Number value; // same as rationalValue but IntegerNumber if type is
-						// integer
-		Interval bound = anAI.getBound(pseudo);
+		// same as rationalValue but IntegerNumber if type is integer:
+		Number value;
+		Interval bound = context.getBound(pseudo);
 
 		if (pseudo.type().isInteger()) {
 			if (!nf.isIntegral(rationalValue))
@@ -812,16 +836,15 @@ public class ContextBuilder {
 		}
 		if (bound != null && !bound.contains(value))
 			return false;
-		anAI.setMonicValue(pseudo, value);
+		context.setMonicValue(pseudo, value);
 		return true;
 	}
 
-	private boolean extractNEQ0Bounds(Primitive primitive, Context anAI) {
-
+	private boolean extractNEQ0Bounds(Primitive primitive, Context context) {
 		if (primitive instanceof Polynomial)
-			return extractNEQ0BoundsPoly((Polynomial) primitive, anAI);
+			return extractNEQ0BoundsPoly((Polynomial) primitive, context);
 
-		Interval bound = anAI.getBound(primitive);
+		Interval bound = context.getBound(primitive);
 		SymbolicType type = primitive.type();
 		Constant zero = info.idealFactory.zero(type);
 
@@ -843,9 +866,9 @@ public class ContextBuilder {
 			if (bound.isEmpty())
 				return false;
 			if (!bound.equals(oldBound))
-				anAI.setBound(primitive, bound);
+				context.setBound(primitive, bound);
 		}
-		anAI.setTruth(info.universe.neq(zero, primitive), true);
+		context.setTruth(info.universe.neq(zero, primitive), true);
 		return true;
 	}
 
@@ -865,7 +888,7 @@ public class ContextBuilder {
 	 *         is inconsistent with the information in the bound map and boolean
 	 *         map; else <code>true</code>
 	 */
-	private boolean extractNEQ0BoundsPoly(Polynomial poly, Context anAI) {
+	private boolean extractNEQ0BoundsPoly(Polynomial poly, Context context) {
 		// poly=aX+b. if X=-b/a, contradiction.
 		NumberFactory nf = info.numberFactory;
 		SymbolicType type = poly.type();
@@ -877,7 +900,7 @@ public class ContextBuilder {
 				.negate(nf.divide(offset, coefficient));
 		Number value; // same as rationalValue but IntegerNumber if type is
 						// integer
-		Interval bound = anAI.getBound(pseudo);
+		Interval bound = context.getBound(pseudo);
 		Monomial zero = info.idealFactory.zero(type);
 
 		if (type.isInteger()) {
@@ -885,7 +908,7 @@ public class ContextBuilder {
 				value = nf.integerValue(rationalValue);
 			} else {
 				// an integer cannot equal a non-integer.
-				anAI.setTruth(info.idealFactory.neq(zero, poly), true);
+				context.setTruth(info.idealFactory.neq(zero, poly), true);
 				return true;
 			}
 		} else {
@@ -910,28 +933,29 @@ public class ContextBuilder {
 			if (bound.isEmpty())
 				return false;
 			if (!bound.equals(oldBound))
-				anAI.setBound(pseudo, bound);
+				context.setBound(pseudo, bound);
 		}
-		anAI.setTruth(info.universe.neq(zero, poly), true);
+		context.setTruth(info.universe.neq(zero, poly), true);
 		return true;
 	}
 
 	private boolean extractIneqBounds(Monic monic, boolean gt, boolean strict,
-			Context anAI) {
+			Context context) {
 		if (monic instanceof Polynomial)
-			return extractIneqBoundsPoly((Polynomial) monic, gt, strict, anAI);
+			return extractIneqBoundsPoly((Polynomial) monic, gt, strict,
+					context);
 
 		NumberFactory nf = info.numberFactory;
 		Number zero = monic.type().isInteger() ? nf.zeroInteger()
 				: nf.zeroRational();
-		Interval interval = gt ? anAI.restrictLowerBound(monic, zero, strict)
-				: anAI.restrictUpperBound(monic, zero, strict);
+		Interval interval = gt ? context.restrictLowerBound(monic, zero, strict)
+				: context.restrictUpperBound(monic, zero, strict);
 
 		return !interval.isEmpty();
 	}
 
 	private boolean extractIneqBoundsPoly(Polynomial poly, boolean gt,
-			boolean strict, Context anAI) {
+			boolean strict, Context context) {
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Monic pseudo = affine.pseudo();
 		Number coefficient = affine.coefficient();
@@ -946,10 +970,10 @@ public class ContextBuilder {
 		if (poly.type().isInteger())
 			strict = false;
 		if ((pos && gt) || (!pos && !gt)) // lower bound
-			interval = anAI.restrictLowerBound(pseudo, theBound, strict);
+			interval = context.restrictLowerBound(pseudo, theBound, strict);
 		else
 			// upper bound
-			interval = anAI.restrictUpperBound(pseudo, theBound, strict);
+			interval = context.restrictUpperBound(pseudo, theBound, strict);
 		return !interval.isEmpty();
 	}
 
@@ -974,9 +998,9 @@ public class ContextBuilder {
 
 	/**
 	 * This method inserts into the simplification cache all facts from the
-	 * assumption that are not otherwise encoded in the {@link #constantMap},
-	 * {@link #booleanMap}, or {@link #boundMap}. It is to be invoked only after
-	 * the assumption has been simplified for the final time.
+	 * assumption that are not otherwise encoded in the constantMap, booleanMap,
+	 * or boundMap. It is to be invoked only after the assumption has been
+	 * simplified for the final time.
 	 */
 	private void extractRemainingFacts() {
 		SymbolicOperator operator = assumption.operator();
@@ -992,6 +1016,12 @@ public class ContextBuilder {
 
 	// public methods ...
 
+	/**
+	 * Gets the {@link Context} that was built by this builder. The context is
+	 * built at construction time, then this method is used to get it.
+	 * 
+	 * @return the context that was built
+	 */
 	public Context getContext() {
 		return theContext;
 	}
