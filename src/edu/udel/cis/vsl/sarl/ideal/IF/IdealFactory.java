@@ -239,8 +239,16 @@ import edu.udel.cis.vsl.sarl.util.KeySetFactory;
  */
 public interface IdealFactory extends NumericExpressionFactory {
 
+	/**
+	 * An empty array (i.e., one of length 0) of {@link Monomial}. A useful
+	 * constant.
+	 */
 	Monomial[] emptyTermList = new Monomial[0];
 
+	/**
+	 * An empty array (i.e., one of length 0) of {@link PrimitivePower}. A
+	 * useful constant.
+	 */
 	PrimitivePower[] emptyPPList = new PrimitivePower[0];
 
 	/**
