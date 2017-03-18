@@ -107,10 +107,11 @@ public class CnfFactory implements BooleanExpressionFactory {
 	private SetFactory<BooleanExpression> setFactory;
 
 	/**
-	 * Whether or not Functions check for instances of (p || !p) A value of
-	 * False will increase performance
+	 * Should methods check for instances of (p || !p) ? A value of
+	 * <code>false</code> will increase performance but might miss some
+	 * simplifications (or delay them until a Simplifier acts).
 	 */
-	public Boolean simplify = false;
+	private boolean simplify = false;
 
 	// Constructors...
 
@@ -253,74 +254,73 @@ public class CnfFactory implements BooleanExpressionFactory {
 			return c1;
 		if (c0.equals(not(c1)))
 			return trueExpr;
-		else {
-			BooleanExpression[] c2;
-			SymbolicOperator op0 = c0.operator();
-			SymbolicOperator op1 = c1.operator();
 
-			if (op0 == SymbolicOperator.AND) {
-				BooleanExpression result = trueExpr;
+		BooleanExpression[] c2;
+		SymbolicOperator op0 = c0.operator();
+		SymbolicOperator op1 = c1.operator();
 
-				if (op1 == SymbolicOperator.AND) {
-					for (BooleanExpression clause0 : args(c0))
-						for (BooleanExpression clause1 : args(c1))
-							result = and(result, or(clause0, clause1));
-				} else {
-					for (BooleanExpression clause0 : args(c0))
-						result = and(result, or(clause0, c1));
-				}
-				return result;
-			}
+		if (op0 == SymbolicOperator.AND) {
+			BooleanExpression result = trueExpr;
+
 			if (op1 == SymbolicOperator.AND) {
-				BooleanExpression result = trueExpr;
-
-				for (BooleanExpression clause1 : args(c1))
-					result = and(result, or(c0, clause1));
-				return result;
+				for (BooleanExpression clause0 : args(c0))
+					for (BooleanExpression clause1 : args(c1))
+						result = and(result, or(clause0, clause1));
+			} else {
+				for (BooleanExpression clause0 : args(c0))
+					result = and(result, or(clause0, c1));
 			}
-			if (op0 == SymbolicOperator.OR && op1 == SymbolicOperator.OR) {
-				BooleanExpression[] set0 = args(c0), set1 = args(c1);
-
-				if (simplify) {
-					c2 = setFactory.union(set0, set1);
-
-					for (BooleanExpression clause : set0)
-						if (setFactory.contains(set1, not(clause)))
-							return trueExpr;
-					return orExpr(c2);
-				} else
-					return orExpr(setFactory.union(set0, set1));
-			}
-			if (op0 == SymbolicOperator.OR) {
-				BooleanExpression[] set0 = args(c0);
-
-				if (simplify) {
-					BooleanExpression notC1 = not(c1);
-
-					c2 = setFactory.put(set0, c1);
-					for (BooleanExpression clause : set0)
-						if (clause.equals(notC1))
-							return (trueExpr);
-					return orExpr(c2);
-				} else
-					return orExpr(setFactory.put(set0, c1));
-			}
-			if (op1 == SymbolicOperator.OR) {
-				BooleanExpression[] set1 = args(c1);
-
-				if (simplify) {
-					BooleanExpression notC0 = not(c0);
-
-					c2 = setFactory.put(set1, c0);
-					for (BooleanExpression clause : set1)
-						if (clause.equals(notC0))
-							return (trueExpr);
-					return orExpr(c2);
-				} else
-					return orExpr(setFactory.put(set1, c0));
-			}
-			return orExpr(theSet(c0, c1));
+			return result;
 		}
+		if (op1 == SymbolicOperator.AND) {
+			BooleanExpression result = trueExpr;
+
+			for (BooleanExpression clause1 : args(c1))
+				result = and(result, or(c0, clause1));
+			return result;
+		}
+		if (op0 == SymbolicOperator.OR && op1 == SymbolicOperator.OR) {
+			BooleanExpression[] set0 = args(c0), set1 = args(c1);
+
+			if (simplify) {
+				c2 = setFactory.union(set0, set1);
+
+				for (BooleanExpression clause : set0)
+					if (setFactory.contains(set1, not(clause)))
+						return trueExpr;
+				return orExpr(c2);
+			} else
+				return orExpr(setFactory.union(set0, set1));
+		}
+		if (op0 == SymbolicOperator.OR) {
+			BooleanExpression[] set0 = args(c0);
+
+			if (simplify) {
+				BooleanExpression notC1 = not(c1);
+
+				c2 = setFactory.put(set0, c1);
+				for (BooleanExpression clause : set0)
+					if (clause.equals(notC1))
+						return (trueExpr);
+				return orExpr(c2);
+			} else
+				return orExpr(setFactory.put(set0, c1));
+		}
+		if (op1 == SymbolicOperator.OR) {
+			BooleanExpression[] set1 = args(c1);
+
+			if (simplify) {
+				BooleanExpression notC0 = not(c0);
+
+				c2 = setFactory.put(set1, c0);
+				for (BooleanExpression clause : set1)
+					if (clause.equals(notC0))
+						return (trueExpr);
+				return orExpr(c2);
+			} else
+				return orExpr(setFactory.put(set1, c0));
+		}
+		return orExpr(theSet(c0, c1));
 	}
 
 	/**
