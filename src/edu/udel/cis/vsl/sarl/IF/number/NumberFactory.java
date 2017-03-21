@@ -368,14 +368,14 @@ public interface NumberFactory {
 	Interval emptyRealInterval();
 
 	/**
-	 * Returns the universal integer interval: (-infi, +infi).
+	 * Returns the universal integer interval: (-&infin;, +&infin;).
 	 * 
 	 * @return universal integer interval
 	 */
 	Interval universalIntegerInterval();
 
 	/**
-	 * Returns the universal real interval: (-infi, +infi).
+	 * Returns the universal real interval: (-&infin;, +&infin;).
 	 * 
 	 * @return universal real interval
 	 */
@@ -428,17 +428,16 @@ public interface NumberFactory {
 	Interval restrictLower(Interval interval, Number bound, boolean strict);
 
 	/**
-	 * Returns a new {@link Interval} as specified. A value of <code>null</code>
-	 * for the lower bound represents negative infinity; for the upper bound it
-	 * represents positive infinity.
-	 * 
+	 * Returns a new {@link Interval} as specified. If the bound of
+	 * <code>this</code> {@link Interval} is an implementation of
+	 * {@link RealInfinity}, the bound represents an infinity. <br>
+	 *
 	 * Precondition:
 	 * <ul>
 	 * <li>if the type is integral, then the upper and lower bounds must be
 	 * instances of {@link IntegerNumber}, else they must be instances of
-	 * {@link RationalNumber} (If the bound is non-<code>null</code.>)</li>
+	 * {@link RationalNumber}</li>
 	 * </ul>
-	 * 
 	 * 
 	 * Postconditions: the parameters must specify an interval in "normal form",
 	 * i.e., the following must all hold:
@@ -448,25 +447,28 @@ public interface NumberFactory {
 	 * instances of {@link IntegerNumber}, else they must be instances of
 	 * {@link RationalNumber}</li>
 	 * 
-	 * <li>if the lower bound is <code>null</code>, <code>strictLower</code>
-	 * must be <code>true</code>; if the upper bound is <code>null</code>,
-	 * <code>strictUpper</code> must be <code>true</code></li>
+	 * <li>if the bound is exclusive, the corresponding <code>strictLower</code>
+	 * (or <code>strictUpper</code>) must be <code>true</code>.</li>
 	 * 
-	 * <li>if both bounds are non-<code>null</code>, the lower bound must be
-	 * less than or equal to the upper bound (Otherwise, it will be an empty
-	 * interval.)</li>
+	 * <li>the lower bound must be less than or equal to the upper bound
+	 * (Otherwise, this method will return an empty interval.)</li>
 	 * 
-	 * <li>if the bounds are non-<code>null</code> and equal: either (1) both
+	 * <li>if the bounds are <strong>finite</strong> and equal: either (1) both
 	 * <code>strictLower</code> and <code>strictUpper</code> will be
 	 * <code>false</code>, or (2) <code>strictLower</code> and
 	 * <code>strictUpper</code> will be <code>true</code> and the upper and
 	 * lower bounds will be 0. The first case represents an interval consisting
 	 * of a single point; the second case represents the empty interval.</li>
 	 * 
-	 * <li>if the type is integral: if the lower bound is non-<code>null</code>
-	 * then <code>strictLower</code> will be <code>false</code>; if the upper
-	 * bound is non-<code>null</code> then <code>strictUpper</code> will be
-	 * <code>false</code>.</li>
+	 * <li>if the <strong>lower bound</strong> <code>lower</code> is infinite,
+	 * it must be a <strong>negative</strong> infinity. And if the <strong>upper
+	 * bound</strong> <code>upper</code> is infinite, it must be a
+	 * <strong>positive</strong> infinity.</li>
+	 * 
+	 * <li>if <code>isIntegral</code> is <strong><code>true</code></strong>: if
+	 * the lower bound is finite then <code>strictLower</code> must be
+	 * <code>false</code>; if the upper bound is finite then
+	 * <code>strictUpper</code> must be <code>false</code>.</li>
 	 * </ul>
 	 * 
 	 * @param isIntegral
@@ -475,13 +477,15 @@ public interface NumberFactory {
 	 *            the lower bound of the interval with the type defined by
 	 *            isIntegral
 	 * @param strictLower
-	 *            is the lower bound strict, i.e., "(", as opposed to "["?
+	 *            is the lower bound strict? (i.e., "(" if exclusive, as opposed
+	 *            to "[" if inclusive)
 	 * @param upper
 	 *            the upper bound of the interval with the type defined by
 	 *            isIntegral
 	 * @param strictUpper
-	 *            is the upper bound strict, i.e., ")", as opposed to "]"?
-	 * @return a new interval object as specified
+	 *            is the upper bound strict? (i.e., ")" if exclusive, as opposed
+	 *            to "]" if inclusive)
+	 * @return a new interval instance as specified
 	 */
 	Interval newInterval(boolean isIntegral, Number lower, boolean strictLower,
 			Number upper, boolean strictUpper);

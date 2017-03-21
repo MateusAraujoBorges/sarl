@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
@@ -1434,7 +1433,7 @@ public class IntervalUnionSet implements Range {
 	}
 
 	@Override
-	public BooleanExpression symbolicRepresentation(SymbolicConstant x,
+	public BooleanExpression symbolicRepresentation(NumericExpression x,
 			PreUniverse universe) {
 		assert x != null;
 		assert universe != null;
@@ -1442,7 +1441,6 @@ public class IntervalUnionSet implements Range {
 		BooleanExpression result = universe.bool(false);
 		NumericExpression lowerExpression = null;
 		NumericExpression upperExpression = null;
-		NumericExpression symbolX = (NumericExpression) x;
 		Interval temp = null;
 		int index = 0;
 		int size = intervalArray.length;
@@ -1469,28 +1467,28 @@ public class IntervalUnionSet implements Range {
 			} else if (lower.isInfinite()) {
 				upperExpression = universe.number(upper);
 				tempExpression = strictUpper
-						? universe.lessThan(symbolX, upperExpression)
-						: universe.lessThanEquals(symbolX, upperExpression);
+						? universe.lessThan(x, upperExpression)
+						: universe.lessThanEquals(x, upperExpression);
 			} else if (upper.isInfinite()) {
 				lowerExpression = universe.number(lower);
 				tempExpression = strictLower
-						? universe.lessThan(lowerExpression, symbolX)
-						: universe.lessThanEquals(lowerExpression, symbolX);
+						? universe.lessThan(lowerExpression, x)
+						: universe.lessThanEquals(lowerExpression, x);
 			} else {
 				lowerExpression = universe.number(lower);
 				upperExpression = universe.number(upper);
 				lowerWithXExpression = strictLower
-						? universe.lessThan(lowerExpression, symbolX)
-						: universe.lessThanEquals(lowerExpression, symbolX);
+						? universe.lessThan(lowerExpression, x)
+						: universe.lessThanEquals(lowerExpression, x);
 				upperWithXExpression = strictUpper
-						? universe.lessThan(symbolX, upperExpression)
-						: universe.lessThanEquals(symbolX, upperExpression);
+						? universe.lessThan(x, upperExpression)
+						: universe.lessThanEquals(x, upperExpression);
 				tempExpression = universe.and(lowerWithXExpression,
 						upperWithXExpression);
 				if (lower.compareTo(upper) == 0) {
 					// This interval represents a single number.
 					assert !strictLower && !strictUpper;
-					tempExpression = universe.equals(symbolX, lowerExpression);
+					tempExpression = universe.equals(x, lowerExpression);
 				}
 			}
 			result = universe.or(result, tempExpression);
@@ -1652,5 +1650,34 @@ public class IntervalUnionSet implements Range {
 			}
 		}
 		return true;
+	}
+
+	@Override
+	public Number getSingletonValue() {
+		if (intervalArray.length == 1) {
+			assert intervalArray[0] != null;
+
+			Interval singletonInterval = intervalArray[0];
+			Number upper = singletonInterval.upper();
+
+			if ((singletonInterval.lower().numericalCompareTo(upper) == 0)
+					&& !(singletonInterval.strictLower()
+							|| singletonInterval.strictUpper())) {
+				return singletonInterval.lower();
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public Interval asInterval() {
+		if (intervalArray.length == 0) {
+			return isInt ? numberFactory.emptyIntegerInterval()
+					: numberFactory.emptyRealInterval();
+		} else if (intervalArray.length == 1) {
+			assert intervalArray[0] != null;
+			return intervalArray[0];
+		}
+		return null;
 	}
 }

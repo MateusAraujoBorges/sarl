@@ -21,7 +21,47 @@ package edu.udel.cis.vsl.sarl.IF.number;
 /**
  * An instance of Interval represents a numeric interval. It can have either
  * real or integer type. It can be open or closed on the left, open or closed on
- * right. It can be unbounded on either side.
+ * right. It can be unbounded on either side.<br>
+ * 
+ * <strong>Precondition</strong>:
+ * <ul>
+ * <li>if the type is integral, then the upper and lower bounds must be
+ * instances of {@link IntegerNumber}, else they must be instances of
+ * {@link RationalNumber}</li>
+ * </ul>
+ * 
+ * <strong>Postconditions</strong>: the parameters must specify an interval in
+ * "normal form", i.e., the following must all hold:
+ * 
+ * <ul>
+ * <li>if the type is integral, then the upper and lower bounds must be
+ * instances of {@link IntegerNumber}, else they must be instances of
+ * {@link RationalNumber}</li>
+ * 
+ * <li>if the bound is exclusive, the corresponding <code>strictLower</code> (or
+ * <code>strictUpper</code>) must be <code>true</code>.</li>
+ * 
+ * <li>the lower bound must be less than or equal to the upper bound (Otherwise,
+ * this method will return an empty interval.)</li>
+ * 
+ * <li>if the bounds are <strong>finite</strong> and equal: either (1) both
+ * <code>strictLower</code> and <code>strictUpper</code> will be
+ * <code>false</code>, or (2) <code>strictLower</code> and
+ * <code>strictUpper</code> will be <code>true</code> and the upper and lower
+ * bounds will be 0. The first case represents an interval consisting of a
+ * single point; the second case represents the empty interval.</li>
+ * 
+ * <li>if the <strong>lower bound</strong> <code>lower</code> is infinite, it
+ * must be a <strong>negative</strong> infinity. And if the <strong>upper
+ * bound</strong> <code>upper</code> is infinite, it must be a
+ * <strong>positive</strong> infinity.</li>
+ * 
+ * <li>if <code>isIntegral</code> is <strong><code>true</code></strong>: if the
+ * lower bound is finite then <code>strictLower</code> must be
+ * <code>false</code>; if the upper bound is finite then
+ * <code>strictUpper</code> must be <code>false</code>.</li>
+ * </ul>
+ * 
  */
 public interface Interval {
 

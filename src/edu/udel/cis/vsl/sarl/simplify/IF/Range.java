@@ -1,7 +1,7 @@
 package edu.udel.cis.vsl.sarl.simplify.IF;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
@@ -112,16 +112,18 @@ public interface Range {
 	Range affineTransform(Number a, Number b);
 
 	/**
-	 * Given a symbolic constant x, returns a boolean expression which holds iff
-	 * x is in this range.
+	 * Given a {@link NumericExpression} <code>x</code>, returns a
+	 * {@link BooleanExpression} which holds iff <code>x</code> is in
+	 * <code>this</code> {@link Range}.
 	 * 
 	 * <p>
-	 * Example: suppose this range is the interval (0,1]. Given x, this method
-	 * will return the boolean symbolic expression <code>x>0 && x<=1</code>.
+	 * Example: suppose <code>this</code> {@link Range} is the {@link Interval}
+	 * (0,1]. Given <code>x</code>, this method will return a
+	 * {@link BooleanExpression} <code>x>0 && x<=1</code>.
 	 * </p>
 	 * 
 	 * <p>
-	 * Example: (0,1] U [4,5]. Given x, returns
+	 * Example: (0,1] U [4,5]. Given <code>x</code>, returns
 	 * <code>(x>0 && x<=1) || (x>=4 && x<=5)</code>.
 	 * </p>
 	 * 
@@ -129,8 +131,32 @@ public interface Range {
 	 *            variable to use in the new expression
 	 * @param universe
 	 *            symbolic universe used to construct the symbolic expression
-	 * @return a boolean expression involving x which holds iff x is in this set
+	 * @return a {@link BooleanExpression} involving <code>x</code> which holds
+	 *         iff <code>x</code> is in this set
 	 */
-	BooleanExpression symbolicRepresentation(SymbolicConstant x,
+	BooleanExpression symbolicRepresentation(NumericExpression x,
 			PreUniverse universe);
+
+	/**
+	 * If this range represents a singleton set (a set consisting of exactly one
+	 * Number), this method returns the value of its sole element; otherwise,
+	 * returns <code>null</code>.
+	 * 
+	 * @return The exact {@link Number} represented by <code>this
+	 *         </code> {@link Range}, if <code>this</code> range represents a
+	 *         singleton number;<br>
+	 *         otherwise, it will return <code>null</code>.
+	 */
+	Number getSingletonValue();
+
+	/**
+	 * If this range is an interval, return the Interval representation,
+	 * otherwise, returns <code>null</code>.
+	 * 
+	 * @return The exact {@link Interval} represented by <code>this
+	 *         </code> {@link Range}, if <code>this</code> range represents a
+	 *         singleton interval;<br>
+	 *         otherwise, it will return <code>null</code>.
+	 */
+	Interval asInterval();
 }
