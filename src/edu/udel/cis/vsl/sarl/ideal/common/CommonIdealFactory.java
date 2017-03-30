@@ -1491,7 +1491,7 @@ public class CommonIdealFactory implements IdealFactory {
 					(NumericExpression) numericExpression.argument(0));
 			SymbolicObject arg1 = numericExpression.argument(1);
 
-			if (arg1.symbolicObjectKind() == SymbolicObjectKind.INT)
+			if (arg1.symbolicObjectKind() == SymbolicObjectKind.NUMBER)
 				return power(realBase, ((NumberObject) arg1));
 			else
 				return power(realBase, castToReal((NumericExpression) arg1));
