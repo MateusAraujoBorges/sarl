@@ -1,11 +1,11 @@
 package edu.udel.cis.vsl.sarl.reason.common;
 
 import java.io.PrintStream;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.udel.cis.vsl.sarl.IF.ModelResult;
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
@@ -111,7 +111,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 * are stored here (except the most trivial ones), even if they were
 	 * obtained by delegation to a reduced context.
 	 */
-	private Map<BooleanExpression, ValidityResult> validityCache = new HashMap<>();
+	private Map<BooleanExpression, ValidityResult> validityCache = new ConcurrentHashMap<>();
 
 	// Constructors...
 
@@ -143,11 +143,9 @@ public class ContextMinimizingReasoner implements Reasoner {
 		return simplifier;
 	}
 
-	private TheoremProver getProver() {
-		if (prover == null)
-			prover = factory.getTheoremProverFactory()
-					.newProver(getReducedContext());
-		return prover;
+	private synchronized TheoremProver getProver() {
+		return prover == null ? (prover = factory.getTheoremProverFactory()
+				.newProver(getReducedContext())) : prover;
 	}
 
 	/**
@@ -452,9 +450,9 @@ public class ContextMinimizingReasoner implements Reasoner {
 		if (fullContext.isTrue()) {
 			predicate.setValidity(result.getResultType());
 			if (result instanceof ModelResult)
-				validityCache.put(predicate, result);
+				validityCache.putIfAbsent(predicate, result);
 		} else {
-			validityCache.put(predicate, result);
+			validityCache.putIfAbsent(predicate, result);
 		}
 	}
 

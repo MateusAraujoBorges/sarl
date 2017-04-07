@@ -18,8 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.reason.common;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.TheoremProverException;
@@ -47,7 +47,7 @@ public class SimpleReasoner implements Reasoner {
 
 	private Simplifier simplifier;
 
-	private Map<BooleanExpression, ValidityResult> validityCache = new HashMap<BooleanExpression, ValidityResult>();
+	private Map<BooleanExpression, ValidityResult> validityCache = new ConcurrentHashMap<BooleanExpression, ValidityResult>();
 
 	public SimpleReasoner(Simplifier simplifier) {
 		this.simplifier = simplifier;
@@ -103,7 +103,7 @@ public class SimpleReasoner implements Reasoner {
 				result = Prove.RESULT_YES;
 			else
 				result = Prove.RESULT_NO;
-			validityCache.put(predicate, result);
+			validityCache.putIfAbsent(predicate, result);
 		}
 		return result;
 	}

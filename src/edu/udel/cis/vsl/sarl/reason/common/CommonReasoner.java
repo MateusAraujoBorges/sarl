@@ -19,8 +19,8 @@
 package edu.udel.cis.vsl.sarl.reason.common;
 
 import java.io.PrintStream;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.udel.cis.vsl.sarl.IF.ModelResult;
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
@@ -78,7 +78,7 @@ public class CommonReasoner implements Reasoner {
 	 * {@link #valid(BooleanExpression)},
 	 * {@link #validOrModel(BooleanExpression)}.
 	 */
-	private Map<BooleanExpression, ValidityResult> validityCache = new HashMap<>();
+	private Map<BooleanExpression, ValidityResult> validityCache = new ConcurrentHashMap<>();
 
 	/**
 	 * @param reasonerFactory
@@ -188,11 +188,8 @@ public class CommonReasoner implements Reasoner {
 				else {
 					result = validityCache.get(simplifiedPredicate);
 					if (result == null) {
-						if (prover == null)
-							prover = reasonerFactory.getTheoremProverFactory()
-									.newProver(getReducedContext());
-						result = prover.valid(simplifiedPredicate);
-						validityCache.put(predicate, result);
+						result = getProver().valid(simplifiedPredicate);
+						validityCache.putIfAbsent(predicate, result);
 					}
 				}
 			}
@@ -222,11 +219,8 @@ public class CommonReasoner implements Reasoner {
 			result = validityCache.get(simplifiedPredicate);
 			if (result != null && result instanceof ModelResult)
 				return result;
-			if (prover == null)
-				prover = reasonerFactory.getTheoremProverFactory()
-						.newProver(getReducedContext());
-			result = prover.validOrModel(simplifiedPredicate);
-			validityCache.put(predicate, result);
+			result = getProver().validOrModel(simplifiedPredicate);
+			validityCache.putIfAbsent(predicate, result);
 		}
 		return result;
 	}
@@ -293,5 +287,11 @@ public class CommonReasoner implements Reasoner {
 		// return newReasoner
 		// .isValid(universe.equals(newLhs, universe.zeroReal()));
 		throw new UnsupportedOperationException();
+	}
+
+	private synchronized TheoremProver getProver() {
+		return prover == null ? (prover = reasonerFactory
+				.getTheoremProverFactory().newProver(getReducedContext()))
+				: prover;
 	}
 }
