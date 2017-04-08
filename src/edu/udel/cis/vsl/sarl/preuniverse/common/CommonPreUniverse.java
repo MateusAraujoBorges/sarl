@@ -3491,6 +3491,11 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	@Override
+	public void printCompressed(SymbolicExpression expr, PrintStream out) {
+		new CompressedPrinter(this, out, expr).print();
+	}
+
+	@Override
 	public void printCompressedTree(SymbolicExpression expr, PrintStream out) {
 		Set<SymbolicObject> seen = new HashSet<SymbolicObject>();
 

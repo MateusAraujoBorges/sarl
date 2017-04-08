@@ -2217,6 +2217,18 @@ public interface CoreUniverse {
 	String getErrFile();
 
 	/**
+	 * Prints the expression by preceding with a sequence of definitions of
+	 * sub-expressions which are used more than once. Good for printing large
+	 * expressions with many repeated sub-expressions.
+	 * 
+	 * @param expr
+	 *            the symbolic expression to print
+	 * @param out
+	 *            the stream to which the output will be sent
+	 */
+	void printCompressed(SymbolicExpression expr, PrintStream out);
+
+	/**
 	 * <p>
 	 * Use this method to print large symbolic expression hierarchically.
 	 * </p>
