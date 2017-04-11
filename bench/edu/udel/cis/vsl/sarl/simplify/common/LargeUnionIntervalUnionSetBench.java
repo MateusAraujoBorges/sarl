@@ -3,6 +3,7 @@ package edu.udel.cis.vsl.sarl.simplify.common;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
+import edu.udel.cis.vsl.sarl.simplify.IF.RangeFactory;
 
 public class LargeUnionIntervalUnionSetBench {
 
@@ -16,6 +17,7 @@ public class LargeUnionIntervalUnionSetBench {
 		Range[] intervalUnionSets;
 		Range intervalUnionSet;
 		NumberFactory numberFactory = Numbers.REAL_FACTORY;
+		RangeFactory rangeFactory = new IntervalUnionFactory();
 
 		//
 		numexpr = 10000;
@@ -28,16 +30,14 @@ public class LargeUnionIntervalUnionSetBench {
 		intervalUnionSet = new IntervalUnionSet(true);
 		start = System.currentTimeMillis();
 		for (int i = 0; i < numexpr; i++) {
-			intervalUnionSet = intervalUnionSet.union(intervalUnionSets[i]);
-
+			intervalUnionSet = rangeFactory.union(intervalUnionSet,
+					intervalUnionSets[i]);
 		}
 		end = System.currentTimeMillis();
 		mark = end - start;
-		System.out
-				.println("To union ("
-						+ numexpr
-						+ ") intervalUnionSets with ordered disjoint interval takes: ("
-						+ mark + ") Millis");
+		System.out.println("To union (" + numexpr
+				+ ") intervalUnionSets with ordered disjoint interval takes: ("
+				+ mark + ") Millis");
 		//
 		intervalUnionSets = new IntervalUnionSet[numexpr];
 		for (int i = 0; i < numexpr * 3; i += 3) {
@@ -48,8 +48,8 @@ public class LargeUnionIntervalUnionSetBench {
 		intervalUnionSet = new IntervalUnionSet(true);
 		start = System.currentTimeMillis();
 		for (int i = 0; i < numexpr; i++) {
-			intervalUnionSet = intervalUnionSet.union(intervalUnionSets[i]);
-
+			intervalUnionSet = rangeFactory.union(intervalUnionSet,
+					intervalUnionSets[i]);
 		}
 		end = System.currentTimeMillis();
 		mark = end - start;
@@ -61,46 +61,40 @@ public class LargeUnionIntervalUnionSetBench {
 		for (int i = 0; i < numexpr * 3; i += 3) {
 			tempInt1 = (int) (Math.random() * 100);
 			tempInt2 = (int) (Math.random() * 1000000);
-			intervalUnionSets[i / 3] = new IntervalUnionSet(
-					numberFactory.newInterval(true,
-							numberFactory.integer(tempInt2), false,
+			intervalUnionSets[i / 3] = new IntervalUnionSet(numberFactory
+					.newInterval(true, numberFactory.integer(tempInt2), false,
 							numberFactory.integer(tempInt2 + tempInt1), false));
 		}
 		intervalUnionSet = new IntervalUnionSet(true);
 		start = System.currentTimeMillis();
 		for (int i = 0; i < numexpr; i++) {
-			intervalUnionSet = intervalUnionSet.union(intervalUnionSets[i]);
-
+			intervalUnionSet = rangeFactory.union(intervalUnionSet,
+					intervalUnionSets[i]);
 		}
 		end = System.currentTimeMillis();
 		mark = end - start;
-		System.out
-				.println("To union ("
-						+ numexpr
-						+ ") intervalUnionSets with random (mostly disjoint) interval takes: ("
-						+ mark + ") Millis");
+		System.out.println("To union (" + numexpr
+				+ ") intervalUnionSets with random (mostly disjoint) interval takes: ("
+				+ mark + ") Millis");
 		//
 		intervalUnionSets = new IntervalUnionSet[numexpr];
 		for (int i = 0; i < numexpr * 3; i += 3) {
 			tempInt1 = (int) (Math.random() * 1000000);
 			tempInt2 = (int) (Math.random() * 100000);
-			intervalUnionSets[i / 3] = new IntervalUnionSet(
-					numberFactory.newInterval(true,
-							numberFactory.integer(tempInt2), false,
+			intervalUnionSets[i / 3] = new IntervalUnionSet(numberFactory
+					.newInterval(true, numberFactory.integer(tempInt2), false,
 							numberFactory.integer(tempInt2 + tempInt1), false));
 		}
 		intervalUnionSet = new IntervalUnionSet(true);
 		start = System.currentTimeMillis();
 		for (int i = 0; i < numexpr; i++) {
-			intervalUnionSet = intervalUnionSet.union(intervalUnionSets[i]);
-
+			intervalUnionSet = rangeFactory.union(intervalUnionSet,
+					intervalUnionSets[i]);
 		}
 		end = System.currentTimeMillis();
 		mark = end - start;
-		System.out
-				.println("To union ("
-						+ numexpr
-						+ ") intervalUnionSets with random (mostly jointed) interval takes: ("
-						+ mark + ") Millis");
+		System.out.println("To union (" + numexpr
+				+ ") intervalUnionSets with random (mostly jointed) interval takes: ("
+				+ mark + ") Millis");
 	}
 }

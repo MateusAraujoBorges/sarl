@@ -76,14 +76,6 @@ public interface Interval {
 	// union: take union of two ValueSets
 
 	/**
-	 * Does this interval have real type? If so, then both the upper and lower
-	 * bounds will be real.
-	 * 
-	 * @return true iff the type is real
-	 */
-	boolean isReal();
-
-	/**
 	 * Does this interval have integer type? If so, then both the upper and
 	 * lower bounds will have integer type.
 	 * 

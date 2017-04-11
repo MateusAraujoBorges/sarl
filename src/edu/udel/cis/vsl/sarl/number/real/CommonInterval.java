@@ -145,11 +145,6 @@ public class CommonInterval implements Interval {
 	}
 
 	@Override
-	public boolean isReal() {
-		return !isIntegral;
-	}
-
-	@Override
 	public boolean isEmpty() {
 		return strictLower && strictUpper && lower.isZero() && upper.isZero();
 	}

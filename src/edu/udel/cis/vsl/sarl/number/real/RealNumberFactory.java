@@ -2433,7 +2433,7 @@ public class RealNumberFactory implements NumberFactory {
 				: divide(lo, num);
 		up = up.isInfinite() ? infiniteNumber(isIntegral, true)
 				: divide(up, num);
-		if (sign > 0)
+		if (sign < 0)
 			return newInterval(isIntegral, up, sl, lo, su);
 		else
 			return newInterval(isIntegral, lo, sl, up, su);

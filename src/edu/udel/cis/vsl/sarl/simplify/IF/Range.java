@@ -60,58 +60,6 @@ public interface Range {
 	boolean intersects(Range set);
 
 	/**
-	 * Computes the complement of this set. If this has integer type, that is
-	 * the set of all integers not in this set. If this has real type, it is the
-	 * set of all reals not in this set.
-	 * 
-	 * @return the complement of this set
-	 */
-	Range complement();
-
-	/**
-	 * Computes the union of this set with the given one.
-	 * 
-	 * @param set
-	 *            a non-null number set of the same type (integer/real) as this
-	 *            one
-	 * @return the union of the two sets
-	 */
-	Range union(Range set);
-
-	/**
-	 * Computes the intersection of this set with the given one.
-	 * 
-	 * @param set
-	 *            a number set of the same type (integer/real) as this one
-	 * @return the intersection of the two sets
-	 */
-	Range intersect(Range set);
-
-	/**
-	 * Returns the set difference of this set with that one. That is the set
-	 * consisting of all numbers in this set that are not in that one.
-	 * 
-	 * @param set
-	 *            a number set of the same type (integer/real) as this one
-	 * @return this - that (the set difference)
-	 */
-	Range minus(Range set);
-
-	/**
-	 * Computes the set aX+b, where X is this set. That is, the set of all
-	 * numbers of the form ax+b, where x is in this set. (For integral
-	 * {@link Interval} set, it will return the set including all transformed
-	 * integers, which are contained in the original set.)
-	 * 
-	 * @param a
-	 *            a number of the same type as this set
-	 * @param b
-	 *            a number of the same type as this set
-	 * @return the set aX+b, where X is the set of numbers in this set
-	 */
-	Range affineTransform(Number a, Number b);
-
-	/**
 	 * Given a {@link NumericExpression} <code>x</code>, returns a
 	 * {@link BooleanExpression} which holds iff <code>x</code> is in
 	 * <code>this</code> {@link Range}.
@@ -159,4 +107,12 @@ public interface Range {
 	 *         otherwise, it will return <code>null</code>.
 	 */
 	Interval asInterval();
+
+	/**
+	 * Get all intervals contained in this range;<br>
+	 * If this range is empty, an array with size of zero will be returned.
+	 * 
+	 * @return
+	 */
+	Interval[] intervals();
 }

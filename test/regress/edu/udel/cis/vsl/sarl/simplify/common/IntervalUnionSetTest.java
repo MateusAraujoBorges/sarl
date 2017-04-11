@@ -26,6 +26,7 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
+import edu.udel.cis.vsl.sarl.simplify.IF.RangeFactory;
 
 /**
  * @author WenhaoWu
@@ -40,6 +41,7 @@ public class IntervalUnionSetTest {
 	private static int ARR_SIZE = 15;
 	private static PreUniverse universe;
 	private static NumberFactory numberFactory = Numbers.REAL_FACTORY;
+	private static RangeFactory rangeFactory = new IntervalUnionFactory();
 	private static Interval INT_EMPTY = numberFactory.emptyIntegerInterval();
 	private static Interval RAT_EMPTY = numberFactory.emptyRealInterval();
 	private static Interval INT_UNIV = numberFactory.universalIntegerInterval();
@@ -1113,7 +1115,7 @@ public class IntervalUnionSetTest {
 		if (ASSERTION_ENABLED) {
 			IntervalUnionSet nullIntervalUnionSet = null;
 			IntervalUnionSet original = new IntervalUnionSet(true);
-			actual = original.union(nullIntervalUnionSet);
+			actual = rangeFactory.union(original, nullIntervalUnionSet);
 		} else {
 			throw new AssertionError();
 		}
@@ -1124,7 +1126,7 @@ public class IntervalUnionSetTest {
 		if (ASSERTION_ENABLED) {
 			IntervalUnionSet rational = new IntervalUnionSet(false);
 			IntervalUnionSet integral = new IntervalUnionSet(true);
-			actual = integral.union(rational);
+			actual = rangeFactory.union(integral, rational);
 		} else {
 			throw new AssertionError();
 		}
@@ -1136,8 +1138,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet nonemptyRatSet = new IntervalUnionSet(numberFactory
 				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected = nonemptyRatSet;
-		actual1 = nonemptyRatSet.union(emptyRatSet);
-		actual2 = emptyRatSet.union(nonemptyRatSet);
+		actual1 = rangeFactory.union(nonemptyRatSet, emptyRatSet);
+		actual2 = rangeFactory.union(emptyRatSet, nonemptyRatSet);
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
@@ -1152,8 +1154,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet nonunivIntSet = new IntervalUnionSet(numberFactory
 				.newInterval(true, INT_N_ONE, false, INT_ONE, false));
 		expected = univIntSet;
-		actual1 = nonunivIntSet.union(univIntSet);
-		actual2 = univIntSet.union(nonunivIntSet);
+		actual1 = rangeFactory.union(nonunivIntSet, univIntSet);
+		actual2 = rangeFactory.union(univIntSet, nonunivIntSet);
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
@@ -1167,7 +1169,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet original = new IntervalUnionSet(numberFactory
 				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected = original;
-		actual = original.union(original);
+		actual = rangeFactory.union(original, original);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "expected: " + expected.toString());
@@ -1204,7 +1206,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(expectedList);
-		actual = set1.union(set2);
+		actual = rangeFactory.union(set1, set2);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "    set1: " + set1.toString());
@@ -1241,7 +1243,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(RAT_UNIV);
-		actual = set1.union(set2);
+		actual = rangeFactory.union(set1, set2);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "    set1: " + set1.toString());
@@ -1278,7 +1280,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(INT_UNIV);
-		actual = set1.union(set2);
+		actual = rangeFactory.union(set1, set2);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "    set1: " + set1.toString());
@@ -1317,7 +1319,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(result);
-		actual = set1.union(set2);
+		actual = rangeFactory.union(set1, set2);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "    set1: " + set1.toString());
@@ -1356,7 +1358,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(result);
-		actual = set1.union(set2);
+		actual = rangeFactory.union(set1, set2);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "    set1: " + set1.toString());
@@ -1393,7 +1395,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(result, fourth1, fifth1);
-		actual = set1.union(set2);
+		actual = rangeFactory.union(set1, set2);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "    set1: " + set1.toString());
@@ -1422,7 +1424,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(RAT_UNIV);
-		actual = set1.union(set2);
+		actual = rangeFactory.union(set1, set2);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "    set1: " + set1.toString());
@@ -1451,7 +1453,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(RAT_UNIV);
-		actual = set1.union(set2);
+		actual = rangeFactory.union(set1, set2);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "    set1: " + set1.toString());
@@ -2895,7 +2897,7 @@ public class IntervalUnionSetTest {
 		if (ASSERTION_ENABLED) {
 			IntervalUnionSet nullSet = null;
 			IntervalUnionSet currentSet = new IntervalUnionSet(RAT_ZERO);
-			actual = currentSet.intersect(nullSet);
+			actual = rangeFactory.intersect(currentSet, nullSet);
 		} else {
 			throw new AssertionError();
 		}
@@ -2907,7 +2909,7 @@ public class IntervalUnionSetTest {
 			IntervalUnionSet intSet = new IntervalUnionSet(INT_ZERO);
 			IntervalUnionSet ratSet = new IntervalUnionSet(RAT_ZERO);
 
-			actual = ratSet.intersect(intSet);
+			actual = rangeFactory.intersect(ratSet, intSet);
 		} else {
 			throw new AssertionError();
 		}
@@ -2919,8 +2921,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet nonemptyRatSet = new IntervalUnionSet(numberFactory
 				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected = emptyRatSet;
-		actual1 = nonemptyRatSet.intersect(emptyRatSet);
-		actual2 = emptyRatSet.intersect(nonemptyRatSet);
+		actual1 = rangeFactory.intersect(nonemptyRatSet, emptyRatSet);
+		actual2 = rangeFactory.intersect(emptyRatSet, nonemptyRatSet);
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
@@ -2935,8 +2937,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet nonunivIntSet = new IntervalUnionSet(numberFactory
 				.newInterval(true, INT_N_ONE, false, INT_ONE, false));
 		expected = nonunivIntSet;
-		actual1 = nonunivIntSet.intersect(univIntSet);
-		actual2 = univIntSet.intersect(nonunivIntSet);
+		actual1 = rangeFactory.intersect(nonunivIntSet, univIntSet);
+		actual2 = rangeFactory.intersect(univIntSet, nonunivIntSet);
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
@@ -2950,7 +2952,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet original = new IntervalUnionSet(numberFactory
 				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected = original;
-		actual = original.intersect(original);
+		actual = rangeFactory.intersect(original, original);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "expected: " + expected.toString());
@@ -2984,8 +2986,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(false);
-		actual1 = set1.intersect(set2);
-		actual2 = set2.intersect(set1);
+		actual1 = rangeFactory.intersect(set1, set2);
+		actual2 = rangeFactory.intersect(set2, set1);
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
@@ -3023,8 +3025,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(false);
-		actual1 = set1.intersect(set2);
-		actual2 = set2.intersect(set1);
+		actual1 = rangeFactory.intersect(set1, set2);
+		actual2 = rangeFactory.intersect(set2, set1);
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
@@ -3063,8 +3065,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(true);
-		actual1 = set1.intersect(set2);
-		actual2 = set2.intersect(set1);
+		actual1 = rangeFactory.intersect(set1, set2);
+		actual2 = rangeFactory.intersect(set2, set1);
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
@@ -3119,8 +3121,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(list3);
-		actual1 = set1.intersect(set2);
-		actual2 = set2.intersect(set1);
+		actual1 = rangeFactory.intersect(set1, set2);
+		actual2 = rangeFactory.intersect(set2, set1);
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
@@ -3162,8 +3164,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(list3);
-		actual1 = set1.intersect(set2);
-		actual2 = set2.intersect(set1);
+		actual1 = rangeFactory.intersect(set1, set2);
+		actual2 = rangeFactory.intersect(set2, set1);
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
@@ -3205,8 +3207,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set1 = new IntervalUnionSet(list1);
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected = new IntervalUnionSet(list3);
-		actual1 = set1.intersect(set2);
-		actual2 = set2.intersect(set1);
+		actual1 = rangeFactory.intersect(set1, set2);
+		actual2 = rangeFactory.intersect(set2, set1);
 
 		assertEquals(expected.toString(), actual1.toString());
 		assertEquals(expected.toString(), actual2.toString());
@@ -3222,7 +3224,7 @@ public class IntervalUnionSetTest {
 		if (ASSERTION_ENABLED) {
 			IntervalUnionSet nullSet = null;
 			IntervalUnionSet currentSet = new IntervalUnionSet(RAT_ZERO);
-			actual = currentSet.minus(nullSet);
+			actual = rangeFactory.setMinus(currentSet, nullSet);
 		} else {
 			throw new AssertionError();
 		}
@@ -3233,7 +3235,7 @@ public class IntervalUnionSetTest {
 		if (ASSERTION_ENABLED) {
 			IntervalUnionSet intSet = new IntervalUnionSet(INT_ZERO);
 			IntervalUnionSet ratSet = new IntervalUnionSet(RAT_ZERO);
-			actual = ratSet.minus(intSet);
+			actual = rangeFactory.setMinus(ratSet, intSet);
 		} else {
 			throw new AssertionError();
 		}
@@ -3246,8 +3248,8 @@ public class IntervalUnionSetTest {
 				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected1 = nonemptyRatSet;
 		expected2 = emptyRatSet;
-		actual1 = nonemptyRatSet.minus(emptyRatSet);
-		actual2 = emptyRatSet.minus(nonemptyRatSet);
+		actual1 = rangeFactory.setMinus(nonemptyRatSet, emptyRatSet);
+		actual2 = rangeFactory.setMinus(emptyRatSet, nonemptyRatSet);
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
@@ -3268,8 +3270,8 @@ public class IntervalUnionSetTest {
 						false),
 				numberFactory.newInterval(true, INT_TWO, false, INT_POS_INF,
 						true));
-		actual1 = nonunivIntSet.minus(univIntSet);
-		actual2 = univIntSet.minus(nonunivIntSet);
+		actual1 = rangeFactory.setMinus(nonunivIntSet, univIntSet);
+		actual2 = rangeFactory.setMinus(univIntSet, nonunivIntSet);
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
@@ -3284,7 +3286,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet original = new IntervalUnionSet(numberFactory
 				.newInterval(false, RAT_N_ONE, true, RAT_ONE, true));
 		expected = new IntervalUnionSet(false);
-		actual = original.minus(original);
+		actual = rangeFactory.setMinus(original, original);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "expected: " + expected.toString());
@@ -3319,8 +3321,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected1 = set1;
 		expected2 = set2;
-		actual1 = set1.minus(set2);
-		actual2 = set2.minus(set1);
+		actual1 = rangeFactory.setMinus(set1, set2);
+		actual2 = rangeFactory.setMinus(set2, set1);
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
@@ -3360,8 +3362,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected1 = set1;
 		expected2 = set2;
-		actual1 = set1.minus(set2);
-		actual2 = set2.minus(set1);
+		actual1 = rangeFactory.setMinus(set1, set2);
+		actual2 = rangeFactory.setMinus(set2, set1);
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
@@ -3401,8 +3403,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected1 = set1;
 		expected2 = set2;
-		actual1 = set1.minus(set2);
-		actual2 = set2.minus(set1);
+		actual1 = rangeFactory.setMinus(set1, set2);
+		actual2 = rangeFactory.setMinus(set2, set1);
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
@@ -3469,8 +3471,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected1 = new IntervalUnionSet(list3);
 		expected2 = new IntervalUnionSet(list4);
-		actual1 = set1.minus(set2);
-		actual2 = set2.minus(set1);
+		actual1 = rangeFactory.setMinus(set1, set2);
+		actual2 = rangeFactory.setMinus(set2, set1);
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
@@ -3526,8 +3528,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected1 = new IntervalUnionSet(list3);
 		expected2 = new IntervalUnionSet(list4);
-		actual1 = set1.minus(set2);
-		actual2 = set2.minus(set1);
+		actual1 = rangeFactory.setMinus(set1, set2);
+		actual2 = rangeFactory.setMinus(set2, set1);
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
@@ -3583,8 +3585,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected1 = new IntervalUnionSet(list3);
 		expected2 = new IntervalUnionSet(list4);
-		actual1 = set1.minus(set2);
-		actual2 = set2.minus(set1);
+		actual1 = rangeFactory.setMinus(set1, set2);
+		actual2 = rangeFactory.setMinus(set2, set1);
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
@@ -3623,8 +3625,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set2 = new IntervalUnionSet(list2);
 		expected1 = new IntervalUnionSet(list3);
 		expected2 = new IntervalUnionSet(true);
-		actual1 = set1.minus(set2);
-		actual2 = set2.minus(set1);
+		actual1 = rangeFactory.setMinus(set1, set2);
+		actual2 = rangeFactory.setMinus(set2, set1);
 
 		assertEquals(expected1.toString(), actual1.toString());
 		assertEquals(expected2.toString(), actual2.toString());
@@ -3641,13 +3643,13 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet univIntSet = new IntervalUnionSet(INT_UNIV);
 		IntervalUnionSet nonunivIntSet = new IntervalUnionSet(numberFactory
 				.newInterval(true, INT_N_ONE, false, INT_ONE, false));
-		actual = nonunivIntSet.complement();
+		actual = rangeFactory.complement(nonunivIntSet);
 		expected1 = new IntervalUnionSet(
 				numberFactory.newInterval(true, INT_NEG_INF, true, INT_N_TWO,
 						false),
 				numberFactory.newInterval(true, INT_TWO, false, INT_POS_INF,
 						true));
-		expected2 = univIntSet.minus(nonunivIntSet);
+		expected2 = rangeFactory.setMinus(univIntSet, nonunivIntSet);
 
 		assertEquals(expected1.toString(), actual.toString());
 		assertEquals(expected2.toString(), actual.toString());
@@ -3663,7 +3665,7 @@ public class IntervalUnionSetTest {
 			IntegerNumber a = null;
 			IntegerNumber b = INT_ZERO;
 			IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
-			actual = original.affineTransform(a, b);
+			actual = rangeFactory.affineTransform(original, a, b);
 		} else {
 			throw new AssertionError();
 		}
@@ -3675,7 +3677,7 @@ public class IntervalUnionSetTest {
 			IntegerNumber a = INT_ONE;
 			IntegerNumber b = null;
 			IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
-			actual = original.affineTransform(a, b);
+			actual = rangeFactory.affineTransform(original, a, b);
 		} else {
 			throw new AssertionError();
 		}
@@ -3687,7 +3689,7 @@ public class IntervalUnionSetTest {
 			RationalNumber a = RAT_ONE;
 			IntegerNumber b = INT_ONE;
 			IntervalUnionSet original = new IntervalUnionSet(INT_ONE);
-			actual = original.affineTransform(a, b);
+			actual = rangeFactory.affineTransform(original, a, b);
 		} else {
 			throw new AssertionError();
 		}
@@ -3699,7 +3701,7 @@ public class IntervalUnionSetTest {
 			RationalNumber a = RAT_ONE;
 			IntegerNumber b = INT_ONE;
 			IntervalUnionSet original = new IntervalUnionSet(RAT_ONE);
-			actual = original.affineTransform(a, b);
+			actual = rangeFactory.affineTransform(original, a, b);
 		} else {
 			throw new AssertionError();
 		}
@@ -3711,7 +3713,7 @@ public class IntervalUnionSetTest {
 		RationalNumber b = RAT_TEN;
 		IntervalUnionSet original = new IntervalUnionSet(false);
 		expected = original;
-		actual = original.affineTransform(a, b);
+		actual = rangeFactory.affineTransform(original, a, b);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "original: " + original.toString());
@@ -3726,7 +3728,7 @@ public class IntervalUnionSetTest {
 		IntegerNumber b = INT_N_TEN;
 		IntervalUnionSet original = new IntervalUnionSet(INT_UNIV);
 		expected = original;
-		actual = original.affineTransform(a, b);
+		actual = rangeFactory.affineTransform(original, a, b);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "original: " + original.toString());
@@ -3742,7 +3744,7 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet original = new IntervalUnionSet(numberFactory
 				.newInterval(true, INT_N_TEN, false, INT_TEN, false));
 		expected = original;
-		actual = original.affineTransform(a, b);
+		actual = rangeFactory.affineTransform(original, a, b);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "original: " + original.toString());
@@ -3759,7 +3761,7 @@ public class IntervalUnionSetTest {
 				.newInterval(true, INT_N_THREE, false, INT_THREE, false));
 		expected = new IntervalUnionSet(numberFactory.newInterval(true,
 				INT_N_EIGHT, false, INT_TEN, false));
-		actual = original.affineTransform(a, b);
+		actual = rangeFactory.affineTransform(original, a, b);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "original: " + original.toString());
@@ -3776,7 +3778,7 @@ public class IntervalUnionSetTest {
 				.newInterval(false, RAT_N_TEN, true, RAT_TEN, true));
 		expected = new IntervalUnionSet(numberFactory.newInterval(false,
 				RAT_ZERO, false, RAT_ZERO, false));
-		actual = original.affineTransform(a, b);
+		actual = rangeFactory.affineTransform(original, a, b);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "original: " + original.toString());
@@ -3793,7 +3795,7 @@ public class IntervalUnionSetTest {
 				.newInterval(true, INT_N_FOUR, false, INT_TWO, false));
 		expected = new IntervalUnionSet(numberFactory.newInterval(true,
 				INT_N_EIGHT, false, INT_TEN, false));
-		actual = original.affineTransform(a, b);
+		actual = rangeFactory.affineTransform(original, a, b);
 
 		assertEquals(expected.toString(), actual.toString());
 		p(DEBUG, "original: " + original.toString());
@@ -3910,5 +3912,38 @@ public class IntervalUnionSetTest {
 		p(DEBUG, expected.toString());
 		p(DEBUG, actual.toString());
 		assertEquals(expected, actual);
+	}
+
+	@Test
+	public void divide_IntervalUnionSet_01() {
+		Interval interval = numberFactory.newInterval(true, INT_ZERO, false,
+				INT_TEN, false);
+		Interval expectedInterval = numberFactory.newInterval(true, INT_ZERO,
+				false, INT_THREE, false);
+		IntervalUnionSet set = new IntervalUnionSet(interval);
+		IntervalUnionSet expected = new IntervalUnionSet(expectedInterval);
+		IntervalUnionSet actual = (IntervalUnionSet) rangeFactory
+				.divide(set, INT_THREE);
+
+		p(DEBUG, expected.toString());
+		p(DEBUG, actual.toString());
+		assertEquals(expected.toString(), actual.toString());
+	}
+
+	@Test
+	public void divide_IntervalUnionSet_02() {
+		RationalNumber rat_tenThird = numberFactory.divide(RAT_TEN, RAT_THREE);
+		Interval interval = numberFactory.newInterval(false, RAT_ZERO, true,
+				RAT_TEN, false);
+		Interval expectedInterval = numberFactory.newInterval(false, RAT_ZERO,
+				true, rat_tenThird, false);
+		IntervalUnionSet set = new IntervalUnionSet(interval);
+		IntervalUnionSet expected = new IntervalUnionSet(expectedInterval);
+		IntervalUnionSet actual = (IntervalUnionSet) rangeFactory
+				.divide(set, RAT_THREE);
+
+		p(DEBUG, expected.toString());
+		p(DEBUG, actual.toString());
+		assertEquals(expected.toString(), actual.toString());
 	}
 }
