@@ -133,4 +133,10 @@ public class ExpressionStub implements SymbolicExpression {
 		return false;
 	}
 
+	@Override
+	public void setInCanonic() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -2,7 +2,6 @@ package edu.udel.cis.vsl.sarl.IF;
 
 import java.io.PrintStream;
 import java.math.BigInteger;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
@@ -205,14 +204,6 @@ public interface CoreUniverse {
 	 * @return the canonic symbolic object with the given ID number.
 	 */
 	SymbolicObject objectWithId(int id);
-
-	/**
-	 * Returns the set of all canonic {@link SymbolicObject}s controlled by this
-	 * universe as a Java {@link Collection}.
-	 * 
-	 * @return the set of all canonic symbolic objects
-	 */
-	Collection<SymbolicObject> objects();
 
 	// Types...
 

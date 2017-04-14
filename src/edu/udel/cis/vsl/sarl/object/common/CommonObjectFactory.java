@@ -19,10 +19,11 @@
 package edu.udel.cis.vsl.sarl.object.common;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
@@ -46,9 +47,16 @@ public class CommonObjectFactory implements ObjectFactory {
 
 	private NumberFactory numberFactory;
 
-	private Map<SymbolicObject, SymbolicObject> objectMap = new ConcurrentHashMap<SymbolicObject, SymbolicObject>();
+	private Map<SymbolicObject, SymbolicObject> objectMap = new ConcurrentHashMap<>();
 
-	private ArrayList<SymbolicObject> objectList = new ArrayList<SymbolicObject>();
+	private ArrayList<SymbolicObject> objectList = new ArrayList<>();
+
+	private final ReentrantReadWriteLock objectListReadWriteLock = new ReentrantReadWriteLock();
+
+	private final Lock objectListReadLock = objectListReadWriteLock.readLock();
+
+	private final Lock objectListWriteLock = objectListReadWriteLock
+			.writeLock();
 
 	private BooleanObject trueObj, falseObj;
 
@@ -107,6 +115,7 @@ public class CommonObjectFactory implements ObjectFactory {
 		return comparator;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends SymbolicObject> T canonic(T object) {
 		if (object == null)
@@ -117,18 +126,38 @@ public class CommonObjectFactory implements ObjectFactory {
 			SymbolicObject result = objectMap.get(object);
 
 			if (result == null) {
-				// set temp. ID to some non-negative number so it looks
-				// canonic to prevent infinite cycles in canonizeChildren...
-				((CommonSymbolicObject) object).setId(0);
+				// Set canonic id to INCANONIC to avoid infinite loop when
+				// canonic children.
+				((CommonSymbolicObject) object).setInCanonic();
 				((CommonSymbolicObject) object).canonizeChildren(this);
-				// that changed objectList, objectMap.
-				((CommonSymbolicObject) object).setId(objectList.size());
-				objectMap.put(object, object);
-				objectList.add(object);
-				return object;
-			}
+				CommonSymbolicObject obj = (CommonSymbolicObject) objectMap
+						.putIfAbsent(object, object);
 
-			@SuppressWarnings("unchecked")
+				if (obj == null) {
+					obj = (CommonSymbolicObject) object;
+					synchronized (obj) {
+						obj.setId(numObjects());
+						objectListWriteLock.lock();
+						try {
+							objectList.add(obj);
+						} finally {
+							objectListWriteLock.unlock();
+						}
+						obj.notifyAll();
+					}
+				} else {
+					synchronized (obj) {
+						while (obj.id() < 0)
+							try {
+								obj.wait();
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+					}
+				}
+
+				return (T) obj;
+			}
 			T result2 = (T) result;
 
 			return result2;
@@ -206,17 +235,22 @@ public class CommonObjectFactory implements ObjectFactory {
 
 	@Override
 	public SymbolicObject objectWithId(int index) {
-		return objectList.get(index);
-	}
-
-	@Override
-	public Collection<SymbolicObject> objects() {
-		return objectList;
+		objectListReadLock.lock();
+		try {
+			return objectList.get(index);
+		} finally {
+			objectListReadLock.unlock();
+		}
 	}
 
 	@Override
 	public int numObjects() {
-		return objectList.size();
+		objectListReadLock.lock();
+		try {
+			return objectList.size();
+		} finally {
+			objectListReadLock.unlock();
+		}
 	}
 
 	@Override

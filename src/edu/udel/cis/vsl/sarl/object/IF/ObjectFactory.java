@@ -18,7 +18,6 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.object.IF;
 
-import java.util.Collection;
 import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
@@ -166,11 +165,6 @@ public interface ObjectFactory {
 	 * @return Returns an object from the objectList at specified index
 	 */
 	SymbolicObject objectWithId(int index);
-
-	/**
-	 * @return Returns the entire objectList
-	 */
-	Collection<SymbolicObject> objects();
 
 	/**
 	 * @return Returns the length of the objectList

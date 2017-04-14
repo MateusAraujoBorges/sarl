@@ -31,9 +31,12 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 
 	// static fields ...
 
-	private final static int NOT_HASHED = -2;
+	private final static int NOT_HASHED = -3;
 
-	private final static int HASHED = -1;
+	private final static int HASHED = -2;
+
+	// TODO
+	private final static int IN_CANONIC = -1;
 
 	/**
 	 * If true, more detailed string representations of symbolic objects will be
@@ -72,7 +75,7 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 	// Methods...
 
 	public boolean isCanonic() {
-		return id >= 0;
+		return id >= IN_CANONIC;
 	}
 
 	/**
@@ -163,6 +166,11 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 			return toStringBufferLong().toString();
 		else
 			return toStringBuffer(false).toString();
+	}
+
+	@Override
+	public void setInCanonic() {
+		this.id = IN_CANONIC;
 	}
 
 }

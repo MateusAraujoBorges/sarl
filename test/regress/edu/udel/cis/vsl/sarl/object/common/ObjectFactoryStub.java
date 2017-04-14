@@ -1,6 +1,5 @@
 package edu.udel.cis.vsl.sarl.object.common;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -33,7 +32,6 @@ public class ObjectFactoryStub implements ObjectFactory {
 	@Override
 	public void setExpressionComparator(Comparator<SymbolicExpression> c) {
 	}
-
 
 	@Override
 	public void setTypeComparator(Comparator<SymbolicType> c) {
@@ -136,11 +134,6 @@ public class ObjectFactoryStub implements ObjectFactory {
 	}
 
 	@Override
-	public Collection<SymbolicObject> objects() {
-		return objectMap.keySet();
-	}
-
-	@Override
 	public int numObjects() {
 		return objectMap.size();
 	}
@@ -154,14 +147,12 @@ public class ObjectFactoryStub implements ObjectFactory {
 	public <T extends SymbolicObject> void canonize(T[] objectArray) {
 	}
 
-
 	@Override
 	public <T extends SymbolicExpression> SymbolicSequence<T> sequence(
 			Iterable<? extends T> elements) {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 
 	@Override
 	public <T extends SymbolicExpression> SymbolicSequence<T> sequence(
@@ -170,14 +161,12 @@ public class ObjectFactoryStub implements ObjectFactory {
 		return null;
 	}
 
-
 	@Override
 	public <T extends SymbolicExpression> SymbolicSequence<T> singletonSequence(
 			T element) {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 
 	@Override
 	public <T extends SymbolicExpression> SymbolicSequence<T> emptySequence() {

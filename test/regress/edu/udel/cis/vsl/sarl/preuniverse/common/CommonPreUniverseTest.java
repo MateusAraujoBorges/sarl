@@ -99,9 +99,6 @@ public class CommonPreUniverseTest {
 
 		booleanFactory = system.booleanFactory();
 
-		// For testing objects() method
-		objectCollection = objectFactory.objects();
-
 		// For testing multiply(Iterable) method
 		emptyNumericList = new ArrayList<NumericExpression>();
 		numericList = new ArrayList<NumericExpression>();
@@ -191,21 +188,7 @@ public class CommonPreUniverseTest {
 
 		assertEquals(obj1.id(), 3);
 	}
-
-	/**
-	 * @author blutuu
-	 * 
-	 *         Here, a local sequence of universe.objects are tested against a
-	 *         global preuniverse.objectCollection. The object() method returns
-	 *         a sequence of objects, which populates testCollection.
-	 */
-	@Test
-	// Written by Marlin Blue
-	public void testObjects() {
-		Collection<SymbolicObject> testCollection = universe.objects();
-		assertEquals(objectCollection, testCollection);
-	}
-
+	
 	/**
 	 * Test for substitute() method
 	 */

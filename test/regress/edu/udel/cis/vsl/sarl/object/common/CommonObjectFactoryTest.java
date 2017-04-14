@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
-import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.number.real.RealNumberFactory;
 import edu.udel.cis.vsl.sarl.type.common.TypeComparator;
 import edu.udel.cis.vsl.sarl.type.common.TypeSequenceComparator;
@@ -225,36 +224,11 @@ public class CommonObjectFactoryTest {
 	}
 
 	/**
-	 * Method to test CommonObjectFactory.objects() and canonic()
-	 */
-	@Test
-	public void testObjects() {
-		// make something canonic and check to make sure its added to the list
-		int originalcount = this.fac.objects().size();
-		IntObject tempint = this.fac.intObject(2);
-
-		this.fac.canonic(tempint);
-		assertEquals(this.fac.objects().size(), originalcount + 1);
-	}
-
-	/**
 	 * Method to test thrown exception for CommonObjectFactory.canonic()
 	 */
 	@Test(expected = SARLException.class)
 	public void testCanonicException() {
 		this.fac.canonic(null);
-	}
-
-	/**
-	 * Method to test CommonObjectFactory.numObjects
-	 */
-	@Test
-	public void testNumObjects() {
-		int originalcount = this.fac.numObjects();
-		IntObject tempint = this.fac.intObject(2);
-
-		this.fac.canonic(tempint);
-		assertEquals(this.fac.numObjects(), originalcount + 1);
 	}
 
 }

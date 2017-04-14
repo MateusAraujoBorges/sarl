@@ -159,4 +159,11 @@ public interface SymbolicObject {
 	 */
 	boolean containsQuantifier();
 
+	/**
+	 * Set the id of this object to a special value indicating that this object
+	 * is in the process of being made canonic. Calls to {@link #isCanonic()}
+	 * will return true.
+	 */
+	void setInCanonic();
+
 }
