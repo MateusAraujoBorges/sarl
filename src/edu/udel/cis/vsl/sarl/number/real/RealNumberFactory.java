@@ -20,8 +20,8 @@ package edu.udel.cis.vsl.sarl.number.real;
 
 import java.io.PrintWriter;
 import java.math.BigInteger;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
@@ -110,9 +110,9 @@ public class RealNumberFactory implements NumberFactory {
 	 */
 	private static int EXACTLY_SAME = 0;
 
-	private Map<BigInteger, RealInteger> integerMap = new HashMap<BigInteger, RealInteger>();
+	private Map<BigInteger, RealInteger> integerMap = new ConcurrentHashMap<BigInteger, RealInteger>();
 
-	private Map<RationalKey, RealRational> rationalMap = new HashMap<RationalKey, RealRational>();
+	private Map<RationalKey, RealRational> rationalMap = new ConcurrentHashMap<RationalKey, RealRational>();
 
 	/**
 	 * Private fields stores {@link IntegerNumber} frequently used. <br>
@@ -216,15 +216,15 @@ public class RealNumberFactory implements NumberFactory {
 	 * 
 	 */
 	public RealInteger integer(BigInteger big) {
-		RealInteger oldValue = integerMap.get(big);
+		RealInteger realValue = integerMap.get(big);
 
-		if (oldValue != null) {
-			return oldValue;
+		if (realValue != null) {
+			return realValue;
 		} else {
 			RealInteger newValue = new RealInteger(big);
 
-			integerMap.put(big, newValue);
-			return newValue;
+			realValue = integerMap.putIfAbsent(big, newValue);
+			return realValue == null ? newValue : realValue;
 		}
 	}
 
@@ -246,7 +246,7 @@ public class RealNumberFactory implements NumberFactory {
 	public RealRational rational(BigInteger numerator, BigInteger denominator) {
 		int signum = denominator.signum();
 		RationalKey key;
-		RealRational oldValue;
+		RealRational realValue;
 
 		if (signum == 0) {
 			throw new ArithmeticException("Division by 0");
@@ -269,14 +269,14 @@ public class RealNumberFactory implements NumberFactory {
 			}
 		}
 		key = new RationalKey(numerator, denominator);
-		oldValue = rationalMap.get(key);
-		if (oldValue != null) {
-			return oldValue;
+		realValue = rationalMap.get(key);
+		if (realValue != null) {
+			return realValue;
 		} else {
 			RealRational newValue = new RealRational(numerator, denominator);
 
-			rationalMap.put(key, newValue);
-			return newValue;
+			realValue = rationalMap.put(key, newValue);
+			return realValue == null ? newValue : realValue;
 		}
 	}
 
