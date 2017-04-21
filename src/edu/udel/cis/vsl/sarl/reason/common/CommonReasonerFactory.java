@@ -18,8 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.reason.common;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
@@ -41,7 +41,7 @@ public class CommonReasonerFactory implements ReasonerFactory {
 	 * have at most one {@link Reasoner} for each boolean expression
 	 * ("context").
 	 */
-	private Map<BooleanExpression, Reasoner> reasonerCache = new HashMap<>();
+	private Map<BooleanExpression, Reasoner> reasonerCache = new ConcurrentHashMap<>();
 
 	/**
 	 * The theorem prover factory associated to this reasoner factory. It will
@@ -82,9 +82,10 @@ public class CommonReasonerFactory implements ReasonerFactory {
 
 		if (result == null) {
 			Simplifier simplifier = simplifierFactory.newSimplifier(context);
+			Reasoner newReasoner = new CommonReasoner(this, simplifier);
 
-			result = new CommonReasoner(this, simplifier);
-			reasonerCache.put(context, result);
+			result = reasonerCache.putIfAbsent(context, newReasoner);
+			return result == null ? newReasoner : result;
 		}
 		return result;
 	}

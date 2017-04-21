@@ -1,7 +1,7 @@
 package edu.udel.cis.vsl.sarl.reason.common;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
@@ -43,7 +43,7 @@ public class ContextMinimizingReasonerFactory implements ReasonerFactory {
 	 * relation is determined by the {@link BooleanExpression#equals(Object)}
 	 * method.
 	 */
-	private Map<BooleanExpression, ContextMinimizingReasoner> reasonerMap = new HashMap<>();
+	private Map<BooleanExpression, ContextMinimizingReasoner> reasonerMap = new ConcurrentHashMap<>();
 
 	/**
 	 * Creates new factory based on the given symbolic universe, theorem prover
@@ -75,8 +75,12 @@ public class ContextMinimizingReasonerFactory implements ReasonerFactory {
 		ContextMinimizingReasoner result = reasonerMap.get(context);
 
 		if (result == null) {
-			result = new ContextMinimizingReasoner(this, context);
-			reasonerMap.put(context, result);
+			ContextMinimizingReasoner newContextMinimizingReasoner = new ContextMinimizingReasoner(
+					this, context);
+
+			result = reasonerMap.putIfAbsent(context,
+					newContextMinimizingReasoner);
+			return result == null ? newContextMinimizingReasoner : result;
 		}
 		return result;
 	}
