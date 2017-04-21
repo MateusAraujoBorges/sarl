@@ -2089,6 +2089,17 @@ public class CommonPreUniverse implements PreUniverse {
 								+ "\nvalue: " + value + "\ntype: "
 								+ value.type() + "\nExpected: "
 								+ arrayType.elementType());
+			// If array has ARRAY_WRITE operator and the written index is extact
+			// same as the one going to be written, it's safe to over-write it:
+			if (array.operator() == SymbolicOperator.ARRAY_WRITE) {
+				NumericExpression prevIdx = (NumericExpression) array
+						.argument(1);
+
+				if (prevIdx.equals(index))
+					return arrayWrite_noCheck(
+							(SymbolicExpression) array.argument(0), arrayType,
+							index, value);
+			}
 			return arrayWrite_noCheck(array, arrayType, index, value);
 		}
 	}
