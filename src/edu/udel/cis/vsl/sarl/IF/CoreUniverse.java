@@ -1052,8 +1052,10 @@ public interface CoreUniverse {
 	 *            summation expression.
 	 * @return
 	 */
-	SymbolicExpression sigma(NumericExpression low, NumericExpression high,
+	NumericExpression sigma(NumericExpression low, NumericExpression high,
 			SymbolicExpression function);
+
+	boolean isSigmaExpression(SymbolicExpression expr);
 
 	/**
 	 * Returns a symbolic expression which is the result of multiplying the two

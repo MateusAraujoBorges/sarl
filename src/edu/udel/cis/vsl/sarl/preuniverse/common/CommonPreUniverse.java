@@ -3570,7 +3570,7 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	@Override
-	public SymbolicExpression sigma(NumericExpression low,
+	public NumericExpression sigma(NumericExpression low,
 			NumericExpression high, SymbolicExpression function) {
 		NumericExpression sum;
 
@@ -3614,7 +3614,8 @@ public class CommonPreUniverse implements PreUniverse {
 		StringObject sigma = stringObject(Sigma);
 		SymbolicExpression result = symbolicConstant(sigma, functionType);
 
-		return this.apply(result, Arrays.asList(low, high, function));
+		return (NumericExpression) apply(result,
+				Arrays.asList(low, high, function));
 	}
 
 	/**
@@ -3630,6 +3631,14 @@ public class CommonPreUniverse implements PreUniverse {
 			StringObject functionName = (StringObject) function.argument(0);
 
 			return functionName.getString().equals(Sigma);
+		}
+		return false;
+	}
+
+	@Override
+	public boolean isSigmaExpression(SymbolicExpression expr) {
+		if (expr.operator() == SymbolicOperator.APPLY) {
+			return isSigmaApplied((SymbolicExpression) expr.argument(0));
 		}
 		return false;
 	}
