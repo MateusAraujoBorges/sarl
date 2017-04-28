@@ -1,4 +1,42 @@
 
+
+
+----------------------------------------------
+
+Schwartz Zippel Lemma:
+
+Single point version:
+
+Multipoint version:
+
+
+# of roots over the set T^n (n=9 for us) is at most d*|T|^(n-1), where d is
+the total degree of the polynomial.
+
+prob of getting root: d/|T| < e
+|T|>d/e
+
+e=10^{-1000}
+
+|T|=2^32
+
+d*2^{-32} is prob of getting 0 if it is non-0
+(d*2^{-32})^k is upper bound on prob. of it being non=0 after k applications
+
+
+
+
+
+
+
+
+
+----------------------------------------------
+
+
+
+
+
 subsumption:
 
 if a is a subset of b and a preceded b in dictionary order

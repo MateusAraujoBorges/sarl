@@ -6,10 +6,13 @@ import static edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator.
 import static edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator.NEQ;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
+import java.util.Set;
 
 import edu.udel.cis.vsl.sarl.IF.CoreUniverse;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
@@ -49,6 +52,12 @@ import edu.udel.cis.vsl.sarl.util.SingletonMap;
 public class IdealSimplifierWorker extends CommonSimplifierWorker {
 
 	// static members...
+
+	/**
+	 * A random number generator with seed very likely to be distinct from all
+	 * other seeds. TODO: this must be made thread-safe.
+	 */
+	private static Random random = new Random();
 
 	/**
 	 * A categorization of intervals based on their relationship to 0. Every
@@ -1128,6 +1137,46 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 				return falseExpr();
 		}
 
+		// TODO:
+		// heuristic totalDegree and number of primitives...
+		// (x1+x2+x3)^100
+
+		Set<Primitive> vars = getTruePrimitives(poly);
+		IntegerNumber totalDegree = poly.totalDegree(numberFactory());
+		int numVars = vars.size();
+		IntegerNumber numVarsNumber = numberFactory().integer(numVars);
+		IntegerNumber product = numberFactory().multiply(totalDegree,
+				numVarsNumber);
+
+		// TODO: make constants somewhere...
+
+		IntegerNumber threshold = numberFactory().integer(100);
+		RationalNumber twoTo128 = numberFactory().power(
+				numberFactory().rational(numberFactory().integer(2)), 128);
+		RationalNumber prob = numberFactory()
+				.divide(numberFactory().oneRational(), twoTo128);
+
+		info.out.println("product = " + product + ", threshold = " + threshold);
+		info.out.flush();
+
+		if (numberFactory().compare(product, threshold) >= 0) {
+
+			info.out.println("Entering probabalistic mode...");
+			info.out.flush();
+
+			boolean answer = is0WithProbability(poly, totalDegree, vars, prob);
+
+			if (answer) {
+				info.out.println(
+						"Polynomial determined to be 0 with probability of error < "
+								+ prob);
+				info.out.flush();
+				return info.trueExpr;
+			} else {
+				return info.falseExpr;
+			}
+		}
+
 		// if (is0byEvaluation(poly))
 		// return trueExpr();
 		// if (new FastEvaluator(numberFactory(), poly).isZero())
@@ -1182,6 +1231,100 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		default:
 			return null;
 		}
+	}
+
+	private void addTruePrimitives(Monomial m, Set<Primitive> set) {
+		if (m instanceof Primitive && !(m instanceof Polynomial)) {
+			set.add((Primitive) m);
+		} else {
+			switch (m.operator()) {
+			case ADD:
+			case MULTIPLY:
+				int n = m.numArguments();
+
+				for (int i = 0; i < n; i++) {
+					SymbolicObject arg = m.argument(i);
+
+					addTruePrimitives((Monomial) arg, set);
+				}
+				break;
+			case POWER:
+				addTruePrimitives((Monomial) m.argument(0), set);
+				break;
+			default:
+			}
+		}
+	}
+
+	private Set<Primitive> getTruePrimitives(Monomial m) {
+		Set<Primitive> set = new HashSet<>();
+
+		addTruePrimitives(m, set);
+		return set;
+	}
+
+	/**
+	 * Chooses a random integer with uniform probability from the set of all
+	 * 2^32 ints for each variable.
+	 * 
+	 * @param poly
+	 * @return
+	 */
+	private NumericExpression evaluateAtRandomPoint32(Polynomial poly,
+			Map<SymbolicExpression, SymbolicExpression> subMap) {
+
+		for (Entry<SymbolicExpression, SymbolicExpression> entry : subMap
+				.entrySet()) {
+			// an int randomly chosen with uniform probability from
+			// the set of all 2^32 ints:
+			int randomInt = random.nextInt();
+			SymbolicExpression concrete = entry.getKey().type().isInteger()
+					? universe.integer(randomInt)
+					: universe.rational(randomInt);
+
+			entry.setValue(concrete);
+		}
+
+		NumericExpression result = (NumericExpression) universe
+				.mapSubstituter(subMap).apply(poly);
+
+		return result;
+	}
+
+	/**
+	 * Can you show that <code>poly</code> is equivalent to 0 with probability
+	 * of being wrong less than or equal to epsilon?
+	 * 
+	 * @param poly
+	 *            the {@link Polynomial} being tested for zero-ness
+	 * @param epsilon
+	 *            a real number in (0,1)
+	 * @return if this method returns true, then poly is probably 0 and the
+	 *         probability that it is not 0 is less than or equal to epsilon. If
+	 *         this method returns false, then poly is not zero.
+	 */
+	private boolean is0WithProbability(Polynomial poly,
+			IntegerNumber totalDegree, Set<Primitive> vars,
+			RationalNumber epsilon) {
+		NumberFactory nf = info.numberFactory;
+		RationalNumber prob = nf.oneRational();
+		// IntegerNumber totalDegree = poly.totalDegree(nf);
+		RationalNumber twoTo32 = nf.power(nf.rational(nf.integer(2)), 32);
+		RationalNumber ratio = nf.divide(nf.rational(totalDegree), twoTo32);
+		// Set<Primitive> vars = getTruePrimitives(poly);
+		Map<SymbolicExpression, SymbolicExpression> subMap = new HashMap<>();
+
+		for (Primitive var : vars)
+			subMap.put(var, null);
+		do {
+			NumericExpression evaluation = evaluateAtRandomPoint32(poly,
+					subMap);
+
+			if (!evaluation.isZero())
+				return false;
+			prob = nf.multiply(prob, ratio);
+		} while (nf.compare(epsilon, prob) < 0);
+		return true;
 	}
 
 	/**
