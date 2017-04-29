@@ -1156,13 +1156,18 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		RationalNumber prob = numberFactory()
 				.divide(numberFactory().oneRational(), twoTo128);
 
-		info.out.println("product = " + product + ", threshold = " + threshold);
-		info.out.flush();
+		if (debug) {
+			info.out.println("Poly0: product = " + product + ", threshold = "
+					+ threshold);
+			info.out.flush();
+		}
 
 		if (numberFactory().compare(product, threshold) >= 0) {
 
-			info.out.println("Entering probabalistic mode...");
-			info.out.flush();
+			if (debug) {
+				info.out.println("Entering probabalistic mode...");
+				info.out.flush();
+			}
 
 			boolean answer = is0WithProbability(poly, totalDegree, vars, prob);
 
