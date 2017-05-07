@@ -1,10 +1,7 @@
 package edu.udel.cis.vsl.sarl.simplify.common;
 
 import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
 
-import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
@@ -38,12 +35,6 @@ public abstract class CommonSimplifier implements Simplifier {
 	public static int simplifyCount = 0;
 
 	// Instance fields...
-
-	/**
-	 * Cached simplification results. A key is some canonic symbolic object, and
-	 * the value is the canonic, simplified version of that object.
-	 */
-	private Map<SymbolicObject, SymbolicObject> simplifyMap = new HashMap<SymbolicObject, SymbolicObject>();
 
 	/**
 	 * The symbolic universe used to make new expressions.
@@ -80,23 +71,6 @@ public abstract class CommonSimplifier implements Simplifier {
 	 * @return a new worker that will be used to simplify a symbolic expression
 	 */
 	protected abstract CommonSimplifierWorker newWorker();
-
-	// Protected methods ...
-
-	protected SymbolicObject getCachedSimplification(SymbolicObject key) {
-		return simplifyMap.get(key);
-	}
-
-	protected SymbolicObject cacheSimplification(SymbolicObject key,
-			SymbolicObject value) {
-		assert key.isCanonic();
-		assert value.isCanonic();
-		return simplifyMap.put(key, value);
-	}
-
-	protected void clearSimplificationCache() {
-		simplifyMap.clear();
-	}
 
 	// Methods specified in {@link Simplifier} ...
 
