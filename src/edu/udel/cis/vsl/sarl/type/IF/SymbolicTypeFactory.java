@@ -53,7 +53,10 @@ public interface SymbolicTypeFactory {
 	void setExpressionComparator(Comparator<SymbolicExpression> c);
 
 	/**
-	 * Initializing the factory
+	 * Initializes the factory; should be called only after the comparators have
+	 * all been linked.
+	 * 
+	 * Precondition: the object factory has already been initialized.
 	 */
 	void init();
 

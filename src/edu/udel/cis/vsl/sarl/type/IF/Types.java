@@ -34,4 +34,9 @@ public class Types {
 			ObjectFactory objectFactory) {
 		return new CommonSymbolicTypeFactory(objectFactory);
 	}
+
+	// public static Comparator<SymbolicType> newTypeComparator() {
+	// Comparator<SymbolicType> result = new TypeComparator();
+	// Comparator<SymbolicTypeSequence>
+	// }
 }

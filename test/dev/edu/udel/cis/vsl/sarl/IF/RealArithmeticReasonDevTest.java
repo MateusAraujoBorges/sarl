@@ -16,6 +16,7 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class RealArithmeticReasonDevTest {
+	
 	private static boolean debug = true;
 	private static PrintStream out = System.out;
 	private SymbolicUniverse universe;
@@ -46,6 +47,7 @@ public class RealArithmeticReasonDevTest {
 		b = (NumericExpression) universe.symbolicConstant(b_obj, realType);
 		c = (NumericExpression) universe.symbolicConstant(c_obj, realType);
 		d = (NumericExpression) universe.symbolicConstant(d_obj, realType);
+		trueExpr = universe.trueExpression();
 	}
 
 	@After
@@ -133,6 +135,7 @@ public class RealArithmeticReasonDevTest {
 				universe.power(a, c));
 		NumericExpression e2 = universe.power(a, universe.add(b, c));
 		Reasoner reasoner = universe.reasoner(trueExpr);
+		
 		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
 	}
 

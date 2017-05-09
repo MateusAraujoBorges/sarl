@@ -3,6 +3,7 @@ package edu.udel.cis.vsl.sarl.object.common;
 import java.util.LinkedList;
 
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
@@ -136,7 +137,12 @@ public class ExpressionStub implements SymbolicExpression {
 	@Override
 	public void setInCanonic() {
 		// TODO Auto-generated method stub
-		
+	}
+
+	@Override
+	public RationalNumber getOrder() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

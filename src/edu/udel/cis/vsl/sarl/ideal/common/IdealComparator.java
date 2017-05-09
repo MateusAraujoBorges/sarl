@@ -23,6 +23,7 @@ import java.util.Comparator;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
@@ -90,6 +91,8 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 */
 	private CommonIdealFactory idealFactory;
 
+	private NumberFactory numberFactory;
+
 	/**
 	 * Constructs a new {@link IdealComparator} associated with the given ideal
 	 * factory.
@@ -101,12 +104,13 @@ public class IdealComparator implements Comparator<NumericExpression> {
 		this.idealFactory = idealFactory;
 		this.objectComparator = idealFactory.objectFactory().comparator();
 		this.typeComparator = idealFactory.typeFactory().typeComparator();
+		this.numberFactory = idealFactory.numberFactory();
 	}
 
 	/**
 	 * Should debugging output be printed?
 	 */
-	private static boolean debug = false;
+	public final static boolean debug = false;
 
 	/**
 	 * <p>
@@ -238,7 +242,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *         otherwise a positive integer
 	 */
 	private int compareMonomials(Monomial m1, Monomial m2) {
-		NumberFactory nf = idealFactory.numberFactory();
+		NumberFactory nf = numberFactory;
 		int result = nf.subtract(m2.monomialDegree(nf), m1.monomialDegree(nf))
 				.signum();
 
@@ -266,7 +270,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *         positive integer
 	 */
 	public int compareMonics(Monic m1, Monic m2) {
-		NumberFactory nf = idealFactory.numberFactory();
+		NumberFactory nf = numberFactory;
 		IntegerNumber degree1 = m1.monomialDegree(nf);
 		IntegerNumber degree2 = m2.monomialDegree(nf);
 
@@ -396,16 +400,17 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 */
 	@Override
 	public int compare(NumericExpression o1, NumericExpression o2) {
-		if (debug) {
-			int result;
+		if (SymbolicObject.TREE_CANONIC) {
+			RationalNumber order1 = o1.getOrder();
 
-			System.out.print("Comparing " + o1 + " and " + o2 + ": ");
-			result = compareWork(o1, o2);
-			System.out.println(result);
-			System.out.flush();
-			return result;
-		} else
-			return compareWork(o1, o2);
+			if (order1 != null) {
+				RationalNumber order2 = o2.getOrder();
+
+				if (order2 != null) {
+					return numberFactory.compare(order1, order2);
+				}
+			}
+		}
+		return compareWork(o1, o2);
 	}
-
 }

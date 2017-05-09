@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.IF.object;
 
+import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
+
 /**
  * The root of the symbolic object type hierarchy. Represents any kind of
  * symbolic object: symbolic expressions, symbolic types, symbolic expression
@@ -68,6 +70,11 @@ package edu.udel.cis.vsl.sarl.IF.object;
  * 
  */
 public interface SymbolicObject {
+
+	/**
+	 * Use trees for canonicalization (not hash maps?)
+	 */
+	public final static boolean TREE_CANONIC = false;
 
 	public enum SymbolicObjectKind {
 		BOOLEAN, CHAR, EXPRESSION, SEQUENCE, INT, NUMBER, STRING, TYPE, TYPE_SEQUENCE
@@ -165,5 +172,14 @@ public interface SymbolicObject {
 	 * will return true.
 	 */
 	void setInCanonic();
+
+	/**
+	 * Experimental: get the number which imposes a total order on the set of
+	 * all canonic symbolic object.
+	 * 
+	 * @return the order of this object in the list of all canonic symbolic
+	 *         objects
+	 */
+	RationalNumber getOrder();
 
 }

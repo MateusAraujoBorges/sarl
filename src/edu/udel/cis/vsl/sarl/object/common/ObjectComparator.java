@@ -22,7 +22,10 @@ import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
+import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.CharObject;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
@@ -135,44 +138,62 @@ public class ObjectComparator implements Comparator<SymbolicObject> {
 	public int compare(SymbolicObject o1, SymbolicObject o2) {
 		if (o1 == o2)
 			return 0;
-		else {
-			SymbolicObjectKind kind = o1.symbolicObjectKind();
-			int result = kind.compareTo(o2.symbolicObjectKind());
 
-			if (result != 0)
-				return result;
-			switch (kind) {
-			case EXPRESSION:
-				return expressionComparator.compare((SymbolicExpression) o1,
-						(SymbolicExpression) o2);
-			case SEQUENCE:
-				return compareSequences((SymbolicSequence<?>) o1,
-						(SymbolicSequence<?>) o2);
-			case TYPE:
-				return typeComparator.compare((SymbolicType) o1,
-						(SymbolicType) o2);
-			case TYPE_SEQUENCE:
-				return typeSequenceComparator.compare((SymbolicTypeSequence) o1,
-						(SymbolicTypeSequence) o2);
-			case BOOLEAN:
-				return ((BooleanObject) o1).getBoolean()
-						? (((BooleanObject) o2).getBoolean() ? 0 : 1)
-						: (((BooleanObject) o2).getBoolean() ? -1 : 0);
-			case INT:
-				return ((IntObject) o1).getInt() - ((IntObject) o2).getInt();
-			case NUMBER:
-				return numberFactory.compare(((NumberObject) o1).getNumber(),
-						((NumberObject) o2).getNumber());
-			case STRING:
-				return ((StringObject) o1).getString()
-						.compareTo(((StringObject) o2).getString());
-			case CHAR:
-				return Character.compare(((CharObject) o1).getChar(),
-						((CharObject) o2).getChar());
-			default:
-				throw new SARLInternalException(
-						"unreachable: unknown object kind: " + kind);
+		if (SymbolicObject.TREE_CANONIC) {
+			RationalNumber order1 = o1.getOrder();
+
+			if (order1 != null) {
+				RationalNumber order2 = o2.getOrder();
+
+				if (order2 != null)
+					return numberFactory.compare(order1, order2);
 			}
+		}
+
+		SymbolicObjectKind kind = o1.symbolicObjectKind();
+		int result = kind.compareTo(o2.symbolicObjectKind());
+
+		if (result != 0)
+			return result;
+		switch (kind) {
+		case EXPRESSION:
+			return expressionComparator.compare((SymbolicExpression) o1,
+					(SymbolicExpression) o2);
+		case SEQUENCE:
+			return compareSequences((SymbolicSequence<?>) o1,
+					(SymbolicSequence<?>) o2);
+		case TYPE:
+			return typeComparator.compare((SymbolicType) o1, (SymbolicType) o2);
+		case TYPE_SEQUENCE:
+			return typeSequenceComparator.compare((SymbolicTypeSequence) o1,
+					(SymbolicTypeSequence) o2);
+		case BOOLEAN:
+			return ((BooleanObject) o1).getBoolean()
+					? (((BooleanObject) o2).getBoolean() ? 0 : 1)
+					: (((BooleanObject) o2).getBoolean() ? -1 : 0);
+		case INT:
+			return ((IntObject) o1).getInt() - ((IntObject) o2).getInt();
+		case NUMBER: {
+			Number num1 = ((NumberObject) o1).getNumber(),
+					num2 = ((NumberObject) o2).getNumber();
+			boolean isInt1 = num1 instanceof IntegerNumber,
+					isInt2 = num2 instanceof IntegerNumber;
+
+			if (isInt1 && !isInt2)
+				return 1;
+			if ((!isInt1) && isInt2)
+				return -1;
+			return numberFactory.compare(num1, num2);
+		}
+		case STRING:
+			return ((StringObject) o1).getString()
+					.compareTo(((StringObject) o2).getString());
+		case CHAR:
+			return Character.compare(((CharObject) o1).getChar(),
+					((CharObject) o2).getChar());
+		default:
+			throw new SARLInternalException(
+					"unreachable: unknown object kind: " + kind);
 		}
 	}
 }

@@ -204,4 +204,10 @@ public interface BooleanExpressionFactory {
 	 *         this factory
 	 */
 	Comparator<BooleanExpression> getBooleanComparator();
+
+	/**
+	 * Initializes fields; should be called after comparators have been set and
+	 * linked.
+	 */
+	void init();
 }

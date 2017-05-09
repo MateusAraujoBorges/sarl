@@ -351,7 +351,7 @@ public abstract class CommonSimplifierWorker {
 
 	public SymbolicExpression simplifyExpression(
 			SymbolicExpression expression) {
-		expression = universe.canonic(expression);
+		expression = universe.canonic(expression); // hotspot
 
 		SymbolicExpression result = (SymbolicExpression) getCachedSimplification(
 				expression);

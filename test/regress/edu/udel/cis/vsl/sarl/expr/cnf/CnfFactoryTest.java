@@ -21,7 +21,6 @@ package edu.udel.cis.vsl.sarl.expr.cnf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,7 +37,6 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
-import edu.udel.cis.vsl.sarl.expr.IF.Expressions;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
@@ -92,15 +90,6 @@ public class CnfFactoryTest {
 	}
 
 	/**
-	 * tearDown()
-	 * 
-	 * @throws Exception
-	 */
-	@After
-	public void tearDown() throws Exception {
-	}
-
-	/**
 	 * Check !(p&&q) equals (!p)||(!q).
 	 */
 	@Test
@@ -117,7 +106,6 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void notTest() {
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
 		BooleanExpression testingfalse = factory.falseExpr();
 		StringObject pobject = of.stringObject("a");
 		StringObject qobject = of.stringObject("b");
@@ -126,31 +114,33 @@ public class CnfFactoryTest {
 				booleanType);
 		BooleanExpression q = (BooleanExpression) ef.symbolicConstant(qobject,
 				booleanType);
-		BooleanExpression foralltruechk = bef.exists(b, testingfalse);
-		BooleanExpression EXISTS = bef
+		BooleanExpression foralltruechk = factory.exists(b, testingfalse);
+		BooleanExpression EXISTS = factory
 				.booleanExpression(SymbolicOperator.EXISTS, foralltruechk);
 		BooleanPrimitive cnf2 = (BooleanPrimitive) EXISTS;
-		BooleanExpression existschk = bef.forall(b, testingtrue);
-		BooleanExpression FORALL = bef
+		BooleanExpression existschk = factory.forall(b, testingtrue);
+		BooleanExpression FORALL = factory
 				.booleanExpression(SymbolicOperator.FORALL, existschk);
 		BooleanPrimitive cnf3 = (BooleanPrimitive) FORALL;
-		BooleanExpression andtrue = bef.and(p, q);
-		BooleanExpression ortrue = bef.or(p, q);
-		BooleanExpression nottrue = bef.not(q);
-		BooleanExpression foralltrue = bef.forall(b, testingtrue);
-		BooleanExpression existstrue = bef.exists(b, testingfalse);
+		BooleanExpression andtrue = factory.and(p, q);
+		BooleanExpression ortrue = factory.or(p, q);
+		BooleanExpression nottrue = factory.not(q);
+		BooleanExpression foralltrue = factory.forall(b, testingtrue);
+		BooleanExpression existstrue = factory.exists(b, testingfalse);
 
 		// Use DeMorgan's rules logic to create same functions using ands or ors
 		// to test
-		assertEquals(bef.or(bef.not(p), bef.not(q)), bef.not(andtrue));
-		assertEquals(bef.and(bef.not(p), bef.not(q)), bef.not(ortrue));
-		assertEquals(q, bef.not(nottrue));
+		assertEquals(factory.or(factory.not(p), factory.not(q)),
+				factory.not(andtrue));
+		assertEquals(factory.and(factory.not(p), factory.not(q)),
+				factory.not(ortrue));
+		assertEquals(q, factory.not(nottrue));
 
 		// for not(forall) since it is not, check with reverse(i.e. exists)
-		assertEquals(cnf2.argument(0), bef.not(foralltrue));
+		assertEquals(cnf2.argument(0), factory.not(foralltrue));
 
 		// for not(exists)
-		assertEquals(cnf3.argument(0), bef.not(existstrue));
+		assertEquals(cnf3.argument(0), factory.not(existstrue));
 	}
 
 	/**
@@ -160,7 +150,6 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void cnFFactoryNotTest() {
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
 		BooleanExpression testingfalse = factory.falseExpr();
 		StringObject pobject = of.stringObject("a");
 		StringObject qobject = of.stringObject("b");
@@ -169,28 +158,30 @@ public class CnfFactoryTest {
 		BooleanExpression q = (BooleanExpression) ef.symbolicConstant(qobject,
 				booleanType);
 		BooleanExpression testingtrue = factory.trueExpr();
-		BooleanExpression andtrue = bef.and(p, q);
-		BooleanExpression ortrue = bef.or(p, q);
-		BooleanExpression nottrue = bef.not(q);
-		BooleanExpression foralltrue = bef.forall(b, testingtrue);
-		BooleanExpression existstrue = bef.exists(b, testingfalse);
-		BooleanExpression foralltruechk = bef.exists(b, testingfalse);
-		BooleanExpression EXISTS = bef
+		BooleanExpression andtrue = factory.and(p, q);
+		BooleanExpression ortrue = factory.or(p, q);
+		BooleanExpression nottrue = factory.not(q);
+		BooleanExpression foralltrue = factory.forall(b, testingtrue);
+		BooleanExpression existstrue = factory.exists(b, testingfalse);
+		BooleanExpression foralltruechk = factory.exists(b, testingfalse);
+		BooleanExpression EXISTS = factory
 				.booleanExpression(SymbolicOperator.EXISTS, foralltruechk);
 		BooleanPrimitive cnf2 = (BooleanPrimitive) EXISTS;
-		BooleanExpression existschk = bef.forall(b, testingtrue);
-		BooleanExpression FORALL = bef
+		BooleanExpression existschk = factory.forall(b, testingtrue);
+		BooleanExpression FORALL = factory
 				.booleanExpression(SymbolicOperator.FORALL, existschk);
 		BooleanPrimitive cnf3 = (BooleanPrimitive) FORALL;
 
-		assertEquals(bef.or(bef.not(p), bef.not(q)), bef.not(andtrue));
-		assertEquals(bef.and(bef.not(p), bef.not(q)), bef.not(ortrue));
-		assertEquals(q, bef.not(nottrue));
+		assertEquals(factory.or(factory.not(p), factory.not(q)),
+				factory.not(andtrue));
+		assertEquals(factory.and(factory.not(p), factory.not(q)),
+				factory.not(ortrue));
+		assertEquals(q, factory.not(nottrue));
 
-		assertEquals(cnf2.argument(0), bef.not(foralltrue));
+		assertEquals(cnf2.argument(0), factory.not(foralltrue));
 
 		// for not(exists)
-		assertEquals(cnf3.argument(0), bef.not(existstrue));
+		assertEquals(cnf3.argument(0), factory.not(existstrue));
 	}
 
 	/**
@@ -200,7 +191,6 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void orTest() {
-		CnfFactory bef = (CnfFactory) Expressions.newCnfFactory(stf, of);
 		StringObject pobject = of.stringObject("p");
 		StringObject qobject = of.stringObject("q");
 		StringObject robject = of.stringObject("r");
@@ -210,35 +200,36 @@ public class CnfFactoryTest {
 				booleanType);
 		BooleanExpression r = (BooleanExpression) ef.symbolicConstant(robject,
 				booleanType);
-		BooleanExpression falseExpr = bef.falseExpr();
-		BooleanExpression trueExpr = bef.trueExpr();
-		BooleanExpression qandtrue = bef.and(q, trueExpr);
-		BooleanExpression pandfalse = bef.and(p, falseExpr);
-		BooleanExpression qortrue = bef.or(q, bef.not(p));
-		BooleanExpression porfalse = bef.or(p, r);
+		BooleanExpression falseExpr = factory.falseExpr();
+		BooleanExpression trueExpr = factory.trueExpr();
+		BooleanExpression qandtrue = factory.and(q, trueExpr);
+		BooleanExpression pandfalse = factory.and(p, falseExpr);
+		BooleanExpression qortrue = factory.or(q, factory.not(p));
+		BooleanExpression porfalse = factory.or(p, r);
 		BooleanExpression testingtrue = factory.trueExpr();
 		BooleanExpression testingfalse = factory.falseExpr();
 
 		// testing for various combinations of true and false and and or results
-		if (bef.getBooleanExpressionSimplification()) {
-			assertEquals(trueExpr,
-					(bef.or(p, bef.or(q, bef.or(bef.not(p), r)))));
-			assertEquals(trueExpr, bef.or(qortrue, porfalse));
+		if (factory.getBooleanExpressionSimplification()) {
+			assertEquals(trueExpr, (factory.or(p,
+					factory.or(q, factory.or(factory.not(p), r)))));
+			assertEquals(trueExpr, factory.or(qortrue, porfalse));
 		}
 
-		assertEquals(falseExpr, bef.and(bef.not(p), p));
-		assertEquals(falseExpr, bef.and(p, bef.not(p)));
-		assertEquals(bef.or(bef.not(p), r),
-				(bef.or(bef.not(p), bef.and(p, r))));
+		assertEquals(falseExpr, factory.and(factory.not(p), p));
+		assertEquals(falseExpr, factory.and(p, factory.not(p)));
+		assertEquals(factory.or(factory.not(p), r),
+				(factory.or(factory.not(p), factory.and(p, r))));
 
-		assertEquals(bef.and(p, r), bef.or(bef.and(p, r), bef.and(r, p)));
-		assertEquals(bef.or(bef.or(p, r), p), bef.or(r, p));
-		assertEquals(bef.or(bef.or(p, r), bef.or(q, r)),
-				bef.or(r, bef.or(q, p)));
-		assertEquals(testingtrue, bef.or(p, bef.not(p)));
-		assertEquals(testingtrue, bef.or(bef.not(p), p));
-		assertEquals(testingfalse, bef.not(bef.or(bef.not(p), p)));
-		assertEquals(q, bef.or(qandtrue, pandfalse));
+		assertEquals(factory.and(p, r),
+				factory.or(factory.and(p, r), factory.and(r, p)));
+		assertEquals(factory.or(factory.or(p, r), p), factory.or(r, p));
+		assertEquals(factory.or(factory.or(p, r), factory.or(q, r)),
+				factory.or(r, factory.or(q, p)));
+		assertEquals(testingtrue, factory.or(p, factory.not(p)));
+		assertEquals(testingtrue, factory.or(factory.not(p), p));
+		assertEquals(testingfalse, factory.not(factory.or(factory.not(p), p)));
+		assertEquals(q, factory.or(qandtrue, pandfalse));
 	}
 
 	/**
@@ -247,8 +238,7 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void orSimplifyTest() {
-		CnfFactory bef = (CnfFactory) Expressions.newCnfFactory(stf, of);
-		bef.setBooleanExpressionSimplification(true);
+		factory.setBooleanExpressionSimplification(true);
 		StringObject pobject = of.stringObject("p");
 		StringObject qobject = of.stringObject("q");
 		StringObject robject = of.stringObject("r");
@@ -258,35 +248,36 @@ public class CnfFactoryTest {
 				booleanType);
 		BooleanExpression r = (BooleanExpression) ef.symbolicConstant(robject,
 				booleanType);
-		BooleanExpression falseExpr = bef.falseExpr();
-		BooleanExpression trueExpr = bef.trueExpr();
-		BooleanExpression qandtrue = bef.and(q, trueExpr);
-		BooleanExpression pandfalse = bef.and(p, falseExpr);
-		BooleanExpression qortrue = bef.or(q, bef.not(p));
-		BooleanExpression porfalse = bef.or(p, r);
+		BooleanExpression falseExpr = factory.falseExpr();
+		BooleanExpression trueExpr = factory.trueExpr();
+		BooleanExpression qandtrue = factory.and(q, trueExpr);
+		BooleanExpression pandfalse = factory.and(p, falseExpr);
+		BooleanExpression qortrue = factory.or(q, factory.not(p));
+		BooleanExpression porfalse = factory.or(p, r);
 		BooleanExpression testingtrue = factory.trueExpr();
 		BooleanExpression testingfalse = factory.falseExpr();
 
 		// testing for various combinations of true and false and and or results
-		if (bef.getBooleanExpressionSimplification()) {
-			assertEquals(trueExpr,
-					(bef.or(p, bef.or(q, bef.or(bef.not(p), r)))));
-			assertEquals(trueExpr, bef.or(qortrue, porfalse));
+		if (factory.getBooleanExpressionSimplification()) {
+			assertEquals(trueExpr, (factory.or(p,
+					factory.or(q, factory.or(factory.not(p), r)))));
+			assertEquals(trueExpr, factory.or(qortrue, porfalse));
 		}
 
-		assertEquals(falseExpr, bef.and(bef.not(p), p));
-		assertEquals(falseExpr, bef.and(p, bef.not(p)));
-		assertEquals(bef.or(bef.not(p), r),
-				(bef.or(bef.not(p), bef.and(p, r))));
+		assertEquals(falseExpr, factory.and(factory.not(p), p));
+		assertEquals(falseExpr, factory.and(p, factory.not(p)));
+		assertEquals(factory.or(factory.not(p), r),
+				(factory.or(factory.not(p), factory.and(p, r))));
 
-		assertEquals(bef.and(p, r), bef.or(bef.and(p, r), bef.and(r, p)));
-		assertEquals(bef.or(bef.or(p, r), p), bef.or(r, p));
-		assertEquals(bef.or(bef.or(p, r), bef.or(q, r)),
-				bef.or(r, bef.or(q, p)));
-		assertEquals(testingtrue, bef.or(p, bef.not(p)));
-		assertEquals(testingtrue, bef.or(bef.not(p), p));
-		assertEquals(testingfalse, bef.not(bef.or(bef.not(p), p)));
-		assertEquals(q, bef.or(qandtrue, pandfalse));
+		assertEquals(factory.and(p, r),
+				factory.or(factory.and(p, r), factory.and(r, p)));
+		assertEquals(factory.or(factory.or(p, r), p), factory.or(r, p));
+		assertEquals(factory.or(factory.or(p, r), factory.or(q, r)),
+				factory.or(r, factory.or(q, p)));
+		assertEquals(testingtrue, factory.or(p, factory.not(p)));
+		assertEquals(testingtrue, factory.or(factory.not(p), p));
+		assertEquals(testingfalse, factory.not(factory.or(factory.not(p), p)));
+		assertEquals(q, factory.or(qandtrue, pandfalse));
 	}
 
 	/**
@@ -295,18 +286,17 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void andTrueExprTest() {
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
 		BooleanExpression testingtrue = factory.trueExpr();
 		BooleanExpression testingfalse = factory.falseExpr();
-		BooleanExpression falseExpr = bef.falseExpr();
-		BooleanExpression trueExpr = bef.trueExpr();
+		BooleanExpression falseExpr = factory.falseExpr();
+		BooleanExpression trueExpr = factory.trueExpr();
 
-		assertEquals(testingtrue, bef.and(testingtrue, testingtrue));
-		assertEquals(testingtrue, bef.and(trueExpr, testingtrue));
-		assertEquals(testingfalse, bef.and(trueExpr, testingfalse));
-		assertEquals(testingfalse, bef.and(testingfalse, trueExpr));
-		assertEquals(testingfalse, bef.and(falseExpr, testingtrue));
-		assertEquals(testingfalse, bef.and(testingtrue, falseExpr));
+		assertEquals(testingtrue, factory.and(testingtrue, testingtrue));
+		assertEquals(testingtrue, factory.and(trueExpr, testingtrue));
+		assertEquals(testingfalse, factory.and(trueExpr, testingfalse));
+		assertEquals(testingfalse, factory.and(testingfalse, trueExpr));
+		assertEquals(testingfalse, factory.and(falseExpr, testingtrue));
+		assertEquals(testingfalse, factory.and(testingtrue, falseExpr));
 	}
 
 	/**
@@ -315,20 +305,16 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void orTrueExprTest() {
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
-
 		BooleanExpression testingtrue = factory.trueExpr();
 		BooleanExpression testingfalse = factory.falseExpr();
+		BooleanExpression falseExpr = factory.falseExpr();
+		BooleanExpression trueExpr = factory.trueExpr();
 
-		BooleanExpression falseExpr = bef.falseExpr();
-		BooleanExpression trueExpr = bef.trueExpr();
-
-		assertEquals(testingtrue, bef.or(testingtrue, testingtrue));
-		assertEquals(testingtrue, bef.or(trueExpr, testingtrue));
-		assertEquals(testingtrue, bef.or(trueExpr, testingfalse));
-		assertEquals(testingtrue, bef.or(falseExpr, testingtrue));
-		assertEquals(testingfalse, bef.or(testingfalse, falseExpr));
-		// System.out.println(bef.and(p, bef.or(q, bef.not(q))));
+		assertEquals(testingtrue, factory.or(testingtrue, testingtrue));
+		assertEquals(testingtrue, factory.or(trueExpr, testingtrue));
+		assertEquals(testingtrue, factory.or(trueExpr, testingfalse));
+		assertEquals(testingtrue, factory.or(falseExpr, testingtrue));
+		assertEquals(testingfalse, factory.or(testingfalse, falseExpr));
 	}
 
 	/**
@@ -336,11 +322,9 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void booleannotTest() {
-		CnfFactory test = new CnfFactory(stf, of);
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
-		BooleanExpression falseEx = bef.falseExpr();
+		BooleanExpression falseEx = factory.falseExpr();
 
-		assertEquals(false, test.not(falseEx).isFalse());
+		assertEquals(false, factory.not(falseEx).isFalse());
 	}
 
 	/**
@@ -349,14 +333,13 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void forAllTest() {
-		CnfFactory test = new CnfFactory(stf, of);
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
-		BooleanExpression falseEx = bef.falseExpr();
-		BooleanExpression trueEx = bef.trueExpr();
-		assertEquals(true, test.forall(x, falseEx).isFalse());
-		assertEquals(false, test.forall(x, falseEx).isTrue());
-		assertEquals(true, test.forall(x, trueEx).isTrue());
-		assertEquals(false, test.forall(x, trueEx).isFalse());
+		BooleanExpression falseEx = factory.falseExpr();
+		BooleanExpression trueEx = factory.trueExpr();
+
+		assertEquals(true, factory.forall(x, falseEx).isFalse());
+		assertEquals(false, factory.forall(x, falseEx).isTrue());
+		assertEquals(true, factory.forall(x, trueEx).isTrue());
+		assertEquals(false, factory.forall(x, trueEx).isFalse());
 	}
 
 	/**
@@ -365,17 +348,15 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void existsTest() {
-		CnfFactory test = new CnfFactory(stf, of);
-		BooleanExpressionFactory bef = Expressions.newCnfFactory(stf, of);
-		BooleanExpression falseEx = bef.falseExpr();
-		BooleanExpression trueEx = bef.trueExpr();
-		BooleanExpression b = bef.or(trueEx, falseEx);
+		BooleanExpression falseEx = factory.falseExpr();
+		BooleanExpression trueEx = factory.trueExpr();
+		BooleanExpression b = factory.or(trueEx, falseEx);
 
-		assertEquals(true, test.exists(x, b).isTrue());
-		assertEquals(true, test.exists(x, falseEx).isFalse());
-		assertEquals(false, test.exists(x, falseEx).isTrue());
-		assertEquals(true, test.exists(x, trueEx).isTrue());
-		assertEquals(false, test.exists(x, trueEx).isFalse());
+		assertEquals(true, factory.exists(x, b).isTrue());
+		assertEquals(true, factory.exists(x, falseEx).isFalse());
+		assertEquals(false, factory.exists(x, falseEx).isTrue());
+		assertEquals(true, factory.exists(x, trueEx).isTrue());
+		assertEquals(false, factory.exists(x, trueEx).isFalse());
 	}
 
 	/**
@@ -385,8 +366,7 @@ public class CnfFactoryTest {
 	@Test
 	public void cnfSymbolicConstantTest() {
 		StringObject name = of.stringObject("Hello");
-		CnfFactory Test = new CnfFactory(stf, of);
-		CnfSymbolicConstant hellotest = (CnfSymbolicConstant) Test
+		CnfSymbolicConstant hellotest = (CnfSymbolicConstant) factory
 				.booleanSymbolicConstant(name);
 		StringObject hellomsg = of.stringObject("Hello");
 		StringObject hellomsgfalse = of.stringObject("hello");

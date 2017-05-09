@@ -99,8 +99,6 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	 * @return CommonExpressionFactory
 	 */
 	public CommonExpressionFactory(NumericExpressionFactory numericFactory) {
-		this.zero = numericFactory.zeroInt();
-		this.one = numericFactory.oneInt();
 		this.numericFactory = numericFactory;
 		this.numberFactory = numericFactory.numberFactory();
 		this.objectFactory = numericFactory.objectFactory();
@@ -109,10 +107,47 @@ public class CommonExpressionFactory implements ExpressionFactory {
 		this.expressionComparator = new ExpressionComparator(
 				numericFactory.comparator(), objectFactory.comparator(),
 				typeFactory.typeComparator());
-		this.nullExpression = objectFactory.canonic(expression(
-				SymbolicOperator.NULL, null, new SymbolicObject[] {}));
 		typeFactory.setExpressionComparator(expressionComparator);
 		objectFactory.setExpressionComparator(expressionComparator);
+	}
+
+	@Override
+	public void init() {
+		SymbolicTypeSequence referenceIndexSeq; // Ref x Int
+		SymbolicType referenceFunctionType; // Ref x Int -> Ref
+
+		booleanFactory.init();
+		numericFactory.init();
+
+		this.nullExpression = objectFactory.canonic(expression(
+				SymbolicOperator.NULL, null, new SymbolicObject[] {}));
+		this.zero = numericFactory.zeroInt();
+		this.one = numericFactory.oneInt();
+		integerType = objectFactory.canonic(typeFactory.integerType());
+		referenceType = objectFactory.canonic(typeFactory.tupleType(
+				objectFactory.stringObject("Ref"),
+				typeFactory.sequence(new SymbolicType[] { integerType })));
+		referenceIndexSeq = typeFactory
+				.sequence(new SymbolicType[] { referenceType, integerType });
+		referenceFunctionType = objectFactory.canonic(
+				typeFactory.functionType(referenceIndexSeq, referenceType));
+		arrayElementReferenceFunction = objectFactory.canonic(
+				symbolicConstant(objectFactory.stringObject("ArrayElementRef"),
+						referenceFunctionType));
+		tupleComponentReferenceFunction = objectFactory
+				.canonic(symbolicConstant(
+						objectFactory.stringObject("TupleComponentRef"),
+						referenceFunctionType));
+		unionMemberReferenceFunction = objectFactory.canonic(
+				symbolicConstant(objectFactory.stringObject("UnionMemberRef"),
+						referenceFunctionType));
+		offsetReferenceFunction = objectFactory.canonic(
+				symbolicConstant(objectFactory.stringObject("OffsetRef"),
+						referenceFunctionType));
+		nullReference = objectFactory
+				.canonic(new CommonNullReference(referenceType, zero));
+		identityReference = objectFactory
+				.canonic(new CommonIdentityReference(referenceType, one));
 	}
 
 	/**
@@ -221,42 +256,6 @@ public class CommonExpressionFactory implements ExpressionFactory {
 					arguments[1]);
 		return new HomogeneousExpression<SymbolicObject>(operator,
 				referenceType, arguments);
-	}
-
-	/**
-	 * Method that initializes a CommonExpressionFactory.
-	 */
-	@Override
-	public void init() {
-		SymbolicTypeSequence referenceIndexSeq; // Ref x Int
-		SymbolicType referenceFunctionType; // Ref x Int -> Ref
-
-		numericFactory.init();
-		integerType = objectFactory.canonic(typeFactory.integerType());
-		referenceType = objectFactory.canonic(typeFactory.tupleType(
-				objectFactory.stringObject("Ref"),
-				typeFactory.sequence(new SymbolicType[] { integerType })));
-		referenceIndexSeq = typeFactory
-				.sequence(new SymbolicType[] { referenceType, integerType });
-		referenceFunctionType = objectFactory.canonic(
-				typeFactory.functionType(referenceIndexSeq, referenceType));
-		arrayElementReferenceFunction = objectFactory.canonic(
-				symbolicConstant(objectFactory.stringObject("ArrayElementRef"),
-						referenceFunctionType));
-		tupleComponentReferenceFunction = objectFactory
-				.canonic(symbolicConstant(
-						objectFactory.stringObject("TupleComponentRef"),
-						referenceFunctionType));
-		unionMemberReferenceFunction = objectFactory.canonic(
-				symbolicConstant(objectFactory.stringObject("UnionMemberRef"),
-						referenceFunctionType));
-		offsetReferenceFunction = objectFactory.canonic(
-				symbolicConstant(objectFactory.stringObject("OffsetRef"),
-						referenceFunctionType));
-		nullReference = objectFactory
-				.canonic(new CommonNullReference(referenceType, zero));
-		identityReference = objectFactory
-				.canonic(new CommonIdentityReference(referenceType, one));
 	}
 
 	/**

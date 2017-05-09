@@ -18,7 +18,10 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.preuniverse.common;
 
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
@@ -34,6 +37,18 @@ public class CommonFactorySystem implements FactorySystem {
 
 	private SymbolicTypeFactory typeFactory;
 
+	/**
+	 * Creates new instance from the three given factories and initializes the
+	 * given factories in this order: first, the object factory, then the type
+	 * factory, then the expression factory.
+	 * 
+	 * @param objectFactory
+	 *            factory used to create {@link SymbolicObject}s
+	 * @param typeFactory
+	 *            factory used to create {@link SymbolicType}s
+	 * @param expressionFactory
+	 *            factory used to create {@link SymbolicExpression}s
+	 */
 	public CommonFactorySystem(ObjectFactory objectFactory,
 			SymbolicTypeFactory typeFactory,
 			ExpressionFactory expressionFactory) {

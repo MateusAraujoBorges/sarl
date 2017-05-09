@@ -18,24 +18,45 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.object.common;
 
+import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
- * A partial implementation of {@link SymbolicObject}.
+ * A partial implementation of {@link SymbolicObject}. Experimenting with two
+ * different modes: one which uses a tree for implementing the Flyweight
+ * Pattern, and another which uses a hash map.
  * 
  * @author siegel
- * 
  */
 public abstract class CommonSymbolicObject implements SymbolicObject {
 
 	// static fields ...
 
+	/**
+	 * Used as an ID in hash canonicalization mode. Indicates this is a new
+	 * object that has not even been hashed yet.
+	 */
 	private final static int NOT_HASHED = -3;
 
+	/**
+	 * Used as an ID in hash canonicalization mode. Indicates this object has
+	 * been hashed (and its hash code cached in variable {@link #hashCode}, but
+	 * not yet canonicalized.
+	 */
 	private final static int HASHED = -2;
 
-	// TODO
+	/**
+	 * Used as an ID for tree canonicalization only: indicates this is a new
+	 * object not yet being inserted into the canonicalization tree.
+	 */
+	private final static int NEW = -2;
+
+	/**
+	 * Used as an ID in both hash and tree modes: indicates that this object is
+	 * in the midst of being canonicalized. Needed to avoid infinite recursion
+	 * when canonicalizing children.
+	 */
 	private final static int IN_CANONIC = -1;
 
 	/**
@@ -52,15 +73,37 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 	private int hashCode;
 
 	/**
-	 * If this object has not been hashed, <code>id</code> will be
-	 * <code>NOT_HASHED</code>. If this object has been hashed, but is not
-	 * canonic, <code>id</code> will be <code>HASHED</code>. If this object is
-	 * canonic (which implies it has been hashed), <code>id</code> will be
-	 * nonnegative and will be the unique ID number among canonic objects. This
-	 * means this object is the unique representative of its equivalence class.
-	 * -1.
+	 * Has the hash code been computed and stored in variable {@link #hashCode}?
+	 * Only needed in the Tree mode. In Hashing mode, this information is
+	 * obtained from the ID. You can comment this out if you are not using Tree
+	 * mode, but you will also have to comment out other code in this class that
+	 * used it.
 	 */
-	private int id = NOT_HASHED;
+	private boolean hashed = false;
+
+	/**
+	 * <p>
+	 * In Hashing mode: If this object has not been hashed, <code>id</code> will
+	 * be {@link #NOT_HASHED}. If this object has been hashed, but is not
+	 * canonic, {@link #id} will be {@link #HASHED}. If this object is canonic
+	 * (which implies it has been hashed), {@link #id} will be nonnegative and
+	 * will be the unique ID number among canonic objects. This means this
+	 * object is the unique representative of its equivalence class.
+	 * </p>
+	 * 
+	 * <p>
+	 * In Tree mode: this field will start off as {@link #NEW}, then change to
+	 * {@link #IN_CANONIC}, then finally to a non-negative integer which is the
+	 * unique canonic ID number.
+	 * </p>
+	 */
+	private int id = (TREE_CANONIC ? NEW : NOT_HASHED);
+
+	/**
+	 * This number places a total order on all canonic objects. Used only in
+	 * Tree mode. It is not used until it becomes canonic.
+	 */
+	private RationalNumber order;
 
 	// Constructors...
 
@@ -91,6 +134,15 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 		return id;
 	}
 
+	void setOrder(RationalNumber r) {
+		this.order = r;
+	}
+
+	@Override
+	public RationalNumber getOrder() {
+		return order;
+	}
+
 	/**
 	 * Computes the hash code to be returned by hashCode(). This is run the
 	 * first time hashCode is run. The hash is cached for future calls to
@@ -100,11 +152,26 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 	 */
 	protected abstract int computeHashCode();
 
+	private boolean hashed() {
+		if (TREE_CANONIC) {
+			return hashed;
+		} else {
+			return id >= HASHED;
+		}
+	}
+
+	private void setHashed() {
+		if (TREE_CANONIC)
+			hashed = true;
+		else
+			id = HASHED;
+	}
+
 	@Override
 	public int hashCode() {
-		if (id == NOT_HASHED) {
+		if (!hashed()) {
 			hashCode = computeHashCode();
-			id = HASHED;
+			setHashed();
 		}
 		return hashCode;
 	}
@@ -129,11 +196,18 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 
 			if (this.symbolicObjectKind() != that.symbolicObjectKind())
 				return false;
-			if (id >= 0 && that.id >= 0) {
+			if (id >= 0 && that.id >= 0) { // both are canonic reps
+				// could also use: this == that
 				return id == that.id;
 			}
-			if (id >= HASHED && that.id >= HASHED && hashCode != that.hashCode)
-				return false;
+			if (TREE_CANONIC) {
+				if (hashed && that.hashed && hashCode != that.hashCode)
+					return false;
+			} else {
+				if (id >= HASHED && that.id >= HASHED
+						&& hashCode != that.hashCode)
+					return false;
+			}
 			return intrinsicEquals(that);
 		}
 		return false;
@@ -172,5 +246,4 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 	public void setInCanonic() {
 		this.id = IN_CANONIC;
 	}
-
 }

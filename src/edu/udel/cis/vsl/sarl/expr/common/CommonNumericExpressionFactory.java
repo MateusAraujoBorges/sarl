@@ -84,10 +84,6 @@ public class CommonNumericExpressionFactory
 		this.typeFactory = idealFactory.typeFactory();
 		this.objectFactory = typeFactory.objectFactory();
 		this.numberFactory = idealFactory.numberFactory();
-		this.herbrandRealType = typeFactory.herbrandRealType();
-		this.herbrandIntegerType = typeFactory.herbrandIntegerType();
-		this.idealRealType = typeFactory.realType();
-		this.idealIntegerType = typeFactory.integerType();
 		this.comparator = new CommonNumericComparator(idealFactory.comparator(),
 				herbrandFactory.comparator());
 	}
@@ -174,6 +170,10 @@ public class CommonNumericExpressionFactory
 	public void init() {
 		idealFactory.init();
 		herbrandFactory.init();
+		this.herbrandRealType = typeFactory.herbrandRealType();
+		this.herbrandIntegerType = typeFactory.herbrandIntegerType();
+		this.idealRealType = typeFactory.realType();
+		this.idealIntegerType = typeFactory.integerType();
 	}
 
 	/**

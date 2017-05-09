@@ -2,6 +2,7 @@ package edu.udel.cis.vsl.sarl.ideal.simplify;
 
 import java.io.PrintStream;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -174,8 +175,10 @@ public class Context {
 		this.otherConstantMap = otherConstantMap;
 		this.reduceMap = new TreeMap<Monic, Monic>(
 				info.idealFactory.monicComparator());
-		this.simplificationCache = new TreeMap<SymbolicObject, SymbolicObject>(
-				info.universe.comparator());
+		// this.simplificationCache = new TreeMap<SymbolicObject,
+		// SymbolicObject>(
+		// info.universe.comparator());
+		this.simplificationCache = new HashMap<>();
 		this.parent = null;
 		// do this once and put it in universe...
 		this.variableComparator = new Comparator<SymbolicConstant>() {

@@ -96,6 +96,10 @@ public class CnfFactory implements BooleanExpressionFactory {
 
 	// Fields ...
 
+	private ObjectFactory objectFactory;
+
+	private SymbolicTypeFactory typeFactory;
+
 	private NumericExpressionFactory numericExpressionFactory;
 
 	private SymbolicType _booleanType;
@@ -117,6 +121,15 @@ public class CnfFactory implements BooleanExpressionFactory {
 
 	public CnfFactory(SymbolicTypeFactory typeFactory,
 			ObjectFactory objectFactory) {
+		this.typeFactory = typeFactory;
+		this.objectFactory = objectFactory;
+		this.booleanComparator = new BooleanComparator(
+				objectFactory.comparator());
+		this.setFactory = new BooleanSetFactory(booleanComparator);
+	}
+
+	@Override
+	public void init() {
 		this._booleanType = typeFactory.booleanType();
 		this.trueExpr = objectFactory
 				.canonic(booleanExpression(SymbolicOperator.CONCRETE,
@@ -124,9 +137,6 @@ public class CnfFactory implements BooleanExpressionFactory {
 		this.falseExpr = objectFactory
 				.canonic(booleanExpression(SymbolicOperator.CONCRETE,
 						new SymbolicObject[] { objectFactory.falseObj() }));
-		this.booleanComparator = new BooleanComparator(
-				objectFactory.comparator());
-		this.setFactory = new BooleanSetFactory(booleanComparator);
 	}
 
 	// Helpers...

@@ -97,18 +97,6 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 		typeSequenceComparator = new TypeSequenceComparator();
 		typeComparator.setTypeSequenceComparator(typeSequenceComparator);
 		typeSequenceComparator.setTypeComparator(typeComparator);
-		booleanType = objectFactory.canonic(new CommonSymbolicPrimitiveType(
-				SymbolicTypeKind.BOOLEAN));
-		integerType = objectFactory.canonic(new CommonSymbolicIntegerType(
-				IntegerKind.IDEAL));
-		herbrandIntegerType = objectFactory
-				.canonic(new CommonSymbolicIntegerType(IntegerKind.HERBRAND));
-		realType = objectFactory.canonic(new CommonSymbolicRealType(
-				RealKind.IDEAL));
-		herbrandRealType = objectFactory.canonic(new CommonSymbolicRealType(
-				RealKind.HERBRAND));
-		characterType = objectFactory.canonic(new CommonSymbolicPrimitiveType(
-				SymbolicTypeKind.CHAR));
 		objectFactory.setTypeComparator(typeComparator);
 		objectFactory.setTypeSequenceComparator(typeSequenceComparator);
 	}
@@ -219,6 +207,18 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 	@Override
 	public void init() {
 		assert typeComparator.expressionComparator() != null;
+		booleanType = objectFactory.canonic(
+				new CommonSymbolicPrimitiveType(SymbolicTypeKind.BOOLEAN));
+		integerType = objectFactory
+				.canonic(new CommonSymbolicIntegerType(IntegerKind.IDEAL));
+		herbrandIntegerType = objectFactory
+				.canonic(new CommonSymbolicIntegerType(IntegerKind.HERBRAND));
+		realType = objectFactory
+				.canonic(new CommonSymbolicRealType(RealKind.IDEAL));
+		herbrandRealType = objectFactory
+				.canonic(new CommonSymbolicRealType(RealKind.HERBRAND));
+		characterType = objectFactory.canonic(
+				new CommonSymbolicPrimitiveType(SymbolicTypeKind.CHAR));
 	}
 
 	/**
@@ -385,7 +385,8 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 	}
 
 	@Override
-	public SymbolicMapType mapType(SymbolicType keyType, SymbolicType valueType) {
+	public SymbolicMapType mapType(SymbolicType keyType,
+			SymbolicType valueType) {
 		return new CommonSymbolicMapType(keyType, valueType);
 	}
 
@@ -396,8 +397,8 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 
 		if (result != null)
 			return result;
-		result = tupleType(objectFactory.stringObject("Entry"),
-				sequence(Arrays.asList(mapType.keyType(), mapType.valueType())));
+		result = tupleType(objectFactory.stringObject("Entry"), sequence(
+				Arrays.asList(mapType.keyType(), mapType.valueType())));
 		if (mapType.isCanonic())
 			result = objectFactory.canonic(result);
 		((CommonSymbolicMapType) mapType).setEntryType(result);

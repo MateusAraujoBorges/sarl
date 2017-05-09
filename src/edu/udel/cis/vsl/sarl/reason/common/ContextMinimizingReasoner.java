@@ -337,7 +337,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 		}
 
 		/*
-		 * Multi-level predicate reducetion is applied:
+		 * Multi-level predicate reduction is applied:
 		 * 
 		 * Level 0: reduce predicate with constant substitution map;
 		 * 
@@ -650,6 +650,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 	}
 
 	///////////////////////// Private helper methods ////////////////////////
+	
 	/**
 	 * Given a predicate in CNF (conjunctive normal form), find out all
 	 * universal quantified expression in the predicate.

@@ -64,7 +64,7 @@ public interface ObjectFactory {
 
 	/**
 	 * Asserts that expressionComparator, collectionComparator, typeComparator,
-	 * and typeSequenceComparator are set for this object
+	 * and typeSequenceComparator are set for this object.
 	 */
 	public void init();
 

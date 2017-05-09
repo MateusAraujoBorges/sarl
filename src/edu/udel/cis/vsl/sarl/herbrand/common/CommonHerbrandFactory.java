@@ -70,6 +70,12 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 		this.objectFactory = objectFactory;
 		this.typeFactory = typeFactory;
 		this.booleanFactory = booleanFactory;
+		this.comparator = new HerbrandComparator(objectFactory.comparator(),
+				typeFactory.typeComparator());
+	}
+
+	@Override
+	public void init() {
 		this.herbrandIntegerType = typeFactory.herbrandIntegerType();
 		this.herbrandRealType = typeFactory.herbrandRealType();
 		this.booleanType = typeFactory.booleanType();
@@ -81,8 +87,6 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 				objectFactory.numberObject(numberFactory.zeroInteger())));
 		this.zeroReal = objectFactory.canonic(number(
 				objectFactory.numberObject(numberFactory.zeroRational())));
-		this.comparator = new HerbrandComparator(objectFactory.comparator(),
-				typeFactory.typeComparator());
 	}
 
 	private SymbolicConstant commonSymbolicConstant(StringObject name,
@@ -311,10 +315,6 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 
 	private SymbolicConstant lteOperator(SymbolicType type) {
 		return type.isInteger() ? lteInteger() : lteReal();
-	}
-
-	@Override
-	public void init() {
 	}
 
 	@Override

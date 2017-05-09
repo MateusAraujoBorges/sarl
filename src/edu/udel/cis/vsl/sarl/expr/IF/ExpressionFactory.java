@@ -47,6 +47,9 @@ public interface ExpressionFactory {
 	/**
 	 * Initialize this expression factory. This should be called before it is
 	 * used.
+	 * 
+	 * Preconditions: the object factory and type factory have already been
+	 * initialized.
 	 */
 	void init();
 

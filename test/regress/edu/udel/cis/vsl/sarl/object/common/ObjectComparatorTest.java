@@ -17,9 +17,10 @@ import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
-import edu.udel.cis.vsl.sarl.number.IF.Numbers;
-import edu.udel.cis.vsl.sarl.number.real.RealNumberFactory;
-import edu.udel.cis.vsl.sarl.type.common.CommonSymbolicTypeFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
+import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
 /**
  * Test class for ObjectComparator
@@ -34,6 +35,10 @@ public class ObjectComparatorTest {
 	 */
 	ObjectComparator com;
 
+	ObjectFactory obFac;
+
+	SymbolicTypeFactory typeFac;
+
 	/**
 	 * Instantiates this.com
 	 * 
@@ -41,7 +46,11 @@ public class ObjectComparatorTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		this.com = new ObjectComparator(Numbers.REAL_FACTORY);
+		FactorySystem system = PreUniverses.newIdealFactorySystem();
+
+		this.obFac = system.objectFactory();
+		this.typeFac = system.typeFactory();
+		this.com = obFac.comparator();
 	}
 
 	/**
@@ -81,11 +90,6 @@ public class ObjectComparatorTest {
 		this.com.setTypeSequenceComparator(new TypeSequenceComparatorStub());
 		this.com.setTypeComparator(new TypeComparatorStub());
 		this.com.setExpressionComparator(new ExpressionComparatorStub());
-
-		CommonObjectFactory obFac = new CommonObjectFactory(
-				new RealNumberFactory());
-		CommonSymbolicTypeFactory typeFac = new CommonSymbolicTypeFactory(
-				obFac);
 
 		BooleanObject bool1 = obFac.booleanObject(true);
 		BooleanObject bool2 = obFac.booleanObject(true);

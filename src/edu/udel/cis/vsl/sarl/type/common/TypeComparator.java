@@ -29,29 +29,28 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 
 /**
- * This class is to compare different types in the Type module. It compare those
- * types: Boolean, Integer, Real, Array, Function, Tuple, and Union.
- * 
- * @author alali
+ * A {@link Comparator} on {@link SymbolicType}s.
  */
 public class TypeComparator implements Comparator<SymbolicType> {
 
 	/**
-	 * used to compare typeSequence from the types that contain a sequence, i.e.
-	 * Function, Tuple, Union
+	 * The comparator on type sequences.
 	 */
 	private Comparator<SymbolicTypeSequence> typeSequenceComparator;
 
 	/**
-	 * used to compare the lengths of a SymbolicCompleteArrayType
+	 * The comparator on expressions.
 	 */
 	private Comparator<SymbolicExpression> expressionComparator;
 
 	/**
-	 * a default constructor (with no arguments) for TypeComparator
+	 * Constructs a new instance of this class, but it can't be used until the
+	 * expression comparator and type sequence comparator have been set.
+	 * 
+	 * @see #setExpressionComparator(Comparator)
+	 * @see #setTypeSequenceComparator(Comparator)
 	 */
 	public TypeComparator() {
-
 	}
 
 	/**
@@ -97,11 +96,11 @@ public class TypeComparator implements Comparator<SymbolicType> {
 		case CHAR:
 			return 0;
 		case INTEGER:
-			return ((SymbolicIntegerType) o1).integerKind().compareTo(
-					((SymbolicIntegerType) o2).integerKind());
+			return ((SymbolicIntegerType) o1).integerKind()
+					.compareTo(((SymbolicIntegerType) o2).integerKind());
 		case REAL:
-			return ((SymbolicRealType) o1).realKind().compareTo(
-					((SymbolicRealType) o2).realKind());
+			return ((SymbolicRealType) o1).realKind()
+					.compareTo(((SymbolicRealType) o2).realKind());
 		case ARRAY: {
 			CommonSymbolicArrayType t1 = (CommonSymbolicArrayType) o1;
 			CommonSymbolicArrayType t2 = (CommonSymbolicArrayType) o2;

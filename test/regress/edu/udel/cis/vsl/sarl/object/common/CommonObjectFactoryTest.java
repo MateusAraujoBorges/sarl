@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.number.real.RealNumberFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 import edu.udel.cis.vsl.sarl.type.common.TypeComparator;
 import edu.udel.cis.vsl.sarl.type.common.TypeSequenceComparator;
 
@@ -22,7 +24,7 @@ public class CommonObjectFactoryTest {
 	/**
 	 * CommonObjectFactory that is instantiated during setUp
 	 */
-	CommonObjectFactory fac;
+	ObjectFactory fac;
 
 	/**
 	 * Instantiates this.fac to a CommonObjectFactory
@@ -30,9 +32,8 @@ public class CommonObjectFactoryTest {
 	 * @throws Exception
 	 */
 	@Before
-	public void setUp() throws Exception {
-		this.fac = null;
-		this.fac = new CommonObjectFactory(new RealNumberFactory());
+	public void setUp() {
+		this.fac = PreUniverses.newIdealFactorySystem().objectFactory();
 	}
 
 	/**

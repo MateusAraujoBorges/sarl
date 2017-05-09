@@ -53,6 +53,9 @@ public interface NumericExpressionFactory {
 	/**
 	 * Initialize this numeric expression factory. This factory should not be
 	 * used until it has been initialized.
+	 * 
+	 * Pre-conditions: the boolean factory, object factory, and type factory
+	 * have alrady been initialized.
 	 */
 	void init();
 

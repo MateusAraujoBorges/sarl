@@ -288,28 +288,9 @@ public class CommonIdealFactory implements IdealFactory {
 		this.objectFactory = objectFactory;
 		this.typeFactory = typeFactory;
 		this.booleanFactory = booleanFactory;
-		this.trueExpr = booleanFactory.trueExpr();
-		this.falseExpr = booleanFactory.falseExpr();
 		this.comparator = new IdealComparator(this);
 		this.monicComparator = new MonicComparator(this.comparator);
 		this.primitiveComparator = new PrimitiveComparator(this.comparator);
-		this.integerType = typeFactory.integerType();
-		this.realType = typeFactory.realType();
-		this.oneIntObject = objectFactory.oneIntObj();
-		this.oneInt = objectFactory.canonic(new One(integerType,
-				objectFactory.numberObject(numberFactory.oneInteger())));
-		this.oneReal = objectFactory.canonic(new One(realType,
-				objectFactory.numberObject(numberFactory.oneRational())));
-		this.zeroInt = canonicIntConstant(0);
-		this.negOneInt = canonicIntConstant(-1);
-		this.zeroReal = canonicRealConstant(0);
-		this.oneTermListInt = new Monomial[] { oneInt };
-		this.oneTermListReal = new Monomial[] { oneReal };
-		this.monomialAdder = new MonomialAdder(this);
-		this.primitivePowerMultiplier = new PrimitivePowerMultiplier(this);
-		this.monicFactory = new MonicFactory(primitiveComparator);
-		this.polynomialFactory = new PolynomialFactory(monicComparator);
-		this.intNumTwo = numberFactory.integer(2);
 	}
 
 	// ************************** Private Methods *************************
@@ -1576,6 +1557,27 @@ public class CommonIdealFactory implements IdealFactory {
 
 	@Override
 	public void init() {
+		// need the boolean factory, type factory, object factory, to be init-ed.
+		
+		this.trueExpr = booleanFactory.trueExpr();
+		this.falseExpr = booleanFactory.falseExpr();
+		this.integerType = typeFactory.integerType();
+		this.realType = typeFactory.realType();
+		this.oneIntObject = objectFactory.oneIntObj();
+		this.oneInt = objectFactory.canonic(new One(integerType,
+				objectFactory.numberObject(numberFactory.oneInteger())));
+		this.oneReal = objectFactory.canonic(new One(realType,
+				objectFactory.numberObject(numberFactory.oneRational())));
+		this.zeroInt = canonicIntConstant(0);
+		this.negOneInt = canonicIntConstant(-1);
+		this.zeroReal = canonicRealConstant(0);
+		this.oneTermListInt = new Monomial[] { oneInt };
+		this.oneTermListReal = new Monomial[] { oneReal };
+		this.monomialAdder = new MonomialAdder(this);
+		this.primitivePowerMultiplier = new PrimitivePowerMultiplier(this);
+		this.monicFactory = new MonicFactory(primitiveComparator);
+		this.polynomialFactory = new PolynomialFactory(monicComparator);
+		this.intNumTwo = numberFactory.integer(2);
 	}
 
 	@Override

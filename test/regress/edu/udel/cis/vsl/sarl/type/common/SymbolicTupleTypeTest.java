@@ -18,9 +18,9 @@ import org.junit.Test;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType.IntegerKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType.RealKind;
-import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
-import edu.udel.cis.vsl.sarl.object.IF.Objects;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 
 public class SymbolicTupleTypeTest {
 	/**
@@ -70,8 +70,10 @@ public class SymbolicTupleTypeTest {
 
 	@Before
 	public void setUp() throws Exception {
-		numberFactory = Numbers.REAL_FACTORY;
-		objectFactory = Objects.newObjectFactory(numberFactory);
+		FactorySystem system = PreUniverses.newIdealFactorySystem();
+
+		numberFactory = system.numberFactory();
+		objectFactory = system.objectFactory();
 		idealIntKind = new CommonSymbolicIntegerType(IntegerKind.IDEAL);
 		boundedIntKind = new CommonSymbolicIntegerType(IntegerKind.BOUNDED);
 		idealRealKind = new CommonSymbolicRealType(RealKind.IDEAL);
