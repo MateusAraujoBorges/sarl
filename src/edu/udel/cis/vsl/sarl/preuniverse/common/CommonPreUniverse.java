@@ -2898,7 +2898,9 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public Set<SymbolicConstant> getFreeSymbolicConstants(
 			SymbolicExpression expr) {
-		return new ExpressionWalker(expr).getResult();
+		// TODO: experimental optimization in progress...
+		// return new ExpressionWalker(expr).getResult();
+		return expr.getFreeVars();
 	}
 
 	@Override

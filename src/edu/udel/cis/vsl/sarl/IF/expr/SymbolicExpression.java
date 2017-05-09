@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.IF.expr;
 
+import java.util.Set;
+
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.CharObject;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
@@ -561,5 +563,9 @@ public interface SymbolicExpression extends SymbolicObject {
 	 * @return the {@link SymbolicType} of this expression
 	 */
 	SymbolicType type();
+
+	Set<SymbolicConstant> getFreeVars();
+
+	// void setFreeVars(Collection<SymbolicConstant>);
 
 }

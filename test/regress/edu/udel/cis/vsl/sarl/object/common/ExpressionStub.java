@@ -1,7 +1,9 @@
 package edu.udel.cis.vsl.sarl.object.common;
 
 import java.util.LinkedList;
+import java.util.Set;
 
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
@@ -141,6 +143,12 @@ public class ExpressionStub implements SymbolicExpression {
 
 	@Override
 	public RationalNumber getOrder() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Set<SymbolicConstant> getFreeVars() {
 		// TODO Auto-generated method stub
 		return null;
 	}

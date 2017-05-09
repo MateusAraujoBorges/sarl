@@ -481,6 +481,11 @@ public class CommonIdealFactory implements IdealFactory {
 	 * computes the monic p such that: f1=p*g1, f2=p*g2, and g1 and g2 have no
 	 * primitives in common.
 	 * 
+	 * TODO: make this faster by avoiding the "get"s altogether.
+	 * Do more like merge.  Both lists are sorted.  Handle special cases.
+	 * (Lists of length 1 or 2).
+	 * 
+	 * 
 	 * @param monic1
 	 *            a non-<code>null</code> monic
 	 * @param monic2

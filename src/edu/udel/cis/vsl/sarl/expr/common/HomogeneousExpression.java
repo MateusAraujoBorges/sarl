@@ -19,16 +19,26 @@
 package edu.udel.cis.vsl.sarl.expr.common;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
+import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.object.common.CommonSymbolicObject;
 import edu.udel.cis.vsl.sarl.util.ArrayIterable;
@@ -60,6 +70,8 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	 */
 	private ResultType containsQuantifier = ResultType.MAYBE;
 
+	private Set<SymbolicConstant> freeVars = null;
+
 	// Constructors...
 
 	/**
@@ -88,81 +100,128 @@ public class HomogeneousExpression<T extends SymbolicObject>
 
 	}
 
-	@Override
-	public SymbolicObjectKind symbolicObjectKind() {
-		return SymbolicObjectKind.EXPRESSION;
+	// Private methods...
+
+	/**
+	 * Walks over the elements of a collection, adding free symbolic constants
+	 * found to <code>result</code>.
+	 * 
+	 * @param seq
+	 *            a non-<code>null</code> symbolic sequence
+	 */
+	private void walkSequence(SymbolicSequence<?> seq,
+			Set<SymbolicConstant> freeSet) {
+		for (SymbolicExpression expr : seq)
+			freeSet.addAll(expr.getFreeVars());
 	}
 
 	/**
-	 * Returns the type of this symbolic expression.
+	 * Walks over a type. A type can contain expressions and therefore symbolic
+	 * constants. Adds free symbolic constants discovered to <code>result</code>
+	 * .
+	 * 
+	 * @param type
+	 *            a non-<code>null</code> symbolic type
 	 */
-	public SymbolicType type() {
-		return type;
+	private void walkType(SymbolicType type, Set<SymbolicConstant> freeSet) {
+		if (type == null)
+			return;
+
+		switch (type.typeKind()) {
+		case BOOLEAN:
+		case INTEGER:
+		case REAL:
+		case CHAR:
+			return;
+		case ARRAY: {
+			SymbolicArrayType arrayType = (SymbolicArrayType) type;
+			SymbolicType elementType = arrayType.elementType();
+
+			if (arrayType.isComplete()) {
+				NumericExpression extent = ((SymbolicCompleteArrayType) arrayType)
+						.extent();
+
+				freeSet.addAll(extent.getFreeVars());
+			}
+			walkType(elementType, freeSet);
+			return;
+		}
+		case FUNCTION: {
+			SymbolicFunctionType functionType = (SymbolicFunctionType) type;
+			SymbolicTypeSequence inputs = functionType.inputTypes();
+			SymbolicType output = functionType.outputType();
+
+			walkTypeSequence(inputs, freeSet);
+			walkType(output, freeSet);
+			return;
+		}
+		case TUPLE: {
+			SymbolicTupleType tupleType = (SymbolicTupleType) type;
+			SymbolicTypeSequence fields = tupleType.sequence();
+
+			walkTypeSequence(fields, freeSet);
+			return;
+		}
+		case UNION: {
+			SymbolicUnionType unionType = (SymbolicUnionType) type;
+			SymbolicTypeSequence members = unionType.sequence();
+
+			walkTypeSequence(members, freeSet);
+			return;
+		}
+		default:
+			throw new SARLInternalException("unreachable");
+		}
 	}
 
 	/**
-	 * Returns the arguments of this symbolic expression.
+	 * Walks a type sequence, adding found free symbolic constants to
+	 * <code>result</code>.
+	 * 
+	 * @param sequence
+	 *            a non-<code>null</code> type sequence
 	 */
-	public T[] arguments() {
-		return arguments;
-	}
-
-	@Override
-	public Iterable<T> getArguments() {
-		return new ArrayIterable<T>(arguments);
-	}
-
-	/**
-	 * Know that o has argumentKind SYMBOLIC_EXPRESSION and is not == to this.
-	 */
-	@Override
-	protected boolean intrinsicEquals(SymbolicObject o) {
-		HomogeneousExpression<?> that = (HomogeneousExpression<?>) o;
-
-		return operator == that.operator()
-				&& ((type == null && that.type == null)
-						|| type.equals(that.type))
-				&& Arrays.equals(arguments, that.arguments);
+	private void walkTypeSequence(SymbolicTypeSequence sequence,
+			Set<SymbolicConstant> freeSet) {
+		for (SymbolicType t : sequence) {
+			walkType(t, freeSet);
+		}
 	}
 
 	/**
-	 * Returns the type HashCode if not Null and all the Expressions arguments'
-	 * Hashcodes
+	 * Walks a symbolic object, looking for free symbolic constants. For
+	 * primitive objects, nothing to do. Otherwise, delegates to the appropriate
+	 * method.
+	 * 
+	 * @param obj
+	 *            a non-<code>null</code> symbolic object
 	 */
-	@Override
-	protected int computeHashCode() {
-		int numArgs = this.numArguments();
-		int result = operator.hashCode();
+	private void walkObject(SymbolicObject obj, Set<SymbolicConstant> freeSet) {
+		SymbolicObjectKind kind = obj.symbolicObjectKind();
 
-		if (type != null)
-			result ^= type.hashCode();
-		for (int i = 0; i < numArgs; i++)
-			result ^= this.argument(i).hashCode();
-		return result;
-	}
-
-	/**
-	 * Returns an individual argument within the SymbolicExpression
-	 */
-	@Override
-	public T argument(int index) {
-		return arguments[index];
-	}
-
-	/**
-	 * Returns the operator
-	 */
-	@Override
-	public SymbolicOperator operator() {
-		return operator;
-	}
-
-	/**
-	 * Returns the number of arguments within the SymbolicExpression
-	 */
-	@Override
-	public int numArguments() {
-		return arguments.length;
+		switch (kind) {
+		case BOOLEAN:
+		case INT:
+		case NUMBER:
+		case STRING:
+		case CHAR:
+			// no variables contained therein
+			return;
+		case EXPRESSION:
+			freeSet.addAll(((SymbolicExpression) obj).getFreeVars());
+			return;
+		case SEQUENCE:
+			walkSequence((SymbolicSequence<?>) obj, freeSet);
+			return;
+		case TYPE:
+			walkType((SymbolicType) obj, freeSet);
+			return;
+		case TYPE_SEQUENCE:
+			walkTypeSequence((SymbolicTypeSequence) obj, freeSet);
+			return;
+		default:
+			throw new SARLInternalException("unreachable");
+		}
 	}
 
 	/**
@@ -188,23 +247,6 @@ public class HomogeneousExpression<T extends SymbolicObject>
 				buffer.append(object.toStringBufferLong());
 		}
 		buffer.append("}");
-		return buffer;
-	}
-
-	/**
-	 * String representation of a singular SymbolicExpression
-	 */
-	@Override
-	public StringBuffer toStringBufferLong() {
-		StringBuffer buffer = new StringBuffer(getClass().getSimpleName());
-
-		buffer.append("[");
-		buffer.append(operator.toString());
-		buffer.append("; ");
-		buffer.append(type != null ? type.toString() : "no type");
-		buffer.append("; ");
-		buffer.append(toStringBufferLong(arguments));
-		buffer.append("]");
 		return buffer;
 	}
 
@@ -359,11 +401,111 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		}
 	}
 
+	private void processBitNot(StringBuffer buffer, boolean atomizeResult) {
+		atomizeResult = (((NumericExpression) arguments[0]).numArguments() > 1)
+				|| atomizeResult;
+		buffer.append('~');
+		buffer.append(arguments[0].toStringBuffer(false));
+		if (atomizeResult) {
+			buffer.insert(1, '(');
+			buffer.append(')');
+		}
+	}
+
+	private void processBitXOr(StringBuffer buffer, boolean atomizeResult) {
+		int n = arguments.length;
+
+		assert n > 0;
+		if (n == 1) {
+			buffer.append(arguments[0].toStringBuffer(atomizeResult));
+		} else {
+			buffer.append(arguments[0].toStringBuffer(false));
+
+			for (int i = 1; i < n; i++) {
+				buffer.append(" ^ ");
+				buffer.append(arguments[i].toStringBuffer(false));
+			}
+			if (atomizeResult) {
+				buffer.insert(0, '(');
+				buffer.append(')');
+			}
+		}
+	}
+
+	private void processBitOr(StringBuffer buffer, boolean atomizeResult) {
+		int n = arguments.length;
+
+		assert n > 0;
+		if (n == 1) {
+			buffer.append(arguments[0].toStringBuffer(atomizeResult));
+		} else {
+			buffer.append(arguments[0].toStringBuffer(false));
+
+			for (int i = 1; i < n; i++) {
+				buffer.append(" | ");
+				buffer.append(arguments[i].toStringBuffer(false));
+			}
+			if (atomizeResult) {
+				buffer.insert(0, '(');
+				buffer.append(')');
+			}
+		}
+	}
+
+	private void processBitAnd(StringBuffer buffer, boolean atomizeResult) {
+		int n = arguments.length;
+
+		assert n > 0;
+		if (n == 1) {
+			buffer.append(arguments[0].toStringBuffer(atomizeResult));
+		} else {
+			buffer.append(arguments[0].toStringBuffer(false));
+
+			for (int i = 1; i < n; i++) {
+				buffer.append(" & ");
+				buffer.append(arguments[i].toStringBuffer(false));
+			}
+			if (atomizeResult) {
+				buffer.insert(0, '(');
+				buffer.append(')');
+			}
+		}
+	}
+
+	/**
+	 * Know that o has argumentKind SYMBOLIC_EXPRESSION and is not == to this.
+	 */
 	@Override
-	public StringBuffer toStringBuffer(boolean atomize) {
-		if (debug)
-			return toStringBufferLong();
-		return toStringBuffer1(atomize);
+	protected boolean intrinsicEquals(SymbolicObject o) {
+		HomogeneousExpression<?> that = (HomogeneousExpression<?>) o;
+	
+		return operator == that.operator()
+				&& ((type == null && that.type == null)
+						|| type.equals(that.type))
+				&& Arrays.equals(arguments, that.arguments);
+	}
+
+	/**
+	 * Returns the type HashCode if not Null and all the Expressions arguments'
+	 * Hashcodes
+	 */
+	@Override
+	protected int computeHashCode() {
+		int numArgs = this.numArguments();
+		int result = operator.hashCode();
+	
+		if (type != null)
+			result ^= type.hashCode();
+		for (int i = 0; i < numArgs; i++)
+			result ^= this.argument(i).hashCode();
+		return result;
+	}
+
+	/**
+	 * Returns the arguments of this symbolic expression.
+	 */
+	public T[] arguments() {
+		return arguments;
 	}
 
 	/**
@@ -378,7 +520,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	 */
 	public StringBuffer toStringBuffer1(boolean atomize) {
 		StringBuffer result = new StringBuffer();
-
+	
 		switch (operator) {
 		case ADD:
 			processSum(result, atomize);
@@ -444,7 +586,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			return result;
 		case CONCRETE: {
 			SymbolicTypeKind tk = type.typeKind();
-
+	
 			if (tk == SymbolicTypeKind.CHAR) {
 				result.append("'");
 				result.append(arguments[0].toStringBuffer(false));
@@ -479,7 +621,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		case DENSE_ARRAY_WRITE: {
 			int count = 0;
 			boolean first = true;
-
+	
 			result.append(arguments[0].toStringBuffer(true));
 			result.append("[");
 			for (SymbolicExpression value : (SymbolicSequence<?>) arguments[1]) {
@@ -499,7 +641,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		case DENSE_TUPLE_WRITE: {
 			int count = 0;
 			boolean first = true;
-
+	
 			result.append(arguments[0].toStringBuffer(true));
 			result.append("<");
 			for (SymbolicExpression value : (SymbolicSequence<?>) arguments[1]) {
@@ -531,7 +673,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			result.append(", ");
 			result.append(arguments[1].toString());
 			result.append(", ");
-
+	
 			@SuppressWarnings("unchecked")
 			Iterator<NumericExpression> lows = ((Iterable<NumericExpression>) arguments[2])
 					.iterator();
@@ -539,10 +681,10 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			Iterator<NumericExpression> highs = ((Iterable<NumericExpression>) arguments[3])
 					.iterator();
 			boolean first = true;
-
+	
 			while (lows.hasNext()) {
 				NumericExpression low = lows.next(), high = highs.next();
-
+	
 				if (first)
 					first = false;
 				else
@@ -731,75 +873,69 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		}
 	}
 
-	private void processBitNot(StringBuffer buffer, boolean atomizeResult) {
-		atomizeResult = (((NumericExpression) arguments[0]).numArguments() > 1)
-				|| atomizeResult;
-		buffer.append('~');
-		buffer.append(arguments[0].toStringBuffer(false));
-		if (atomizeResult) {
-			buffer.insert(1, '(');
-			buffer.append(')');
-		}
+	/**
+	 * String representation of a singular SymbolicExpression
+	 */
+	@Override
+	public StringBuffer toStringBufferLong() {
+		StringBuffer buffer = new StringBuffer(getClass().getSimpleName());
+	
+		buffer.append("[");
+		buffer.append(operator.toString());
+		buffer.append("; ");
+		buffer.append(type != null ? type.toString() : "no type");
+		buffer.append("; ");
+		buffer.append(toStringBufferLong(arguments));
+		buffer.append("]");
+		return buffer;
 	}
 
-	private void processBitXOr(StringBuffer buffer, boolean atomizeResult) {
-		int n = arguments.length;
-
-		assert n > 0;
-		if (n == 1) {
-			buffer.append(arguments[0].toStringBuffer(atomizeResult));
-		} else {
-			buffer.append(arguments[0].toStringBuffer(false));
-
-			for (int i = 1; i < n; i++) {
-				buffer.append(" ^ ");
-				buffer.append(arguments[i].toStringBuffer(false));
-			}
-			if (atomizeResult) {
-				buffer.insert(0, '(');
-				buffer.append(')');
-			}
-		}
+	@Override
+	public StringBuffer toStringBuffer(boolean atomize) {
+		if (debug)
+			return toStringBufferLong();
+		return toStringBuffer1(atomize);
 	}
 
-	private void processBitOr(StringBuffer buffer, boolean atomizeResult) {
-		int n = arguments.length;
-
-		assert n > 0;
-		if (n == 1) {
-			buffer.append(arguments[0].toStringBuffer(atomizeResult));
-		} else {
-			buffer.append(arguments[0].toStringBuffer(false));
-
-			for (int i = 1; i < n; i++) {
-				buffer.append(" | ");
-				buffer.append(arguments[i].toStringBuffer(false));
-			}
-			if (atomizeResult) {
-				buffer.insert(0, '(');
-				buffer.append(')');
-			}
-		}
+	@Override
+	public Iterable<T> getArguments() {
+		return new ArrayIterable<T>(arguments);
 	}
 
-	private void processBitAnd(StringBuffer buffer, boolean atomizeResult) {
-		int n = arguments.length;
+	/**
+	 * Returns an individual argument within the SymbolicExpression
+	 */
+	@Override
+	public T argument(int index) {
+		return arguments[index];
+	}
 
-		assert n > 0;
-		if (n == 1) {
-			buffer.append(arguments[0].toStringBuffer(atomizeResult));
-		} else {
-			buffer.append(arguments[0].toStringBuffer(false));
+	/**
+	 * Returns the operator
+	 */
+	@Override
+	public SymbolicOperator operator() {
+		return operator;
+	}
 
-			for (int i = 1; i < n; i++) {
-				buffer.append(" & ");
-				buffer.append(arguments[i].toStringBuffer(false));
-			}
-			if (atomizeResult) {
-				buffer.insert(0, '(');
-				buffer.append(')');
-			}
-		}
+	/**
+	 * Returns the number of arguments within the SymbolicExpression
+	 */
+	@Override
+	public int numArguments() {
+		return arguments.length;
+	}
+
+	@Override
+	public SymbolicObjectKind symbolicObjectKind() {
+		return SymbolicObjectKind.EXPRESSION;
+	}
+
+	/**
+	 * Returns the type of this symbolic expression.
+	 */
+	public SymbolicType type() {
+		return type;
 	}
 
 	@Override
@@ -883,5 +1019,34 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		}
 		containsQuantifier = ResultType.NO;
 		return false;
+	}
+
+	@Override
+	public Set<SymbolicConstant> getFreeVars() {
+		if (freeVars != null)
+			return freeVars;
+		freeVars = new HashSet<>();
+		walkType(type, freeVars);
+		if (operator == SymbolicOperator.SYMBOLIC_CONSTANT) {
+			freeVars.add((SymbolicConstant) this);
+			return freeVars;
+		} else if (operator == SymbolicOperator.EXISTS
+				|| operator == SymbolicOperator.FORALL
+				|| operator == SymbolicOperator.LAMBDA) {
+			SymbolicConstant arg0 = (SymbolicConstant) arguments[0];
+			SymbolicExpression arg1 = (SymbolicExpression) arguments[1];
+			Set<SymbolicConstant> bodyVars = arg1.getFreeVars();
+
+			for (SymbolicConstant x : bodyVars) {
+				if (!arg0.equals(x))
+					freeVars.add(x);
+			}
+		} else {
+			for (SymbolicObject arg : arguments) {
+				if (arg != null)
+					walkObject(arg, freeVars);
+			}
+		}
+		return freeVars;
 	}
 }
