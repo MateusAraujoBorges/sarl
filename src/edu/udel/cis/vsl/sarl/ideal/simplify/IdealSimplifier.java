@@ -113,6 +113,10 @@ public class IdealSimplifier extends CommonSimplifier {
 			}
 		}
 		simplifyCount++;
+		// TODO: delete me:
+		// if (simplifyCount % 100000 == 0)
+		// out.println("simplifyCount = " + simplifyCount);
+
 		// rename bound variables with counts starting from where the
 		// original assumption renaming left off. This ensures that
 		// all bound variables in the assumption and x are unique, but

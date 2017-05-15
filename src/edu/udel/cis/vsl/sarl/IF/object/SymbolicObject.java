@@ -71,10 +71,6 @@ import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
  */
 public interface SymbolicObject {
 
-	/**
-	 * Use trees for canonicalization (not hash maps?)
-	 */
-	public final static boolean TREE_CANONIC = false;
 
 	public enum SymbolicObjectKind {
 		BOOLEAN, CHAR, EXPRESSION, SEQUENCE, INT, NUMBER, STRING, TYPE, TYPE_SEQUENCE

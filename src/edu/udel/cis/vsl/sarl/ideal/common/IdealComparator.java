@@ -69,9 +69,6 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
  * 
  * </ul>
  * 
- * TODO: all of these expressions should be assigned order numbers for fast
- * comparisons.
- * 
  * @author siegel
  * 
  */
@@ -117,6 +114,8 @@ public class IdealComparator implements Comparator<NumericExpression> {
 		this.objectComparator = objectFactory.comparator();
 		this.typeComparator = idealFactory.typeFactory().typeComparator();
 		this.numberFactory = idealFactory.numberFactory();
+		// the comparator used to insert Monics into monicOrderedSet,
+		// and to getHigher and getLower:
 		this.monicComparator = new Comparator<Monic>() {
 
 			@Override
@@ -294,7 +293,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 */
 	private Monic insertMonic(Monic monic) {
 		monic = objectFactory.canonic(monic);
-		if (monic.getOrder() != null)
+		if (monic.getOrder() != null) // already inserted
 			return monic;
 
 		Monic lower = monicOrderSet.lower(monic); // slow comparisons
@@ -309,7 +308,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 				.divide(numberFactory.add(low, high), two);
 
 		monic.setOrder(order);
-		monicOrderSet.add(monic);
+		monicOrderSet.add(monic); // fast comparisons
 		return monic;
 	}
 
@@ -464,17 +463,6 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 */
 	@Override
 	public int compare(NumericExpression o1, NumericExpression o2) {
-		if (SymbolicObject.TREE_CANONIC) {
-			RationalNumber order1 = o1.getOrder();
-
-			if (order1 != null) {
-				RationalNumber order2 = o2.getOrder();
-
-				if (order2 != null) {
-					return numberFactory.compare(order1, order2);
-				}
-			}
-		}
 		return compareWork(o1, o2);
 	}
 }

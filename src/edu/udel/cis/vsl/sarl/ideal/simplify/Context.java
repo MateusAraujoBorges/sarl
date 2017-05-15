@@ -794,6 +794,8 @@ public class Context {
 	}
 
 	public void cacheSimplification(SymbolicObject key, SymbolicObject value) {
+		assert key.isCanonic();
+		assert value.isCanonic();
 		simplificationCache.put(key, value);
 	}
 

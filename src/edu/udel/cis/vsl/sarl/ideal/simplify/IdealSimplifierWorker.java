@@ -1182,13 +1182,6 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 				}
 			}
 		}
-
-		// if (is0byEvaluation(poly))
-		// return trueExpr();
-		// if (new FastEvaluator(numberFactory(), poly).isZero())
-		// return trueExpr();
-		// return null;
-
 		// is the expansion different from the term map?
 		if (poly.hasTermWithNontrivialExpansion(id)) {
 			Monomial[] termMap = poly.expand(id);

@@ -178,27 +178,29 @@ public class CnfFactory implements BooleanExpressionFactory {
 	@Override
 	public BooleanExpression booleanExpression(SymbolicOperator operator,
 			SymbolicObject... args) {
-		return new BooleanPrimitive(operator, _booleanType, args);
+		return objectFactory
+				.canonic(new BooleanPrimitive(operator, _booleanType, args));
 	}
 
 	private CompoundBooleanExpression andExpr(BooleanExpression[] args) {
-		return new CompoundBooleanExpression(SymbolicOperator.AND, _booleanType,
-				args);
+		return objectFactory.canonic(new CompoundBooleanExpression(
+				SymbolicOperator.AND, _booleanType, args));
 	}
 
 	private CompoundBooleanExpression orExpr(BooleanExpression[] args) {
-		return new CompoundBooleanExpression(SymbolicOperator.OR, _booleanType,
-				args);
+		return objectFactory.canonic(new CompoundBooleanExpression(
+				SymbolicOperator.OR, _booleanType, args));
 	}
 
 	private CompoundBooleanExpression notExpr(BooleanExpression arg) {
-		return new CompoundBooleanExpression(SymbolicOperator.NOT, _booleanType,
-				arg);
+		return objectFactory.canonic(new CompoundBooleanExpression(
+				SymbolicOperator.NOT, _booleanType, arg));
 	}
 
 	@Override
 	public BooleanSymbolicConstant booleanSymbolicConstant(StringObject name) {
-		return new CnfSymbolicConstant(name, _booleanType);
+		return objectFactory
+				.canonic(new CnfSymbolicConstant(name, _booleanType));
 	}
 
 	@Override

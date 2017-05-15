@@ -25,7 +25,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
-import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.CharObject;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
@@ -138,17 +137,6 @@ public class ObjectComparator implements Comparator<SymbolicObject> {
 	public int compare(SymbolicObject o1, SymbolicObject o2) {
 		if (o1 == o2)
 			return 0;
-
-		if (SymbolicObject.TREE_CANONIC) {
-			RationalNumber order1 = o1.getOrder();
-
-			if (order1 != null) {
-				RationalNumber order2 = o2.getOrder();
-
-				if (order2 != null)
-					return numberFactory.compare(order1, order2);
-			}
-		}
 
 		SymbolicObjectKind kind = o1.symbolicObjectKind();
 		int result = kind.compareTo(o2.symbolicObjectKind());

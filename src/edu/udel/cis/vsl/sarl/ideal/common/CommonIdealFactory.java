@@ -1844,7 +1844,10 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public NumericPrimitive expression(SymbolicOperator operator,
 			SymbolicType numericType, SymbolicObject... arguments) {
-		return new NumericPrimitive(operator, numericType, arguments);
+		// TODO
+		// return new NumericPrimitive(operator, numericType, arguments);
+		return objectFactory.canonic(
+				new NumericPrimitive(operator, numericType, arguments));
 	}
 
 	@Override
@@ -2057,7 +2060,9 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public NumericSymbolicConstant symbolicConstant(StringObject name,
 			SymbolicType type) {
-		return new IdealSymbolicConstant(name, type);
+		// TODO
+		// return new IdealSymbolicConstant(name, type);
+		return objectFactory.canonic(new IdealSymbolicConstant(name, type));
 	}
 
 	@Override
@@ -2155,8 +2160,11 @@ public class CommonIdealFactory implements IdealFactory {
 	public Constant intConstant(int value) {
 		if (value == 1)
 			return oneInt;
-		return new NTConstant(integerType,
+		// TODO
+		Constant result = new NTConstant(integerType,
 				objectFactory.numberObject(numberFactory.integer(value)));
+
+		return objectFactory.canonic(result);
 	}
 
 	@Override
@@ -2275,12 +2283,16 @@ public class CommonIdealFactory implements IdealFactory {
 							+ primitive);
 		if (exponent.isOne())
 			return primitive;
-		return ntPrimitivePower(primitive, exponent);
+		// TODO
+		// return ntPrimitivePower(primitive, exponent);
+		return objectFactory.canonic(ntPrimitivePower(primitive, exponent));
 	}
 
 	@Override
 	public NTPolynomial polynomial(SymbolicType type, Monomial[] terms) {
-		return new NTPolynomial(type, terms);
+		// TODO
+		// return new NTPolynomial(type, terms);
+		return objectFactory.canonic(new NTPolynomial(type, terms));
 	}
 
 	@Override
@@ -2445,7 +2457,10 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public NTRationalExpression ntRationalExpression(Monomial numerator,
 			Monomial denominator) {
-		return new NTRationalExpression(numerator, denominator);
+		// TODO
+		// return new NTRationalExpression(numerator, denominator);
+		return objectFactory
+				.canonic(new NTRationalExpression(numerator, denominator));
 	}
 
 	@Override

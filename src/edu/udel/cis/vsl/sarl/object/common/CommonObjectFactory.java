@@ -21,9 +21,7 @@ package edu.udel.cis.vsl.sarl.object.common;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -31,7 +29,6 @@ import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
-import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.CharObject;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
@@ -67,15 +64,12 @@ public class CommonObjectFactory implements ObjectFactory {
 
 	private NumberObject zeroIntegerObj, zeroRealObj, oneIntegerObj, oneRealObj;
 
-	private RationalNumber twoRational;
-
 	private ObjectComparator comparator;
 
 	private SymbolicSequence<?> emptySequence;
 
 	public CommonObjectFactory(NumberFactory numberFactory) {
 		this.numberFactory = numberFactory;
-		this.twoRational = numberFactory.rational("2");
 		this.comparator = new ObjectComparator(numberFactory);
 	}
 
@@ -107,9 +101,7 @@ public class CommonObjectFactory implements ObjectFactory {
 		assert comparator.expressionComparator() != null;
 		assert comparator.typeComparator() != null;
 		assert comparator.typeSequenceComparator() != null;
-		this.objectMap = SymbolicObject.TREE_CANONIC
-				? new ConcurrentSkipListMap<>(comparator)
-				: new ConcurrentHashMap<>();
+		this.objectMap = new ConcurrentHashMap<>();
 		this.trueObj = canonic(new CommonBooleanObject(true));
 		this.falseObj = canonic(new CommonBooleanObject(false));
 		this.zeroIntObj = canonic(intObject(0));
@@ -148,25 +140,6 @@ public class CommonObjectFactory implements ObjectFactory {
 				theObject = (CommonSymbolicObject) object;
 				synchronized (theObject) {
 					theObject.setId(numObjects());
-
-					if (SymbolicObject.TREE_CANONIC) {
-						// does this require synchronization on objectMap?
-						NavigableMap<SymbolicObject, SymbolicObject> map = (NavigableMap<SymbolicObject, SymbolicObject>) objectMap;
-						CommonSymbolicObject predecessor = (CommonSymbolicObject) map
-								.lowerKey(object),
-								successor = (CommonSymbolicObject) map
-										.higherKey(object);
-						RationalNumber lo = (predecessor == null
-								? numberFactory.zeroRational()
-								: predecessor.getOrder());
-						RationalNumber hi = (successor == null
-								? numberFactory.oneRational()
-								: successor.getOrder());
-						RationalNumber order = numberFactory
-								.divide(numberFactory.add(lo, hi), twoRational);
-
-						theObject.setOrder(order);
-					}
 					objectListWriteLock.lock();
 					try {
 						objectList.add(theObject);
