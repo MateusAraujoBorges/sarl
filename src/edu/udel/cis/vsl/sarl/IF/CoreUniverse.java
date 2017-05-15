@@ -205,6 +205,28 @@ public interface CoreUniverse {
 	 */
 	SymbolicObject objectWithId(int id);
 
+	/**
+	 * The upper bound on the probability of error when deciding whether a
+	 * polynomial is 0. Must be a rational number in [0,1). If 0, probabilistic
+	 * techniques are not used. In general, this should be a very small positive
+	 * number.
+	 * 
+	 * @return the current upper bound on probability of error
+	 */
+	RationalNumber getProbabilisticBound();
+
+	/**
+	 * Sets the upper bound on the probability of error when deciding whether a
+	 * polynomial is 0. Must be a rational number in [0,1). If 0, probabilistic
+	 * techniques are not used. In general, this should be a very small positive
+	 * number.
+	 * 
+	 * @param epsilon
+	 *            the new upper bound on probability of error that should be
+	 *            used from this point forward
+	 */
+	void setProbabilisticBound(RationalNumber epsilon);
+
 	// Types...
 
 	/**

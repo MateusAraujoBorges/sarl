@@ -18,6 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.expr.common;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,6 +29,7 @@ import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
@@ -469,6 +471,67 @@ public class HomogeneousExpression<T extends SymbolicObject>
 				buffer.insert(0, '(');
 				buffer.append(')');
 			}
+		}
+	}
+
+	private void printCompressedTreeWorker(String prefix, PrintStream out,
+			Set<SymbolicObject> seen, SymbolicObject expr) {
+		switch (expr.symbolicObjectKind()) {
+		case EXPRESSION: {
+			SymbolicExpression symExpr = (SymbolicExpression) expr;
+	
+			prefix += " ";
+			/*
+			 * logic: first check if the expr is CONCRETE type, then check if
+			 * the expr is in set, if it's in the set, do some handling; else,
+			 * add it to set.
+			 */
+			if (symExpr.operator() == SymbolicOperator.CONCRETE)
+				out.println(prefix + symExpr);
+			else if (seen.contains(symExpr))
+				if (symExpr.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
+					out.println(prefix + symExpr + " " + "(" + "e"
+							+ symExpr.id() + ")");
+				else
+					out.println(prefix + "e" + symExpr.id());
+			else {
+				seen.add(symExpr);
+				if (symExpr.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
+					out.println(prefix + symExpr + " " + "(" + "e"
+							+ symExpr.id() + ")");
+				else {
+					out.print(prefix);
+					out.print(symExpr.operator());
+					out.println(" (" + "e" + symExpr.id() + ")");
+					for (SymbolicObject arg : symExpr.getArguments())
+						printCompressedTreeWorker(prefix + "|", out, seen, arg);
+				}
+			}
+			break;
+		}
+		case SEQUENCE: {
+			SymbolicSequence<?> symSeq = (SymbolicSequence<?>) expr;
+	
+			out.println(prefix + " SEQ");
+			for (int i = 0; i < symSeq.size(); i++) {
+				SymbolicObject seq = symSeq.get(i);
+	
+				printCompressedTreeWorker(prefix + " |", out, seen, seq);
+			}
+			break;
+		}
+		case INT:
+		case CHAR:
+		case BOOLEAN:
+		case STRING:
+		case NUMBER:
+			out.println(prefix + " " + expr);
+			break;
+		case TYPE:
+		case TYPE_SEQUENCE:
+		default:
+			out.println(
+					"Unkownn Symbolic Object: " + expr.symbolicObjectKind());
 		}
 	}
 
@@ -1048,5 +1111,12 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			}
 		}
 		return freeVars;
+	}
+	
+	@Override
+	public void printCompressedTree(PrintStream out) {
+		Set<SymbolicObject> seen = new HashSet<SymbolicObject>();
+
+		printCompressedTreeWorker("", out, seen, this);
 	}
 }

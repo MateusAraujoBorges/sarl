@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
+import java.util.Set;
+
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
@@ -32,6 +34,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
+import edu.udel.cis.vsl.sarl.util.SingletonSet;
 
 /**
  * A numeric primitive expression---one which is to be considered as an atomic
@@ -183,5 +186,10 @@ public class NumericPrimitive extends HomogeneousExpression<SymbolicObject>
 		if (this.equals(primitive))
 			return factory.oneInteger();
 		return factory.zeroInteger();
+	}
+
+	@Override
+	public Set<Primitive> getTruePrimitives() {
+		return new SingletonSet<Primitive>(this);
 	}
 }

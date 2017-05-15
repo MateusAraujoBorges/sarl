@@ -19,6 +19,8 @@
 package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.util.Comparator;
+import java.util.NavigableSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
@@ -33,6 +35,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
  * <p>
@@ -93,6 +96,14 @@ public class IdealComparator implements Comparator<NumericExpression> {
 
 	private NumberFactory numberFactory;
 
+	private ObjectFactory objectFactory;
+
+	private Comparator<Monic> monicComparator;
+
+	private NavigableSet<Monic> monicOrderSet;
+
+	private RationalNumber two;
+
 	/**
 	 * Constructs a new {@link IdealComparator} associated with the given ideal
 	 * factory.
@@ -102,9 +113,25 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 */
 	public IdealComparator(CommonIdealFactory idealFactory) {
 		this.idealFactory = idealFactory;
-		this.objectComparator = idealFactory.objectFactory().comparator();
+		this.objectFactory = idealFactory.objectFactory();
+		this.objectComparator = objectFactory.comparator();
 		this.typeComparator = idealFactory.typeFactory().typeComparator();
 		this.numberFactory = idealFactory.numberFactory();
+		this.monicComparator = new Comparator<Monic>() {
+
+			@Override
+			public int compare(Monic o1, Monic o2) {
+				RationalNumber order1 = o1.getOrder(), order2 = o2.getOrder();
+
+				if (order1 == null || order2 == null)
+					return compareMonicsWork(o1, o2);
+				else
+					return order1.numericalCompareTo(order2);
+			}
+
+		};
+		this.monicOrderSet = new ConcurrentSkipListSet<>(monicComparator);
+		this.two = numberFactory.rational("2");
 	}
 
 	/**
@@ -256,6 +283,43 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	}
 
 	/**
+	 * Inserts the monic into the {@link #monicOrderSet}, if it is not already
+	 * there. The monic is inserted maintaining the total order and its order
+	 * field is set to be the mean of the monic immediately preceding and
+	 * succeeding it.
+	 * 
+	 * @param monic
+	 *            the monic to insert
+	 * @return the canonicalized monic
+	 */
+	private Monic insertMonic(Monic monic) {
+		monic = objectFactory.canonic(monic);
+		if (monic.getOrder() != null)
+			return monic;
+
+		Monic lower = monicOrderSet.lower(monic); // slow comparisons
+		Monic higher = (lower == null
+				? (monicOrderSet.isEmpty() ? null : monicOrderSet.first())
+				: monicOrderSet.higher(lower)); // fast comparisons
+		RationalNumber low = (lower == null ? numberFactory.zeroRational()
+				: lower.getOrder());
+		RationalNumber high = (higher == null ? numberFactory.oneRational()
+				: higher.getOrder());
+		RationalNumber order = numberFactory
+				.divide(numberFactory.add(low, high), two);
+
+		monic.setOrder(order);
+		monicOrderSet.add(monic);
+		return monic;
+	}
+
+	public int compareMonics(Monic m1, Monic m2) {
+		m1 = insertMonic(m1);
+		m2 = insertMonic(m2);
+		return m1.getOrder().numericalCompareTo(m2.getOrder());
+	}
+
+	/**
 	 * Compares two {@link Monic}s of the same type. A {@link Monic} of higher
 	 * degree always precedes any {@link Monic} of lower degree. If they have
 	 * the same degree, the dictionary order on their {@link Primitive} factors
@@ -269,7 +333,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 * @return a negative integer if m1 precedes m2, 0 if they are equal, else a
 	 *         positive integer
 	 */
-	public int compareMonics(Monic m1, Monic m2) {
+	private int compareMonicsWork(Monic m1, Monic m2) {
 		NumberFactory nf = numberFactory;
 		IntegerNumber degree1 = m1.monomialDegree(nf);
 		IntegerNumber degree2 = m2.monomialDegree(nf);

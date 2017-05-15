@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
+import java.util.Set;
+
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
@@ -35,6 +37,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
+import edu.udel.cis.vsl.sarl.util.EmptySet;
 
 /**
  * Empty monic: equivalent to 1. The number 1 is the only thing which is both a
@@ -46,6 +49,8 @@ public class One extends HomogeneousExpression<SymbolicObject>
 		implements Constant, Monic {
 
 	private final static PrimitivePower[] emptyFactorList = new PrimitivePower[0];
+
+	private final static Set<Primitive> emptySet = new EmptySet<Primitive>();
 
 	/**
 	 * Cache of value returned by {@link #termMap(IdealFactory)}.
@@ -182,5 +187,10 @@ public class One extends HomogeneousExpression<SymbolicObject>
 	public IntegerNumber maxDegreeOf(NumberFactory factory,
 			Primitive primitive) {
 		return factory.zeroInteger();
+	}
+
+	@Override
+	public Set<Primitive> getTruePrimitives() {
+		return emptySet;
 	}
 }

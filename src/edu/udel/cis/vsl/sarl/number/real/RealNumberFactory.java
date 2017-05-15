@@ -2581,4 +2581,69 @@ public class RealNumberFactory implements NumberFactory {
 				interval.strictUpper(), negate(interval.lower()),
 				interval.strictLower());
 	}
+
+	private String zeros(int n) {
+		StringBuffer buf = new StringBuffer();
+
+		for (int i = 0; i < n; i++)
+			buf.append('0');
+		return buf.toString();
+	}
+
+	@Override
+	public String scientificString(RationalNumber num, int numSig) {
+		IntegerNumber numerator = numerator(num),
+				denominator = denominator(num);
+		boolean sign = false;
+
+		if (numerator.signum() < 0) {
+			sign = true;
+			numerator = negate(numerator);
+		}
+
+		String string1 = numerator.toString(), string2 = denominator.toString();
+		int len1 = string1.length(), len2 = string2.length();
+		int delta = 0; // divide final result by 10^{-delta}
+
+		if (len1 - len2 < numSig + 1) {
+			delta = numSig + 1 - len1 + len2;
+			string1 += zeros(delta);
+		}
+
+		IntegerNumber newNumerator = integer(string1);
+		IntegerNumber quotient = divide(newNumerator, denominator);
+		String quotientString = quotient.toString();
+		String sigString = quotientString.substring(0, numSig);
+
+		delta -= quotientString.length() - numSig;
+
+		IntegerNumber sigNumber = integer(sigString);
+		String extraDigitString = quotientString.substring(numSig, numSig + 1);
+		int extraDigit = Integer.valueOf(extraDigitString);
+
+		if (extraDigit >= 5) {
+			sigNumber = increment(sigNumber);
+			sigString = sigNumber.toString();
+			if (sigString.length() > numSig) {
+				delta -= (sigString.length() - numSig);
+				sigString = sigString.substring(0, numSig);
+			}
+		}
+
+		delta -= numSig - 1;
+		delta = -delta;
+
+		String result;
+
+		if (sign)
+			result = "-";
+		else
+			result = "";
+		result += sigString.substring(0, 1);
+
+		result += ".";
+		result += sigString.substring(1, sigString.length());
+		result += " E" + delta;
+		return result;
+	}
 }

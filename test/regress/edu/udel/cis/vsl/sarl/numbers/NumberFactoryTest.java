@@ -2363,5 +2363,36 @@ public class NumberFactoryTest {
 
 		}
 	}
-	// TODO:
+
+	@Test
+	public void scientific1() {
+		RationalNumber r = factory.divide(factory.rational("1"),
+				factory.rational("3"));
+
+		assertEquals("3.33 E-1", factory.scientificString(r, 3));
+		assertEquals("3. E-1", factory.scientificString(r, 1));
+	}
+	
+	@Test
+	public void scientific2() {
+		RationalNumber r = factory.rational("49900");
+
+		assertEquals("4.99 E4", factory.scientificString(r, 3));
+		assertEquals("5.0 E4", factory.scientificString(r, 2));
+	}
+	
+	@Test
+	public void scientific3() {
+		RationalNumber r = factory.rational("99900");
+
+		assertEquals("9.99 E4", factory.scientificString(r, 3));
+		assertEquals("1.0 E5", factory.scientificString(r, 2));
+	}
+	
+	@Test
+	public void scientific4() {
+		RationalNumber r = factory.rational("-.001");
+
+		assertEquals("-1.00 E-3", factory.scientificString(r, 3));
+	}
 }

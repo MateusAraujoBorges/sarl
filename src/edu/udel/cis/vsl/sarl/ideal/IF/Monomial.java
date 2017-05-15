@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.IF;
 
+import java.util.Set;
+
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 
@@ -179,4 +181,13 @@ public interface Monomial extends RationalExpression {
 	 *         <code>primitive</code> occurs in this
 	 */
 	IntegerNumber maxDegreeOf(NumberFactory factory, Primitive primitive);
+
+	/**
+	 * Returns the {@link Primitive}s which are not {@link Polynomial}s
+	 * occurring in this {@link Monomial}. These are essentially the "variables"
+	 * occurring in the polynomial expression.
+	 * 
+	 * @return the set of primitives that are not polynomials occurring herein
+	 */
+	Set<Primitive> getTruePrimitives();
 }

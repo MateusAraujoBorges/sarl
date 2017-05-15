@@ -64,7 +64,7 @@ public interface Reasoner {
 	/**
 	 * <p>
 	 * This method returns a map in which both keys and values are symbolic
-	 * expressions. This map represents the extact same equatianl relations as
+	 * expressions. This map represents the exact same equational relations as
 	 * the map returned by {@link #constantSubstitutionMap()} but with different
 	 * key set and value set.
 	 * </p>

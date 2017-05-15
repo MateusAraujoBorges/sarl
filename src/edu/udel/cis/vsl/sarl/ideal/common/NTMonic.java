@@ -19,6 +19,8 @@
 package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.io.PrintStream;
+import java.util.HashSet;
+import java.util.Set;
 
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
@@ -90,6 +92,11 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 	 * Cached result of {@link #termMap(IdealFactory)}.
 	 */
 	private Monomial[] termMap = null;
+
+	/**
+	 * Cached result of {@link #getTruePrimitives()}.
+	 */
+	private Set<Primitive> truePrimitives = null;
 
 	protected NTMonic(SymbolicType type, PrimitivePower[] factorMap) {
 		super(SymbolicOperator.MULTIPLY, type, factorMap);
@@ -219,6 +226,9 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 			of.canonize(expansion);
 		if (termMap != null)
 			of.canonize(termMap);
+		if (truePrimitives != null) {
+			truePrimitives = null;
+		}
 		// if (lowering != null && !lowering.isCanonic())
 		// lowering = of.canonic(lowering);
 	}
@@ -295,5 +305,16 @@ public class NTMonic extends HomogeneousExpression<PrimitivePower>
 			result = factory.add(result, pp.maxDegreeOf(factory, primitive));
 		}
 		return result;
+	}
+
+	@Override
+	public Set<Primitive> getTruePrimitives() {
+		if (truePrimitives == null) {
+			truePrimitives = new HashSet<Primitive>();
+			for (PrimitivePower pp : monicFactors()) {
+				truePrimitives.addAll(pp.getTruePrimitives());
+			}
+		}
+		return truePrimitives;
 	}
 }

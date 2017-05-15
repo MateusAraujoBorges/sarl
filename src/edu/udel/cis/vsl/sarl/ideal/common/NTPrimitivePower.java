@@ -19,6 +19,7 @@
 package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.io.PrintStream;
+import java.util.Set;
 
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
@@ -294,5 +295,10 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 			Primitive primitive) {
 		return (IntegerNumber) factory.multiply(exponent().getNumber(),
 				primitive().maxDegreeOf(factory, primitive));
+	}
+
+	@Override
+	public Set<Primitive> getTruePrimitives() {
+		return primitive().getTruePrimitives();
 	}
 }

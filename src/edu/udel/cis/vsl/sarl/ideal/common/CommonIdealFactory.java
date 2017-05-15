@@ -18,9 +18,12 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
+import java.io.PrintStream;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
@@ -67,6 +70,13 @@ public class CommonIdealFactory implements IdealFactory {
 	 * Print debugging information.
 	 */
 	public final static boolean debug = false;
+
+	/**
+	 * Avoid comparisons of ideal expressions as much as possible.
+	 */
+	public final static boolean AVOID_COMPARE = false;
+
+	public final static PrintStream out = System.out;
 
 	/**
 	 * The number factory used by this ideal factory to create and manipulate
@@ -156,6 +166,11 @@ public class CommonIdealFactory implements IdealFactory {
 	 */
 	private IntObject oneIntObject;
 
+	// /**
+	// * The {@link IntObject} wrapping the Java int 0.
+	// */
+	// private NumberObject zeroIntNumberObject;
+
 	/**
 	 * The integer 0 as a symbolic expression, which in this ideal universe is
 	 * an instance of {@link Constant}.
@@ -207,8 +222,13 @@ public class CommonIdealFactory implements IdealFactory {
 	 */
 	private PrimitivePowerMultiplier primitivePowerMultiplier;
 
+	// /**
+	// * The {@link IntegerNumber} 0.
+	// */
+	// private IntegerNumber intNumZero;
+
 	/**
-	 * A {@link IntegerNumber} of 2, which is used for 'n % 2' operation.
+	 * The {@link IntegerNumber} 2, which is used for 'n % 2' operation.
 	 */
 	private IntegerNumber intNumTwo;
 
@@ -479,12 +499,82 @@ public class CommonIdealFactory implements IdealFactory {
 	/**
 	 * Extracts the common factors from two monics. Given monics m1 and m2, this
 	 * computes the monic p such that: f1=p*g1, f2=p*g2, and g1 and g2 have no
+	 * primitives in common. This implementation of extract commonality uses no
+	 * comparisons. Only hashing and equality are used.
+	 * 
+	 * @param monic1
+	 *            a non-<code>null</code> monic
+	 * @param monic2
+	 *            a monic of same type as <code>m1</code>
+	 * @return array of length 3 consisting of p, g1, and g2, in that order
+	 */
+	private Monic[] extractCommonality_noCompare(Monic monic1, Monic monic2) {
+		SymbolicType type = monic1.type();
+		PrimitivePower[] set1 = monic1.monicFactors(this),
+				set2 = monic2.monicFactors(this);
+		List<PrimitivePower> newList1 = new LinkedList<>();
+		List<PrimitivePower> newList2 = new LinkedList<>();
+		List<PrimitivePower> common = new LinkedList<>();
+		Map<Primitive, PrimitivePower> map2 = new HashMap<>();
+		int index2 = 0;
+
+		for (PrimitivePower pp : set2) {
+			map2.put(pp.primitive(this), pp);
+		}
+		for (PrimitivePower ppower1 : set1) {
+			Primitive base = ppower1.primitive(this);
+			PrimitivePower ppower2 = map2.get(base);
+
+			if (ppower2 != null) {
+				while (true) {
+					PrimitivePower pp2 = set2[index2];
+
+					index2++;
+					if (ppower2.equals(pp2))
+						break;
+					newList2.add(pp2);
+				}
+
+				NumberObject exponent1 = ppower1.primitivePowerExponent(this);
+				NumberObject exponent2 = ppower2.primitivePowerExponent(this);
+				Number exp1Num = exponent1.getNumber();
+				Number exp2Num = exponent2.getNumber();
+				Number delta = numberFactory.subtract(exp2Num, exp1Num);
+				int signum = delta.signum();
+
+				if (signum == 0) {
+					common.add(ppower1);
+				} else if (signum > 0) {
+					common.add(ppower1);
+					newList2.add(primitivePower(base,
+							objectFactory.numberObject(delta)));
+				} else {
+					common.add(ppower2);
+					newList1.add(primitivePower(base, objectFactory
+							.numberObject(numberFactory.negate(delta))));
+				}
+			} else {
+				newList1.add(ppower1);
+			}
+		}
+		while (index2 < set2.length) {
+			newList2.add(set2[index2]);
+			index2++;
+		}
+
+		PrimitivePower[] array1 = newList1
+				.toArray(new PrimitivePower[newList1.size()]),
+				array2 = newList2.toArray(new PrimitivePower[newList2.size()]),
+				arrayCommon = common.toArray(new PrimitivePower[common.size()]);
+
+		return new Monic[] { monic(type, arrayCommon), monic(type, array1),
+				monic(type, array2) };
+	}
+
+	/**
+	 * Extracts the common factors from two monics. Given monics m1 and m2, this
+	 * computes the monic p such that: f1=p*g1, f2=p*g2, and g1 and g2 have no
 	 * primitives in common.
-	 * 
-	 * TODO: make this faster by avoiding the "get"s altogether.
-	 * Do more like merge.  Both lists are sorted.  Handle special cases.
-	 * (Lists of length 1 or 2).
-	 * 
 	 * 
 	 * @param monic1
 	 *            a non-<code>null</code> monic
@@ -493,6 +583,20 @@ public class CommonIdealFactory implements IdealFactory {
 	 * @return array of length 3 consisting of p, g1, and g2, in that order
 	 */
 	private Monic[] extractCommonality(Monic monic1, Monic monic2) {
+		if (debug) {
+			out.println("extractCommonality: ");
+			monic1.printCompressedTree(out);
+			out.println();
+			out.println("VS.");
+			out.println();
+			monic2.printCompressedTree(out);
+			out.println();
+			out.flush();
+		}
+
+		if (AVOID_COMPARE)
+			return extractCommonality_noCompare(monic1, monic2);
+
 		SymbolicType type = monic1.type();
 		PrimitivePower[] set1 = monic1.monicFactors(this),
 				set2 = monic2.monicFactors(this),
@@ -539,6 +643,127 @@ public class CommonIdealFactory implements IdealFactory {
 	 * modifies the array of monics by replacing each entry with the quotient of
 	 * the original entry with the common divisor.
 	 * 
+	 * This implementation optimized to avoid using comparisons.
+	 * 
+	 * @param monics
+	 *            non-empty array of {@link Monic}s which all have the same type
+	 * @return the common divisor
+	 * 
+	 * @see {@link #extractCommonality(Monic, Monic)}
+	 */
+	private Monic extractCommonality_noCompare(Monic[] monics) {
+		int numMonics = monics.length;
+		PrimitivePower[][] oldLists = new PrimitivePower[numMonics][];
+		@SuppressWarnings("unchecked")
+		List<PrimitivePower>[] newLists = (List<PrimitivePower>[]) new List<?>[numMonics];
+		List<PrimitivePower> commonList = new LinkedList<>();
+		int[] indexes = new int[numMonics];
+		@SuppressWarnings("unchecked")
+		Map<Primitive, PrimitivePower>[] maps = (Map<Primitive, PrimitivePower>[]) new Map<?, ?>[numMonics];
+
+		for (int i = 0; i < numMonics; i++) {
+			oldLists[i] = monics[i].monicFactors(this);
+			newLists[i] = new LinkedList<>();
+		}
+		for (int i = 1; i < numMonics; i++) {
+			indexes[i] = 0;
+			maps[i] = new HashMap<>();
+			for (PrimitivePower pp : oldLists[i])
+				maps[i].put(pp.primitive(this), pp);
+		}
+		// iterate over factors of monic0:
+		for (PrimitivePower pp0 : oldLists[0]) {
+			Primitive p0 = pp0.primitive(this);
+			NumberObject min = pp0.primitivePowerExponent(this);
+			boolean[] mark = new boolean[numMonics];
+			// mark[j] means primitive occurs in monics[j]'s factor list;
+			// ignore mark[0], it is always true.
+
+			// iterate over remaining monics:
+			for (int i = 1; i < numMonics; i++) {
+				PrimitivePower pp1 = maps[i].get(p0);
+
+				if (pp1 == null) {
+					min = null;
+				} else {
+					mark[i] = true;
+					// increment index to right point
+					while (true) {
+						PrimitivePower pp2 = oldLists[i][indexes[i]];
+
+						indexes[i]++;
+						if (pp1.equals(pp2))
+							break;
+						newLists[i].add(pp2);
+					}
+					if (min != null) {
+						NumberObject exp1 = pp1.primitivePowerExponent(this);
+
+						if (min.compareTo(exp1) > 0)
+							min = exp1;
+					}
+				}
+			}
+			if (min == null) {
+				newLists[0].add(pp0);
+				for (int i = 1; i < numMonics; i++)
+					if (mark[i])
+						newLists[i].add(oldLists[i][indexes[i] - 1]);
+			} else {
+				commonList.add(primitivePower(p0, min));
+
+				NumberObject exp0 = pp0.primitivePowerExponent(this);
+				Number minNum = min.getNumber();
+				Number diff0 = numberFactory.subtract(exp0.getNumber(), minNum);
+
+				if (!diff0.isZero())
+					newLists[0].add(primitivePower(p0,
+							objectFactory.numberObject(diff0)));
+				for (int i = 1; i < numMonics; i++) {
+					if (mark[i]) {
+						Number oldExp = oldLists[i][indexes[i] - 1]
+								.primitivePowerExponent(this).getNumber();
+						Number diff = numberFactory.subtract(oldExp, minNum);
+
+						if (!diff.isZero())
+							newLists[i].add(primitivePower(p0,
+									objectFactory.numberObject(diff)));
+					}
+				}
+			}
+		}
+
+		SymbolicType type = monics[0].type();
+
+		if (commonList.isEmpty())
+			return type.isInteger() ? oneInt : oneReal;
+		// add remaining factors to new list...
+		for (int i = 1; i < numMonics; i++) {
+			int numFactors = oldLists[i].length;
+
+			for (int k = indexes[i]; k < numFactors; k++)
+				newLists[i].add(oldLists[i][k]);
+		}
+		// form new Monics...
+		for (int i = 0; i < numMonics; i++) {
+			List<PrimitivePower> newList = newLists[i];
+			PrimitivePower[] newArray = newList
+					.toArray(new PrimitivePower[newList.size()]);
+
+			monics[i] = monic(type, newArray);
+		}
+
+		Monic result = monic(type,
+				commonList.toArray(new PrimitivePower[commonList.size()]));
+
+		return result;
+	}
+
+	/**
+	 * Extracts a common divisor from a nonempty sequence of {@link Monic}s and
+	 * modifies the array of monics by replacing each entry with the quotient of
+	 * the original entry with the common divisor.
+	 * 
 	 * @param monics
 	 *            non-empty array of {@link Monic}s which all have the same type
 	 * @return the common divisor
@@ -546,6 +771,9 @@ public class CommonIdealFactory implements IdealFactory {
 	 * @see {@link #extractCommonality(Monic, Monic)}
 	 */
 	private Monic extractCommonality(Monic[] monics) {
+		if (AVOID_COMPARE)
+			return extractCommonality_noCompare(monics);
+
 		int length = monics.length;
 		SymbolicType type = monics[0].type();
 		PrimitivePower[][] factorSets = new PrimitivePower[length][];
@@ -1562,13 +1790,16 @@ public class CommonIdealFactory implements IdealFactory {
 
 	@Override
 	public void init() {
-		// need the boolean factory, type factory, object factory, to be init-ed.
-		
+		// need the boolean factory, type factory, object factory, to be
+		// init-ed.
+
 		this.trueExpr = booleanFactory.trueExpr();
 		this.falseExpr = booleanFactory.falseExpr();
 		this.integerType = typeFactory.integerType();
 		this.realType = typeFactory.realType();
 		this.oneIntObject = objectFactory.oneIntObj();
+		// this.zeroIntNumberObject = objectFactory.canonic(
+		// objectFactory.numberObject(numberFactory.zeroInteger()));
 		this.oneInt = objectFactory.canonic(new One(integerType,
 				objectFactory.numberObject(numberFactory.oneInteger())));
 		this.oneReal = objectFactory.canonic(new One(realType,

@@ -34,8 +34,8 @@ import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
  * 
  * @author siegel
  */
-public class CommonSymbolicUniverse extends CommonPreUniverse implements
-		SymbolicUniverse {
+public class CommonSymbolicUniverse extends CommonPreUniverse
+		implements SymbolicUniverse {
 
 	/**
 	 * The factory for producing new Reasoner instances.

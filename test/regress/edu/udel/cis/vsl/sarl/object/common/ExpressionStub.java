@@ -1,5 +1,6 @@
 package edu.udel.cis.vsl.sarl.object.common;
 
+import java.io.PrintStream;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -151,6 +152,18 @@ public class ExpressionStub implements SymbolicExpression {
 	public Set<SymbolicConstant> getFreeVars() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void printCompressedTree(PrintStream out) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setOrder(RationalNumber order) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

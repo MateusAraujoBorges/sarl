@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
+import java.util.Set;
+
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
@@ -34,6 +36,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
+import edu.udel.cis.vsl.sarl.util.EmptySet;
 
 /**
  * A constant which is not 1.
@@ -43,6 +46,8 @@ import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
  */
 public class NTConstant extends HomogeneousExpression<SymbolicObject>
 		implements Constant {
+
+	private final static Set<Primitive> emptySet = new EmptySet<Primitive>();
 
 	/**
 	 * Constructs new {@link NTConstant} of given type, wrapping given numeric
@@ -183,5 +188,10 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 	public IntegerNumber maxDegreeOf(NumberFactory factory,
 			Primitive primitive) {
 		return factory.zeroInteger();
+	}
+
+	@Override
+	public Set<Primitive> getTruePrimitives() {
+		return emptySet;
 	}
 }

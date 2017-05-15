@@ -6,7 +6,6 @@ import static edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator.
 import static edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator.NEQ;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +36,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
+import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifierWorker;
 import edu.udel.cis.vsl.sarl.util.SingletonMap;
@@ -58,6 +58,16 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 	 * other seeds. TODO: this must be made thread-safe.
 	 */
 	private static Random random = new Random();
+
+	/**
+	 * Used in a heuristic to determine when to use probabilistic methods to
+	 * determine polynomial zero-ness. If the product of the number of variables
+	 * and the total detree is greater than or equal to this number, the
+	 * polynomial is considered too big to be expanded, and probabilistic
+	 * techniques will be used instead (unless the probabilistic bound is 0).
+	 */
+	private final static IntegerNumber polyProbThreshold = Numbers.REAL_FACTORY
+			.integer(100);
 
 	/**
 	 * A categorization of intervals based on their relationship to 0. Every
@@ -1088,6 +1098,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 	 *         <code>poly</code>=0
 	 */
 	private BooleanExpression simplifyEQ0Poly(Polynomial poly) {
+		NumberFactory nf = numberFactory();
 		IdealFactory id = idealFactory();
 		SymbolicType type = poly.type();
 		AffineExpression affine = affineFactory().affine(poly);
@@ -1097,9 +1108,9 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		// in the bound map in the monic method
 		if (pseudo != poly) {
 			// aX+b=0 => -b/a=X is an integer
-			if (type.isInteger() && !numberFactory()
+			if (type.isInteger() && !nf
 					.mod((IntegerNumber) affine.offset(),
-							(IntegerNumber) numberFactory()
+							(IntegerNumber) nf
 									.abs((IntegerNumber) affine.coefficient()))
 					.isZero())
 				return falseExpr();
@@ -1109,8 +1120,8 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 			if (interval == null)
 				return null;
 
-			Number pseudoValue = numberFactory().negate(numberFactory()
-					.divide(affine.offset(), affine.coefficient()));
+			Number pseudoValue = nf
+					.negate(nf.divide(affine.offset(), affine.coefficient()));
 
 			// Know: lower <? pseudoValue <? upper
 			// (Here "<?" means "<" or "<=".). So
@@ -1123,7 +1134,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 
 			Number lower = interval.lower();
 			int leftSign = lower == null ? -1
-					: numberFactory().subtract(lower, pseudoValue).signum();
+					: nf.subtract(lower, pseudoValue).signum();
 
 			// if 0 is not in that interval, return FALSE
 			if (leftSign > 0 || (leftSign == 0 && interval.strictLower()))
@@ -1131,54 +1142,44 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 
 			Number upper = interval.upper();
 			int rightSign = upper == null ? 1
-					: numberFactory().subtract(upper, pseudoValue).signum();
+					: nf.subtract(upper, pseudoValue).signum();
 
 			if (rightSign < 0 || (rightSign == 0 && interval.strictUpper()))
 				return falseExpr();
 		}
 
-		// TODO:
-		// heuristic totalDegree and number of primitives...
-		// (x1+x2+x3)^100
+		RationalNumber prob = universe.getProbabilisticBound();
 
-		Set<Primitive> vars = getTruePrimitives(poly);
-		IntegerNumber totalDegree = poly.totalDegree(numberFactory());
-		int numVars = vars.size();
-		IntegerNumber numVarsNumber = numberFactory().integer(numVars);
-		IntegerNumber product = numberFactory().multiply(totalDegree,
-				numVarsNumber);
-
-		// TODO: make constants somewhere...
-
-		IntegerNumber threshold = numberFactory().integer(100);
-		RationalNumber twoTo128 = numberFactory().power(
-				numberFactory().rational(numberFactory().integer(2)), 128);
-		RationalNumber prob = numberFactory()
-				.divide(numberFactory().oneRational(), twoTo128);
-
-		if (debug) {
-			info.out.println("Poly0: product = " + product + ", threshold = "
-					+ threshold);
-			info.out.flush();
-		}
-
-		if (numberFactory().compare(product, threshold) >= 0) {
+		if (!prob.isZero()) {
+			Set<Primitive> vars = poly.getTruePrimitives();
+			IntegerNumber totalDegree = poly.totalDegree(nf);
+			int numVars = vars.size();
+			IntegerNumber numVarsNumber = nf.integer(numVars);
+			IntegerNumber product = nf.multiply(totalDegree, numVarsNumber);
 
 			if (debug) {
-				info.out.println("Entering probabalistic mode...");
+				info.out.println("Poly0: product = " + product
+						+ ", threshold = " + polyProbThreshold);
 				info.out.flush();
 			}
+			if (nf.compare(product, polyProbThreshold) >= 0) {
+				if (debug) {
+					info.out.println("Entering probabalistic mode...");
+					info.out.flush();
+				}
 
-			boolean answer = is0WithProbability(poly, totalDegree, vars, prob);
+				boolean answer = is0WithProbability(poly, totalDegree, vars,
+						prob);
 
-			if (answer) {
-				info.out.println(
-						"Polynomial determined to be 0 with probability of error < "
-								+ prob);
-				info.out.flush();
-				return info.trueExpr;
-			} else {
-				return info.falseExpr;
+				if (answer) {
+					info.out.print(
+							"Warning: verified probabilistically with probability of error < ");
+					info.out.println(nf.scientificString(prob, 4));
+					info.out.flush();
+					return info.trueExpr;
+				} else {
+					return info.falseExpr;
+				}
 			}
 		}
 
@@ -1238,35 +1239,22 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 		}
 	}
 
-	private void addTruePrimitives(Monomial m, Set<Primitive> set) {
-		if (m instanceof Primitive && !(m instanceof Polynomial)) {
-			set.add((Primitive) m);
-		} else {
-			switch (m.operator()) {
-			case ADD:
-			case MULTIPLY:
-				int n = m.numArguments();
-
-				for (int i = 0; i < n; i++) {
-					SymbolicObject arg = m.argument(i);
-
-					addTruePrimitives((Monomial) arg, set);
-				}
-				break;
-			case POWER:
-				addTruePrimitives((Monomial) m.argument(0), set);
-				break;
-			default:
-			}
-		}
-	}
-
-	private Set<Primitive> getTruePrimitives(Monomial m) {
-		Set<Primitive> set = new HashSet<>();
-
-		addTruePrimitives(m, set);
-		return set;
-	}
+	/*
+	 * private void addTruePrimitives(Monomial m, Set<Primitive> set) { if (m
+	 * instanceof Primitive && !(m instanceof Polynomial)) { set.add((Primitive)
+	 * m); } else { switch (m.operator()) { case ADD: case MULTIPLY: int n =
+	 * m.numArguments();
+	 * 
+	 * for (int i = 0; i < n; i++) { SymbolicObject arg = m.argument(i);
+	 * 
+	 * addTruePrimitives((Monomial) arg, set); } break; case POWER:
+	 * addTruePrimitives((Monomial) m.argument(0), set); break; default: } } }
+	 * 
+	 * private Set<Primitive> getTruePrimitives(Monomial m) { Set<Primitive> set
+	 * = new HashSet<>();
+	 * 
+	 * addTruePrimitives(m, set); return set; }
+	 */
 
 	/**
 	 * Chooses a random integer with uniform probability from the set of all

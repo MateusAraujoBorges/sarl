@@ -19,6 +19,8 @@
 package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.io.PrintStream;
+import java.util.HashSet;
+import java.util.Set;
 
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
@@ -86,6 +88,8 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 	 * map from this to this.
 	 */
 	private PrimitivePower[] monicFactors = null;
+
+	private Set<Primitive> truePrimitives = null;
 
 	/**
 	 * Cached result for method
@@ -273,6 +277,8 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 			of.canonize(expansion);
 		if (monicFactors != null)
 			of.canonize(monicFactors);
+		if (truePrimitives != null)
+			truePrimitives = null;
 	}
 
 	public String shortString(NumberFactory factory) {
@@ -353,5 +359,16 @@ public class NTPolynomial extends HomogeneousExpression<Monomial>
 			}
 		}
 		return hasTermWithNTE == 1;
+	}
+
+	@Override
+	public Set<Primitive> getTruePrimitives() {
+		if (truePrimitives == null) {
+			truePrimitives = new HashSet<Primitive>();
+			for (Monomial m : termMap()) {
+				truePrimitives.addAll(m.getTruePrimitives());
+			}
+		}
+		return truePrimitives;
 	}
 }

@@ -182,4 +182,12 @@ public interface SymbolicObject {
 	 */
 	RationalNumber getOrder();
 
+	/**
+	 * Experimental: sets the number which imposes a total order on the set of
+	 * all canonic symbolic object.
+	 * 
+	 * @return the order of this object in the list of all canonic symbolic
+	 *         objects
+	 */
+	void setOrder(RationalNumber order);
 }

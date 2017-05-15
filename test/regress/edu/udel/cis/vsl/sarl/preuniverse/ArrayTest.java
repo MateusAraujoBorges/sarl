@@ -23,10 +23,6 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
-import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
-import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
-import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 
 /**
  * This class tests array functionality in the PreUniverse package.
@@ -40,9 +36,9 @@ public class ArrayTest {
 	public final static PrintStream out = System.out;
 
 	// Universe
-	private static PreUniverse universe;
+	private static SymbolicUniverse universe;
 	// Factories
-	private static ExpressionFactory expressionFactory;
+	// private static ExpressionFactory expressionFactory;
 	// SymbolicTypes
 	private static SymbolicType integerType;
 	private static SymbolicType realType;
@@ -54,8 +50,8 @@ public class ArrayTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		FactorySystem system = PreUniverses.newIdealFactorySystem();
-		universe = PreUniverses.newPreUniverse(system);
+		// FactorySystem system = PreUniverses.newIdealFactorySystem();
+		universe = SARL.newStandardUniverse();
 
 		// Instantiate Types
 		integerType = universe.integerType();
@@ -68,8 +64,8 @@ public class ArrayTest {
 		four = universe.integer(4);
 
 		// Instantiate the nullExpression SymbolicExpression
-		expressionFactory = system.expressionFactory();
-		nullExpression = expressionFactory.nullExpression();
+		// expressionFactory = system.expressionFactory();
+		nullExpression = universe.nullExpression();
 	}
 
 	/**
@@ -91,16 +87,16 @@ public class ArrayTest {
 						null, null });
 
 		// Call denseArrayWrite()!
-		SymbolicExpression denseResult = universe.denseArrayWrite(
-				intArrayTypeExpression, expressionsToWrite);
+		SymbolicExpression denseResult = universe
+				.denseArrayWrite(intArrayTypeExpression, expressionsToWrite);
 
 		// USAGE: universe.arrayWrite(array to write to, index in array to
 		// write at, value to write @ that index)
 
 		// TEST by comparing to normal write operation in arrayWrite()
 		// add a 2 at index 2 in arrayTypeExpression array
-		SymbolicExpression writeResult = universe.arrayWrite(
-				intArrayTypeExpression, two, two);
+		SymbolicExpression writeResult = universe
+				.arrayWrite(intArrayTypeExpression, two, two);
 		// replace entry at index 4 (NumExpr four) with a 2 (NumExpr two)
 		writeResult = universe.arrayWrite(writeResult, four, two);
 		assertEquals(writeResult, denseResult); // test if arrays are equal
@@ -176,7 +172,8 @@ public class ArrayTest {
 
 		// Will throw a SARLException because input param #2
 		// (List<SymbolicExpressions>) must be of type ARRAY
-		// "Element 2 of values argument to denseArrayWrite has incompatible type.\nExpected: int[]\nSaw: int"
+		// "Element 2 of values argument to denseArrayWrite has incompatible
+		// type.\nExpected: int[]\nSaw: int"
 		universe.denseArrayWrite(doubleIntArrayTypeExpression,
 				expressionsToWrite);
 	}
@@ -221,8 +218,7 @@ public class ArrayTest {
 		NumericExpression length;
 		tupleType1 = universe.tupleType(universe.stringObject("tupleType1"),
 				Arrays.asList(new SymbolicType[] { integerType, integerType }));
-		tuple = universe.tuple(
-				tupleType1,
+		tuple = universe.tuple(tupleType1,
 				Arrays.asList(new SymbolicExpression[] { universe.integer(1),
 						universe.integer(2) }));
 		length = universe.length(tuple);
@@ -285,8 +281,7 @@ public class ArrayTest {
 
 		tupleType1 = universe.tupleType(universe.stringObject("tupleType1"),
 				Arrays.asList(new SymbolicType[] { integerType, integerType }));
-		tuple = universe.tuple(
-				tupleType1,
+		tuple = universe.tuple(tupleType1,
 				Arrays.asList(new SymbolicExpression[] { universe.integer(1),
 						universe.integer(2) }));
 		// passing an argument from type other than array
@@ -445,8 +440,7 @@ public class ArrayTest {
 
 		tupleType1 = universe.tupleType(universe.stringObject("tupleType1"),
 				Arrays.asList(new SymbolicType[] { integerType, integerType }));
-		tuple = universe.tuple(
-				tupleType1,
+		tuple = universe.tuple(tupleType1,
 				Arrays.asList(new SymbolicExpression[] { universe.integer(1),
 						universe.integer(2) }));
 
@@ -574,8 +568,7 @@ public class ArrayTest {
 
 		tupleType1 = universe.tupleType(universe.stringObject("tupleType1"),
 				Arrays.asList(new SymbolicType[] { integerType, integerType }));
-		tuple = universe.tuple(
-				tupleType1,
+		tuple = universe.tuple(tupleType1,
 				Arrays.asList(new SymbolicExpression[] { universe.integer(1),
 						universe.integer(2) }));
 		two = universe.integer(2);
@@ -768,16 +761,16 @@ public class ArrayTest {
 		SymbolicExpression array, expected;
 		SymbolicExpression value;
 
-		array = universe.array(
-				integerType,
+		array = universe.array(integerType,
 				Arrays.asList(new NumericExpression[] { universe.integer(7),
 						universe.integer(10) }));
 		value = universe.integer(5);
 		// expected array after append
-		expected = universe.array(
-				integerType,
-				Arrays.asList(new NumericExpression[] { universe.integer(7),
-						universe.integer(10), universe.integer(5) }));
+		expected = universe
+				.array(integerType,
+						Arrays.asList(new NumericExpression[] {
+								universe.integer(7), universe.integer(10),
+								universe.integer(5) }));
 		// appending here
 		array = universe.append(array, value);
 
@@ -802,8 +795,7 @@ public class ArrayTest {
 
 		tupleType = universe.tupleType(universe.stringObject("type1"),
 				Arrays.asList(new SymbolicType[] { integerType, realType }));
-		tuple = universe.tuple(
-				tupleType,
+		tuple = universe.tuple(tupleType,
 				Arrays.asList(new NumericExpression[] { universe.integer(10),
 						universe.rational(6) }));
 		value = universe.integer(100);
@@ -826,8 +818,7 @@ public class ArrayTest {
 		SymbolicExpression array;
 		SymbolicExpression value;
 
-		array = universe.array(
-				integerType,
+		array = universe.array(integerType,
 				Arrays.asList(new NumericExpression[] { universe.integer(7),
 						universe.integer(10) }));
 		value = null;
@@ -850,8 +841,7 @@ public class ArrayTest {
 		SymbolicExpression array;
 		SymbolicExpression value;
 
-		array = universe.array(
-				integerType,
+		array = universe.array(integerType,
 				Arrays.asList(new NumericExpression[] { universe.integer(7),
 						universe.integer(10) }));
 		// the value is real but the array is integer
@@ -873,18 +863,15 @@ public class ArrayTest {
 
 		SymbolicExpression array1, array2, expected;
 
-		array1 = universe.array(
-				integerType,
+		array1 = universe.array(integerType,
 				Arrays.asList(new NumericExpression[] { universe.integer(7),
 						universe.integer(10) }));
-		array2 = universe.array(
-				realType,
+		array2 = universe.array(realType,
 				Arrays.asList(new NumericExpression[] { universe.rational(6),
 						universe.rational(110) }));
 
 		// expected array after append call
-		expected = universe.array(
-				integerType,
+		expected = universe.array(integerType,
 				Arrays.asList(new NumericExpression[] { universe.integer(7),
 						universe.integer(10), universe.integer(7),
 						universe.integer(110) }));
@@ -914,15 +901,15 @@ public class ArrayTest {
 		arrayType = universe.arrayType(integerType);
 
 		// creating first array
-		array1 = universe.array(
-				integerType,
+		array1 = universe.array(integerType,
 				Arrays.asList(new NumericExpression[] { universe.integer(10),
 						universe.integer(25) }));
 		// creating second array
-		array2 = universe.array(
-				integerType,
-				Arrays.asList(new NumericExpression[] { universe.integer(1),
-						universe.integer(5), universe.integer(8) }));
+		array2 = universe
+				.array(integerType,
+						Arrays.asList(new NumericExpression[] {
+								universe.integer(1), universe.integer(5),
+								universe.integer(8) }));
 		// creating an array that contains two arrays: array1 and array2 both of
 		// type integer type
 		array3 = universe.array(arrayType,
@@ -957,20 +944,21 @@ public class ArrayTest {
 
 		// initialization of tuple type
 
-		tupleType = universe.tupleType(
-				universe.stringObject("TupleType"),
+		tupleType = universe.tupleType(universe.stringObject("TupleType"),
 				Arrays.asList(new SymbolicType[] { integerType, realType,
 						integerType }));
 
 		// tuple1 and tuple2 will use the previous tuple type
-		tuple1 = universe.tuple(
-				tupleType,
-				Arrays.asList(new NumericExpression[] { universe.integer(20),
-						universe.rational(30), universe.integer(100) }));
-		tuple2 = universe.tuple(
-				tupleType,
-				Arrays.asList(new NumericExpression[] { universe.integer(8),
-						universe.rational(8.2), universe.integer(100000) }));
+		tuple1 = universe
+				.tuple(tupleType,
+						Arrays.asList(new NumericExpression[] {
+								universe.integer(20), universe.rational(30),
+								universe.integer(100) }));
+		tuple2 = universe
+				.tuple(tupleType,
+						Arrays.asList(new NumericExpression[] {
+								universe.integer(8), universe.rational(8.2),
+								universe.integer(100000) }));
 		// creating an array that contain two tuples
 		array = universe.array(tupleType,
 				Arrays.asList(new SymbolicExpression[] { tuple1, tuple2 }));
@@ -979,10 +967,11 @@ public class ArrayTest {
 		assertEquals(tuple2, universe.arrayRead(array, universe.integer(1)));
 		assertEquals(universe.integer(2), universe.length(array));
 
-		tuple1 = universe.tuple(
-				tupleType,
-				Arrays.asList(new NumericExpression[] { universe.integer(1000),
-						universe.rational(1.5), universe.integer(11) }));
+		tuple1 = universe
+				.tuple(tupleType,
+						Arrays.asList(new NumericExpression[] {
+								universe.integer(1000), universe.rational(1.5),
+								universe.integer(11) }));
 		// performing an array write to a specific position in the array.
 		array = universe.arrayWrite(array, universe.integer(1), tuple1);
 
@@ -1008,15 +997,15 @@ public class ArrayTest {
 		arrayType = universe.arrayType(integerType);
 
 		// creating first array
-		array1 = universe.array(
-				integerType,
+		array1 = universe.array(integerType,
 				Arrays.asList(new NumericExpression[] { universe.integer(10),
 						universe.integer(25) }));
 		// creating second array
-		array2 = universe.array(
-				integerType,
-				Arrays.asList(new NumericExpression[] { universe.integer(1),
-						universe.integer(5), universe.integer(8) }));
+		array2 = universe
+				.array(integerType,
+						Arrays.asList(new NumericExpression[] {
+								universe.integer(1), universe.integer(5),
+								universe.integer(8) }));
 		// creating one array that contains two arrays: array1 and array2 both
 		// of type integer type
 		array3 = universe.array(arrayType,
@@ -1039,10 +1028,8 @@ public class ArrayTest {
 
 		try {
 			// error is expected since array2 is different type
-			nestedArray = universe.array(
-					nestedType,
-					Arrays.asList(new SymbolicExpression[] { array3, array4,
-							array2 }));
+			nestedArray = universe.array(nestedType, Arrays.asList(
+					new SymbolicExpression[] { array3, array4, array2 }));
 
 		} catch (SARLException ex) {
 
@@ -1075,12 +1062,12 @@ public class ArrayTest {
 		SymbolicExpression ans;
 
 		arrayType = universe.arrayType(integerType, universe.integer(6));
-		x = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("x"), integerType);
+		x = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("x"), integerType);
 		function1 = universe.lambda(x, universe.multiply(x, x));
 		arrayL1 = universe.arrayLambda(arrayType, function1);
-		p = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("p"), integerType);
+		p = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("p"), integerType);
 		function2 = universe.lambda(p, universe.add(p, p));
 		arrayL2 = universe.arrayLambda(arrayType, function2);
 		ans = universe.integer(4);
@@ -1099,8 +1086,8 @@ public class ArrayTest {
 		SymbolicExpression arrayL;
 
 		arrayType = universe.arrayType(integerType, universe.integer(6));
-		x = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("x"), integerType);
+		x = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("x"), integerType);
 		function = universe.multiply(x, x);
 		arrayL = universe.arrayLambda(arrayType, function);
 	}
@@ -1139,13 +1126,13 @@ public class ArrayTest {
 		arrayType = universe.arrayType(integerType);
 
 		// creating first array
-		array1 = universe.array(
-				integerType,
-				Arrays.asList(new NumericExpression[] { universe.integer(10),
-						universe.integer(25), universe.integer(50) }));
+		array1 = universe
+				.array(integerType,
+						Arrays.asList(new NumericExpression[] {
+								universe.integer(10), universe.integer(25),
+								universe.integer(50) }));
 		// creating second array
-		array2 = universe.array(
-				integerType,
+		array2 = universe.array(integerType,
 				Arrays.asList(new NumericExpression[] { universe.integer(1),
 						universe.integer(5), universe.integer(8),
 						universe.integer(11) }));
@@ -1178,17 +1165,18 @@ public class ArrayTest {
 	public void complexArrayTest() {
 
 		NumericSymbolicConstant x_var, y_var;
-		NumericExpression x_plus_y, x_minus_y, x_plus_2y, x_plus_y_multiply_x_plus_y;
+		NumericExpression x_plus_y, x_minus_y, x_plus_2y,
+				x_plus_y_multiply_x_plus_y;
 		SymbolicExpression array, expected, simplifiedArray;
 		BooleanExpression claim1, claim2, claim;
 		Reasoner reasoner;
-		SymbolicUniverse reasonerUniverse = SARL.newStandardUniverse();
+		//SymbolicUniverse reasonerUniverse = SARL.newStandardUniverse();
 
 		// initialization of symbolic constants
-		x_var = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("x"), integerType);
-		y_var = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("y"), integerType);
+		x_var = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("x"), integerType);
+		y_var = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("y"), integerType);
 
 		// mixing the constant in numeric expressions
 		x_plus_y = (NumericExpression) universe.add(x_var, y_var);
@@ -1198,14 +1186,15 @@ public class ArrayTest {
 				y_var);
 		x_plus_2y = (NumericExpression) universe.add(x_var, x_plus_2y);
 
-		x_plus_y_multiply_x_plus_y = (NumericExpression) universe.multiply(
-				x_plus_y, x_plus_y);
+		x_plus_y_multiply_x_plus_y = (NumericExpression) universe
+				.multiply(x_plus_y, x_plus_y);
 
 		// initialization of the array
-		array = universe.array(
-				integerType,
-				Arrays.asList(new NumericExpression[] { x_plus_y, x_minus_y,
-						x_plus_2y, x_plus_y_multiply_x_plus_y }));
+		array = universe
+				.array(integerType,
+						Arrays.asList(new NumericExpression[] { x_plus_y,
+								x_minus_y, x_plus_2y,
+								x_plus_y_multiply_x_plus_y }));
 
 		// initialization of boolean expressions
 		claim1 = universe.equals(x_var, universe.integer(5));
@@ -1214,10 +1203,9 @@ public class ArrayTest {
 		// combining claim1, claim2 into claim
 		claim = universe.and(claim1, claim2);
 		// using the claim in the reasoner
-		reasoner = reasonerUniverse.reasoner(claim);
+		reasoner = universe.reasoner(claim);
 		// creating the expected result array
-		expected = universe.array(
-				integerType,
+		expected = universe.array(integerType,
 				Arrays.asList(new NumericExpression[] { universe.integer(8),
 						universe.integer(2), universe.integer(11),
 						universe.integer(64) }));
@@ -1247,18 +1235,19 @@ public class ArrayTest {
 		SymbolicExpression array1, array2;
 		SymbolicExpression nestedArray, array3, array4;
 		NumericSymbolicConstant x_var, y_var;
-		NumericExpression x_plus_y, x_minus_y, x_plus_2y, x_plus_y_multiply_x_plus_y;
+		NumericExpression x_plus_y, x_minus_y, x_plus_2y,
+				x_plus_y_multiply_x_plus_y;
 		@SuppressWarnings("unused")
 		SymbolicExpression simplifiedArray;
 		BooleanExpression claim1, claim2, claim;
 		Reasoner reasoner;
-		SymbolicUniverse reasonerUniverse = SARL.newStandardUniverse();
+//		SymbolicUniverse reasonerUniverse = SARL.newStandardUniverse();
 
 		// initialization of symbolic constants
-		x_var = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("x"), integerType);
-		y_var = (NumericSymbolicConstant) universe.symbolicConstant(
-				universe.stringObject("y"), integerType);
+		x_var = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("x"), integerType);
+		y_var = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("y"), integerType);
 
 		// mixing the constant in numeric expressions
 		x_plus_y = (NumericExpression) universe.add(x_var, y_var);
@@ -1268,8 +1257,8 @@ public class ArrayTest {
 				y_var);
 		x_plus_2y = (NumericExpression) universe.add(x_var, x_plus_2y);
 
-		x_plus_y_multiply_x_plus_y = (NumericExpression) universe.multiply(
-				x_plus_y, x_plus_y);
+		x_plus_y_multiply_x_plus_y = (NumericExpression) universe
+				.multiply(x_plus_y, x_plus_y);
 
 		// initialization of integer type array
 		arrayType = universe.arrayType(integerType);
@@ -1278,8 +1267,7 @@ public class ArrayTest {
 		array1 = universe.array(integerType,
 				Arrays.asList(new NumericExpression[] { x_plus_y, x_minus_y }));
 		// creating second array
-		array2 = universe.array(
-				integerType,
+		array2 = universe.array(integerType,
 				Arrays.asList(new NumericExpression[] { x_plus_2y,
 						x_plus_y_multiply_x_plus_y, x_minus_y }));
 		// creating one array that contains two arrays: array1 and array2 both
@@ -1311,10 +1299,8 @@ public class ArrayTest {
 
 		try {
 			// error is expected since array2 is different type
-			nestedArray = universe.array(
-					nestedType,
-					Arrays.asList(new SymbolicExpression[] { array3, array4,
-							array2 }));
+			nestedArray = universe.array(nestedType, Arrays.asList(
+					new SymbolicExpression[] { array3, array4, array2 }));
 
 		} catch (SARLException ex) {
 
@@ -1323,7 +1309,7 @@ public class ArrayTest {
 			nestedArray = universe.array(nestedType,
 					Arrays.asList(new SymbolicExpression[] { array3, array4 }));
 			// using the claim in a reasoner
-			reasoner = reasonerUniverse.reasoner(claim);
+			reasoner = universe.reasoner(claim);
 			// Substitute the values of the constant
 			simplifiedArray = reasoner.simplify(nestedArray);
 
@@ -1365,14 +1351,13 @@ public class ArrayTest {
 	 */
 	@Test
 	public void simplifyDenseArrayWrite() {
-		Iterable<NumericExpression> values = Arrays.asList(
-				universe.rational(9), universe.rational(99),
-				universe.rational(999));
+		Iterable<NumericExpression> values = Arrays.asList(universe.rational(9),
+				universe.rational(99), universe.rational(999));
 		SymbolicExpression oracle = universe.array(realType, values);
 		NumericExpression length = universe.integer(3);
 		SymbolicArrayType arrayType = universe.arrayType(realType, length);
-		SymbolicExpression x = universe.symbolicConstant(
-				universe.stringObject("X"), arrayType);
+		SymbolicExpression x = universe
+				.symbolicConstant(universe.stringObject("X"), arrayType);
 		SymbolicExpression a = universe.denseArrayWrite(x, values);
 
 		if (debug)

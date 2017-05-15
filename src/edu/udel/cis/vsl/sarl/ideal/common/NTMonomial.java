@@ -18,6 +18,8 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
+import java.util.Set;
+
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
@@ -208,6 +210,11 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	public IntegerNumber maxDegreeOf(NumberFactory factory,
 			Primitive primitive) {
 		return monic().maxDegreeOf(factory, primitive);
+	}
+
+	@Override
+	public Set<Primitive> getTruePrimitives() {
+		return monic().getTruePrimitives();
 	}
 
 }

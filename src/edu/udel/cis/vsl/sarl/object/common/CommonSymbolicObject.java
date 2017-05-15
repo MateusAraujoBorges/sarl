@@ -134,7 +134,7 @@ public abstract class CommonSymbolicObject implements SymbolicObject {
 		return id;
 	}
 
-	void setOrder(RationalNumber r) {
+	public void setOrder(RationalNumber r) {
 		this.order = r;
 	}
 

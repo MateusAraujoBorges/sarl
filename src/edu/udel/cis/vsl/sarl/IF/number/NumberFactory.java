@@ -797,4 +797,16 @@ public interface NumberFactory {
 		public int status;
 		public Interval union;
 	}
+
+	/**
+	 * Constructs a string representation of the given rational number in
+	 * scientific notation: x.xxxx * 10^{-yyy}.
+	 * 
+	 * @param num
+	 *            the rational number
+	 * @param numSig
+	 *            the number of significant digits
+	 * @return string representation in scientific notation
+	 */
+	String scientificString(RationalNumber num, int numSig);
 }

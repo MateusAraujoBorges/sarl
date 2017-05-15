@@ -18,6 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.IF.expr;
 
+import java.io.PrintStream;
 import java.util.Set;
 
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
@@ -564,8 +565,21 @@ public interface SymbolicExpression extends SymbolicObject {
 	 */
 	SymbolicType type();
 
+	/**
+	 * Get the set of free variables occurring in this symbolic expression. Do
+	 * not attempt to modify the set returned or all future behavior is
+	 * undefined.
+	 * 
+	 * @return the set of free (i.e., not bound) variables (symbolic constants)
+	 *         occurring in this expression
+	 */
 	Set<SymbolicConstant> getFreeVars();
 
-	// void setFreeVars(Collection<SymbolicConstant>);
-
+	/**
+	 * Prints compressed tree representation of this expression.
+	 * 
+	 * @param out
+	 *            where to send the output
+	 */
+	void printCompressedTree(PrintStream out);
 }

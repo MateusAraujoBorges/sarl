@@ -1,12 +1,13 @@
 package edu.udel.cis.vsl.sarl.preuniverse.common;
 
+import static edu.udel.cis.vsl.sarl.number.IF.Numbers.REAL_FACTORY;
+
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +35,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.UnionMemberReference;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.CharObject;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
@@ -66,6 +68,16 @@ import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 import edu.udel.cis.vsl.sarl.util.Pair;
 import edu.udel.cis.vsl.sarl.util.SequenceFactory;
 
+// TODO:
+// add fields:
+// RationalNumber probabilisticBound : number in (0,1), upper bound on
+// probability
+// of being wrong when testing for 0
+// boolean useProbabilisticTesting : should we use probabilistic techniques
+//
+// add to CERTAINTY: PROBABLY (with bound on probability)
+// need to count the number of events. this is change in CIVL
+
 public class CommonPreUniverse implements PreUniverse {
 
 	// Fields...
@@ -85,6 +97,14 @@ public class CommonPreUniverse implements PreUniverse {
 
 	// TODO: To make the length as a argument to the bit-wise
 	private int INTEGER_BIT_BOUND = 32;
+
+	/**
+	 * The upper bound on the probability of error when deciding whether a
+	 * polynomial is 0. Must be a rational number in [0,1). If 0, probabilistic
+	 * techniques are not used. In general, this should be a very small positive
+	 * number.
+	 */
+	private RationalNumber probabilisticBound;
 
 	/**
 	 * IntegerNumber versions of the corresponding static int fields.
@@ -206,7 +226,7 @@ public class CommonPreUniverse implements PreUniverse {
 
 	/**
 	 * Constructs a new CommonSymbolicUniverse from the given system of
-	 * factories.
+	 * factories. The probabilistic bound is given default value of 2^(-128).
 	 * 
 	 * @param system
 	 *            a factory system
@@ -237,6 +257,12 @@ public class CommonPreUniverse implements PreUniverse {
 			}
 
 		};
+
+		RationalNumber twoTo128 = numberFactory
+				.power(numberFactory.rational(numberFactory.integer(2)), 128);
+
+		probabilisticBound = numberFactory.divide(numberFactory.oneRational(),
+				twoTo128);
 	}
 
 	// Helper methods...
@@ -3504,71 +3530,8 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public void printCompressedTree(SymbolicExpression expr, PrintStream out) {
-		Set<SymbolicObject> seen = new HashSet<SymbolicObject>();
-
 		expr = canonic(expr);
-		printCompressedTreeWorker("", out, seen, expr);
-	}
-
-	private void printCompressedTreeWorker(String prefix, PrintStream out,
-			Set<SymbolicObject> seen, SymbolicObject expr) {
-		switch (expr.symbolicObjectKind()) {
-		case EXPRESSION: {
-			SymbolicExpression symExpr = (SymbolicExpression) expr;
-
-			prefix += " ";
-			/*
-			 * logic: first check if the expr is CONCRETE type, then check if
-			 * the expr is in set, if it's in the set, do some handling; else,
-			 * add it to set.
-			 */
-			if (symExpr.operator() == SymbolicOperator.CONCRETE)
-				out.println(prefix + symExpr);
-			else if (seen.contains(symExpr))
-				if (symExpr.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
-					out.println(prefix + symExpr + " " + "(" + "e"
-							+ symExpr.id() + ")");
-				else
-					out.println(prefix + "e" + symExpr.id());
-			else {
-				seen.add(symExpr);
-				if (symExpr.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
-					out.println(prefix + symExpr + " " + "(" + "e"
-							+ symExpr.id() + ")");
-				else {
-					out.print(prefix);
-					out.print(symExpr.operator());
-					out.println(" (" + "e" + symExpr.id() + ")");
-					for (SymbolicObject arg : symExpr.getArguments())
-						printCompressedTreeWorker(prefix + "|", out, seen, arg);
-				}
-			}
-			break;
-		}
-		case SEQUENCE: {
-			SymbolicSequence<?> symSeq = (SymbolicSequence<?>) expr;
-
-			out.println(prefix + " SEQ");
-			for (int i = 0; i < symSeq.size(); i++) {
-				SymbolicObject seq = symSeq.get(i);
-
-				printCompressedTreeWorker(prefix + " |", out, seen, seq);
-			}
-			break;
-		}
-		case INT:
-		case CHAR:
-		case BOOLEAN:
-		case STRING:
-		case NUMBER:
-			out.println(prefix + " " + expr);
-			break;
-		case TYPE:
-		case TYPE_SEQUENCE:
-		default:
-			out.println(
-					"Unkownn Symbolic Object: " + expr.symbolicObjectKind());
-		}
+		expr.printCompressedTree(out);
 	}
 
 	@Override
@@ -4265,6 +4228,20 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public NumericExpression[] expand(NumericExpression expr) {
 		return numericFactory.expand(expr);
+	}
+
+	@Override
+	public RationalNumber getProbabilisticBound() {
+		return this.probabilisticBound;
+	}
+
+	@Override
+	public void setProbabilisticBound(RationalNumber epsilon) {
+		if (epsilon.signum() < 0
+				|| REAL_FACTORY.oneRational().numericalCompareTo(epsilon) <= 0)
+			throw new SARLException(
+					"Probabilitic bound must be in [0,1), not " + epsilon);
+		this.probabilisticBound = epsilon;
 	}
 
 }
