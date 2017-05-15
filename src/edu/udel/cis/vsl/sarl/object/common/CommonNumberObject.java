@@ -116,7 +116,7 @@ public class CommonNumberObject extends CommonSymbolicObject
 	}
 
 	@Override
-	public SymbolicObjectKind symbolicObjectKind() {
+	public final SymbolicObjectKind symbolicObjectKind() {
 		return SymbolicObjectKind.NUMBER;
 	}
 

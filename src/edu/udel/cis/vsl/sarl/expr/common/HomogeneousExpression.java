@@ -990,7 +990,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	}
 
 	@Override
-	public SymbolicObjectKind symbolicObjectKind() {
+	public final SymbolicObjectKind symbolicObjectKind() {
 		return SymbolicObjectKind.EXPRESSION;
 	}
 

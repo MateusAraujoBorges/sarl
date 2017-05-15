@@ -85,7 +85,7 @@ public class CommonSymbolicTypeSequence extends CommonSymbolicObject
 	}
 
 	@Override
-	public SymbolicObjectKind symbolicObjectKind() {
+	public final SymbolicObjectKind symbolicObjectKind() {
 		return SymbolicObjectKind.TYPE_SEQUENCE;
 	}
 

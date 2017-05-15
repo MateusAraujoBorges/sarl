@@ -126,7 +126,7 @@ public class CommonIntObject extends CommonSymbolicObject implements IntObject {
 	}
 
 	@Override
-	public SymbolicObjectKind symbolicObjectKind() {
+	public final SymbolicObjectKind symbolicObjectKind() {
 		return SymbolicObjectKind.INT;
 	}
 

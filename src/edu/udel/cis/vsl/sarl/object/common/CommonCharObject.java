@@ -84,7 +84,7 @@ public class CommonCharObject extends CommonSymbolicObject
 	}
 
 	@Override
-	public SymbolicObjectKind symbolicObjectKind() {
+	public final SymbolicObjectKind symbolicObjectKind() {
 		return SymbolicObjectKind.CHAR;
 	}
 

@@ -372,7 +372,7 @@ public class SimpleSequence<T extends SymbolicExpression>
 	}
 
 	@Override
-	public SymbolicObjectKind symbolicObjectKind() {
+	public final SymbolicObjectKind symbolicObjectKind() {
 		return SymbolicObjectKind.SEQUENCE;
 	}
 

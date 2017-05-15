@@ -95,7 +95,7 @@ public class CommonBooleanObject extends CommonSymbolicObject
 	}
 
 	@Override
-	public SymbolicObjectKind symbolicObjectKind() {
+	public final SymbolicObjectKind symbolicObjectKind() {
 		return SymbolicObjectKind.BOOLEAN;
 	}
 

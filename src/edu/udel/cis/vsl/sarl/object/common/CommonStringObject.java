@@ -76,7 +76,7 @@ public class CommonStringObject extends CommonSymbolicObject
 	}
 
 	@Override
-	public SymbolicObjectKind symbolicObjectKind() {
+	public final SymbolicObjectKind symbolicObjectKind() {
 		return SymbolicObjectKind.STRING;
 	}
 

@@ -50,7 +50,7 @@ public abstract class CommonSymbolicType extends CommonSymbolicObject
 	protected abstract boolean typeEquals(CommonSymbolicType that);
 
 	@Override
-	public SymbolicObjectKind symbolicObjectKind() {
+	public final SymbolicObjectKind symbolicObjectKind() {
 		return SymbolicObjectKind.TYPE;
 	}
 
