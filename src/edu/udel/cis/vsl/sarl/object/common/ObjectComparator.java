@@ -37,77 +37,52 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 
 /**
- * Contains comparators for expressions, collections, types, and typesequences.
+ * The default {@link Comparator} on all {@link SymbolicObject}s. It requires
+ * {@link Comparator}s for {@link SymbolicExpression}s, {@link SymbolicType}s,
+ * and {@link SymbolicTypeSequence}s. It harness together all of these other
+ * comparators in order to form a more general comparator on all symbolic
+ * objects.
+ * 
+ * @author siegel
  */
 public class ObjectComparator implements Comparator<SymbolicObject> {
 
 	/**
-	 * Expression Comparator, set using setExpressionComparator
+	 * The {@link Comparator} on {@link SymbolicExpression}s used by this
+	 * {@link Comparator}.
 	 */
 	private Comparator<SymbolicExpression> expressionComparator;
 
+	/**
+	 * The factory used to perform exact, unbounded arithmetic on integer and
+	 * real numbers.
+	 */
 	private NumberFactory numberFactory;
 
 	/**
-	 * Type Comparator, set using setTypeComparator
+	 * The {@link Comparator} on {@link SymbolicType}s used by this
+	 * {@link Comparator}.
 	 */
 	private Comparator<SymbolicType> typeComparator;
 
 	/**
-	 * Type Sequence Comparison, set using setTypeSequenceComparator
+	 * The {@link Comparator} on {@link SymbolicTypeSequence}s used by this
+	 * {@link Comparator}.
 	 */
 	private Comparator<SymbolicTypeSequence> typeSequenceComparator;
 
+	/**
+	 * Creates a new instance using the given number factory. The specialized
+	 * comparators are initially <code>null</code>. They must be set later using
+	 * the setter methods provided here before the first comparison is
+	 * performed.
+	 * 
+	 * @param numberFactory
+	 *            the factory used to perform exact, unbounded real and integer
+	 *            arithmetic
+	 */
 	public ObjectComparator(NumberFactory numberFactory) {
 		this.numberFactory = numberFactory;
-	}
-
-	/**
-	 * Sets the expression comparator for this object
-	 * 
-	 * @param c
-	 */
-	public void setExpressionComparator(Comparator<SymbolicExpression> c) {
-		expressionComparator = c;
-	}
-
-	/**
-	 * Sets the type comparator for this object
-	 * 
-	 * @param c
-	 */
-	public void setTypeComparator(Comparator<SymbolicType> c) {
-		typeComparator = c;
-	}
-
-	/**
-	 * Sets the type sequence comparator for this object
-	 * 
-	 * @param c
-	 */
-	public void setTypeSequenceComparator(Comparator<SymbolicTypeSequence> c) {
-		typeSequenceComparator = c;
-	}
-
-	/**
-	 * @return this object's expression comparator
-	 */
-	public Comparator<SymbolicExpression> expressionComparator() {
-		return expressionComparator;
-	}
-
-	/**
-	 * @return the object's type comparator
-	 */
-	public Comparator<SymbolicType> typeComparator() {
-		return typeComparator;
-	}
-
-	/**
-	 * @return the object's type sequence comparator
-	 */
-	public Comparator<SymbolicTypeSequence> typeSequenceComparator() {
-		return typeSequenceComparator;
 	}
 
 	private int compareSequences(SymbolicSequence<?> seq1,
@@ -123,15 +98,78 @@ public class ObjectComparator implements Comparator<SymbolicObject> {
 				return result;
 		}
 		return 0;
-
 	}
 
 	/**
-	 * Compares two SymbolicObjects.
+	 * Sets the expression comparator for this object.
+	 * 
+	 * @param c
+	 *            the expression comparator to be used by this object
+	 */
+	public void setExpressionComparator(Comparator<SymbolicExpression> c) {
+		expressionComparator = c;
+	}
+
+	/**
+	 * Sets the type comparator for this object.
+	 * 
+	 * @param c
+	 *            the type comparator to be used by this object
+	 */
+	public void setTypeComparator(Comparator<SymbolicType> c) {
+		typeComparator = c;
+	}
+
+	/**
+	 * Sets the type sequence comparator for this object.
+	 * 
+	 * @param c
+	 *            the type sequence comparator to be used by this object
+	 */
+	public void setTypeSequenceComparator(Comparator<SymbolicTypeSequence> c) {
+		typeSequenceComparator = c;
+	}
+
+	/**
+	 * Gets the expression comparator.
+	 * 
+	 * @return this object's expression comparator
+	 */
+	public Comparator<SymbolicExpression> expressionComparator() {
+		return expressionComparator;
+	}
+
+	/**
+	 * Gets the type comparator.
+	 * 
+	 * @return the object's type comparator
+	 */
+	public Comparator<SymbolicType> typeComparator() {
+		return typeComparator;
+	}
+
+	/**
+	 * Gets the type sequence comparator.
+	 * 
+	 * @return the object's type sequence comparator
+	 */
+	public Comparator<SymbolicTypeSequence> typeSequenceComparator() {
+		return typeSequenceComparator;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * Compares any two non-<code>null</code> {@link SymbolicObject}s. The
+	 * objects are ordered first by "kind".
 	 * 
 	 * @param o1
+	 *            first object
 	 * @param o2
-	 * @return 0 if the two objects are equivalent
+	 *            second object
+	 * @return 0 a negative integer if the first object precedes the second in
+	 *         the total order; 0 if the two objects are equal; a positive
+	 *         integer if the second object precedes the first
 	 */
 	@Override
 	public int compare(SymbolicObject o1, SymbolicObject o2) {
