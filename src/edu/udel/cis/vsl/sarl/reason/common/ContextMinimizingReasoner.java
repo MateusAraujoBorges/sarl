@@ -133,14 +133,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 		this.context = context;
 		this.partition = Simplify.newContextPartition(factory.getUniverse(),
 				context);
-	}
-
-	// Private methods...
-
-	private Simplifier getSimplifier() {
-		if (simplifier == null)
-			simplifier = factory.getSimplifierFactory().newSimplifier(context);
-		return simplifier;
+		this.simplifier = factory.getSimplifierFactory().newSimplifier(context);
 	}
 
 	private synchronized TheoremProver getProver() {
@@ -324,7 +317,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 		}
 		// the method named "getReducedContext" below has nothing to do
 		// with the context reduction being performed by this reasoner...
-		BooleanExpression newContext = getSimplifier().getReducedContext();
+		BooleanExpression newContext = simplifier.getReducedContext();
 		BooleanExpression newPredicate = (BooleanExpression) simplifier
 				.apply(predicate);
 		ValidityResult result = null;
@@ -477,22 +470,22 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 	@Override
 	public Map<SymbolicConstant, SymbolicExpression> constantSubstitutionMap() {
-		return getSimplifier().constantSubstitutionMap();
+		return simplifier.constantSubstitutionMap();
 	}
 
 	@Override
 	public BooleanExpression getReducedContext() {
-		return getSimplifier().getReducedContext();
+		return simplifier.getReducedContext();
 	}
 
 	@Override
 	public BooleanExpression getFullContext() {
-		return getSimplifier().getFullContext();
+		return simplifier.getFullContext();
 	}
 
 	@Override
 	public Interval assumptionAsInterval(SymbolicConstant symbolicConstant) {
-		return getSimplifier().assumptionAsInterval(symbolicConstant);
+		return simplifier.assumptionAsInterval(symbolicConstant);
 	}
 
 	@Override
@@ -506,7 +499,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 		ContextMinimizingReasoner reducedReasoner = getReducedReasonerFor(
 				expression);
-		SymbolicExpression result = reducedReasoner.getSimplifier()
+		SymbolicExpression result = reducedReasoner.simplifier
 				.apply(expression);
 
 		if (debug) {
@@ -601,9 +594,9 @@ public class ContextMinimizingReasoner implements Reasoner {
 							true);
 					BooleanExpression newContext;
 
-					predicate = (BooleanExpression) getSimplifier().universe()
+					predicate = (BooleanExpression) simplifier.universe()
 							.fullySubstitute(substMap, predicate);
-					newContext = (BooleanExpression) getSimplifier().universe()
+					newContext = (BooleanExpression) simplifier.universe()
 							.fullySubstitute(substMap, getReducedContext());
 					newReasoner = this.factory.getReasoner(newContext);
 				}
@@ -634,19 +627,19 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 	@Override
 	public Interval intervalApproximation(NumericExpression expr) {
-		return getSimplifier().intervalApproximation(expr);
+		return simplifier.intervalApproximation(expr);
 	}
 
 	@Override
 	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
 			boolean selfUpdate) {
-		return getSimplifier().substitutionMap(selfUpdate);
+		return simplifier.substitutionMap(selfUpdate);
 	}
 
 	@Override
 	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
 			SymbolicConstant expectedKey, boolean selfUpdate) {
-		return getSimplifier().substitutionMap(expectedKey, selfUpdate);
+		return simplifier.substitutionMap(expectedKey, selfUpdate);
 	}
 
 	///////////////////////// Private helper methods ////////////////////////
@@ -712,7 +705,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 			return false;
 
 		BooleanExpression P = (BooleanExpression) quantifiedP.argument(1);
-		PreUniverse universe = getSimplifier().universe();
+		PreUniverse universe = simplifier.universe();
 		Set<SymbolicConstant> freeSymbolicConstants = universe
 				.getFreeSymbolicConstants(P);
 
@@ -750,7 +743,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 		// assumption. Perform Taylor expansions where appropriate.
 		// TODO: rename the indexConstraint and the limitVars if they conflict
 		// with any free variables.
-		PreUniverse universe = getSimplifier().universe();
+		PreUniverse universe = simplifier.universe();
 		BooleanExpression oldContext = simplifier.getFullContext();
 		BooleanExpression newContext = universe.and(oldContext,
 				indexConstraint);
