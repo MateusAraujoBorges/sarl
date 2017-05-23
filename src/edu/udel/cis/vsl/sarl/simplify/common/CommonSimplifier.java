@@ -8,9 +8,8 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 
 /**
- * A partial implementation of {@link Simplifier}. This class uses a partial
- * implementation of {@link SimplifierWorker} to simplify symbolic expressions
- * in a generic way.
+ * A partial implementation of {@link Simplifier} providing generic
+ * simplification methods.
  * 
  * @author siegel
  */

@@ -39,7 +39,9 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 
 /**
- * A partial implementation of {@link Simplifier} which can be extended.
+ * An instance of this class is formed to simplify a symbolic expression. It
+ * disappears after it completes the simplification of that expression. Should
+ * be extended by implementing the abstract methods.
  * 
  * @author Stephen F. Siegel
  */
@@ -47,6 +49,9 @@ public abstract class CommonSimplifierWorker {
 
 	// Static fields...
 
+	/**
+	 * Are we going to print general debugging information?
+	 */
 	public final static boolean debug = false;
 
 	/**
@@ -62,8 +67,14 @@ public abstract class CommonSimplifierWorker {
 
 	// Instance fields...
 
+	/**
+	 * The universe we're using to create new symbolic objects.
+	 */
 	protected PreUniverse universe;
 
+	/**
+	 * Current depth of quantified expression stack.
+	 */
 	protected int quantificationDepth = 0;
 
 	// Constructors...
@@ -229,19 +240,20 @@ public abstract class CommonSimplifierWorker {
 	protected SymbolicSequence<?> simplifySequenceWork(
 			SymbolicSequence<?> sequence) {
 		int size = sequence.size();
-		// TODO: why create this array if it may not be needed?
-		SymbolicExpression[] newElements = new SymbolicExpression[size];
 		SymbolicSequence<?> result = sequence;
 
 		for (int i = 0; i < size; i++) {
 			SymbolicExpression oldElement = sequence.get(i);
 			SymbolicExpression newElement = simplifyExpression(oldElement);
 
-			newElements[i] = newElement;
 			if (newElement != oldElement) {
-				i++;
-				for (; i < size; i++)
-					newElements[i] = simplifyExpression(sequence.get(i));
+				SymbolicExpression[] newElements = new SymbolicExpression[size];
+
+				for (int j = 0; j < i; j++)
+					newElements[j] = sequence.get(j);
+				newElements[i] = newElement;
+				for (int j = i + 1; j < size; j++)
+					newElements[j] = simplifyExpression(sequence.get(j));
 				result = universe.objectFactory().sequence(newElements);
 				break;
 			}
