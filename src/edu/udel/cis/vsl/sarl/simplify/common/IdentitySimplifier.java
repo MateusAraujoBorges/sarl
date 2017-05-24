@@ -83,16 +83,4 @@ public class IdentitySimplifier implements Simplifier {
 		return universe.numberFactory().newInterval(expr.type().isInteger(),
 				null, true, null, true);
 	}
-
-	@Override
-	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
-			boolean selfupdate) {
-		return new EmptyMap<SymbolicExpression, SymbolicExpression>();
-	}
-
-	@Override
-	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
-			SymbolicConstant expectedKey, boolean selfupdate) {
-		return new EmptyMap<SymbolicExpression, SymbolicExpression>();
-	}
 }

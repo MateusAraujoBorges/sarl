@@ -13,7 +13,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
-import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
@@ -22,7 +21,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
-import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class SimplifyTest {
 
@@ -136,70 +134,4 @@ public class SimplifyTest {
 		Reasoner r = universe.reasoner(universe.bool(true));
 		r.isValid(e);
 	}
-
-	/**
-	 * Assumption: 0==(sigma(0,Y1*Y2 - 1,lambda k : int . (Y8[k]*Y9[k])) -
-	 * 1*Y12) && 0==(Y1*Y2 - 1*Y11) <br>
-	 * <br>
-	 * Predicate: 0==(sigma(0,Y11 - 1,lambda t : int . (Y8[t]*Y9[t])) - 1*Y12)
-	 * 
-	 * cvc3 required
-	 */
-	@Test
-	public void sigmaReasoning() {
-		// 0==(sigma(0,Y1*Y2 - 1,lambda k : int . (Y8[k]*Y9[k])) -
-		// 1*Y12)
-		NumericSymbolicConstant Y1 = (NumericSymbolicConstant) universe
-				.symbolicConstant(universe.stringObject("Y1"),
-						universe.integerType());
-		NumericSymbolicConstant Y2 = (NumericSymbolicConstant) universe
-				.symbolicConstant(universe.stringObject("Y2"),
-						universe.integerType());
-		NumericSymbolicConstant Y11 = (NumericSymbolicConstant) universe
-				.symbolicConstant(universe.stringObject("Y11"),
-						universe.integerType());
-		NumericSymbolicConstant Y12 = (NumericSymbolicConstant) universe
-				.symbolicConstant(universe.stringObject("Y12"),
-						universe.realType());
-		SymbolicType arrayType = universe.arrayType(universe.realType(),
-				universe.integer(10));
-		SymbolicExpression Y8 = universe
-				.symbolicConstant(universe.stringObject("Y8"), arrayType);
-		SymbolicExpression Y9 = universe
-				.symbolicConstant(universe.stringObject("Y9"), arrayType);
-		NumericSymbolicConstant k = (NumericSymbolicConstant) universe
-				.symbolicConstant(universe.stringObject("k"),
-						universe.integerType());
-		SymbolicExpression Y8_k_times_Y9_k = universe.multiply(
-				(NumericExpression) universe.arrayRead(Y8, k),
-				(NumericExpression) universe.arrayRead(Y9, k));
-		SymbolicExpression lambda = universe.lambda(k,
-				Y8_k_times_Y9_k);
-		NumericExpression Y1_times_Y2_minus_1 = universe
-				.subtract(universe.multiply(Y1, Y2), universe.oneInt());
-		NumericExpression Y11_minus_1 = universe.subtract(Y11,
-				universe.oneInt());
-		SymbolicExpression sigma = universe.sigma(universe.zeroInt(),
-				Y1_times_Y2_minus_1, lambda);
-		BooleanExpression pred_sigma_eq_Y12 = universe.equals(sigma, Y12);
-		// 0==(Y1*Y2 - 1*Y11)
-		BooleanExpression Y1_times_Y2_eq_Y11 = universe
-				.equals(universe.multiply(Y1, Y2), Y11);
-		// 0==(sigma(0,Y11 - 1,lambda t : int . (Y8[t]*Y9[t])) - 1*Y12)
-
-		lambda = universe.lambda(k, Y8_k_times_Y9_k);
-		// sigma = universe.sigma(universe.zeroInt(), Y11_minus_1, lambda);
-		sigma = universe.sigma(universe.zeroInt(), Y11_minus_1, lambda);
-		BooleanExpression assu_sigma_eq_Y12 = universe.equals(Y12, sigma);
-		BooleanExpression assumptions = universe
-				.and(Arrays.asList(Y1_times_Y2_eq_Y11, assu_sigma_eq_Y12));
-
-		universe.setShowProverQueries(true);
-		Reasoner reasoner = universe.reasoner(assumptions);
-
-		ResultType resultType = reasoner.valid(pred_sigma_eq_Y12)
-				.getResultType();
-		assertEquals(resultType, ResultType.YES);
-	}
-
 }

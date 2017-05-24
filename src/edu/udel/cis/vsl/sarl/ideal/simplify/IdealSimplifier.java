@@ -147,18 +147,6 @@ public class IdealSimplifier extends CommonSimplifier {
 		return newWorker().intervalApproximation(expr);
 	}
 
-	@Override
-	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
-			boolean selfupdate) {
-		return theContext.substitutionMap(selfupdate);
-	}
-
-	@Override
-	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
-			SymbolicConstant expectedKey, boolean selfupdate) {
-		return theContext.substitutionMap(expectedKey, selfupdate);
-	}
-
 	/**
 	 * Attempts to find, in the context, a clause which states the
 	 * differentiability of the given <code>function</code>. This is a clause

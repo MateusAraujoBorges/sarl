@@ -18,7 +18,6 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
-import edu.udel.cis.vsl.sarl.util.EmptyMap;
 
 /**
  * A structured representation of a boolean formula (assumption), suitable for
@@ -53,14 +52,6 @@ public class Context {
 	 * Map assigning concrete numerical values to certain {@link Monic}s.
 	 */
 	private Map<Monic, Number> constantMap;
-
-	/**
-	 * General Map for replacing equivalent {@link Monic}s. This map is built at
-	 * the same time as {@link #constantMap}, by method
-	 * {@link #updateConstantMap()}. It is obtained by performing back
-	 * substitution after Gaussian elimination completes.
-	 */
-	private Map<Monic, Monic> reduceMap;
 
 	/**
 	 * <p>
@@ -173,8 +164,6 @@ public class Context {
 		this.boundMap = boundMap;
 		this.constantMap = constantMap;
 		this.otherConstantMap = otherConstantMap;
-		this.reduceMap = new TreeMap<Monic, Monic>(
-				info.idealFactory.monicComparator());
 		// this.simplificationCache = new TreeMap<SymbolicObject,
 		// SymbolicObject>(
 		// info.universe.comparator());
@@ -645,16 +634,6 @@ public class Context {
 			info.out.println("Result of updateConstantMap() part 1:");
 			print(info.out);
 		}
-		if (satisfiable) {
-			// satisfiability should be same as the result of
-			// LinearSolver.reduceConstantMap
-			satisfiable = LinearSolver.reduceMap(info.idealFactory, constantMap,
-					reduceMap);
-			if (debug) {
-				info.out.println("Result of updateConstantMap() part 2:");
-				print(info.out);
-			}
-		}
 		if (debug) {
 			if (!satisfiable)
 				info.out.println("Constant map is inconsistent.");
@@ -726,64 +705,6 @@ public class Context {
 						info.universe.bool(entry.getValue()));
 		}
 		return solvedVariables;
-	}
-
-	/**
-	 * This method does not modify anything. It reads {@link #reduceMap}.
-	 * 
-	 * @param selfupdate
-	 * @return
-	 */
-	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
-			boolean selfupdate) {
-		Map<SymbolicExpression, SymbolicExpression> result = new TreeMap<>(
-				info.universe.comparator());
-
-		for (Entry<Monic, Monic> entry : reduceMap.entrySet()) {
-			result.put(entry.getKey(), entry.getValue());
-		}
-		if (selfupdate) {
-			Map<SymbolicExpression, SymbolicExpression> newSubstituteMap = new TreeMap<>(
-					info.universe.comparator());
-
-			newSubstituteMap.putAll(reduceMap);
-			for (Entry<SymbolicExpression, SymbolicExpression> entry : result
-					.entrySet()) {
-				SymbolicExpression key, newKey;
-
-				key = entry.getKey();
-				newSubstituteMap.remove(key);
-				newKey = info.universe.fullySubstitute(newSubstituteMap, key);
-				newSubstituteMap.put(key, entry.getValue());
-				if (newKey != key)
-					newSubstituteMap.put(newKey, entry.getValue());
-			}
-			result = newSubstituteMap;
-		}
-		return result;
-	}
-
-	/**
-	 * Computes a substitution map using Gaussian elimination followed by back
-	 * substitution. This method changes the {@link #reduceMap}.
-	 * 
-	 * @param expectedKey
-	 *            a variable you want to solve for
-	 * @param selfupdate
-	 * @return
-	 */
-	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
-			SymbolicConstant expectedKey, boolean selfupdate) {
-		if (!expectedKey.isNumeric())
-			return new EmptyMap<SymbolicExpression, SymbolicExpression>();
-		else if (reduceMap.containsKey(expectedKey))
-			return substitutionMap(selfupdate);
-		else {
-			reduceMap.clear();
-			LinearSolver.reduceMap(info.idealFactory, (Monic) expectedKey,
-					constantMap, reduceMap);
-			return substitutionMap(selfupdate);
-		}
 	}
 
 	public void cacheSimplification(SymbolicObject key, SymbolicObject value) {

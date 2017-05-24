@@ -137,23 +137,6 @@ public class SimpleReasoner implements Reasoner {
 	}
 
 	@Override
-	public ValidityResult validWTDeduction(BooleanExpression predicate) {
-		return valid(predicate);
-	}
-
-	@Override
-	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
-			boolean selfUpdate) {
-		return simplifier.substitutionMap(selfUpdate);
-	}
-
-	@Override
-	public Map<SymbolicExpression, SymbolicExpression> substitutionMap(
-			SymbolicConstant expectedKey, boolean selfUpdate) {
-		return simplifier.substitutionMap(expectedKey, selfUpdate);
-	}
-
-	@Override
 	public boolean checkBigOClaim(BooleanExpression indexConstraint,
 			NumericExpression lhs, NumericSymbolicConstant[] limitVars,
 			int[] orders) {

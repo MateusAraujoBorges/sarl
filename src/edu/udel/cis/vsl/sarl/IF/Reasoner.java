@@ -62,46 +62,6 @@ public interface Reasoner {
 	Map<SymbolicConstant, SymbolicExpression> constantSubstitutionMap();
 
 	/**
-	 * <p>
-	 * This method returns a map in which both keys and values are symbolic
-	 * expressions. This map represents the exact same equational relations as
-	 * the map returned by {@link #constantSubstitutionMap()} but with different
-	 * key set and value set.
-	 * </p>
-	 * 
-	 * <p>
-	 * Set the argument "selfUpdate" to true triggers the returned map to add
-	 * more keys which are equivalent to existing ones into the map.
-	 * 
-	 * For example, if the original map is {A=B, A*C=D}, after self-update, it
-	 * will be {A=B, A*C=D, A*B=D}.
-	 * </p>
-	 * 
-	 * @param selfUpdate
-	 *            True to trigger the self-update described above
-	 * @return a mapping from some symbolic expressions occurring in original
-	 *         context to equivalent values
-	 */
-	Map<SymbolicExpression, SymbolicExpression> substitutionMap(
-			boolean selfUpdate);
-
-	/**
-	 * In addition to the method {@link #substitutionMap()}, this method allows
-	 * caller to specify a symbolic constant which is guaranteed not be in the
-	 * value set.
-	 * 
-	 * @param expectedKey
-	 *            A symbolic constant which should not be in the value set.
-	 * @param selfUpdate
-	 *            Set to true to perform the self-update as described in
-	 *            {@link #substitutionMap()}
-	 * @return a mapping from some symbolic expressions occurring in original
-	 *         context to equivalent values
-	 */
-	Map<SymbolicExpression, SymbolicExpression> substitutionMap(
-			SymbolicConstant expectedKey, boolean selfUpdate);
-
-	/**
 	 * Returns the reduced context associated to this Reasoner. This expression
 	 * may differ from the original one used to create the Reasoner because it
 	 * was simplified or put into a canonical form. Moreover, symbolic constants
@@ -286,19 +246,6 @@ public interface Reasoner {
 	 *         can be concluded if <code>false</code> is returned
 	 */
 	boolean isValid(BooleanExpression predicate);
-
-	/**
-	 * In addition to the {@link #valid(BooleanExpression)} method, this method
-	 * applies more deduction which is a group of more heuristic than general
-	 * apporaches. These approches are useful for few specific problems but
-	 * expensive, thus caller of this method should be aware of the extra
-	 * overhead.
-	 * 
-	 * @param predicate
-	 *            the predicate q(x)
-	 * @return a validity result as specified above
-	 */
-	ValidityResult validWTDeduction(BooleanExpression predicate);
 
 	/**
 	 * If the given expression can be reduced to a concrete numeric value using
