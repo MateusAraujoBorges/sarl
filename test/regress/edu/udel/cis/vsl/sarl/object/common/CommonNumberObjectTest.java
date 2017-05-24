@@ -14,7 +14,9 @@ import org.junit.runners.JUnit4;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
-import edu.udel.cis.vsl.sarl.number.real.RealNumberFactory;
+import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 
 /**
  * Test class for CommonNumberObject
@@ -60,7 +62,7 @@ public class CommonNumberObjectTest {
 	/**
 	 * Initialized to a CommonObjectFactory upon setUp
 	 */
-	CommonObjectFactory objectfactory;
+	ObjectFactory objectfactory;
 
 	/**
 	 * Initializes realint, newrealint, realreational, newrealrational, zero,
@@ -72,8 +74,10 @@ public class CommonNumberObjectTest {
 	public void setUp() throws Exception {
 		// must create RealIntegers through factory for hash codes to be equal
 		// should make RealInteger constructor private, or implement hash code.
-		this.realfactory = new RealNumberFactory();
-		this.objectfactory = new CommonObjectFactory(this.realfactory);
+		FactorySystem system = PreUniverses.newIdealFactorySystem();
+		
+		this.realfactory = system.numberFactory();
+		this.objectfactory = system.objectFactory();
 		this.realint = new CommonNumberObject(
 				realfactory.integer(new BigInteger("12345678901234567890")));
 		this.newrealint = new CommonNumberObject(

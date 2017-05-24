@@ -166,11 +166,6 @@ public class CommonIdealFactory implements IdealFactory {
 	 */
 	private IntObject oneIntObject;
 
-	// /**
-	// * The {@link IntObject} wrapping the Java int 0.
-	// */
-	// private NumberObject zeroIntNumberObject;
-
 	/**
 	 * The integer 0 as a symbolic expression, which in this ideal universe is
 	 * an instance of {@link Constant}.
@@ -221,11 +216,6 @@ public class CommonIdealFactory implements IdealFactory {
 	 * base.
 	 */
 	private PrimitivePowerMultiplier primitivePowerMultiplier;
-
-	// /**
-	// * The {@link IntegerNumber} 0.
-	// */
-	// private IntegerNumber intNumZero;
 
 	/**
 	 * The {@link IntegerNumber} 2, which is used for 'n % 2' operation.
@@ -318,18 +308,6 @@ public class CommonIdealFactory implements IdealFactory {
 	// Constants...
 
 	/**
-	 * Returns the canonic {@link Constant} of integer type with the value
-	 * specified.
-	 * 
-	 * @param value
-	 *            any Java <code>int</code>
-	 * @return the canonic integer {@link Constant} wrapping that value
-	 */
-	private Constant canonicIntConstant(int value) {
-		return objectFactory.canonic(intConstant(value));
-	}
-
-	/**
 	 * Returns a {@link Constant} of real type with value the given integer.
 	 * 
 	 * @param value
@@ -339,20 +317,9 @@ public class CommonIdealFactory implements IdealFactory {
 	private Constant realConstant(int value) {
 		if (value == 1)
 			return oneReal;
-		return new NTConstant(realType, objectFactory.numberObject(
-				numberFactory.integerToRational(numberFactory.integer(value))));
-	}
-
-	/**
-	 * Returns the canonic {@link Constant} of real type with value the given
-	 * integer.
-	 * 
-	 * @param value
-	 *            any Java <code>int</code>
-	 * @return the canonic real {@link Constant} wrapping that value
-	 */
-	private Constant canonicRealConstant(int value) {
-		return objectFactory.canonic(realConstant(value));
+		return objectFactory.canonic(new NTConstant(realType,
+				objectFactory.numberObject(numberFactory
+						.integerToRational(numberFactory.integer(value)))));
 	}
 
 	/**
@@ -367,8 +334,8 @@ public class CommonIdealFactory implements IdealFactory {
 	private Constant constant(NumberObject object) {
 		if (object.isOne())
 			return object.isInteger() ? oneInt : oneReal;
-		return new NTConstant(object.isInteger() ? integerType : realType,
-				object);
+		return objectFactory.canonic(new NTConstant(
+				object.isInteger() ? integerType : realType, object));
 	}
 
 	/**
@@ -459,7 +426,7 @@ public class CommonIdealFactory implements IdealFactory {
 	 */
 	private NTPrimitivePower ntPrimitivePower(Primitive primitive,
 			NumberObject exponent) {
-		return new NTPrimitivePower(primitive, exponent);
+		return objectFactory.canonic(new NTPrimitivePower(primitive, exponent));
 	}
 
 	// Monics...
@@ -477,7 +444,7 @@ public class CommonIdealFactory implements IdealFactory {
 	 *         <code>monicMap</code>
 	 */
 	private NTMonic ntMonic(SymbolicType type, PrimitivePower[] factorSet) {
-		return new NTMonic(type, factorSet);
+		return objectFactory.canonic(new NTMonic(type, factorSet));
 	}
 
 	/**
@@ -838,7 +805,7 @@ public class CommonIdealFactory implements IdealFactory {
 	 * @return new instance of {@link NTMonomial} as specified
 	 */
 	private NTMonomial ntMonomial(Constant constant, Monic monic) {
-		return new NTMonomial(constant, monic);
+		return objectFactory.canonic(new NTMonomial(constant, monic));
 	}
 
 	/**
@@ -1479,11 +1446,6 @@ public class CommonIdealFactory implements IdealFactory {
 			return r2;
 		if (r2.isOne())
 			return r1;
-
-		// performance debug:
-		// r1 = objectFactory.canonic(r1);
-		// r2 = objectFactory.canonic(r2);
-
 		return divideRealMonomials(
 				multiplyMonomials(r1.numerator(this), r2.numerator(this)),
 				multiplyMonomials(r1.denominator(this), r2.denominator(this)));
@@ -1790,23 +1752,18 @@ public class CommonIdealFactory implements IdealFactory {
 
 	@Override
 	public void init() {
-		// need the boolean factory, type factory, object factory, to be
-		// init-ed.
-
 		this.trueExpr = booleanFactory.trueExpr();
 		this.falseExpr = booleanFactory.falseExpr();
 		this.integerType = typeFactory.integerType();
 		this.realType = typeFactory.realType();
 		this.oneIntObject = objectFactory.oneIntObj();
-		// this.zeroIntNumberObject = objectFactory.canonic(
-		// objectFactory.numberObject(numberFactory.zeroInteger()));
 		this.oneInt = objectFactory.canonic(new One(integerType,
 				objectFactory.numberObject(numberFactory.oneInteger())));
 		this.oneReal = objectFactory.canonic(new One(realType,
 				objectFactory.numberObject(numberFactory.oneRational())));
-		this.zeroInt = canonicIntConstant(0);
-		this.negOneInt = canonicIntConstant(-1);
-		this.zeroReal = canonicRealConstant(0);
+		this.zeroInt = intConstant(0);
+		this.negOneInt = intConstant(-1);
+		this.zeroReal = realConstant(0);
 		this.oneTermListInt = new Monomial[] { oneInt };
 		this.oneTermListReal = new Monomial[] { oneReal };
 		this.monomialAdder = new MonomialAdder(this);
@@ -1844,8 +1801,6 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public NumericPrimitive expression(SymbolicOperator operator,
 			SymbolicType numericType, SymbolicObject... arguments) {
-		// TODO
-		// return new NumericPrimitive(operator, numericType, arguments);
 		return objectFactory.canonic(
 				new NumericPrimitive(operator, numericType, arguments));
 	}
@@ -2060,8 +2015,6 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public NumericSymbolicConstant symbolicConstant(StringObject name,
 			SymbolicType type) {
-		// TODO
-		// return new IdealSymbolicConstant(name, type);
 		return objectFactory.canonic(new IdealSymbolicConstant(name, type));
 	}
 
@@ -2160,11 +2113,8 @@ public class CommonIdealFactory implements IdealFactory {
 	public Constant intConstant(int value) {
 		if (value == 1)
 			return oneInt;
-		// TODO
-		Constant result = new NTConstant(integerType,
-				objectFactory.numberObject(numberFactory.integer(value)));
-
-		return objectFactory.canonic(result);
+		return objectFactory.canonic(new NTConstant(integerType,
+				objectFactory.numberObject(numberFactory.integer(value))));
 	}
 
 	@Override
@@ -2283,15 +2233,11 @@ public class CommonIdealFactory implements IdealFactory {
 							+ primitive);
 		if (exponent.isOne())
 			return primitive;
-		// TODO
-		// return ntPrimitivePower(primitive, exponent);
-		return objectFactory.canonic(ntPrimitivePower(primitive, exponent));
+		return ntPrimitivePower(primitive, exponent);
 	}
 
 	@Override
 	public NTPolynomial polynomial(SymbolicType type, Monomial[] terms) {
-		// TODO
-		// return new NTPolynomial(type, terms);
 		return objectFactory.canonic(new NTPolynomial(type, terms));
 	}
 
@@ -2457,8 +2403,6 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public NTRationalExpression ntRationalExpression(Monomial numerator,
 			Monomial denominator) {
-		// TODO
-		// return new NTRationalExpression(numerator, denominator);
 		return objectFactory
 				.canonic(new NTRationalExpression(numerator, denominator));
 	}

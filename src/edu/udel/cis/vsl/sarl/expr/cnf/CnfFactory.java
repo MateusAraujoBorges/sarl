@@ -50,6 +50,9 @@ public class CnfFactory implements BooleanExpressionFactory {
 	 * A comparator on {@link CnfExpression}. This is needed to keep the
 	 * arguments to AND and OR expressions sorted.
 	 * 
+	 * TODO: think about caching comparisons using an order rational number,
+	 * similar to what is done with numeric Monics.
+	 * 
 	 * @author siegel
 	 */
 	private class BooleanComparator implements Comparator<BooleanExpression> {
@@ -128,15 +131,15 @@ public class CnfFactory implements BooleanExpressionFactory {
 		this.setFactory = new BooleanSetFactory(booleanComparator);
 	}
 
+	// The initializer...
+
 	@Override
 	public void init() {
 		this._booleanType = typeFactory.booleanType();
-		this.trueExpr = objectFactory
-				.canonic(booleanExpression(SymbolicOperator.CONCRETE,
-						new SymbolicObject[] { objectFactory.trueObj() }));
-		this.falseExpr = objectFactory
-				.canonic(booleanExpression(SymbolicOperator.CONCRETE,
-						new SymbolicObject[] { objectFactory.falseObj() }));
+		this.trueExpr = booleanExpression(SymbolicOperator.CONCRETE,
+				new SymbolicObject[] { objectFactory.trueObj() });
+		this.falseExpr = booleanExpression(SymbolicOperator.CONCRETE,
+				new SymbolicObject[] { objectFactory.falseObj() });
 	}
 
 	// Helpers...
@@ -427,22 +430,6 @@ public class CnfFactory implements BooleanExpressionFactory {
 		}
 		return result;
 	}
-
-	// @Override
-	// public BooleanExpression implies(BooleanExpression arg0,
-	// BooleanExpression arg1) {
-	// return or(not(arg0), arg1);
-	// }
-	//
-	// @Override
-	// public BooleanExpression equiv(BooleanExpression arg0,
-	// BooleanExpression arg1) {
-	// BooleanExpression result = implies(arg0, arg1);
-	//
-	// if (result.isFalse())
-	// return result;
-	// return and(result, implies(arg1, arg0));
-	// }
 
 	@Override
 	public BooleanExpression forall(SymbolicConstant boundVariable,

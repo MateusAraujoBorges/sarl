@@ -292,7 +292,6 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 * @return the canonicalized monic
 	 */
 	private Monic insertMonic(Monic monic) {
-		monic = objectFactory.canonic(monic);
 		if (monic.getOrder() != null) // already inserted
 			return monic;
 

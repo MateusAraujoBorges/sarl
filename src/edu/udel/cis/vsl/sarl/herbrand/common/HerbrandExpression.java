@@ -30,26 +30,4 @@ public class HerbrandExpression extends HomogeneousExpression<SymbolicObject>
 			SymbolicObject... arguments) {
 		super(operator, type, arguments);
 	}
-
-	// protected HerbrandExpression(SymbolicOperator operator, SymbolicType
-	// type,
-	// Collection<SymbolicObject> arguments) {
-	// super(operator, type, arguments);
-	// }
-	//
-	// protected HerbrandExpression(SymbolicOperator kind, SymbolicType type,
-	// SymbolicObject arg0) {
-	// super(kind, type, arg0);
-	// }
-	//
-	// protected HerbrandExpression(SymbolicOperator kind, SymbolicType type,
-	// SymbolicObject arg0, SymbolicObject arg1) {
-	// super(kind, type, arg0, arg1);
-	// }
-	//
-	// protected HerbrandExpression(SymbolicOperator kind, SymbolicType type,
-	// SymbolicObject arg0, SymbolicObject arg1, SymbolicObject arg2) {
-	// super(kind, type, arg0, arg1, arg2);
-	// }
-
 }

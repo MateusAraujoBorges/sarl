@@ -310,7 +310,7 @@ public class ContextBuilder {
 			// check for stabilization...
 			if (assumption.equals(newAssumption))
 				break;
-			assumption = (BooleanExpression) universe.canonic(newAssumption);
+			assumption = newAssumption;
 		}
 		extractRemainingFacts();
 	}
@@ -989,7 +989,6 @@ public class ContextBuilder {
 			if (clause.operator() == SymbolicOperator.NEQ) {
 				BooleanExpression eq0 = info.universe.not(clause);
 
-				eq0 = (BooleanExpression) universe.canonic(eq0);
 				declareFact(eq0, false);
 			}
 		} else

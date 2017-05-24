@@ -82,7 +82,6 @@ public class FunctionTypeTest {
 
 		assertEquals(functionType1.typeKind(), functionType2.typeKind());
 		assertEquals(functionType1.isReal(), false);
-		assertEquals(functionType1.isCanonic(), false);
 		assertEquals(functionType1.isInteger(), false);
 
 	}

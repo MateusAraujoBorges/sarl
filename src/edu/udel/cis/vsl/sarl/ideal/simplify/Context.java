@@ -241,13 +241,10 @@ public class Context {
 			if (originalType.isHerbrand()
 					&& (originalType.isInteger() && type.isInteger()
 							|| originalType.isReal() && type.isReal())) {
-				original = info.universe.canonic(original);
 
 				SymbolicExpression constant = info.universe
 						.cast(original.type(), info.universe.number(value));
 
-				constant = info.universe.canonic(constant);
-				// cacheSimplification(original, constant);
 				setOtherValue(original, constant);
 			}
 		}
@@ -526,7 +523,6 @@ public class Context {
 	public Boolean setTruth(BooleanExpression formula, boolean value) {
 		Boolean theValue = value ? Boolean.TRUE : Boolean.FALSE;
 
-		formula = (BooleanExpression) info.universe.canonic(formula);
 		if (parent != null && parent.getTruth(formula) == theValue)
 			return theValue;
 
@@ -576,8 +572,6 @@ public class Context {
 			SymbolicExpression value) {
 		SymbolicExpression result;
 
-		expr = info.universe.canonic(expr);
-		value = info.universe.canonic(value);
 		if (parent != null) {
 			result = getOtherValue(expr);
 			if (result != value) {
@@ -746,8 +740,7 @@ public class Context {
 				info.universe.comparator());
 
 		for (Entry<Monic, Monic> entry : reduceMap.entrySet()) {
-			result.put(info.universe.canonic(entry.getKey()),
-					info.universe.canonic(entry.getValue()));
+			result.put(entry.getKey(), entry.getValue());
 		}
 		if (selfupdate) {
 			Map<SymbolicExpression, SymbolicExpression> newSubstituteMap = new TreeMap<>(

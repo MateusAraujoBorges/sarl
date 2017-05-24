@@ -50,7 +50,7 @@ public class ObjectComparatorTest {
 
 		this.obFac = system.objectFactory();
 		this.typeFac = system.typeFactory();
-		this.com = obFac.comparator();
+		this.com = (ObjectComparator) obFac.comparator();
 	}
 
 	/**

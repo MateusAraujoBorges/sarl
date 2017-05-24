@@ -22,6 +22,7 @@ import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.expr.ArrayElementReference;
+import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.OffsetReference;
 import edu.udel.cis.vsl.sarl.IF.expr.ReferenceExpression;
@@ -92,11 +93,17 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	private NumericExpression one;
 
 	/**
-	 * Constructor that builds a CommonExpressionFactory.
+	 * This is a standard implementation of {@link ExpressionFactory} built from
+	 * a given {@link NumericExpressionFactory}. All methods for producing
+	 * expressions of numeric type are delegated to the numeric expression
+	 * factory. The numeric factory also provides a
+	 * {@link BooleanExpressionFactory} which is responsible for producing all
+	 * {@link BooleanExpression}s. All other types of expressions are dealt with
+	 * directly by this factory.
 	 * 
 	 * @param numericFactory
+	 *            factory for producing {@link NumericExpression}s
 	 * 
-	 * @return CommonExpressionFactory
 	 */
 	public CommonExpressionFactory(NumericExpressionFactory numericFactory) {
 		this.numericFactory = numericFactory;
@@ -119,31 +126,28 @@ public class CommonExpressionFactory implements ExpressionFactory {
 		booleanFactory.init();
 		numericFactory.init();
 
-		this.nullExpression = objectFactory.canonic(expression(
-				SymbolicOperator.NULL, null, new SymbolicObject[] {}));
+		this.nullExpression = expression(SymbolicOperator.NULL, null,
+				new SymbolicObject[] {});
 		this.zero = numericFactory.zeroInt();
 		this.one = numericFactory.oneInt();
-		integerType = objectFactory.canonic(typeFactory.integerType());
-		referenceType = objectFactory.canonic(typeFactory.tupleType(
-				objectFactory.stringObject("Ref"),
-				typeFactory.sequence(new SymbolicType[] { integerType })));
+		integerType = typeFactory.integerType();
+		referenceType = typeFactory.tupleType(objectFactory.stringObject("Ref"),
+				typeFactory.sequence(new SymbolicType[] { integerType }));
 		referenceIndexSeq = typeFactory
 				.sequence(new SymbolicType[] { referenceType, integerType });
-		referenceFunctionType = objectFactory.canonic(
-				typeFactory.functionType(referenceIndexSeq, referenceType));
-		arrayElementReferenceFunction = objectFactory.canonic(
-				symbolicConstant(objectFactory.stringObject("ArrayElementRef"),
-						referenceFunctionType));
-		tupleComponentReferenceFunction = objectFactory
-				.canonic(symbolicConstant(
-						objectFactory.stringObject("TupleComponentRef"),
-						referenceFunctionType));
-		unionMemberReferenceFunction = objectFactory.canonic(
-				symbolicConstant(objectFactory.stringObject("UnionMemberRef"),
-						referenceFunctionType));
-		offsetReferenceFunction = objectFactory.canonic(
-				symbolicConstant(objectFactory.stringObject("OffsetRef"),
-						referenceFunctionType));
+		referenceFunctionType = typeFactory.functionType(referenceIndexSeq,
+				referenceType);
+		arrayElementReferenceFunction = symbolicConstant(
+				objectFactory.stringObject("ArrayElementRef"),
+				referenceFunctionType);
+		tupleComponentReferenceFunction = symbolicConstant(
+				objectFactory.stringObject("TupleComponentRef"),
+				referenceFunctionType);
+		unionMemberReferenceFunction = symbolicConstant(
+				objectFactory.stringObject("UnionMemberRef"),
+				referenceFunctionType);
+		offsetReferenceFunction = symbolicConstant(
+				objectFactory.stringObject("OffsetRef"), referenceFunctionType);
 		nullReference = objectFactory
 				.canonic(new CommonNullReference(referenceType, zero));
 		identityReference = objectFactory
@@ -151,11 +155,13 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	}
 
 	/**
-	 * Private method that extracts integer value from NumericExpression.
+	 * Extracts an int value from a {@link NumericExpression}.
 	 * 
 	 * @param expr
+	 *            a non-<code>null</code> {@link NumericExpression} wrapping an
+	 *            {@link IntegerNumber}.
 	 * 
-	 * @return int
+	 * @return the int value
 	 */
 	private int extractInt(NumericExpression expr) {
 		int result = ((IntegerNumber) ((NumberObject) expr.argument(0))
@@ -165,18 +171,18 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	}
 
 	/**
-	 * Private method that builds a concrete ReferenceExpression.
+	 * Returns a specific, concrete {@link ReferenceExpression} wrapping the
+	 * given concrete integer expression <code>arg0</code>. If <code>arg0</code>
+	 * is 0, returns {@link #nullReference}. If <code>arg0</code> is 1, returns
+	 * {@link #identityReference}. Otherwise, throws exception.
 	 * 
-	 * @param operator
 	 * @param arg0
+	 *            concrete integer in numeric expression
 	 * 
-	 * @return ReferenceExpression
+	 * @return a concrete {@link ReferenceExpression}
 	 */
 	private ReferenceExpression concreteReferenceExpression(
-			SymbolicOperator operator, NumericExpression arg0) {
-		if (operator != SymbolicOperator.TUPLE)
-			throw new SARLInternalException(
-					"Expected TUPLE operator, not " + operator);
+			NumericExpression arg0) {
 		if (arg0.isZero())
 			return nullReference;
 		if (arg0.isOne())
@@ -229,8 +235,8 @@ public class CommonExpressionFactory implements ExpressionFactory {
 				throw new SARLInternalException("unreachable");
 			}
 		}
-		return new HomogeneousExpression<SymbolicObject>(operator,
-				referenceType, new SymbolicObject[] { arg0, arg1 });
+		return objectFactory.canonic(new HomogeneousExpression<SymbolicObject>(
+				operator, referenceType, new SymbolicObject[] { arg0, arg1 }));
 	}
 
 	/**
@@ -249,13 +255,13 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	private SymbolicExpression referenceExpression(SymbolicOperator operator,
 			SymbolicObject[] arguments) {
 		if (operator == SymbolicOperator.TUPLE)
-			return concreteReferenceExpression(operator,
+			return concreteReferenceExpression(
 					(NumericExpression) arguments[0]);
 		else if (operator == SymbolicOperator.APPLY)
 			return nonTrivialReferenceExpression(operator, arguments[0],
 					arguments[1]);
-		return new HomogeneousExpression<SymbolicObject>(operator,
-				referenceType, arguments);
+		return objectFactory.canonic(new HomogeneousExpression<SymbolicObject>(
+				operator, referenceType, arguments));
 	}
 
 	/**
@@ -311,8 +317,8 @@ public class CommonExpressionFactory implements ExpressionFactory {
 			if (type.equals(referenceType))
 				return referenceExpression(operator, arguments);
 		}
-		return new HomogeneousExpression<SymbolicObject>(operator, type,
-				arguments);
+		return objectFactory.canonic(new HomogeneousExpression<SymbolicObject>(
+				operator, type, arguments));
 	}
 
 	/**
@@ -330,7 +336,7 @@ public class CommonExpressionFactory implements ExpressionFactory {
 			return numericFactory.symbolicConstant(name, type);
 		if (type.isBoolean())
 			return booleanFactory.booleanSymbolicConstant(name);
-		return new CommonSymbolicConstant(name, type);
+		return objectFactory.canonic(new CommonSymbolicConstant(name, type));
 	}
 
 	/**
@@ -430,9 +436,9 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	@Override
 	public ArrayElementReference arrayElementReference(
 			ReferenceExpression arrayReference, NumericExpression index) {
-		return new CommonArrayElementReference(referenceType,
-				arrayElementReferenceFunction,
-				parentIndexSequence(arrayReference, index));
+		return objectFactory.canonic(new CommonArrayElementReference(
+				referenceType, arrayElementReferenceFunction,
+				parentIndexSequence(arrayReference, index)));
 	}
 
 	/**
@@ -447,9 +453,9 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	public TupleComponentReference tupleComponentReference(
 			ReferenceExpression tupleReference, IntObject fieldIndex) {
 
-		return new CommonTupleComponentReference(referenceType,
-				tupleComponentReferenceFunction,
-				parentIndexSequence(tupleReference, fieldIndex), fieldIndex);
+		return objectFactory.canonic(new CommonTupleComponentReference(
+				referenceType, tupleComponentReferenceFunction,
+				parentIndexSequence(tupleReference, fieldIndex), fieldIndex));
 	}
 
 	/**
@@ -463,9 +469,9 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	@Override
 	public UnionMemberReference unionMemberReference(
 			ReferenceExpression unionReference, IntObject memberIndex) {
-		return new CommonUnionMemberReference(referenceType,
-				unionMemberReferenceFunction,
-				parentIndexSequence(unionReference, memberIndex), memberIndex);
+		return objectFactory.canonic(new CommonUnionMemberReference(
+				referenceType, unionMemberReferenceFunction,
+				parentIndexSequence(unionReference, memberIndex), memberIndex));
 	}
 
 	/**
@@ -479,8 +485,9 @@ public class CommonExpressionFactory implements ExpressionFactory {
 	@Override
 	public OffsetReference offsetReference(ReferenceExpression reference,
 			NumericExpression offset) {
-		return new CommonOffsetReference(referenceType, offsetReferenceFunction,
-				parentIndexSequence(reference, offset));
+		return objectFactory.canonic(new CommonOffsetReference(referenceType,
+				offsetReferenceFunction,
+				parentIndexSequence(reference, offset)));
 
 	}
 

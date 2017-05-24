@@ -524,7 +524,6 @@ public class ContextMinimizingReasoner implements Reasoner {
 		PreUniverse universe = factory.getUniverse();
 		boolean showQuery = universe.getShowQueries();
 
-		predicate = (BooleanExpression) universe.canonic(predicate);
 		if (showQuery) {
 			PrintStream out = universe.getOutputStream();
 			int id = universe.numValidCalls();
@@ -643,7 +642,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 	}
 
 	///////////////////////// Private helper methods ////////////////////////
-	
+
 	/**
 	 * Given a predicate in CNF (conjunctive normal form), find out all
 	 * universal quantified expression in the predicate.

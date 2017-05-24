@@ -53,39 +53,6 @@ public class CommonObjectFactoryTest {
 	}
 
 	/**
-	 * Method to test CommonObjectFactory.setExpressionComparator
-	 */
-	@Test
-	public void testSetExpressionComparator() {
-		this.fac.setExpressionComparator(new ExpressionComparatorStub());
-
-		assertTrue(this.fac.comparator()
-				.expressionComparator() instanceof ExpressionComparatorStub);
-	}
-
-	/**
-	 * Method to test CommonObjectFactory.setTypeComparator
-	 */
-	@Test
-	public void testSetTypeComparator() {
-		this.fac.setTypeComparator(new TypeComparator());
-
-		assertTrue(this.fac.comparator()
-				.typeComparator() instanceof TypeComparator);
-	}
-
-	/**
-	 * Method to test CommonObjectFactory.setTypeSequenceComparator
-	 */
-	@Test
-	public void testSetTypeSequenceComparator() {
-		this.fac.setTypeSequenceComparator(new TypeSequenceComparator());
-
-		assertTrue(this.fac.comparator()
-				.typeSequenceComparator() instanceof TypeSequenceComparator);
-	}
-
-	/**
 	 * Method to test CommonObjectFactory.init
 	 */
 	@Test

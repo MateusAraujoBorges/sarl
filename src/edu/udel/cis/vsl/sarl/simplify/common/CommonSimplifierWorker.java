@@ -302,13 +302,10 @@ public abstract class CommonSimplifierWorker {
 	 * @return result of simplification of <code>object</code>
 	 */
 	protected SymbolicObject simplifyObject(SymbolicObject object) {
-		object = universe.canonic(object);
-
 		SymbolicObject result = getCachedSimplification(object);
 
 		if (result == null) {
 			result = simplifyObjectWork(object);
-			result = universe.canonic(result);
 			if (quantificationDepth == 0)
 				cacheSimplification(object, result);
 		}
@@ -316,13 +313,10 @@ public abstract class CommonSimplifierWorker {
 	}
 
 	protected SymbolicType simplifyType(SymbolicType type) {
-		type = (SymbolicType) universe.canonic(type);
-
 		SymbolicType result = (SymbolicType) getCachedSimplification(type);
 
 		if (result == null) {
 			result = simplifyTypeWork(type);
-			result = (SymbolicType) universe.canonic(result);
 			if (quantificationDepth == 0)
 				cacheSimplification(type, result);
 		}
@@ -331,14 +325,11 @@ public abstract class CommonSimplifierWorker {
 
 	protected SymbolicTypeSequence simplifyTypeSequence(
 			SymbolicTypeSequence seq) {
-		seq = (SymbolicTypeSequence) universe.canonic(seq);
-
 		SymbolicTypeSequence result = (SymbolicTypeSequence) getCachedSimplification(
 				seq);
 
 		if (result == null) {
 			result = simplifyTypeSequenceWork(seq);
-			result = (SymbolicTypeSequence) universe.canonic(result);
 			if (quantificationDepth == 0)
 				cacheSimplification(seq, result);
 		}
@@ -347,14 +338,11 @@ public abstract class CommonSimplifierWorker {
 
 	protected SymbolicSequence<?> simplifySequence(
 			SymbolicSequence<?> sequence) {
-		sequence = (SymbolicSequence<?>) universe.canonic(sequence);
-
 		SymbolicSequence<?> result = (SymbolicSequence<?>) getCachedSimplification(
 				sequence);
 
 		if (result == null) {
 			result = simplifySequenceWork(sequence);
-			result = (SymbolicSequence<?>) universe.canonic(result);
 			if (quantificationDepth == 0)
 				cacheSimplification(sequence, result);
 		}
@@ -363,14 +351,11 @@ public abstract class CommonSimplifierWorker {
 
 	public SymbolicExpression simplifyExpression(
 			SymbolicExpression expression) {
-		expression = universe.canonic(expression); // hotspot
-
 		SymbolicExpression result = (SymbolicExpression) getCachedSimplification(
 				expression);
 
 		if (result == null) {
 			result = simplifyExpressionWork(expression);
-			result = universe.canonic(result);
 			if (quantificationDepth == 0)
 				cacheSimplification(expression, result);
 		}

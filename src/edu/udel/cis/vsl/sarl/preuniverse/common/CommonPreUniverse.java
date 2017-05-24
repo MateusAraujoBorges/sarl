@@ -248,8 +248,8 @@ public class CommonPreUniverse implements PreUniverse {
 		quantifierExpandBound = numberFactory.integer(QUANTIFIER_EXPAND_BOUND);
 		nullExpression = expressionFactory.nullExpression();
 		cleaner = new BoundCleaner(this, objectFactory, typeFactory);
-		arrayIndex = (NumericSymbolicConstant) canonic(
-				symbolicConstant(stringObject("i"), integerType));
+		arrayIndex = (NumericSymbolicConstant) symbolicConstant(
+				stringObject("i"), integerType);
 		exprSeqFactory = new SequenceFactory<SymbolicExpression>() {
 			@Override
 			protected SymbolicExpression[] newArray(int size) {
@@ -867,7 +867,7 @@ public class CommonPreUniverse implements PreUniverse {
 			return cast(type, (SymbolicExpression) args[0]);
 		case CONCRETE:
 			if (type.isNumeric())
-				return canonic(numericFactory.number((NumberObject) args[0]));
+				return numericFactory.number((NumberObject) args[0]);
 			else
 				return expression(SymbolicOperator.CONCRETE, type, args[0]);
 		case COND:
@@ -1312,7 +1312,7 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public SymbolicExpression character(char theChar) {
-		CharObject charObject = (CharObject) canonic(charObject(theChar));
+		CharObject charObject = (CharObject) charObject(theChar);
 
 		return expression(SymbolicOperator.CONCRETE,
 				typeFactory.characterType(), charObject);
@@ -1581,14 +1581,6 @@ public class CommonPreUniverse implements PreUniverse {
 			return result;
 		return and(result, implies(arg1, arg0));
 	}
-
-	// @Override
-	// public SymbolicExpression substitute(SymbolicExpression expression,
-	// SymbolicConstant variable, SymbolicExpression value) {
-	// return substituteSymbolicConstants(expression,
-	// new SingletonMap<SymbolicConstant, SymbolicExpression>(
-	// variable, value));
-	// }
 
 	@Override
 	public BooleanExpression forallInt(NumericSymbolicConstant index,
@@ -2924,8 +2916,6 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public Set<SymbolicConstant> getFreeSymbolicConstants(
 			SymbolicExpression expr) {
-		// TODO: experimental optimization in progress...
-		// return new ExpressionWalker(expr).getResult();
 		return expr.getFreeVars();
 	}
 
@@ -3530,7 +3520,6 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public void printCompressedTree(SymbolicExpression expr, PrintStream out) {
-		expr = canonic(expr);
 		expr.printCompressedTree(out);
 	}
 
@@ -3632,7 +3621,6 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public void printExprTree(SymbolicExpression expr, PrintStream out) {
-		expr = canonic(expr);
 		printExprTreeWorker("", out, expr);
 	}
 

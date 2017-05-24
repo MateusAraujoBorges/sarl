@@ -3,7 +3,6 @@ package edu.udel.cis.vsl.sarl.type.common;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -16,9 +15,9 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType.IntegerKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.ideal.common.NumericPrimitive;
-import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
-import edu.udel.cis.vsl.sarl.object.IF.Objects;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 
 /**
  * @author alali
@@ -61,33 +60,27 @@ public class SymbolicCompleteArrayTypeTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		typeComparator = new TypeComparator();
-		// typeComparator.setExpressionComparator(new ExpressionComparator());
-		numberFactory = Numbers.REAL_FACTORY;
-		objectFactory = Objects.newObjectFactory(numberFactory);
+		FactorySystem system = PreUniverses.newIdealFactorySystem();
+
+		typeComparator = system.typeFactory().typeComparator();
+		numberFactory = system.numberFactory();
+		objectFactory = system.objectFactory();
 		symbolicObject3 = objectFactory.numberObject(numberFactory.integer(3));
 		symbolicObject2 = objectFactory.numberObject(numberFactory.integer(2));
+
 		SymbolicType intType = new CommonSymbolicIntegerType(IntegerKind.IDEAL);
 		SymbolicType arrayType = new CommonSymbolicArrayType(intType);
-		// number = new NumericPrimitive(SymbolicOperator.CONCRETE,
-		// SymbolicType.SymbolicTypeKind.INTEGER, symbolicObject3);
+
 		number3 = new NumericPrimitive(SymbolicOperator.CONCRETE, intType,
 				symbolicObject3);
 		number2 = new NumericPrimitive(SymbolicOperator.CONCRETE, intType,
 				symbolicObject3);
-		// ExpressionStub exprStub = new ExpressionStub("exprStub");
 		completeArray2 = new CommonSymbolicCompleteArrayType(arrayType,
 				number2);
 		completeArray3 = new CommonSymbolicCompleteArrayType(arrayType,
 				number3);
-		// completeArray3 = new CommonSymbolicCompleteArrayType(arrayType,
-		// (NumericExpression)exprStub);
 		completeArray33 = new CommonSymbolicCompleteArrayType(arrayType,
 				number3);
-	}
-
-	@After
-	public void tearDown() throws Exception {
 	}
 
 	/**

@@ -503,7 +503,7 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 				// out.println("simplifyPoly: poly = " + poly);
 				// out.println("simplifyPoly: result = " + result);
 			}
-			poly = (Polynomial) id.objectFactory().canonic(result);
+			poly = (Polynomial) result;
 		}
 	}
 

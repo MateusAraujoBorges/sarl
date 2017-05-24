@@ -43,10 +43,8 @@ import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
 /**
- * an implementation of {@link SymbolicTypeFactory}
- * 
- * @author alali
- * 
+ * An implementation of {@link SymbolicTypeFactory}. All objects returned by
+ * this factory are canonic.
  */
 public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 
@@ -73,12 +71,16 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 	/**
 	 * a SymbolicIntegerType object to be returned by the factory
 	 */
-	private SymbolicIntegerType integerType, herbrandIntegerType;
+	private SymbolicIntegerType integerType;
+
+	private SymbolicIntegerType herbrandIntegerType;
 
 	/**
 	 * a SymbolicRealType objects to be returned by the factory
 	 */
-	private SymbolicRealType realType, herbrandRealType;
+	private SymbolicRealType realType;
+
+	private SymbolicRealType herbrandRealType;
 
 	/**
 	 * a SymbolicType object to be returned for Char or
@@ -147,46 +149,51 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 	@Override
 	public SymbolicTypeSequence sequence(
 			Iterable<? extends SymbolicType> elements) {
-		return new CommonSymbolicTypeSequence(elements);
+		return objectFactory.canonic(new CommonSymbolicTypeSequence(elements));
 	}
 
 	@Override
 	public SymbolicTypeSequence sequence(SymbolicType[] elements) {
-		return new CommonSymbolicTypeSequence(elements);
+		return objectFactory.canonic(new CommonSymbolicTypeSequence(elements));
 	}
 
 	@Override
 	public SymbolicTypeSequence singletonSequence(SymbolicType type) {
-		return new CommonSymbolicTypeSequence(new SymbolicType[] { type });
+		return objectFactory.canonic(
+				new CommonSymbolicTypeSequence(new SymbolicType[] { type }));
 	}
 
 	@Override
 	public SymbolicArrayType arrayType(SymbolicType elementType) {
-		return new CommonSymbolicArrayType(elementType);
+		return objectFactory.canonic(new CommonSymbolicArrayType(elementType));
 	}
 
 	@Override
 	public SymbolicCompleteArrayType arrayType(SymbolicType elementType,
 			NumericExpression extent) {
-		return new CommonSymbolicCompleteArrayType(elementType, extent);
+		return objectFactory.canonic(
+				new CommonSymbolicCompleteArrayType(elementType, extent));
 	}
 
 	@Override
 	public SymbolicTupleType tupleType(StringObject name,
 			SymbolicTypeSequence fieldTypes) {
-		return new CommonSymbolicTupleType(name, fieldTypes);
+		return objectFactory
+				.canonic(new CommonSymbolicTupleType(name, fieldTypes));
 	}
 
 	@Override
 	public SymbolicUnionType unionType(StringObject name,
 			SymbolicTypeSequence memberTypes) {
-		return new CommonSymbolicUnionType(name, memberTypes);
+		return objectFactory
+				.canonic(new CommonSymbolicUnionType(name, memberTypes));
 	}
 
 	@Override
 	public SymbolicFunctionType functionType(SymbolicTypeSequence inputTypes,
 			SymbolicType outputType) {
-		return new CommonSymbolicFunctionType(inputTypes, outputType);
+		return objectFactory.canonic(
+				new CommonSymbolicFunctionType(inputTypes, outputType));
 	}
 
 	@Override
@@ -268,8 +275,8 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 				result = arrayType;
 			else {
 				result = (CommonSymbolicArrayType) arrayType(pureElementType);
-				if (type.isCanonic())
-					result = objectFactory.canonic(result);
+				// if (type.isCanonic())
+				// result = objectFactory.canonic(result);
 				result.setPureType(result);
 			}
 			arrayType.setPureType(result);
@@ -288,8 +295,8 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 			else {
 				result = (CommonSymbolicFunctionType) functionType(pureInputs,
 						pureOutputType);
-				if (type.isCanonic())
-					result = objectFactory.canonic(result);
+				// if (type.isCanonic())
+				// result = objectFactory.canonic(result);
 				result.setPureType(result);
 			}
 			functionType.setPureType(result);
@@ -306,8 +313,8 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 			else {
 				result = (CommonSymbolicTupleType) tupleType(tupleType.name(),
 						pureSequence);
-				if (type.isCanonic())
-					result = objectFactory.canonic(result);
+				// if (type.isCanonic())
+				// result = objectFactory.canonic(result);
 				result.setPureType(result);
 			}
 			tupleType.setPureType(result);
@@ -324,8 +331,8 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 			else {
 				result = (CommonSymbolicUnionType) unionType(unionType.name(),
 						pureSequence);
-				if (type.isCanonic())
-					result = objectFactory.canonic(result);
+				// if (type.isCanonic())
+				// result = objectFactory.canonic(result);
 				result.setPureType(result);
 			}
 			unionType.setPureType(result);
@@ -341,8 +348,8 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 				result = setType;
 			else {
 				result = (CommonSymbolicSetType) setType(pureElementType);
-				if (type.isCanonic())
-					result = objectFactory.canonic(result);
+				// if (type.isCanonic())
+				// result = objectFactory.canonic(result);
 				result.setPureType(result);
 			}
 			setType.setPureType(result);
@@ -361,8 +368,8 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 			else {
 				result = (CommonSymbolicMapType) mapType(pureKeyType,
 						pureValueType);
-				if (type.isCanonic())
-					result = objectFactory.canonic(result);
+				// if (type.isCanonic())
+				// result = objectFactory.canonic(result);
 				result.setPureType(result);
 			}
 			mapType.setPureType(result);
@@ -381,13 +388,14 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 
 	@Override
 	public SymbolicSetType setType(SymbolicType elementType) {
-		return new CommonSymbolicSetType(elementType);
+		return objectFactory.canonic(new CommonSymbolicSetType(elementType));
 	}
 
 	@Override
 	public SymbolicMapType mapType(SymbolicType keyType,
 			SymbolicType valueType) {
-		return new CommonSymbolicMapType(keyType, valueType);
+		return objectFactory
+				.canonic(new CommonSymbolicMapType(keyType, valueType));
 	}
 
 	@Override
@@ -399,8 +407,8 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 			return result;
 		result = tupleType(objectFactory.stringObject("Entry"), sequence(
 				Arrays.asList(mapType.keyType(), mapType.valueType())));
-		if (mapType.isCanonic())
-			result = objectFactory.canonic(result);
+		// if (mapType.isCanonic())
+		// result = objectFactory.canonic(result);
 		((CommonSymbolicMapType) mapType).setEntryType(result);
 		return result;
 	}

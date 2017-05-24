@@ -101,8 +101,6 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 	public PrimitivePower[] monicFactors(IdealFactory factory) {
 		if (monicFactors == null) {
 			monicFactors = new PrimitivePower[] { this };
-			if (isCanonic())
-				factory.objectFactory().canonize(monicFactors);
 		}
 		return monicFactors;
 	}
@@ -181,8 +179,6 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 									+ ": result has size " + expansion.length);
 					out.flush();
 				}
-				if (isCanonic())
-					factory.objectFactory().canonize(expansion);
 			}
 		}
 		return expansion;
@@ -202,8 +198,6 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 	public Monomial[] termMap(IdealFactory factory) {
 		if (termMap == null) {
 			termMap = new Monomial[] { this };
-			if (isCanonic())
-				factory.objectFactory().canonize(termMap);
 		}
 		return termMap;
 	}
@@ -255,8 +249,6 @@ public class NTPrimitivePower extends HomogeneousExpression<SymbolicObject>
 		else {
 			lowering = factory.powerTermMap(type(), primitive.termMap(factory),
 					exponent());
-			if (isCanonic())
-				factory.objectFactory().canonize(lowering);
 		}
 		return lowering;
 	}

@@ -41,15 +41,11 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 
 /**
- * The primary Factory for creating objects
+ * A straightforward implementation of {@link ObjectFactory}. All objects
+ * returned by this factory are canonic. The methods in this factory are also
+ * thread-safe.
  */
 public class CommonObjectFactory implements ObjectFactory {
-
-	private NumberFactory numberFactory;
-
-	private Map<SymbolicObject, SymbolicObject> objectMap;
-
-	private ArrayList<SymbolicObject> objectList = new ArrayList<>();
 
 	private final ReentrantReadWriteLock objectListReadWriteLock = new ReentrantReadWriteLock();
 
@@ -58,11 +54,27 @@ public class CommonObjectFactory implements ObjectFactory {
 	private final Lock objectListWriteLock = objectListReadWriteLock
 			.writeLock();
 
-	private BooleanObject trueObj, falseObj;
+	private ArrayList<SymbolicObject> objectList = new ArrayList<>();
 
-	private IntObject zeroIntObj, oneIntObj;
+	private NumberFactory numberFactory;
 
-	private NumberObject zeroIntegerObj, zeroRealObj, oneIntegerObj, oneRealObj;
+	private Map<SymbolicObject, SymbolicObject> objectMap;
+
+	private BooleanObject trueObj;
+
+	private BooleanObject falseObj;
+
+	private IntObject zeroIntObj;
+
+	private IntObject oneIntObj;
+
+	private NumberObject zeroIntegerObj;
+
+	private NumberObject zeroRealObj;
+
+	private NumberObject oneIntegerObj;
+
+	private NumberObject oneRealObj;
 
 	private ObjectComparator comparator;
 
@@ -71,6 +83,23 @@ public class CommonObjectFactory implements ObjectFactory {
 	public CommonObjectFactory(NumberFactory numberFactory) {
 		this.numberFactory = numberFactory;
 		this.comparator = new ObjectComparator(numberFactory);
+	}
+
+	@Override
+	public void init() {
+		assert comparator.expressionComparator() != null;
+		assert comparator.typeComparator() != null;
+		assert comparator.typeSequenceComparator() != null;
+		this.objectMap = new ConcurrentHashMap<>();
+		this.trueObj = canonic(new CommonBooleanObject(true));
+		this.falseObj = canonic(new CommonBooleanObject(false));
+		this.zeroIntObj = intObject(0);
+		this.oneIntObj = intObject(1);
+		this.zeroIntegerObj = numberObject(numberFactory.zeroInteger());
+		this.zeroRealObj = numberObject(numberFactory.zeroRational());
+		this.oneIntegerObj = numberObject(numberFactory.oneInteger());
+		this.oneRealObj = numberObject(numberFactory.oneRational());
+		this.emptySequence = canonic(new SimpleSequence<SymbolicExpression>());
 	}
 
 	@Override
@@ -91,27 +120,6 @@ public class CommonObjectFactory implements ObjectFactory {
 	@Override
 	public void setTypeSequenceComparator(Comparator<SymbolicTypeSequence> c) {
 		comparator.setTypeSequenceComparator(c);
-	}
-
-	/**
-	 * To be called after the comparator is complete.
-	 */
-	@Override
-	public void init() {
-		assert comparator.expressionComparator() != null;
-		assert comparator.typeComparator() != null;
-		assert comparator.typeSequenceComparator() != null;
-		this.objectMap = new ConcurrentHashMap<>();
-		this.trueObj = canonic(new CommonBooleanObject(true));
-		this.falseObj = canonic(new CommonBooleanObject(false));
-		this.zeroIntObj = canonic(intObject(0));
-		this.oneIntObj = canonic(intObject(1));
-		this.zeroIntegerObj = canonic(
-				numberObject(numberFactory.zeroInteger()));
-		this.zeroRealObj = canonic(numberObject(numberFactory.zeroRational()));
-		this.oneIntegerObj = canonic(numberObject(numberFactory.oneInteger()));
-		this.oneRealObj = canonic(numberObject(numberFactory.oneRational()));
-		this.emptySequence = canonic(new SimpleSequence<SymbolicExpression>());
 	}
 
 	@Override
@@ -211,7 +219,7 @@ public class CommonObjectFactory implements ObjectFactory {
 	public NumberObject numberObject(Number value) {
 		if (value == null)
 			throw new SARLException("null value");
-		return new CommonNumberObject(value);
+		return canonic(new CommonNumberObject(value));
 	}
 
 	@Override
@@ -223,12 +231,12 @@ public class CommonObjectFactory implements ObjectFactory {
 
 	@Override
 	public IntObject intObject(int value) {
-		return new CommonIntObject(value);
+		return canonic(new CommonIntObject(value));
 	}
 
 	@Override
 	public CharObject charObject(char value) {
-		return new CommonCharObject(value);
+		return canonic(new CommonCharObject(value));
 	}
 
 	@Override
@@ -271,19 +279,19 @@ public class CommonObjectFactory implements ObjectFactory {
 	@Override
 	public <T extends SymbolicExpression> SymbolicSequence<T> sequence(
 			Iterable<? extends T> elements) {
-		return new SimpleSequence<T>(elements);
+		return canonic(new SimpleSequence<T>(elements));
 	}
 
 	@Override
 	public <T extends SymbolicExpression> SymbolicSequence<T> sequence(
 			T[] elements) {
-		return new SimpleSequence<T>(elements);
+		return canonic(new SimpleSequence<T>(elements));
 	}
 
 	@Override
 	public <T extends SymbolicExpression> SymbolicSequence<T> singletonSequence(
 			T element) {
-		return new SimpleSequence<T>(element);
+		return canonic(new SimpleSequence<T>(element));
 	}
 
 	@SuppressWarnings("unchecked")
