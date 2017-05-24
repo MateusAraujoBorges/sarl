@@ -11,7 +11,8 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 
-public class MathUniverse extends CommonSymbolicUniverse implements PreUniverse {
+public class MathUniverse extends CommonSymbolicUniverse
+		implements PreUniverse {
 
 	private SymbolicRealType realType;
 
@@ -35,16 +36,16 @@ public class MathUniverse extends CommonSymbolicUniverse implements PreUniverse 
 		this.realType = realType();
 		realSingleton = typeSequence(new SymbolicType[] { realType });
 		this.realToRealFunctionType = functionType(realSingleton, realType);
-		this.sinFunction = canonic(symbolicConstant(stringObject("sin"),
-				realToRealFunctionType));
-		this.cosFunction = canonic(symbolicConstant(stringObject("cos"),
-				realToRealFunctionType));
-		this.pi = (NumericExpression) canonic(symbolicConstant(
-				stringObject("pi"), realType));
-		this.e = (NumericExpression) canonic(symbolicConstant(
-				stringObject("e"), realType));
-		this.i = (NumericExpression) canonic(symbolicConstant(
-				stringObject("i"), realType));
+		this.sinFunction = symbolicConstant(stringObject("sin"),
+				realToRealFunctionType);
+		this.cosFunction = symbolicConstant(stringObject("cos"),
+				realToRealFunctionType);
+		this.pi = (NumericExpression) symbolicConstant(stringObject("pi"),
+				realType);
+		this.e = (NumericExpression) symbolicConstant(stringObject("e"),
+				realType);
+		this.i = (NumericExpression) symbolicConstant(stringObject("i"),
+				realType);
 	}
 
 	public NumericExpression sin(NumericExpression arg) {

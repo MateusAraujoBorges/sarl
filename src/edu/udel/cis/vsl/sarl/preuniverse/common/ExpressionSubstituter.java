@@ -184,7 +184,6 @@ public abstract class ExpressionSubstituter
 		SymbolicSequence<?> result;
 
 		if (state.isInitial()) {
-//			sequence = (SymbolicSequence<?>) universe.canonic(sequence);
 			result = (SymbolicSequence<?>) cache.get(sequence);
 			if (result != null)
 				return result;
@@ -211,7 +210,6 @@ public abstract class ExpressionSubstituter
 		}
 
 		if (state.isInitial()) {
-//			result = (SymbolicSequence<?>) universe.canonic(result);
 			cache.put(sequence, result);
 		}
 		return result;
@@ -292,13 +290,10 @@ public abstract class ExpressionSubstituter
 			return type;
 		default:
 			if (state.isInitial()) {
-//				type = (SymbolicType) universe.canonic(type);
-
 				SymbolicType result = (SymbolicType) cache.get(type);
 
 				if (result == null) {
 					result = substituteCompoundType(type, state);
-//					result = (SymbolicType) universe.canonic(result);
 					cache.put(type, result);
 				}
 				return result;
@@ -466,7 +461,6 @@ public abstract class ExpressionSubstituter
 		SymbolicExpression result;
 
 		if (state.isInitial()) {
-			expression = universe.canonic(expression);
 			result = (SymbolicExpression) cache.get(expression);
 			if (result != null)
 				return result;
@@ -477,7 +471,6 @@ public abstract class ExpressionSubstituter
 			result = substituteNonquantifiedExpression(expression, state);
 		}
 		if (state.isInitial()) {
-			result = universe.canonic(result);
 			cache.put(expression, result);
 		}
 		return result;

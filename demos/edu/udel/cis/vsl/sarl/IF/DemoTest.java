@@ -34,8 +34,6 @@ public class DemoTest {
 
 	private static NumericExpression two;
 
-	// private static NumericExpression three;
-
 	private static NumericExpression pi;
 
 	private static BooleanExpression trueExpr;
@@ -77,9 +75,6 @@ public class DemoTest {
 		out.println("w2 = " + w2);
 		out.flush();
 		assertEquals(w2, w1);
-		// assertSame(w2, w1); // w1==w2?
-		w1 = (NumericExpression) universe.canonic(w1);
-		w2 = (NumericExpression) universe.canonic(w2);
 		assertSame(w2, w1);
 	}
 

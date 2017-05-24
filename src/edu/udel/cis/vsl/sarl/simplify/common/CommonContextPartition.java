@@ -286,7 +286,6 @@ public class CommonContextPartition implements ContextPartition {
 				System.out.println("Minimized context: " + result);
 				System.out.println();
 			}
-			result = (BooleanExpression) universe.canonic(result);
 			minimalContextMap.put(expr, result);
 		}
 		return result;

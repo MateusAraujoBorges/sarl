@@ -128,55 +128,6 @@ public interface CoreUniverse {
 	 */
 	Comparator<SymbolicObject> comparator();
 
-//	/**
-//	 * <p>
-//	 * Returns the unique representative instance from the given object's
-//	 * equivalence class, where the equivalence relation is determined by the
-//	 * "equals" method. (Refer to the "Flyweight Pattern".)
-//	 * </p>
-//	 * 
-//	 * <p>
-//	 * A symbolic universe does not necessarily use the Flyweight Pattern on the
-//	 * symbolic objects it creates, but this method gives the user the option to
-//	 * use that pattern, in full or in part.
-//	 * </p>
-//	 * 
-//	 * <p>
-//	 * The methods in this universe which return symbolic expressions may return
-//	 * distinct instances which are equivalent (under "equals"). However,
-//	 * canonic is guaranteed to return a unique instance from each equivalence
-//	 * class, i.e., if <code>a.equals(b)</code> then
-//	 * <code>canonic(a)==canonic(b)</code>.
-//	 * </p>
-//	 * 
-//	 * @param object
-//	 *            a symbolic object
-//	 * @return canonical representative equal to <code>object</code>
-//	 * @see #canonic(SymbolicExpression)
-//	 */
-//	SymbolicObject canonic(SymbolicObject object);
-
-	/**
-	 * <p>
-	 * Returns the unique representative instance from the given expression's
-	 * equivalence class, where the equivalence relation is determined by the
-	 * "equals" method.
-	 * </p>
-	 * 
-	 * <p>
-	 * The result is the same as that of {@link #canonic(SymbolicObject)}, but
-	 * since the result of {@link #canonic(SymbolicObject)} on a
-	 * {@link SymbolicExpression} must be a {@link SymbolicExpression}, this
-	 * method is provided so that callers don't have to cast.
-	 * </p>
-	 * 
-	 * @param expression
-	 *            any {@link SymbolicExpression} belonging to this universe
-	 * @return the canonic representative equal to <code>expression</code>
-	 * @see #canonic(SymbolicObject)
-	 */
-	SymbolicExpression canonic(SymbolicExpression expression);
-
 	/**
 	 * Returns the number of canonic symbolic objects controlled by this
 	 * universe.

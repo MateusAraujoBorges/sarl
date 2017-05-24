@@ -6,10 +6,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.PrintStream;
 import java.util.Arrays;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -38,28 +34,11 @@ public class SimplifyTest {
 
 	static NumericExpression three = universe.integer(3);
 
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-	}
-
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-	}
-
-	@Before
-	public void setUp() throws Exception {
-	}
-
-	@After
-	public void tearDown() throws Exception {
-	}
-
 	@Test
 	public void invalidInterval() {
 		SymbolicUniverse universe = SARL.newStandardUniverse();
-		SymbolicConstant X = (SymbolicConstant) universe
-				.canonic(universe.symbolicConstant(universe.stringObject("X"),
-						universe.integerType()));
+		SymbolicConstant X = universe.symbolicConstant(
+				universe.stringObject("X"), universe.integerType());
 		// context: X<1 && 1<X
 		BooleanExpression context = (BooleanExpression) universe.and(
 				universe.lessThan((NumericExpression) X, universe.oneInt()),
@@ -74,19 +53,16 @@ public class SimplifyTest {
 	@Test
 	public void simplify() {
 		SymbolicUniverse univ = SARL.newStandardUniverse();
-		SymbolicConstant X1 = (SymbolicConstant) univ.canonic(univ
-				.symbolicConstant(univ.stringObject("X1"), univ.integerType()));
-		SymbolicConstant X2 = (SymbolicConstant) univ.canonic(univ
-				.symbolicConstant(univ.stringObject("X2"), univ.integerType()));
-		BooleanExpression contex = (BooleanExpression) univ
-				.canonic(univ.equals(univ.integer(4),
-						univ.canonic(univ.multiply((NumericExpression) X1,
-								(NumericExpression) X2))));
+		SymbolicConstant X1 = univ.symbolicConstant(univ.stringObject("X1"),
+				univ.integerType());
+		SymbolicConstant X2 = univ.symbolicConstant(univ.stringObject("X2"),
+				univ.integerType());
+		BooleanExpression contex = univ.equals(univ.integer(4),
+				univ.multiply((NumericExpression) X1, (NumericExpression) X2));
 		Reasoner reasoner;
 
-		contex = (BooleanExpression) univ
-				.canonic(univ.and(contex, (BooleanExpression) univ
-						.canonic(univ.equals(X1, univ.integer(1)))));
+		contex = univ.and(contex,
+				(BooleanExpression) univ.equals(X1, univ.integer(1)));
 		reasoner = univ.reasoner(contex);
 		System.out.println(contex.toString());
 		contex = reasoner.getReducedContext();

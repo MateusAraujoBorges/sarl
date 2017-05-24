@@ -81,7 +81,7 @@ public class ArrayTest {
 		seventeen = universe.integer(17);
 		list1 = Arrays.asList(new NumericExpression[] { five, six });
 		list2 = Arrays.asList(new NumericExpression[] { seventeen });
-		list3 = Arrays.asList(new NumericExpression[] { });
+		list3 = Arrays.asList(new NumericExpression[] {});
 	}
 
 	@After
@@ -158,10 +158,12 @@ public class ArrayTest {
 		SymbolicExpression r2 = universe.removeElementAt(r1, 0);
 		SymbolicExpression a3 = universe.arrayWrite(a2, zero, r2);
 		SymbolicExpression r3 = universe.arrayRead(a3, zero);
-		NumericExpression v1 = (NumericExpression)universe.arrayRead(r3, zero);
-		
-		assertEquals(universe.length(a1), universe.add(universe.length(a3), one));
-		assertEquals(universe.length(r1), universe.add(universe.length(r3), one));
+		NumericExpression v1 = (NumericExpression) universe.arrayRead(r3, zero);
+
+		assertEquals(universe.length(a1),
+				universe.add(universe.length(a3), one));
+		assertEquals(universe.length(r1),
+				universe.add(universe.length(r3), one));
 		assertEquals(six, v1);
 	}
 
@@ -246,17 +248,4 @@ public class ArrayTest {
 		out.println("b2 = " + b2);
 		assertEquals(b2, b1);
 	}
-
-	// @Test
-	// public void canonic1() {
-	// SymbolicArrayType t1 = universe.arrayType(integerType,
-	// universe.integer(3));
-	// SymbolicArrayType t2 = universe.arrayType(integerType,
-	// universe.integer(3));
-	// assertEquals(t1, t2);
-	// t1 = (SymbolicArrayType) universe.canonic(t1);
-	// t2 = (SymbolicArrayType) universe.canonic(t2);
-	// assertSame(t1, t2);
-	// }
-
 }

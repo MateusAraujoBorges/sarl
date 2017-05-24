@@ -51,7 +51,6 @@ public class CompressedPrinter {
 			SymbolicObject object) {
 		this.universe = universe;
 		this.out = out;
-//		this.theObject = universe.canonic(object);
 		analyze(theObject);
 	}
 

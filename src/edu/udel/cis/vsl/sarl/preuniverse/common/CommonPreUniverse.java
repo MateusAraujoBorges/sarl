@@ -69,12 +69,6 @@ import edu.udel.cis.vsl.sarl.util.Pair;
 import edu.udel.cis.vsl.sarl.util.SequenceFactory;
 
 // TODO:
-// add fields:
-// RationalNumber probabilisticBound : number in (0,1), upper bound on
-// probability
-// of being wrong when testing for 0
-// boolean useProbabilisticTesting : should we use probabilistic techniques
-//
 // add to CERTAINTY: PROBABLY (with bound on probability)
 // need to count the number of events. this is change in CIVL
 
@@ -300,20 +294,6 @@ public class CommonPreUniverse implements PreUniverse {
 	 */
 	protected SARLInternalException ierr(String message) {
 		return new SARLInternalException(message);
-	}
-
-	/**
-	 * Invokes the object factory's generic canonic method on a symbolic
-	 * expression. Here for convenience.
-	 * 
-	 * @param expression
-	 *            a symbolic expression
-	 * @return canonic representative of that object's equivalence class under
-	 *         "equals" (a la Flyweight Pattern)
-	 */
-	@Override
-	public SymbolicExpression canonic(SymbolicExpression expression) {
-		return objectFactory.canonic(expression);
 	}
 
 	protected SymbolicExpression expression(SymbolicOperator operator,
@@ -767,11 +747,6 @@ public class CommonPreUniverse implements PreUniverse {
 		return result;
 	}
 
-	// protected SymbolicExpression tupleUnsafe(SymbolicTupleType type,
-	// SymbolicExpression[] components) {
-	// return expression(SymbolicOperator.SEQUENCE, type, components);
-	// }
-
 	// Public methods...
 
 	public NumericExpressionFactory numericExpressionFactory() {
@@ -809,11 +784,6 @@ public class CommonPreUniverse implements PreUniverse {
 	public void setOutputStream(PrintStream out) {
 		this.out = out;
 	}
-
-//	@Override
-//	public SymbolicObject canonic(SymbolicObject object) {
-//		return objectFactory.canonic(object);
-//	}
 
 	/**
 	 * For exists and forall, must provide an instance of
@@ -4231,5 +4201,4 @@ public class CommonPreUniverse implements PreUniverse {
 					"Probabilitic bound must be in [0,1), not " + epsilon);
 		this.probabilisticBound = epsilon;
 	}
-
 }
