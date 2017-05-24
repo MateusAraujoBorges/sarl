@@ -810,10 +810,10 @@ public class CommonPreUniverse implements PreUniverse {
 		this.out = out;
 	}
 
-	@Override
-	public SymbolicObject canonic(SymbolicObject object) {
-		return objectFactory.canonic(object);
-	}
+//	@Override
+//	public SymbolicObject canonic(SymbolicObject object) {
+//		return objectFactory.canonic(object);
+//	}
 
 	/**
 	 * For exists and forall, must provide an instance of
