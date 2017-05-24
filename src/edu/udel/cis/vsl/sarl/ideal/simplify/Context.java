@@ -35,14 +35,6 @@ public class Context {
 	// Instance Fields ...
 
 	/**
-	 * The parent context. Everything that holds in the parent also holds in
-	 * this context, but more things may hold here. For examples, bounds can be
-	 * tightened, a variable may get solved, etc. To find the bounds on a monic,
-	 * look here first, then look in the parent.
-	 */
-	private Context parent;
-
-	/**
 	 * A map that assigns concrete boolean values to boolean primitive
 	 * expressions.
 	 */
@@ -154,21 +146,19 @@ public class Context {
 
 	// Constructors ...
 
-	private Context(SimplifierInfo info, Context parent,
+	private Context(SimplifierInfo info,
 			Map<BooleanExpression, Boolean> booleanMap,
 			Map<Monic, Interval> boundMap, Map<Monic, Number> constantMap,
 			Map<SymbolicExpression, SymbolicExpression> otherConstantMap) {
 		this.info = info;
-		this.parent = parent;
 		this.booleanMap = booleanMap;
 		this.boundMap = boundMap;
 		this.constantMap = constantMap;
 		this.otherConstantMap = otherConstantMap;
+		// can also use a TreeMap, but HashMap seems faster...
 		// this.simplificationCache = new TreeMap<SymbolicObject,
-		// SymbolicObject>(
-		// info.universe.comparator());
+		// SymbolicObject>(info.universe.comparator());
 		this.simplificationCache = new HashMap<>();
-		this.parent = null;
 		// do this once and put it in universe...
 		this.variableComparator = new Comparator<SymbolicConstant>() {
 			Comparator<SymbolicType> typeComparator = info.universe
@@ -198,9 +188,8 @@ public class Context {
 	 *            context. The parent will never be modified by methods in this
 	 *            {@link Context}.
 	 */
-	public Context(SimplifierInfo info, Context parent) {
-		this(info, parent,
-				new TreeMap<>(info.booleanFactory.getBooleanComparator()),
+	public Context(SimplifierInfo info) {
+		this(info, new TreeMap<>(info.booleanFactory.getBooleanComparator()),
 				new TreeMap<>(info.idealFactory.monicComparator()),
 				new TreeMap<>(info.idealFactory.monicComparator()),
 				new TreeMap<>(info.universe.comparator()));
@@ -244,12 +233,6 @@ public class Context {
 			out.println("  " + entry.getKey() + " : " + entry.getValue());
 		}
 		out.flush();
-	}
-
-	private void addBoundsToMap(Map<Monic, Interval> map) {
-		if (parent != null)
-			parent.addBoundsToMap(map);
-		map.putAll(boundMap);
 	}
 
 	// Package-private methods ...
@@ -305,7 +288,7 @@ public class Context {
 
 	@Override
 	public Context clone() {
-		return new Context(info, parent, cloneTreeMap(booleanMap),
+		return new Context(info, cloneTreeMap(booleanMap),
 				cloneTreeMap(boundMap), cloneTreeMap(constantMap),
 				cloneTreeMap(otherConstantMap));
 	}
@@ -343,12 +326,6 @@ public class Context {
 	 *            <code>key</code>, the new interval bound
 	 */
 	public void setBound(Monic key, Interval bound) {
-		if (parent != null) {
-			Interval bound0 = getBound(key);
-
-			if (bound0 != null)
-				bound = info.numberFactory.intersection(bound0, bound);
-		}
 		change = !bound.equals(boundMap.put(key, bound));
 	}
 
@@ -377,8 +354,6 @@ public class Context {
 	public Interval getBound(Monic key) {
 		Interval result = boundMap.get(key);
 
-		if (parent != null && result == null)
-			result = parent.getBound(key);
 		return result;
 	}
 
@@ -392,14 +367,7 @@ public class Context {
 	 *         interval bounds on {@link Monic}s
 	 */
 	public Set<Entry<Monic, Interval>> getBounds() {
-		if (parent == null)
-			return boundMap.entrySet();
-
-		Map<Monic, Interval> map = new TreeMap<Monic, Interval>(
-				info.idealFactory.monicComparator());
-
-		addBoundsToMap(map);
-		return map.entrySet();
+		return boundMap.entrySet();
 	}
 
 	/**
@@ -436,8 +404,6 @@ public class Context {
 	public Interval restrictBound(Monic key, Interval bound) {
 		Interval original = boundMap.get(key), result;
 
-		if (parent != null && original == null)
-			original = parent.getBound(key);
 		if (original == null) {
 			result = bound;
 			boundMap.put(key, result);
@@ -511,10 +477,6 @@ public class Context {
 	 */
 	public Boolean setTruth(BooleanExpression formula, boolean value) {
 		Boolean theValue = value ? Boolean.TRUE : Boolean.FALSE;
-
-		if (parent != null && parent.getTruth(formula) == theValue)
-			return theValue;
-
 		Boolean result = booleanMap.put(formula, theValue);
 
 		if (result != theValue)
@@ -535,8 +497,6 @@ public class Context {
 	public Boolean getTruth(BooleanExpression formula) {
 		Boolean result = booleanMap.get(formula);
 
-		if (result == null && parent != null)
-			result = parent.getTruth(formula);
 		return result;
 	}
 
@@ -559,26 +519,15 @@ public class Context {
 
 	public SymbolicExpression setOtherValue(SymbolicExpression expr,
 			SymbolicExpression value) {
-		SymbolicExpression result;
+		SymbolicExpression result = otherConstantMap.put(expr, value);
 
-		if (parent != null) {
-			result = getOtherValue(expr);
-			if (result != value) {
-				otherConstantMap.put(expr, value);
-				change = true;
-			}
-		} else {
-			result = otherConstantMap.put(expr, value);
-			change = change || result != value;
-		}
+		change = change || result != value;
 		return result;
 	}
 
 	public SymbolicExpression getOtherValue(SymbolicExpression expr) {
 		SymbolicExpression result = otherConstantMap.get(expr);
 
-		if (parent != null && result == null)
-			result = parent.getOtherValue(expr);
 		return result;
 	}
 

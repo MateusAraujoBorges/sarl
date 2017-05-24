@@ -129,18 +129,13 @@ public class ContextBuilder {
 	 * @param info
 	 *            simple structure with fields for all required factories and
 	 *            other commonly-used objects needed by this builder
-	 * @param parent
-	 *            the {@link Context} that should become the parent of the new
-	 *            context being constructed; everything that holds in the parent
-	 *            also holds in the child
 	 * @param assumption
 	 *            the boolean expression which is being analyze and converted
 	 *            into an abstract representation which is an instance of
 	 *            {@link Context}
 	 */
-	public ContextBuilder(SimplifierInfo info, Context parent,
-			BooleanExpression assumption) {
-		theContext = new Context(info, parent);
+	public ContextBuilder(SimplifierInfo info, BooleanExpression assumption) {
+		theContext = new Context(info);
 		this.assumption = assumption;
 		this.info = info;
 		this.universe = info.universe;
