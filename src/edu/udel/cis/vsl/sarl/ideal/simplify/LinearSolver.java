@@ -25,12 +25,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
-import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
@@ -588,13 +586,18 @@ public class LinearSolver {
 	}
 
 	/**
-	 * Build a {@link Map} which maps {@link SymbolicExpression}s to
-	 * {@link Constant}s.
-	 * 
+	 * Given a constant map, performs Gaussian Elimination to modify the map,
+	 * placing it is a reduced, simplified form. The map is viewed as a matrix
+	 * in which there is one row for each entry, the monic of that entry is
+	 * interpreted as a linear combination of monics, and a final column
+	 * represents the constant value of that monic.
 	 * 
 	 * @param idealFactory
 	 * @param map
-	 * @return
+	 *            a map mapping a monic to a number which is the known value of
+	 *            that monic
+	 * @return <code>true</code>, unless the map has been determined to be
+	 *         inconsistent
 	 */
 	public static boolean reduceConstantMap(IdealFactory idealFactory,
 			Map<Monic, Number> map) {

@@ -24,6 +24,10 @@ public class FastNode<T> {
 		return data;
 	}
 
+	public void setData(T data) {
+		this.data = data;
+	}
+
 	public FastNode<T> getPrev() {
 		return prev;
 	}
@@ -44,5 +48,4 @@ public class FastNode<T> {
 	public String toString() {
 		return data.toString();
 	}
-
 }

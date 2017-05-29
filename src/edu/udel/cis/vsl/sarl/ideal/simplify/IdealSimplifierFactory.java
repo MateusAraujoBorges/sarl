@@ -50,7 +50,7 @@ public class IdealSimplifierFactory implements SimplifierFactory {
 	 */
 	public IdealSimplifierFactory(IdealFactory idealFactory,
 			PreUniverse universe) {
-		info = new SimplifierInfo();
+		info = new SimplifierInfo(universe, idealFactory);
 		info.universe = universe;
 		info.affineFactory = new AffineFactory(idealFactory);
 		info.booleanFactory = idealFactory.booleanFactory();

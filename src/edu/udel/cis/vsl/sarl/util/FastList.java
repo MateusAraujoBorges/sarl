@@ -117,6 +117,32 @@ public class FastList<T> {
 	}
 
 	/**
+	 * Given a node in this list, returns the next node in a cyclic ordering.
+	 * This is the usual next node, unless the usual next node is null, in which
+	 * case it is the first node of this list.
+	 * 
+	 * @param node
+	 *            a node in this list
+	 * @return the next node in the cyclic ordering
+	 */
+	public FastNode<T> getNextCyclic(FastNode<T> node) {
+		return node == last ? first : node.getNext();
+	}
+
+	/**
+	 * Given a node in this list, returns the previous node in a cyclic
+	 * ordering. This is the usual previous node, unless the usual previous node
+	 * is null, in which case it is the last node of this list.
+	 * 
+	 * @param node
+	 *            a node in this list
+	 * @return the previous node in the cyclic ordering
+	 */
+	public FastNode<T> getPrevCyclic(FastNode<T> node) {
+		return node == first ? last : node.getPrev();
+	}
+
+	/**
 	 * Adds an element to the end of this list.
 	 * 
 	 * @param value
@@ -336,6 +362,30 @@ public class FastList<T> {
 			newPrev.setNext(that.first);
 		}
 		that.empty();
+	}
+
+	/**
+	 * Removes a node from this list. The <code>node</code> must be a node
+	 * currently in this list, or the behavior is undefined.
+	 * 
+	 * @param node
+	 *            a node currently in this list
+	 */
+	public void remove(FastNode<T> node) {
+		if (node == first) {
+			first = node.getNext();
+			if (node == last)
+				last = null;
+		} else if (node == last) {
+			last = node.getPrev();
+			if (node == first)
+				first = null;
+		} else {
+			node.getPrev().setNext(node.getNext());
+			node.getNext().setPrev(node.getPrev());
+		}
+		node.setNext(null);
+		node.setPrev(null);
 	}
 
 	/**

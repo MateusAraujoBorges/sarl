@@ -329,6 +329,15 @@ public class ContextBuilder {
 			return false;
 		return theContext.updateConstantMap();
 	}
+	
+	// let's try this again:
+	// p||q : assume !p, simplify q.  Replace q with simplified q.
+	// Then assume !q and simplify p.
+	// Example : x>0 || x>3 --> x>0 || false --> x>0
+
+	// need to do same thing for simplifying AND.
+	// p&&q : assume p, simplify q.
+	
 
 	private boolean extractBoundsOr(BooleanExpression or, Context context) {
 		if (or.operator() != SymbolicOperator.OR)

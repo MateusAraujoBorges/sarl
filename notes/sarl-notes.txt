@@ -1,5 +1,62 @@
 
 
+extract(expression, context) : modifies context based on information
+  in expression.
+
+simplify(context, expression) : Expression
+  returns simplified version of expression based on context.
+
+
+for i=1..n
+  C = new context;
+  for j in 1..n-{i} :
+    extract(p_j, C);
+  p_i <- simplify(C,p_i)
+
+
+Example:   (p||q)&&p
+
+123456
+
+
+Only efficient way is to REMOVE one element at a time
+from the context and simplify it, then put it back.
+That takes care of the "and" problem.
+
+But how to simplify the assumption?  This won't work.
+Unless you know the context is equivalent to the
+assumption.
+
+
+-----
+
+
+Figure out how to simplify "and".
+Then to simplify or
+
+simplify(or(p_i)) = not simplify(and(not p_i))
+
+
+---
+
+To simplify and:
+Create a new context.
+same method used to addSub
+(and reduce the subMap).
+BUT: the "simplify" method should use union
+of the original (outer) context and this.
+
+simplify(C0, AND(p_i)):
+Let C1=C0
+
+make an interface for Context that can be used
+by the SimplifierWorker.  The interface would
+only have get methods that are needed to perform
+simplification
+
+make two different kinds of Context.
+
+
 
 ----------------------------------------------
 
