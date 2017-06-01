@@ -1,16 +1,24 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
+import static edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator.LESS_THAN;
+
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
+import edu.udel.cis.vsl.sarl.IF.CoreUniverse.ForallStructure;
+import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
@@ -18,16 +26,23 @@ import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
+import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
+import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
+import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
+import edu.udel.cis.vsl.sarl.simplify.IF.RangeFactory;
 import edu.udel.cis.vsl.sarl.util.FastList;
 import edu.udel.cis.vsl.sarl.util.FastNode;
 import edu.udel.cis.vsl.sarl.util.Pair;
@@ -292,6 +307,9 @@ public class Context2 implements ContextIF {
 	 * process of transformation it is determined that x and y are equivalent,
 	 * both fields of the pair will be set to <code>null</code>
 	 * 
+	 * TODO: don't you want pseudo form? Leading coefficient of x to be 1 if
+	 * real, else gcd=1 ?  (YES, the comment just doesn't say it)
+	 * 
 	 * @param pair
 	 *            a substitution pair specifying a value x and the value y that
 	 *            is to be substituted for x
@@ -369,58 +387,102 @@ public class Context2 implements ContextIF {
 	}
 
 	/**
-	 * Declares that <code>key</code> is bounded by <code>bound</code>, hence
-	 * any existing bound I associated to <code>key</code> will be replaced by
-	 * the intersection of I and <code>bound</code>.
-	 * 
-	 * Precondition: <code>range</code> is not empty.
+	 * Declares that the values taken on by <code>key</code> are contained in
+	 * <code>range</code>, modifying the state of this context accordingly. An
+	 * existing range R associated to <code>key</code> will be replaced by the
+	 * intersection of R and <code>range</code>. If this results in a singleton
+	 * value, the entry is removed from the {@link #rangeMap} altogether and and
+	 * is entered into the {@link #subMap}.
 	 * 
 	 * @param key
 	 *            a non-<code>null</code> {@link Monic}
 	 * @param range
 	 *            a non-empty range of the same type as <code>key</code>
 	 *            containing all possible values of <code>key</code>
-	 * @return the old bound associated to <code>key</code>, or
-	 *         <code>null</code> if there was none
+	 * @return a {@link Pair} consisting of the old range associated to
+	 *         <code>key</code> (or <code>null</code> if there was none) and the
+	 *         new range associated to <code>key</code>
 	 * @throws InconsistentContextException
-	 *             if the new restricted range is empty
+	 *             if the new restricted range is empty or an inconsistency is
+	 *             detected when updating the {@link #subMap}
 	 */
-	private Range restrictRange(Monic key, Range range)
+	private Pair<Range, Range> restrictRange(Monic key, Range range)
 			throws InconsistentContextException {
 		Range original = rangeMap.get(key), result;
 
 		if (original == null) {
 			result = range;
-			rangeMap.put(key, result);
 		} else {
 			result = info.rangeFactory.intersect(original, range);
-			if (!result.equals(original)) {
-				if (result.isEmpty())
-					throw new InconsistentContextException();
-				rangeMap.put(key, result);
-			}
+			if (result == original)
+				return new Pair<>(original, result);
 		}
-		return original;
+		if (result.isEmpty())
+			throw new InconsistentContextException();
+
+		Number value = result.getSingletonValue();
+
+		if (value == null) {
+			rangeMap.put(key, result);
+		} else {
+			addSub(key, info.universe.number(value));
+			if (original != null)
+				rangeMap.remove(key);
+		}
+		return new Pair<>(original, result);
 	}
 
-	/**
-	 * Attempts to determine whether the formula <code>value1==value2</code> is
-	 * unsatisfiable.
-	 * 
-	 * @param value1
-	 *            a non-<code>null</code> symbolic expression
-	 * @param value2
-	 *            a non-<code>null</code> symbolic expression of type compatible
-	 *            with that of <code>value1</code>
-	 * @return
-	 */
-	private boolean inconsistent(SymbolicExpression value1,
-			SymbolicExpression value2) {
-		if (value1.operator() == SymbolicOperator.CONCRETE
-				&& value2.operator() == SymbolicOperator.CONCRETE) {
-			return !value1.equals(value2);
+	private Range getGeneralRange(Monic monic) {
+		Range range = rangeMap.get(monic);
+
+		if (range == null) {
+			SymbolicExpression value = subMap.get(monic);
+
+			if (value instanceof Constant)
+				range = info.rangeFactory
+						.singletonSet(((Constant) value).number());
 		}
-		return false;
+		return range;
+	}
+
+	private boolean containsZero(Range range) {
+		Number zero = range.isIntegral() ? info.numberFactory.zeroInteger()
+				: info.numberFactory.zeroRational();
+
+		return range.containsNumber(zero);
+	}
+
+	// /**
+	// * Attempts to determine whether the formula <code>value1==value2</code>
+	// is
+	// * unsatisfiable.
+	// *
+	// * @param value1
+	// * a non-<code>null</code> symbolic expression
+	// * @param value2
+	// * a non-<code>null</code> symbolic expression of type compatible
+	// * with that of <code>value1</code>
+	// * @return
+	// */
+	// private boolean inconsistent(SymbolicExpression value1,
+	// SymbolicExpression value2) {
+	// if (value1.operator() == SymbolicOperator.CONCRETE
+	// && value2.operator() == SymbolicOperator.CONCRETE) {
+	// return !value1.equals(value2);
+	// }
+	// return false;
+	// }
+
+	private SymbolicExpression updateSub(SymbolicExpression key,
+			SymbolicExpression value) throws InconsistentContextException {
+		SymbolicExpression old = subMap.put(key, value);
+
+		if (old != null && value.operator() == SymbolicOperator.CONCRETE
+				&& old.operator() == SymbolicOperator.CONCRETE
+				&& old != value) {
+			throw new InconsistentContextException();
+		}
+		return old;
 	}
 
 	/**
@@ -463,8 +525,6 @@ public class Context2 implements ContextIF {
 
 			if (oldValue.equals(newValue))
 				continue; // this sub is already in the subMap
-			if (inconsistent(oldValue, newValue))
-				throw new InconsistentContextException();
 			// apply newKey->newValue to every entry of subMap...
 			UnaryOperator<SymbolicExpression> singleSubstituter = info.universe
 					.mapSubstituter(new SingletonMap<>(newKey, newValue));
@@ -484,17 +544,18 @@ public class Context2 implements ContextIF {
 					workList.add(new Pair<>(subKey, subValue));
 				}
 			}
-			subMap.put(newKey, newValue);
+			updateSub(newKey, newValue);
 		}
 	}
 
 	/**
-	 * Transforms a claim that a monomial lies in a range to an equivalent
-	 * (normalized) form in which the monomial is a {@link Monic}, and if that
-	 * {@link Monic} is a {@link Polynomial}, its constant term is 0.
+	 * Transforms a claim that a non-constant monomial lies in a range to an
+	 * equivalent (normalized) form in which the monomial is a {@link Monic},
+	 * and if that {@link Monic} is a {@link Polynomial}, its constant term is
+	 * 0.
 	 * 
 	 * @param monomial
-	 *            a non-<code>null</code> {@link Monomial}
+	 *            a non-<code>null</code>, non-{@link Constant} {@link Monomial}
 	 * @param range
 	 *            a non-<code>null</code> {@link Range}, with the same type as
 	 *            <code>monomial</code>
@@ -545,61 +606,64 @@ public class Context2 implements ContextIF {
 		FastNode<Monic> curr = keyList.getFirst(),
 				lastChanged = keyList.getLast();
 
+		// idea: keep iterating cyclically over the keys of the
+		// rangeMap until it stabilizes. They keys are changing
+		// as you iterate.
+		// invariant: keyList is a list containing all the keys in the rangeMap
+		// (and possibly additional expressions not keys in the rangeMap)
+		// lastChanged is the last node to have changed in some way.
+		// curr is the current node.
 		while (true) {
-			Monic key = curr.getData();
-			NumericExpression simpKey = (NumericExpression) simplify(key);
+			Monic oldKey = curr.getData();
+			NumericExpression simpKey = (NumericExpression) simplify(oldKey);
 
-			if (simpKey == key) {
+			if (simpKey == oldKey) { // no change
 				if (lastChanged == curr)
-					break;
-				else
-					curr = keyList.getNextCyclic(curr);
-			} else { // a change has occurred: update rangeMap
-				Range range = rangeMap.get(key);
+					break; // complete cycle with no change: done!
+				curr = keyList.getNextCyclic(curr);
+				continue;
+			}
+			// a change has occurred: simpKey!=oldKey
+			// remove oldKey, update rangeMap and/or subMap
 
+			Range oldRange = rangeMap.remove(oldKey);
+
+			if (oldRange != null) {
 				change = true;
-				if (range != null) {
-					// We assume simpKey is not a RationalExpression
+
+				// if simpKey is Constant, it is either in the range or not
+				if (simpKey instanceof Constant) {
+					if (!oldRange.containsNumber(((Constant) simpKey).number()))
+						throw new InconsistentContextException();
+				} else {
+					// We assume simpKey is not a RationalExpression...
 					Pair<Monic, Range> normalization = getMonicRange(
-							(Monomial) simpKey, range);
+							(Monomial) simpKey, oldRange);
 					Monic newKey = normalization.left;
+					Pair<Range, Range> pair = restrictRange(newKey,
+							normalization.right);
 
-					range = normalization.right;
-
-					// TODO: if range is empty, this is inconsistent?
-
-					// TODO: does the correctness of this method
-					// depend on the fact that ranges are precise
-					// representations of inequalities? I.e.,
-					// no information can be lost?
-
-					Number value = range.getSingletonValue();
-
-					if (value == null) {
-						rangeMap.remove(key);
-
-						Range oldRange = restrictRange(newKey, range);
-
-						if (oldRange == null) {
-							curr.setData(newKey);
-							lastChanged = curr;
-							curr = keyList.getNextCyclic(curr);
-							continue;
-						}
-					} else {
-						addSub(newKey, info.universe.number(value));
+					if (pair.left == null
+							&& pair.right.getSingletonValue() == null) {
+						// oldKey has been removed. newKey was not in the map
+						// and now it is. So replace oldKey with newKey in the
+						// list.
+						curr.setData(newKey);
+						lastChanged = curr;
+						curr = keyList.getNextCyclic(curr);
+						continue;
 					}
 				}
-
-				// remove current node...
-				FastNode<Monic> next = keyList.getNextCyclic(curr);
-
-				keyList.remove(curr);
-				if (keyList.isEmpty())
-					break;
-				curr = next;
-				lastChanged = keyList.getPrevCyclic(curr);
 			}
+
+			// remove current node...
+			FastNode<Monic> next = keyList.getNextCyclic(curr);
+
+			keyList.remove(curr);
+			if (keyList.isEmpty())
+				break;
+			curr = next;
+			lastChanged = keyList.getPrevCyclic(curr);
 		}
 		return change;
 	}
@@ -713,13 +777,15 @@ public class Context2 implements ContextIF {
 
 			if (oldValue instanceof Constant) {
 				assert ((Constant) oldValue).number().equals(newNumber);
-				// must be the case or else the LinearSolver would
+				// must be the case, else the LinearSolver would
 				// have returned inconsistent (false)
 			} else {
 				SymbolicExpression newValue = info.universe.number(newNumber);
 
-				subMap.put(key, newValue);
-				change = change || !oldValue.equals(newValue);
+				if (oldValue != newValue) {
+					change = true;
+					addSub(key, newValue);
+				}
 			}
 		}
 		if (debug) {
@@ -729,13 +795,497 @@ public class Context2 implements ContextIF {
 		return change;
 	}
 
-	private void addFact(BooleanExpression fact)
+	/**
+	 * Processes a boolean expression, updating the state of this context
+	 * appropriately. The boolean expression must be in CNF (conjunctive normal
+	 * form).
+	 * 
+	 * @param assumption
+	 *            the boolean expression to process
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent
+	 */
+	private void addFact(BooleanExpression assumption)
 			throws InconsistentContextException {
+		if (assumption.operator() == SymbolicOperator.AND) {
+			for (SymbolicObject arg : assumption.getArguments()) {
+				BooleanExpression clause = (BooleanExpression) arg;
 
-		// TODO
-		// process this boolean expression and update the state of this
-		// context appropriately.
-		// formerly known as "extract..."
+				extractOr(clause);
+			}
+		} else {
+			extractOr(assumption);
+		}
+	}
+
+	/**
+	 * Processes an expression in which the operator is not
+	 * {@link SymbolicOperator#AND}. In the CNF form, this expression is a
+	 * clause of the outer "and" expression.
+	 * 
+	 * @param or
+	 *            the boolean expression to process
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent
+	 */
+	private void extractOr(BooleanExpression or)
+			throws InconsistentContextException {
+		if (or.operator() != SymbolicOperator.OR)
+			extractClause(or);
+		or = info.universe.not(new SubContext(info, this, info.universe.not(or))
+				.getFullAssumption());
+		if (or.operator() == SymbolicOperator.OR) {
+			addSub(or, info.trueExpr);
+		} else {
+			addFact(or);
+		}
+	}
+
+	/**
+	 * Processes a basic boolean expression --- one in which the operator is
+	 * neither {@link SymbolicOperator#AND} nor {@link SymbolicOperator#OR} ---
+	 * and updates this context accordingly.
+	 * 
+	 * @param clause
+	 *            the expression which is not an "and" or "or" expression
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent
+	 */
+	private void extractClause(BooleanExpression clause)
+			throws InconsistentContextException {
+		SymbolicOperator op = clause.operator();
+
+		switch (op) {
+		case CONCRETE:
+			if (!((BooleanObject) clause.argument(0)).getBoolean())
+				throw new InconsistentContextException();
+			break;
+		case NOT:
+			extractNot((BooleanExpression) clause.argument(0));
+			break;
+		case FORALL:
+			extractForall(clause);
+			break;
+		case EXISTS:
+			extractExists(clause);
+			break;
+		case EQUALS:
+			extractEquals(clause);
+			break;
+		case NEQ:
+			extractNEQ((SymbolicExpression) clause.argument(0),
+					(SymbolicExpression) clause.argument(1));
+			break;
+		case LESS_THAN: // 0<x or x<0
+		case LESS_THAN_EQUALS: {// 0<=x or x<=0
+			SymbolicExpression arg0 = (SymbolicExpression) clause.argument(0),
+					arg1 = (SymbolicExpression) clause.argument(1);
+
+			if (arg0.isZero()) {
+				extractIneq((Monic) arg1, true, op == LESS_THAN);
+			} else {
+				extractIneq((Monic) arg0, false, op == LESS_THAN);
+			}
+			break;
+		}
+		default:
+			addSub(clause, info.trueExpr);
+		}
+	}
+
+	private void extractNot(BooleanExpression pred)
+			throws InconsistentContextException {
+		addSub(pred, info.falseExpr);
+	}
+
+	/**
+	 * Processes an equality expression and updates the state of this context
+	 * accordingly.
+	 * 
+	 * @param eqExpr
+	 *            a symbolic expression in which the operator is
+	 *            {@link SymbolicOperator#EQUALS}
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent
+	 */
+	private void extractEquals(SymbolicExpression eqExpr)
+			throws InconsistentContextException {
+		SymbolicExpression arg0 = (SymbolicExpression) eqExpr.argument(0);
+		SymbolicExpression arg1 = (SymbolicExpression) eqExpr.argument(1);
+
+		if (arg0.type().isNumeric()) { // 0=x for a Primitive x
+			extractEQ0((Primitive) arg1);
+		} else {
+			boolean const0 = arg0.operator() == SymbolicOperator.CONCRETE;
+			boolean const1 = arg1.operator() == SymbolicOperator.CONCRETE;
+
+			if (const1 && !const0) {
+				addSub(arg0, arg1);
+			} else if (const0 && !const1) {
+				addSub(arg1, arg0);
+			} else if (const0 && const1) {
+				if (!arg0.equals(arg1))
+					throw new InconsistentContextException();
+			} else { // neither is constant
+				addSub(eqExpr, info.trueExpr);
+			}
+		}
+	}
+
+	/**
+	 * Processes an equality of the form x=0, for a {@link Primitive} x,
+	 * updating the state of this context based on that fact.
+	 * 
+	 * @param primitive
+	 *            a non-<code>null</code> numeric {@link Primitive}
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent
+	 */
+	private void extractEQ0(Primitive primitive)
+			throws InconsistentContextException {
+		// TODO: probabilistic technique?
+		addSub(primitive, info.idealFactory.zero(primitive.type()));
+	}
+
+	private void extractNEQ(SymbolicExpression arg0, SymbolicExpression arg1)
+			throws InconsistentContextException {
+		SymbolicType type = arg0.type();
+
+		if (type.isNumeric()) { // 0!=x, for a Primitive x
+			Primitive primitive = (Primitive) arg1;
+			RangeFactory rf = info.rangeFactory;
+			Number zero = type.isInteger() ? info.numberFactory.zeroInteger()
+					: info.numberFactory.zeroRational();
+
+			restrictRange(primitive, rf.complement(rf.singletonSet(zero)));
+		} else {
+			addSub(info.universe.equals(arg0, arg1), info.falseExpr);
+		}
+	}
+
+	/**
+	 * Processes a numeric inequality and updates the state of this context
+	 * accordingly. The inequality has one of the forms: 0&lt;x, 0&le;x, x&lt;0,
+	 * or x&le;0.
+	 * 
+	 * @param monic
+	 *            a non-<code>null</code> {@link Monic} (x) which is being
+	 *            compared to 0
+	 * @param gt
+	 *            is the inequality stating that <code>monic</code> is greater
+	 *            than (or greater than or equal to) 0? I.e., is the inequality
+	 *            form one of 0&lt;x, 0&le;x ?
+	 * @param strict
+	 *            is the inequality strict, i.e., either of the form 0&lt;x or
+	 *            x&lt;0 ?
+	 * @throws InconsistentContextException
+	 *             if an inconsistency is this context is detected
+	 */
+	private void extractIneq(Monic monic, boolean gt, boolean strict)
+			throws InconsistentContextException {
+		NumberFactory nf = info.numberFactory;
+		RangeFactory rf = info.rangeFactory;
+		boolean isIntegral = monic.type().isInteger();
+		Number zero = isIntegral ? nf.zeroInteger() : nf.zeroRational();
+		Range range;
+		
+		if (monic instanceof Polynomial) {
+			// example: 0<=2x+2y+3 ---> -3<=2(x+y) ---> -3/2<=x+y ---> 
+		}
+
+		if (gt) {
+			range = rf.interval(isIntegral, zero, strict,
+					nf.infiniteNumber(isIntegral, true), true);
+		} else {
+			range = rf.interval(isIntegral,
+					nf.infiniteNumber(isIntegral, false), true, zero, strict);
+		}
+		// Convert monic and range together...
+		// if monic is a polynomial, get it into affine form
+		
+	}
+
+	/**
+	 * Looks for the pattern: <code>forall int i . 0<=i<=n-1 -> a[i]=expr</code>
+	 * . If that pattern is found, adds the substitution to the {@link #subMap}:
+	 * <code>a = (T[n]) lambda i . expr</code>. Otherwise, just adds the default
+	 * substitution mapping <code>forallExpr</code> to <code>true</code>.
+	 * 
+	 * @param forallExpr
+	 *            an expression in which the operator is
+	 *            {@link SymbolicOperator#FORALL}.
+	 * @throws InconsistentContextException
+	 *             this context is determined to be inconsistent
+	 */
+	private void extractForall(BooleanExpression forallExpr)
+			throws InconsistentContextException {
+		ArrayDefinition defn = extractArrayDefinition(forallExpr);
+
+		if (defn != null && defn.array
+				.operator() == SymbolicOperator.SYMBOLIC_CONSTANT) {
+			addSub(defn.array, defn.lambda);
+		} else {
+			addSub(forallExpr, info.trueExpr);
+		}
+	}
+
+	private void extractExists(SymbolicExpression existsExpr)
+			throws InconsistentContextException {
+		addSub(existsExpr, info.trueExpr);
+	}
+
+	// Begin array term analysis....
+
+	/**
+	 * Given an <code>equation</code> and a {@link Primitive} <code>p</code>,
+	 * attempts to solve for <code>p</code>.
+	 * 
+	 * @param equation
+	 *            an equation that must be off the form 0==x for some numeric
+	 *            {@link Primitive} x (this is the canonical form of all numeric
+	 *            equations in the {@link IdealFactory}
+	 * @param p
+	 *            a numeric {@link Primitive}
+	 * @return an expression which must be equal to <code>p</code> and does not
+	 *         involve <code>p</code>, or <code>null</code> if it could not be
+	 *         solved
+	 */
+	NumericExpression solveFor(Monomial[] terms, Primitive p) {
+		int nterms = terms.length;
+
+		if (nterms == 0)
+			return null;
+
+		IdealFactory idf = info.idealFactory;
+		List<Monomial> deg0List = new LinkedList<>();
+		List<Monomial> deg1List = new LinkedList<>();
+
+		for (int i = 0; i < nterms; i++) {
+			Monomial term = terms[i];
+			Monic monic = term.monic(idf);
+			PrimitivePower[] factors = monic.monicFactors(idf);
+			int nfactors = factors.length;
+			boolean isDeg0 = true;
+
+			for (int j = 0; j < nfactors; j++) {
+				PrimitivePower factor = factors[j];
+
+				if (factor.primitive(idf).equals(p)) {
+					NumberObject exponent = factor.primitivePowerExponent(idf);
+
+					if (exponent.isOne()) {
+						isDeg0 = false;
+						break;
+					} else {
+						// cannot solve non-linear equation -- yet
+						return null;
+					}
+				}
+			}
+			if (isDeg0)
+				deg0List.add(term);
+			else
+				deg1List.add(term);
+		}
+		if (deg1List.isEmpty())
+			return null;
+
+		SymbolicType type = terms[0].type();
+		Monomial zero = idf.zero(type);
+		Monomial coefficient = zero;
+
+		for (Monomial term : deg1List) {
+			coefficient = idf.addMonomials(coefficient,
+					(Monomial) idf.divide(term, p));
+		}
+
+		BooleanExpression isNonZero = (BooleanExpression) simplify(
+				idf.isNonZero(coefficient));
+
+		if (!isNonZero.isTrue())
+			return null;
+
+		NumericExpression offset = info.universe.add(deg0List);
+		NumericExpression result = null;
+
+		if (type.isReal()) {
+			result = idf.divide(idf.minus(offset), coefficient);
+		} else if (coefficient.isOne()) {
+			result = idf.minus(offset);
+		} else if (idf.minus(coefficient).isOne()) {
+			result = offset;
+		}
+		return result;
+	}
+
+	private Iterable<Primitive> findArrayReads(Monomial[] terms,
+			NumericSymbolicConstant indexVar) {
+		Set<Primitive> nonlinearFactors = new HashSet<>();
+		Set<Primitive> linearFactors = new HashSet<>();
+		IdealFactory idf = info.idealFactory;
+
+		for (Monomial term : terms) {
+			for (PrimitivePower pp : term.monic(idf).monicFactors(idf)) {
+				Primitive p = pp.primitive(idf);
+
+				if (p.operator() == SymbolicOperator.ARRAY_READ
+						&& p.argument(1).equals(indexVar)
+						&& !nonlinearFactors.contains(p)) {
+					if (pp.primitivePowerExponent(idf).isOne()) {
+						linearFactors.add(p);
+					} else {
+						linearFactors.remove(p);
+						nonlinearFactors.add(p);
+					}
+				}
+			}
+		}
+		return linearFactors;
+	}
+
+	class ArrayEquationSolution {
+		SymbolicExpression array;
+		SymbolicExpression rhs;
+	}
+
+	/**
+	 * Given an equation a=b, where a and b are symbolic expressions, and an
+	 * integer symbolic constant i, attempts to find an equivalent equation of
+	 * the form e[i]=f. If this equivalent form is found, the result is returned
+	 * as a structure with the <code>array</code> field e and the
+	 * <code>rhs</code> field f.
+	 * 
+	 * @param equation
+	 *            the boolean expression which is an equality
+	 * @return a structure as specified above if the equation can be solved, or
+	 *         <code>null</code> if <code>equation</code> is not an equality or
+	 *         could not be put into that form
+	 */
+	private ArrayEquationSolution solveArrayEquation(SymbolicExpression arg0,
+			SymbolicExpression arg1, NumericSymbolicConstant index) {
+		ArrayEquationSolution result;
+
+		if (arg0.operator() == SymbolicOperator.ARRAY_READ
+				&& arg0.argument(1).equals(index)) {
+			result = new ArrayEquationSolution();
+			result.array = (SymbolicExpression) arg0.argument(0);
+			result.rhs = arg1;
+			return result;
+		}
+		if (arg1.operator() == SymbolicOperator.ARRAY_READ
+				&& arg1.argument(1).equals(index)) {
+			result = new ArrayEquationSolution();
+			result.array = (SymbolicExpression) arg1.argument(0);
+			result.rhs = arg0;
+			return result;
+		}
+		if (arg0.type().isNumeric()) {
+			assert arg0.isZero();
+			assert arg1 instanceof Primitive;
+
+			IdealFactory idf = info.idealFactory;
+			Monomial[] terms = ((Primitive) arg1).expand(idf);
+
+			for (Primitive arrayRead : findArrayReads(terms, index)) {
+				NumericExpression solution = solveFor(terms, arrayRead);
+
+				if (solution != null) {
+					result = new ArrayEquationSolution();
+					result.array = (SymbolicExpression) arrayRead.argument(0);
+					result.rhs = solution;
+					return result;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * A simple structure with two fields: a symbolic expression of array type
+	 * and an equivalent array-lambda expression.
+	 * 
+	 * @see #extractArrayDefinition(BooleanExpression)
+	 * 
+	 * @author siegel
+	 */
+	class ArrayDefinition {
+		/**
+		 * An expression of array type.
+		 */
+		SymbolicExpression array;
+
+		/**
+		 * An {@link SymbolicOperator#ARRAY_LAMBDA} expression equivalent to
+		 * {@link #array}.
+		 */
+		SymbolicExpression lambda;
+	}
+
+	/**
+	 * If the boolean expression has the form
+	 * 
+	 * <pre>
+	 * forall int i in [0,n-1] . e[i]=f
+	 * </pre>
+	 * 
+	 * where n is an integer expressions not involving i, e has type
+	 * "array of length n of T" for some type T, and f is some expression, then
+	 * return a structure in which the array field is e and the lambda field is
+	 * the expression <code>arraylambda i . f</code>.
+	 * 
+	 * @param forallExpr
+	 *            a boolean expression with operator
+	 *            {@link SymbolicOperator#FORALL}
+	 * @return if the given boolean expression is a forall expression in the
+	 *         form described above, the structure containing the array and the
+	 *         array-lambda expression, else <code>null</code>
+	 */
+	private ArrayDefinition extractArrayDefinition(
+			BooleanExpression forallExpr) {
+		ForallStructure structure = info.universe
+				.getForallStructure(forallExpr);
+
+		if (structure == null)
+			return null;
+
+		BooleanExpression body = structure.body;
+		NumericSymbolicConstant var = structure.boundVariable;
+		ArrayEquationSolution solution = null;
+
+		if (body.operator() == SymbolicOperator.FORALL) {
+			ArrayDefinition innerDefn = extractArrayDefinition(body);
+
+			if (innerDefn == null)
+				return null;
+			solution = solveArrayEquation(innerDefn.array, innerDefn.lambda,
+					var);
+		} else if (body.operator() == SymbolicOperator.EQUALS) {
+			solution = solveArrayEquation((SymbolicExpression) body.argument(0),
+					(SymbolicExpression) body.argument(1), var);
+		}
+		if (solution == null)
+			return null;
+
+		SymbolicArrayType arrayType = (SymbolicArrayType) solution.array.type();
+
+		if (!arrayType.isComplete())
+			return null;
+
+		SymbolicCompleteArrayType completeType = (SymbolicCompleteArrayType) arrayType;
+		NumericExpression length = info.universe.add(structure.upperBound,
+				info.universe.oneInt());
+
+		if (structure.lowerBound.isZero() && info.universe
+				.equals(length, completeType.extent()).isTrue()) {
+			SymbolicExpression lambda = info.universe.arrayLambda(completeType,
+					info.universe.lambda(var, solution.rhs));
+			ArrayDefinition result = new ArrayDefinition();
+
+			result.array = solution.array;
+			result.lambda = lambda;
+			return result;
+		}
+		return null;
 	}
 
 	/**

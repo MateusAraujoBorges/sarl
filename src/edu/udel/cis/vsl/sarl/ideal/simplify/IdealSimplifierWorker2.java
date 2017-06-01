@@ -377,60 +377,60 @@ public class IdealSimplifierWorker2 extends CommonSimplifierWorker {
 	 *         <code>poly</code> under the existing assumptions
 	 */
 	private Monomial simplifyPolynomial(Polynomial poly) {
-//		IdealFactory id = idealFactory();
-//
-//		while (true) { // repeat until stabilization
-//			Number constant = theContext.getConstantValue(poly);
-//
-//			if (constant != null)
-//				return id.constant(constant);
-//
-//			// try rewriting poly as aX+b for some pseudo monomial X...
-//			AffineExpression affine = affineFactory().affine(poly);
-//
-//			if (!affine.coefficient().isOne() || !affine.offset().isZero()) {
-//				constant = theContext.getConstantValue(affine.pseudo());
-//				if (constant != null)
-//					return id.constant(
-//							affineFactory().affineValue(affine, constant));
-//			}
-//
-//			if (debug) {
-//				// out.println("simplifyPoly: starting term simplification of "
-//				// + poly.id());
-//				// TODO: need toString method which will check how long the
-//				// description is and cut it off and use a different description
-//				// instead.
-//				out.flush();
-//			}
-//
-//			Monomial[] termMap = poly.termMap(id);
-//			int size = termMap.length;
-//			Monomial[] terms = new Monomial[size];
-//			boolean simplified = false;
-//
-//			for (int i = 0; i < size; i++) {
-//				Monomial term = termMap[i];
-//				Monomial simplifiedTerm = (Monomial) simplifyExpression(term);
-//
-//				simplified = simplified || term != simplifiedTerm;
-//				terms[i] = simplifiedTerm;
-//			}
-//
-//			Monomial result = simplified ? id.addMonomials(terms) : poly;
-//
-//			// can't decide whether to expand or not.
-//			// For now, only expanding for "=0"...
-//			if (result == poly)
-//				return result;
-//			if (!(result instanceof Polynomial))
-//				return (Monomial) simplifyExpression(result);
-//			if (debug) {
-//				// out.println("simplifyPoly: poly = " + poly);
-//				// out.println("simplifyPoly: result = " + result);
-//			}
-//			poly = (Polynomial) result;
-//		}
+		// IdealFactory id = idealFactory();
+		//
+		// while (true) { // repeat until stabilization
+		// Number constant = theContext.getConstantValue(poly);
+		//
+		// if (constant != null)
+		// return id.constant(constant);
+		//
+		// // try rewriting poly as aX+b for some pseudo monomial X...
+		// AffineExpression affine = affineFactory().affine(poly);
+		//
+		// if (!affine.coefficient().isOne() || !affine.offset().isZero()) {
+		// constant = theContext.getConstantValue(affine.pseudo());
+		// if (constant != null)
+		// return id.constant(
+		// affineFactory().affineValue(affine, constant));
+		// }
+		//
+		// if (debug) {
+		// // out.println("simplifyPoly: starting term simplification of "
+		// // + poly.id());
+		// // TODO: need toString method which will check how long the
+		// // description is and cut it off and use a different description
+		// // instead.
+		// out.flush();
+		// }
+		//
+		// Monomial[] termMap = poly.termMap(id);
+		// int size = termMap.length;
+		// Monomial[] terms = new Monomial[size];
+		// boolean simplified = false;
+		//
+		// for (int i = 0; i < size; i++) {
+		// Monomial term = termMap[i];
+		// Monomial simplifiedTerm = (Monomial) simplifyExpression(term);
+		//
+		// simplified = simplified || term != simplifiedTerm;
+		// terms[i] = simplifiedTerm;
+		// }
+		//
+		// Monomial result = simplified ? id.addMonomials(terms) : poly;
+		//
+		// // can't decide whether to expand or not.
+		// // For now, only expanding for "=0"...
+		// if (result == poly)
+		// return result;
+		// if (!(result instanceof Polynomial))
+		// return (Monomial) simplifyExpression(result);
+		// if (debug) {
+		// // out.println("simplifyPoly: poly = " + poly);
+		// // out.println("simplifyPoly: result = " + result);
+		// }
+		// poly = (Polynomial) result;
+		// }
 		// TODO:
 		return null;
 	}
@@ -665,21 +665,21 @@ public class IdealSimplifierWorker2 extends CommonSimplifierWorker {
 	 *         <code>monic</code>
 	 */
 	private Interval intervalMonic(Monic monic) {
-//		Interval result = theContext.getBound(monic);
-//
-//		if (result == null) {
-//			BoundType type = getBoundTypeMonic(monic);
-//
-//			if (type == null) {
-//				NumberFactory nf = numberFactory();
-//
-//				result = monic.type().isInteger()
-//						? nf.universalIntegerInterval()
-//						: nf.universalRealInterval();
-//			} else
-//				result = intervalOfBoundType(type, monic.type().isInteger());
-//		}
-//		return result;
+		// Interval result = theContext.getBound(monic);
+		//
+		// if (result == null) {
+		// BoundType type = getBoundTypeMonic(monic);
+		//
+		// if (type == null) {
+		// NumberFactory nf = numberFactory();
+		//
+		// result = monic.type().isInteger()
+		// ? nf.universalIntegerInterval()
+		// : nf.universalRealInterval();
+		// } else
+		// result = intervalOfBoundType(type, monic.type().isInteger());
+		// }
+		// return result;
 		// TODO:
 		return null;
 	}
@@ -761,20 +761,20 @@ public class IdealSimplifierWorker2 extends CommonSimplifierWorker {
 	}
 
 	private BoundType getBoundTypeMonic(Monic monic) {
-//		if (monic.isOne())
-//			return BoundType.GT0;
-//
-//		Interval monicBound = theContext.getBound(monic);
-//
-//		if (monicBound != null)
-//			return boundType(monicBound);
-//
-//		SymbolicOperator op = monic.operator();
-//
-//		if (op == SymbolicOperator.POWER) {
-//			return getBoundTypePower((Primitive) monic);
-//		}
-//		return null;
+		// if (monic.isOne())
+		// return BoundType.GT0;
+		//
+		// Interval monicBound = theContext.getBound(monic);
+		//
+		// if (monicBound != null)
+		// return boundType(monicBound);
+		//
+		// SymbolicOperator op = monic.operator();
+		//
+		// if (op == SymbolicOperator.POWER) {
+		// return getBoundTypePower((Primitive) monic);
+		// }
+		// return null;
 		// TODO:
 		return null;
 	}
@@ -930,41 +930,41 @@ public class IdealSimplifierWorker2 extends CommonSimplifierWorker {
 	 */
 	private BooleanExpression simplifyIneq0Poly(Polynomial poly, boolean gt,
 			boolean strict) {
-//		AffineExpression affine = affineFactory().affine(poly);
-//		Monic pseudo = affine.pseudo(); // non-null since poly non-constant
-//		Number pseudoValue = theContext.getConstantValue(pseudo);
-//		AffineFactory af = affineFactory();
-//
-//		if (pseudoValue != null) {
-//			// substitute known constant value for pseudo...
-//			Number val = af.affineValue(affine, pseudoValue);
-//			int sgn = val.signum();
-//			BooleanExpression result;
-//
-//			if (gt) {
-//				result = (strict ? sgn > 0 : sgn >= 0) ? trueExpr()
-//						: falseExpr();
-//			} else {
-//				result = (strict ? sgn < 0 : sgn <= 0) ? trueExpr()
-//						: falseExpr();
-//			}
-//			return result;
-//		}
-//
-//		Interval pseudoBound = theContext.getBound(pseudo);
-//
-//		if (pseudoBound == null)
-//			return null;
-//
-//		// the following is a bound on poly
-//		Interval polyBound = numberFactory().affineTransform(pseudoBound,
-//				affine.coefficient(), affine.offset());
-//		BoundType boundType = boundType(polyBound);
-//		BooleanExpression result = ineqFromBoundType(poly, boundType, gt,
-//				strict);
-//
-//		return result;
-		// TODO: 
+		// AffineExpression affine = affineFactory().affine(poly);
+		// Monic pseudo = affine.pseudo(); // non-null since poly non-constant
+		// Number pseudoValue = theContext.getConstantValue(pseudo);
+		// AffineFactory af = affineFactory();
+		//
+		// if (pseudoValue != null) {
+		// // substitute known constant value for pseudo...
+		// Number val = af.affineValue(affine, pseudoValue);
+		// int sgn = val.signum();
+		// BooleanExpression result;
+		//
+		// if (gt) {
+		// result = (strict ? sgn > 0 : sgn >= 0) ? trueExpr()
+		// : falseExpr();
+		// } else {
+		// result = (strict ? sgn < 0 : sgn <= 0) ? trueExpr()
+		// : falseExpr();
+		// }
+		// return result;
+		// }
+		//
+		// Interval pseudoBound = theContext.getBound(pseudo);
+		//
+		// if (pseudoBound == null)
+		// return null;
+		//
+		// // the following is a bound on poly
+		// Interval polyBound = numberFactory().affineTransform(pseudoBound,
+		// affine.coefficient(), affine.offset());
+		// BoundType boundType = boundType(polyBound);
+		// BooleanExpression result = ineqFromBoundType(poly, boundType, gt,
+		// strict);
+		//
+		// return result;
+		// TODO:
 		return null;
 	}
 
@@ -1260,24 +1260,7 @@ public class IdealSimplifierWorker2 extends CommonSimplifierWorker {
 	private BooleanExpression simplifyBoolean(BooleanExpression expression) {
 		if (expression.isTrue() || expression.isFalse())
 			return expression;
-		// recursion is possible here since Context calls
-		// simplify in this class, so we need a
-		// termination argument: the context will not call
-		// simplify on the AND expression (but it may call
-		// simplify on the clauses, which is fine as they
-		// are strictly smaller). The context also
-		// will not call simplify on a relational expression
-		// (though it may call simplify on subexpressions of it).
-		if (SimplifierInfo.isNumericRelational(expression)
-				|| expression.operator() == SymbolicOperator.AND)
-			return new SubContext(info, theContext, expression)
-					.getFullAssumption();
-		// the not turns the OR expression into an AND expression
-		// which gets handled by the case above...
-		if (expression.operator() == SymbolicOperator.OR)
-			return info.universe
-					.not(simplifyBoolean(info.universe.not(expression)));
-		return (BooleanExpression) simplifyExpressionGeneric(expression);
+		return new SubContext(info, theContext, expression).getFullAssumption();
 	}
 
 	// Package-private methods...
