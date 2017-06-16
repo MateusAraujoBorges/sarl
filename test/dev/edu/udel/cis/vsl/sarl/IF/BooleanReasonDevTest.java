@@ -413,6 +413,17 @@ public class BooleanReasonDevTest {
 		reasoner.getFullContext();
 	}
 
+	/**
+	 * Context: <code>
+	 * forall i0 : int . ((Y5[i0] == Y11[i0]) || (2*_uf_$mpi_sizeof(Y3)*Y2 - 1*i0 <= 0) || (i0 + 1 <= 0)) &&
+	 * forall i0 : int . ((Y11[i0] == Y5[i0]) || (2*_uf_$mpi_sizeof(Y9)*Y8 - 1*i0 <= 0) || (i0 + 1 <= 0))
+	 * </code>
+	 * 
+	 * Query: <code>
+	 * 0 == _uf_$mpi_sizeof(Y1)*Y0 - 1*_uf_$mpi_sizeof(Y3)*Y2 && 
+	 * forall i0 : int. ((Y4[i0] == Y5[i0]) || (_uf_$mpi_sizeof(Y1)*Y0 - 1*i0 <= 0) || (i0 + 1<= 0))
+	 * </code>
+	 */
 	@Test
 	public void infiniteSimplificationBug() {
 		// Types: Abstract function f(int) : int
@@ -423,7 +434,6 @@ public class BooleanReasonDevTest {
 		SymbolicConstant function = universe.symbolicConstant(
 				universe.stringObject("_uf_$mpi_sizeof"), functionType);
 		// Constants:
-		NumericExpression one = universe.oneInt();
 		NumericSymbolicConstant Y0 = (NumericSymbolicConstant) universe
 				.symbolicConstant(universe.stringObject("Y0"),
 						universe.integerType());
@@ -440,14 +450,6 @@ public class BooleanReasonDevTest {
 						universe.integerType());
 		NumericExpression fY3 = (NumericExpression) universe.apply(function,
 				Arrays.asList(Y3));
-		NumericSymbolicConstant Y6 = (NumericSymbolicConstant) universe
-				.symbolicConstant(universe.stringObject("Y6"),
-						universe.integerType());
-		NumericSymbolicConstant Y7 = (NumericSymbolicConstant) universe
-				.symbolicConstant(universe.stringObject("Y7"),
-						universe.integerType());
-		NumericExpression fY7 = (NumericExpression) universe.apply(function,
-				Arrays.asList(Y7));
 		NumericSymbolicConstant Y8 = (NumericSymbolicConstant) universe
 				.symbolicConstant(universe.stringObject("Y8"),
 						universe.integerType());
@@ -464,8 +466,6 @@ public class BooleanReasonDevTest {
 				universe.multiply(Arrays.asList(fY3, Y2, universe.integer(2))));
 		SymbolicType arrayType1 = universe.arrayType(universe.characterType(),
 				universe.multiply(Arrays.asList(fY9, Y8, universe.integer(2))));
-		SymbolicType arrayType2 = universe.arrayType(universe.characterType(),
-				universe.multiply(Arrays.asList(fY7, Y6, universe.integer(2))));
 		SymbolicType arrayType3 = universe.arrayType(universe.characterType(),
 				universe.multiply(Arrays.asList(fY3, Y2)));
 		// Array
@@ -473,61 +473,17 @@ public class BooleanReasonDevTest {
 				.symbolicConstant(universe.stringObject("Y5"), arrayType0);
 		SymbolicConstant Y11 = universe
 				.symbolicConstant(universe.stringObject("Y11"), arrayType1);
-		SymbolicConstant Y10 = universe
-				.symbolicConstant(universe.stringObject("Y10"), arrayType2);
 		SymbolicConstant Y4 = universe
 				.symbolicConstant(universe.stringObject("Y4"), arrayType3);
-		// Bounds:
-		BooleanExpression bound0 = universe.lessThan(universe.multiply(fY1, Y0),
-				universe.integer(512));
-		BooleanExpression bound1 = universe.lessThan(universe.multiply(fY3, Y2),
-				universe.integer(512));
-		BooleanExpression bound2 = universe.lessThan(universe.multiply(fY7, Y6),
-				universe.integer(512));
-		BooleanExpression bound3 = universe.lessThan(universe.multiply(fY9, Y8),
-				universe.integer(512));
-
-		bound0 = universe.and(bound0,
-				universe.lessThanEquals(one, universe.multiply(fY1, Y0)));
-		bound1 = universe.and(bound1,
-				universe.lessThanEquals(one, universe.multiply(fY3, Y2)));
-		bound2 = universe.and(bound2,
-				universe.lessThanEquals(one, universe.multiply(fY7, Y6)));
-		bound3 = universe.and(bound3,
-				universe.lessThanEquals(one, universe.multiply(fY9, Y8)));
-
-		// Y2 * f(Y3) == Y0 * f(Y1)
-		// Y0 * f(Y1) == Y6 * f(Y7)
-		// f(Y3) * Y2 == Y8 * f(Y9)
-		// f(Y7) * Y6 == Y8 * f(Y9)
-		BooleanExpression equation0 = universe
-				.equals(universe.multiply(Y8, fY9), universe.multiply(Y2, fY3));
-		BooleanExpression equation1 = universe
-				.equals(universe.multiply(Y2, fY3), universe.multiply(Y0, fY1));
-		BooleanExpression equation2 = universe
-				.equals(universe.multiply(fY7, Y6), universe.multiply(Y8, fY9));
-		BooleanExpression equation3 = universe
-				.equals(universe.multiply(fY7, Y6), universe.multiply(Y0, fY1));
-		// forall i0. 0<= i0 < f(Y3)*Y2 ==> Y5[i0] == Y4[i0]
 		// forall i0. 0<= i0 < Y2*f(Y3)*2 ==> Y5[i0] == Y11[i0]
-		// forall i0. 0<= i0 < Y6*f(Y7) ==> Y5[Y6*f(Y7) + i0] == Y10[i0]
 		// forall i0. 0<= i0 < Y8*f(Y9)*2 ==> Y5[i0] == Y11[i0]
-		BooleanExpression propsition0 = universe
-				.equals(universe.arrayRead(Y5, i0), universe.arrayRead(Y4, i0));
 		BooleanExpression propsition1 = universe.equals(
 				universe.arrayRead(Y5, i0), universe.arrayRead(Y11, i0));
-		BooleanExpression propsition2 = universe
-				.equals(universe.arrayRead(Y10, i0), universe.arrayRead(Y5,
-						universe.add(universe.multiply(fY7, Y6), i0)));
 		BooleanExpression propsition3 = universe.equals(
 				universe.arrayRead(Y11, i0), universe.arrayRead(Y5, i0));
-		BooleanExpression forall0 = universe.forallInt(i0, universe.zeroInt(),
-				universe.multiply(Arrays.asList(fY3, Y2)), propsition0);
 		BooleanExpression forall1 = universe.forallInt(i0, universe.zeroInt(),
 				universe.multiply(Arrays.asList(Y2, fY3, universe.integer(2))),
 				propsition1);
-		BooleanExpression forall2 = universe.forallInt(i0, universe.zeroInt(),
-				universe.multiply(Arrays.asList(fY7, Y6)), propsition2);
 		BooleanExpression forall3 = universe.forallInt(i0, universe.zeroInt(),
 				universe.multiply(Arrays.asList(fY9, Y8, universe.integer(2))),
 				propsition3);
@@ -537,30 +493,12 @@ public class BooleanReasonDevTest {
 				universe.equals(universe.arrayRead(Y4, i0),
 						universe.arrayRead(Y5, i0)));
 
-		// Misc:
-		BooleanExpression misc0 = universe.lessThanEquals(universe.zeroInt(),
-				Y0);
-		BooleanExpression misc1 = universe.lessThanEquals(universe.zeroInt(),
-				Y2);
-		BooleanExpression misc2 = universe.lessThanEquals(universe.zeroInt(),
-				Y6);
-		BooleanExpression misc3 = universe.lessThanEquals(universe.zeroInt(),
-				Y8);
-		BooleanExpression misc4 = universe.neq(universe.zeroInt(), fY3);
-		BooleanExpression misc5 = universe.neq(universe.zeroInt(), fY9);
-		BooleanExpression misc6 = universe.neq(universe.zeroInt(), Y2);
-		BooleanExpression misc7 = universe.neq(universe.zeroInt(), Y8);
-
 		query = universe.and(query, universe.equals(universe.multiply(Y0, fY1),
 				universe.multiply(fY3, Y2)));
 
-		BooleanExpression context = universe.and(Arrays.asList(bound0, bound1,
-				bound2, bound3, equation0, equation1, equation2, equation3,
-				forall0, forall1, forall2, forall3, misc0, misc1, misc2, misc3,
-				misc4, misc5, misc6, misc7));
+		BooleanExpression context = universe
+				.and(Arrays.asList(forall1, forall3));
 		Reasoner reasoner = universe.reasoner(context);
-		System.out.println(context);
-		System.out.println(query);
 		reasoner.valid(query);
 	}
 }
