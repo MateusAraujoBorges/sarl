@@ -14,6 +14,40 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
  * @author Stephen F. Siegel
  */
 public interface Range {
+	/**
+	 * A categorization of ranges based on their relationship to 0. Every Range
+	 * falls into exactly one of these categories.
+	 */
+	static enum RangeSign {
+		/**
+		 * Every element of the range is less than 0 and the range is not empty.
+		 */
+		LT0,
+		/**
+		 * Every element of the range is less than or equal to 0 and the range
+		 * contains 0 and a negative number.
+		 */
+		LE0,
+		/** The range consists exactly of 0 and nothing else. */
+		EQ0,
+		/**
+		 * The range contains 0 and a positive number and every element of the
+		 * range is greater than or equal to 0.
+		 */
+		GE0,
+		/**
+		 * Every element of the range is greater than 0 and the range is
+		 * non-empty.
+		 */
+		GT0,
+		/** The range is empty */
+		EMPTY,
+		/**
+		 * The range contains at least a negative number and a positive number
+		 * (0 is optionally contained)
+		 */
+		ALL
+	};
 
 	/**
 	 * Is this an integer set?
@@ -24,11 +58,18 @@ public interface Range {
 	boolean isIntegral();
 
 	/**
-	 * Is this set empty?
+	 * Is this an empty set?
 	 * 
-	 * @return <code>true</code> iff this is the empty set
+	 * @return <code>true</code> iff this is an empty set
 	 */
 	boolean isEmpty();
+
+	/**
+	 * Is this a universal set?
+	 * 
+	 * @return <code>true</code> iff this is a universal set
+	 */
+	boolean isUniversal();
 
 	/**
 	 * Does this set contain the given number as a member?
@@ -115,4 +156,11 @@ public interface Range {
 	 * @return
 	 */
 	Interval[] intervals();
+
+	/**
+	 * Get the {@link RangeSign} of <code>this</code> range.
+	 * 
+	 * @return
+	 */
+	RangeSign sign();
 }

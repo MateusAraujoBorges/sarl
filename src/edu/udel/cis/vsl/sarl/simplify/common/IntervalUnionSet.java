@@ -60,6 +60,12 @@ public class IntervalUnionSet implements Range {
 	private static NumberFactory numberFactory = Numbers.REAL_FACTORY;
 
 	/**
+	 * {@link #rSign} stores the categorization of <code>this</code>
+	 * {@link IntervalUnionSet} based on their relationship to <code>0</code>
+	 */
+	private RangeSign rSign;
+
+	/**
 	 * A boolean value to represent whether this {@link IntervalUnionSet} is
 	 * integral or not: <code>true</code> - it is integral, or
 	 * <code>false</code> - it is rational.
@@ -100,6 +106,7 @@ public class IntervalUnionSet implements Range {
 	public IntervalUnionSet(boolean isIntegral) {
 		isInt = isIntegral;
 		intervalArray = new Interval[0];
+		updateRangeSign();
 	}
 
 	/**
@@ -118,6 +125,7 @@ public class IntervalUnionSet implements Range {
 		isInt = number instanceof IntegerNumber;
 		intervalArray = new Interval[1];
 		intervalArray[0] = interval;
+		updateRangeSign();
 	}
 
 	/**
@@ -146,7 +154,8 @@ public class IntervalUnionSet implements Range {
 		isInt = isIntegral;
 		intervalArray = new Interval[1];
 		intervalArray[0] = interval;
-	}// Under testing
+		updateRangeSign();
+	}
 
 	/**
 	 * Constructs an {@link IntervalUnionSet} with exactly one {@link Interval}.
@@ -158,17 +167,14 @@ public class IntervalUnionSet implements Range {
 		// intervals are immutable, so re-use:
 		assert interval != null;
 
-		Interval temp = numberFactory.newInterval(interval.isIntegral(),
-				interval.lower(), interval.strictLower(), interval.upper(),
-				interval.strictUpper());
-
-		isInt = temp.isIntegral();
-		if (temp.isEmpty()) {
+		isInt = interval.isIntegral();
+		if (interval.isEmpty()) {
 			intervalArray = new Interval[0];
 		} else {
 			intervalArray = new Interval[1];
-			intervalArray[0] = temp;
+			intervalArray[0] = interval;
 		}
+		updateRangeSign();
 	}
 
 	/**
@@ -217,6 +223,7 @@ public class IntervalUnionSet implements Range {
 		size = list.size();
 		intervalArray = new Interval[size];
 		list.toArray(intervalArray);
+		updateRangeSign();
 	}
 
 	/**
@@ -234,6 +241,7 @@ public class IntervalUnionSet implements Range {
 		isInt = other.isInt;
 		intervalArray = new Interval[size];
 		System.arraycopy(other.intervalArray, 0, intervalArray, 0, size);
+		updateRangeSign();
 	}
 
 	/**
@@ -247,6 +255,37 @@ public class IntervalUnionSet implements Range {
 	}
 
 	/**
+	 * Generate the {@link RangeSign} for <code>this</code>
+	 * {@link IntervalUnionSet}, which implements {@link Range}.
+	 */
+	private void updateRangeSign() {
+		int numInterval = intervalArray.length;
+
+		if (numInterval == 0)
+			this.rSign = RangeSign.EMPTY;
+		else {
+			Interval leftMostInterval = intervalArray[0];
+			Interval rightMostInterval = intervalArray[numInterval - 1];
+			Number leftmost = leftMostInterval.lower();
+			Number rightmost = rightMostInterval.upper();
+
+			if (numInterval == 1 && leftmost.isZero())
+				this.rSign = RangeSign.EQ0;
+			else if (leftmost.signum() > 0)
+				this.rSign = RangeSign.GT0;
+			else if (leftmost.signum() == 0 && !leftMostInterval.strictLower())
+				this.rSign = RangeSign.GE0;
+			else if (rightmost.signum() < 0)
+				this.rSign = RangeSign.LT0;
+			else if (rightmost.signum() == 0
+					&& !rightMostInterval.strictUpper())
+				this.rSign = RangeSign.LE0;
+			else
+				this.rSign = RangeSign.ALL;
+		}
+	}
+
+	/**
 	 * To union a single non-<code>null</code> {@link Interval} into given list.
 	 * 
 	 * @param list
@@ -256,9 +295,9 @@ public class IntervalUnionSet implements Range {
 	 */
 	private void addInterval(ArrayList<Interval> list, Interval interval) {
 		// TODO: add the pre-cond: list should satisfy all invariants.
-		// assert list != null;
-		// assert interval != null;
-		// assert isInt == interval.isIntegral();
+		assert list != null;
+		assert interval != null;
+		assert isInt == interval.isIntegral();
 
 		// TODO: add comments for magic numbers
 		int size = list.size();
@@ -738,6 +777,7 @@ public class IntervalUnionSet implements Range {
 					System.arraycopy(intervalArray, rightIndex + 1,
 							result.intervalArray, rightIndex,
 							size - rightIndex - 1);
+					result.updateRangeSign();
 					return result;
 				} else if (leftJoint) {
 					// The number changes an interval's lower condition
@@ -752,6 +792,7 @@ public class IntervalUnionSet implements Range {
 								.newInterval(false, leftLo, leftSl, number,
 										false);
 					}
+					result.updateRangeSign();
 					return result;
 				} else if (rightJoint) {
 					// The number changes an interval's upper condition
@@ -766,6 +807,7 @@ public class IntervalUnionSet implements Range {
 								.newInterval(false, number, false, rightUp,
 										rightSu);
 					}
+					result.updateRangeSign();
 					return result;
 				} else {
 					// The number becomes a new point interval
@@ -798,6 +840,7 @@ public class IntervalUnionSet implements Range {
 								result.intervalArray, rightIndex + 1,
 								size - rightIndex);
 					}
+					result.updateRangeSign();
 					return result;
 				}
 			}
@@ -813,6 +856,13 @@ public class IntervalUnionSet implements Range {
 	@Override
 	public boolean isEmpty() {
 		return intervalArray.length == 0;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return intervalArray.length == 1
+				&& intervalArray[0].upper().isInfinite()
+				&& intervalArray[0].lower().isInfinite();
 	}
 
 	@Override
@@ -1238,5 +1288,10 @@ public class IntervalUnionSet implements Range {
 			hashObjs[index + 4] = interval.strictUpper();
 		}
 		return Objects.hash(hashObjs);
+	}
+
+	@Override
+	public RangeSign sign() {
+		return rSign;
 	}
 }

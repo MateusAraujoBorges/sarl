@@ -23,23 +23,16 @@ package edu.udel.cis.vsl.sarl.IF.number;
  * real or integer type. It can be open or closed on the left, open or closed on
  * right. It can be unbounded on either side.<br>
  * 
- * <strong>Precondition</strong>:
- * <ul>
- * <li>if the type is integral, then the upper and lower bounds must be
- * instances of {@link IntegerNumber}, else they must be instances of
- * {@link RationalNumber}</li>
- * </ul>
- * 
- * <strong>Postconditions</strong>: the parameters must specify an interval in
- * "normal form", i.e., the following must all hold:
+ * <strong>Definitions</strong>:
  * 
  * <ul>
- * <li>if the type is integral, then the upper and lower bounds must be
- * instances of {@link IntegerNumber}, else they must be instances of
- * {@link RationalNumber}</li>
+ * <li>if the the type of <code>this</code> is integral, then the upper and
+ * lower bounds must be instances of {@link IntegerNumber}, else they must be
+ * instances of {@link RationalNumber}</li>
  * 
- * <li>if the bound is exclusive, the corresponding <code>strictLower</code> (or
- * <code>strictUpper</code>) must be <code>true</code>.</li>
+ * <li>if the bound is exclusive/open/strict, the corresponding
+ * <code>strictLower</code> (or <code>strictUpper</code>) must be
+ * <code>true</code>.</li>
  * 
  * <li>the lower bound must be less than or equal to the upper bound (Otherwise,
  * this method will return an empty interval.)</li>
@@ -60,20 +53,12 @@ package edu.udel.cis.vsl.sarl.IF.number;
  * lower bound is finite then <code>strictLower</code> must be
  * <code>false</code>; if the upper bound is finite then
  * <code>strictUpper</code> must be <code>false</code>.</li>
- * </ul>
  * 
+ * <li>if the bound is infinite, then the corresponding strict must be
+ * <code>true</code>.</li>
+ * </ul>
  */
 public interface Interval {
-
-	// IntervalUnion
-
-	// int result; Interval union
-	// given two intervals i1 and i2: determine the case:
-	// (1) i1 is strictly less than i2 and their union is not an interval
-	// (2) their union is an interval and return the union interval
-	// (3) i1 is strictly greater than i2 and their union is not an interval
-
-	// union: take union of two ValueSets
 
 	/**
 	 * Does this interval have integer type? If so, then both the upper and
@@ -142,9 +127,6 @@ public interface Interval {
 	boolean contains(Number number);
 
 	/**
-	 * 
-	 * 
-	 * 
 	 * Determines when the given number lies to the left, inside, or to the
 	 * right of this interval.
 	 * 

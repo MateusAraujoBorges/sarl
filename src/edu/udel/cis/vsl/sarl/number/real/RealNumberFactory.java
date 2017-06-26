@@ -1900,8 +1900,8 @@ public class RealNumberFactory implements NumberFactory {
 
 		if (exp == 0)
 			return singletonInterval(oneNumber);
-		// if (exp < 0)
-		// return power(divide(singletonInterval(oneNumber), interval), -exp);
+		if (exp < 0)
+			return power(divide(singletonInterval(oneNumber), interval), -exp);
 		// exp > 0
 		if (interval.isUniversal()) {
 			return interval;
@@ -1964,6 +1964,110 @@ public class RealNumberFactory implements NumberFactory {
 				} else if (signumLo < 0) {
 					Number tempUpFromLo = power(negate(lower), expNum);
 					Number tempUpFromUp = power(upper, expNum);
+
+					if (tempUpFromLo.compareTo(tempUpFromUp) < 0) {
+						newUp = tempUpFromUp;
+						newSu = strictUpper;
+					} else {
+						newUp = tempUpFromLo;
+						newSu = strictLower;
+					}
+					newLo = zeroNumber;
+					newSl = false;
+				} else {
+					assert signumLo >= 0 && signumUp >= 0;
+				}
+		}
+		return newInterval(isIntegral, newLo, newSl, newUp, newSu);
+	}
+
+	@Override
+	public Interval power(Interval interval, IntegerNumber exp) {
+		assert interval != null && exp != null;
+
+		boolean isIntegral = interval.isIntegral();
+
+		assert exp.signum() >= 0;
+		assert !(interval.isZero() && exp.isZero());
+
+		boolean strictLower = interval.strictLower();
+		boolean strictUpper = interval.strictUpper();
+		boolean newSl = true;
+		boolean newSu = true;
+		Number lower = interval.lower();
+		Number upper = interval.upper();
+		Number newLo = infiniteNumber(isIntegral, false);
+		Number newUp = infiniteNumber(isIntegral, true);
+		Number oneNumber = isIntegral ? oneInteger : oneRational;
+		Number zeroNumber = isIntegral ? zeroInteger : zeroRational;
+
+		if (exp.isZero())
+			return singletonInterval(oneNumber);
+		if (exp.signum() < 0)
+			return power(divide(singletonInterval(oneNumber), interval),
+					negate(exp));
+		// exp > 0
+		if (interval.isUniversal()) {
+			return interval;
+		} else if (lower.isInfinite()) {
+			int signumUp = strictUpper ? upper.signum() * 2 - 1
+					: upper.signum();
+
+			if (mod(exp, integer(2)).isZero()) {
+				if (signumUp < 0) {
+					newLo = power(upper, exp);
+					newSl = strictUpper;
+				} else {
+					newLo = zeroNumber;
+					newSl = false;
+				}
+			} else {
+				newUp = power(upper, exp);
+				newSu = strictUpper;
+			}
+			return newInterval(isIntegral, newLo, newSl, newUp, newSu);
+		} else if (upper.isInfinite()) {
+			int signumLo = strictLower ? lower.signum() * 2 + 1
+					: lower.signum();
+
+			if (signumLo > 0) {
+				newLo = power(lower, exp);
+				newSl = strictLower;
+			} else {
+				if (mod(exp, integer(2)).isZero()) {
+					newLo = zeroNumber;
+					newSl = false;
+				} else {
+					newLo = power(lower, exp);
+					newSl = strictLower;
+				}
+			}
+			return newInterval(isIntegral, newLo, newSl, newUp, newSu);
+		} else {
+			int signumLo = strictLower ? lower.signum() * 2 + 1
+					: lower.signum();
+			int signumUp = strictUpper ? upper.signum() * 2 - 1
+					: upper.signum();
+
+			newUp = power(upper, exp);
+			newSu = strictUpper;
+			newLo = power(lower, exp);
+			newSl = strictLower;
+
+			if (mod(exp, integer(2)).isZero())
+				if (signumUp <= 0) {
+					assert signumLo <= 0;
+
+					Number tempNum = newUp;
+					boolean tempStrict = newSu;
+
+					newUp = newLo;
+					newSu = newSl;
+					newLo = tempNum;
+					newSl = tempStrict;
+				} else if (signumLo < 0) {
+					Number tempUpFromLo = power(negate(lower), exp);
+					Number tempUpFromUp = power(upper, exp);
 
 					if (tempUpFromLo.compareTo(tempUpFromUp) < 0) {
 						newUp = tempUpFromUp;

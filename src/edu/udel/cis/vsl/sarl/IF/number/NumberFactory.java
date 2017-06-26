@@ -290,8 +290,8 @@ public interface NumberFactory {
 	int compare(RationalNumber arg0, RationalNumber arg1);
 
 	/**
-	 * Returns a positive value if arg0 &lt arg1, 0 if arg0 equals arg1, -1 if
-	 * arg0 &lt arg1.
+	 * Returns a positive value if arg0 is greater than arg1, 0 if arg0 equals
+	 * arg1, -1 if arg0 is less than arg1.
 	 */
 	int compare(IntegerNumber arg0, IntegerNumber arg1);
 
@@ -639,6 +639,19 @@ public interface NumberFactory {
 	 * @return the power result of the {@link Interval} with the given integer
 	 */
 	Interval power(Interval interval, int exp);
+
+	/**
+	 * To calculate the power-result of a given non-<code>null</code> and not
+	 * empty {@link Interval} with a given non-<code>null</code> non-negative
+	 * {@link IntegerNumber}.
+	 * 
+	 * @param interval
+	 *            a non-<code>null</code> {@link Interval}
+	 * @param expr
+	 *            an {@link IntegerNumber} of a natural number
+	 * @return the power result described above.
+	 */
+	Interval power(Interval interval, IntegerNumber expr);
 
 	/**
 	 * Calculate the given number powering a given exponent and returns result.

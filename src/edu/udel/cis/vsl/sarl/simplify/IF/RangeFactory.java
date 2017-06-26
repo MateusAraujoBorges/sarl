@@ -1,5 +1,6 @@
 package edu.udel.cis.vsl.sarl.simplify.IF;
 
+import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 
@@ -225,8 +226,7 @@ public interface RangeFactory {
 	 * returned {@link Range} is same with the input <code>range</code>.
 	 * 
 	 * <strong>Preconditions:</strong><br>
-	 * > The <code>range</code> and <code>exps</code> must be non-
-	 * <code>null</code>.<br>
+	 * > The <code>range</code> must be non- <code>null</code>.<br>
 	 * > The <code>exp</code> must be a finite non-negative integer.<br>
 	 * 
 	 * @param range
@@ -237,6 +237,26 @@ public interface RangeFactory {
 	 * @author Wenhao Wu (wuwenhao@udel.edu)
 	 */
 	Range power(Range range, int exp);
+
+	/**
+	 * Return a {@link Range} containing all x^<code>exp</code>, where x is in
+	 * <code>range</code> and <code>exp</code> is an {@link IntegerNumber}. The
+	 * type of returned {@link Range} is same with the input <code>range</code>.
+	 * 
+	 * <strong>Preconditions:</strong><br>
+	 * > The <code>range</code> and <code>exps</code> must be non-
+	 * <code>null</code>.<br>
+	 * > The <code>exp</code> must be a finite non-negative
+	 * {@link IntegerNumber}.<br>
+	 * 
+	 * @param range
+	 *            a non-<code>null</code> {@link Range}
+	 * @param exp
+	 *            an {@link IntegerNumber} as the exponent
+	 * @return a {@link Range} as described.
+	 * @author Wenhao Wu (wuwenhao@udel.edu)
+	 */
+	Range power(Range range, IntegerNumber exp);
 
 	/**
 	 * Return a {@link Range} containing all x*<code>a</code>+<code>b</code>,
@@ -287,6 +307,26 @@ public interface RangeFactory {
 	 * @author Wenhao Wu (wuwenhao@udel.edu)
 	 */
 	Range divide(Range range, Number constant);
+
+	/**
+	 * Return a {@link Range} containing all x/y, where x is in
+	 * <code>range0</code> and y is is in <code>range1</code>. The type of
+	 * returned {@link Range} is same with the both <code>range</code>.
+	 * 
+	 * <strong>Preconditions:</strong><br>
+	 * > The <code>range0</code> and <code>range1</code> must be non-
+	 * <code>null</code>.<br>
+	 * > The <code>range0</code> and <code>range1</code> must have a same type
+	 * (integer/real)<br>
+	 * 
+	 * @param range0
+	 *            a non-<code>null</code> {@link Range}
+	 * @param range1
+	 *            a non-<code>null</code> {@link Range}
+	 * @return a {@link Range} as described.
+	 * @author Wenhao Wu (wuwenhao@udel.edu)
+	 */
+	Range divide(Range range0, Range range1);
 
 	/**
 	 * Return a {@link Range} containing all x*<code>constant</code>, where x is
@@ -379,4 +419,14 @@ public interface RangeFactory {
 	 * @author Wenhao Wu (wuwenhao@udel.edu)
 	 */
 	Range newRange(Interval... intervals);
+
+	/**
+	 * Returns a range of either integer or real type. That is, the set
+	 * consisting of all real numbers, or the set consisting of all integers.
+	 * 
+	 * @param isIntegral
+	 *            is this the integer type (not real type)?
+	 * 
+	 */
+	Range universalSet(boolean isIntegral);
 }

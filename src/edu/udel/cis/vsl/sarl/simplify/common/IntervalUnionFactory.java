@@ -1052,7 +1052,51 @@ public class IntervalUnionFactory implements RangeFactory {
 
 	@Override
 	public Range subtract(Range lRange, Range rRange) {
-		// TODO Auto-generated method stub
+		Interval[] lIntervals = lRange.intervals();
+		Interval[] rIntervals = rRange.intervals();
+		ArrayList<Interval> rawIntervals = new ArrayList<Interval>();
+
+		for (int i = 0; i < lIntervals.length; i++)
+			for (int j = 0; j < rIntervals.length; j++)
+				rawIntervals.add(numberFactory.add(lIntervals[i],
+						numberFactory.negate(rIntervals[j])));
+		return new IntervalUnionSet(
+				rawIntervals.toArray(new Interval[rawIntervals.size()]));
+	}
+
+	@Override
+	public Range universalSet(boolean isIntegral) {
+		return isIntegral ? UNIV_INT_SET : UNIV_REAL_SET;
+	}
+
+	@Override
+	public Range power(Range range, IntegerNumber exp) {
+		IntervalUnionSet set = (IntervalUnionSet) range;
+		Interval[] intervals = set.intervals();
+		int size = intervals.length;
+		Interval[] resultIntervals = new Interval[size];
+
+		for (int i = 0; i < size; ++i) {
+			resultIntervals[i] = numberFactory.power(intervals[i], exp);
+		}
+		return new IntervalUnionSet(resultIntervals);
+	}
+
+	@Override
+	public Range divide(Range range0, Range range1) {
+		IntervalUnionSet set0 = (IntervalUnionSet) range0;
+		IntervalUnionSet set1 = (IntervalUnionSet) range1;
+		Interval[] intervals0 = set0.intervals();
+		Interval[] intervals1 = set1.intervals();
+		int size0 = intervals0.length;
+		int size1 = intervals1.length;
+		Interval[] resultIntervals = new Interval[size0 * size1];
+		for (int i = 0; i < size0; ++i) {
+			for (int j = 0; j < size1; ++i) {
+				resultIntervals[i * size1 + j] = numberFactory
+						.divide(intervals0[i], intervals1[j]);
+			}
+		}
 		return null;
 	}
 }
