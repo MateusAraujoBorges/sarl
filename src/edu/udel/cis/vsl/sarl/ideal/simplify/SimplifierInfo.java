@@ -18,17 +18,10 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
-import static edu.udel.cis.vsl.sarl.ideal.simplify.SimplifierInfo.BoundType.EQ0;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.SimplifierInfo.BoundType.GE0;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.SimplifierInfo.BoundType.GT0;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.SimplifierInfo.BoundType.LE0;
-import static edu.udel.cis.vsl.sarl.ideal.simplify.SimplifierInfo.BoundType.LT0;
-
 import java.io.PrintStream;
 import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
-import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
@@ -36,7 +29,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
-import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
@@ -136,6 +128,8 @@ public class SimplifierInfo {
 
 	BooleanExpression falseExpr;
 
+	// Range[][] signRanges;
+
 	/**
 	 * An ordering on symbolic constants. [Could put this in info.]
 	 */
@@ -175,42 +169,83 @@ public class SimplifierInfo {
 		this.monicComparator = idealFactory.monicComparator();
 		// this.arrayFactComparator = new ArrayFactComparator(
 		// universe.comparator());
+
+		// case ALL: // (-infty,infty)
+		// case EMPTY: // empty
+		// case EQ0: // [0,0]
+		// case GE0: // [0,infty)
+		// case GT0: // (0,infty)
+		// case LE0: // (-infty, 0]
+		// case LT0: // (-infty, 0)
+		// this.signRanges = new Range[2][];
+		// signRanges[0] = new Range[] {
+		// rangeFactory.interval(true,
+		// numberFactory.infiniteNumber(true, false), true,
+		// numberFactory.infiniteNumber(true, true), true),
+		// rangeFactory.emptySet(true),
+		// rangeFactory.singletonSet(numberFactory.zeroInteger()),
+		// rangeFactory.interval(true, numberFactory.zeroInteger(), false,
+		// numberFactory.infiniteNumber(true, true), true),
+		// rangeFactory.interval(true, numberFactory.zeroInteger(), true,
+		// numberFactory.infiniteNumber(true, true), true),
+		// rangeFactory.interval(true,
+		// numberFactory.infiniteNumber(true, false), true,
+		// numberFactory.zeroInteger(), false),
+		// rangeFactory.interval(true,
+		// numberFactory.infiniteNumber(true, false), true,
+		// numberFactory.integer(-1), false) };
+		// signRanges[1] = new Range[] {
+		// rangeFactory.interval(false,
+		// numberFactory.infiniteNumber(true, false), true,
+		// numberFactory.infiniteNumber(true, true), true),
+		// rangeFactory.emptySet(false),
+		// rangeFactory.singletonSet(numberFactory.zeroInteger()),
+		// rangeFactory.interval(false, numberFactory.zeroInteger(), false,
+		// numberFactory.infiniteNumber(true, true), true),
+		// rangeFactory.interval(false, numberFactory.zeroInteger(), true,
+		// numberFactory.infiniteNumber(true, true), true),
+		// rangeFactory.interval(false,
+		// numberFactory.infiniteNumber(true, false), true,
+		// numberFactory.zeroInteger(), false),
+		// rangeFactory.interval(false,
+		// numberFactory.infiniteNumber(true, false), true,
+		// numberFactory.zeroInteger(), true) };
 	}
 
-	/**
-	 * A categorization of intervals based on their relationship to 0. Every
-	 * interval falls into exactly one of these categories.
-	 * 
-	 * @author siegel
-	 */
-	static enum BoundType {
-		/**
-		 * Every element of the interval is less than 0 and the interval is not
-		 * empty.
-		 */
-		LT0,
-		/**
-		 * Every element of the interval is less than or equal to 0 and the
-		 * interval contains 0 and a negative number.
-		 */
-		LE0,
-		/** The interval consists exactly of 0 and nothing else. */
-		EQ0,
-		/**
-		 * The interval contains 0 and a positive number and every element of
-		 * the interval is greater than or equal to 0.
-		 */
-		GE0,
-		/**
-		 * Every element of the interval is greater than 0 and the interval is
-		 * non-empty.
-		 */
-		GT0,
-		/** The interval is empty */
-		EMPTY,
-		/** The interval contains a negative number, 0, and a positive number */
-		ALL
-	};
+	// /**
+	// * A categorization of intervals based on their relationship to 0. Every
+	// * interval falls into exactly one of these categories.
+	// *
+	// * @author siegel
+	// */
+	// static enum BoundType {
+	// /**
+	// * Every element of the interval is less than 0 and the interval is not
+	// * empty.
+	// */
+	// LT0,
+	// /**
+	// * Every element of the interval is less than or equal to 0 and the
+	// * interval contains 0 and a negative number.
+	// */
+	// LE0,
+	// /** The interval consists exactly of 0 and nothing else. */
+	// EQ0,
+	// /**
+	// * The interval contains 0 and a positive number and every element of
+	// * the interval is greater than or equal to 0.
+	// */
+	// GE0,
+	// /**
+	// * Every element of the interval is greater than 0 and the interval is
+	// * non-empty.
+	// */
+	// GT0,
+	// /** The interval is empty */
+	// EMPTY,
+	// /** The interval contains a negative number, 0, and a positive number */
+	// ALL
+	// };
 
 	/**
 	 * Determines if the operator is one of the relation operators
@@ -418,72 +453,72 @@ public class SimplifierInfo {
 		}
 	}
 
-	/**
-	 * Computes the bound type of the given {@link Interval}.
-	 * 
-	 * @param interval
-	 *            a non-<code>null</code> {@link Interval}
-	 * @return the unique category (instance of {@link BoundType}) into which
-	 *         <code>interval</code> falls
-	 */
-	static BoundType boundType(Interval interval) {
-		if (interval.isEmpty())
-			return BoundType.EMPTY;
-
-		Number l = interval.lower(), r = interval.upper();
-		int lsign = l == null ? -1 : l.signum();
-		int rsign = r == null ? 1 : r.signum();
-
-		if (lsign > 0)
-			return GT0;
-		if (rsign < 0)
-			return LT0;
-
-		if (lsign < 0) {
-			if (rsign == 0) {
-				return interval.strictUpper() ? LT0 : LE0;
-			} else { // rsign > 0
-				return BoundType.ALL;
-			}
-		} else { // lsign == 0
-			if (rsign == 0) {
-				return EQ0;
-			} else { // rsign > 0
-				return interval.strictLower() ? GT0 : GE0;
-			}
-		}
-	}
-
-	Interval intervalOfBoundType(BoundType type, boolean isInteger) {
-		NumberFactory nf = numberFactory;
-
-		switch (type) {
-		case ALL:
-			return isInteger ? nf.universalIntegerInterval()
-					: nf.universalRealInterval();
-		case EMPTY:
-			return isInteger ? nf.emptyIntegerInterval()
-					: nf.emptyRealInterval();
-		case EQ0:
-			return nf.singletonInterval(
-					isInteger ? nf.zeroInteger() : nf.zeroRational());
-		case GE0:
-			return nf.newInterval(isInteger,
-					isInteger ? nf.zeroInteger() : nf.zeroRational(), false,
-					null, true);
-		case GT0:
-			return nf.newInterval(isInteger,
-					isInteger ? nf.zeroInteger() : nf.zeroRational(), true,
-					null, true);
-		case LE0:
-			return nf.newInterval(isInteger, null, true,
-					isInteger ? nf.zeroInteger() : nf.zeroRational(), false);
-		case LT0:
-			return nf.newInterval(isInteger, null, true,
-					isInteger ? nf.zeroInteger() : nf.zeroRational(), true);
-		}
-		throw new SARLInternalException("unreachable");
-	}
+	// /**
+	// * Computes the bound type of the given {@link Interval}.
+	// *
+	// * @param interval
+	// * a non-<code>null</code> {@link Interval}
+	// * @return the unique category (instance of {@link BoundType}) into which
+	// * <code>interval</code> falls
+	// */
+	// static BoundType boundType(Interval interval) {
+	// if (interval.isEmpty())
+	// return BoundType.EMPTY;
+	//
+	// Number l = interval.lower(), r = interval.upper();
+	// int lsign = l == null ? -1 : l.signum();
+	// int rsign = r == null ? 1 : r.signum();
+	//
+	// if (lsign > 0)
+	// return GT0;
+	// if (rsign < 0)
+	// return LT0;
+	//
+	// if (lsign < 0) {
+	// if (rsign == 0) {
+	// return interval.strictUpper() ? LT0 : LE0;
+	// } else { // rsign > 0
+	// return BoundType.ALL;
+	// }
+	// } else { // lsign == 0
+	// if (rsign == 0) {
+	// return EQ0;
+	// } else { // rsign > 0
+	// return interval.strictLower() ? GT0 : GE0;
+	// }
+	// }
+	// }
+	//
+	// Interval intervalOfBoundType(BoundType type, boolean isInteger) {
+	// NumberFactory nf = numberFactory;
+	//
+	// switch (type) {
+	// case ALL:
+	// return isInteger ? nf.universalIntegerInterval()
+	// : nf.universalRealInterval();
+	// case EMPTY:
+	// return isInteger ? nf.emptyIntegerInterval()
+	// : nf.emptyRealInterval();
+	// case EQ0:
+	// return nf.singletonInterval(
+	// isInteger ? nf.zeroInteger() : nf.zeroRational());
+	// case GE0:
+	// return nf.newInterval(isInteger,
+	// isInteger ? nf.zeroInteger() : nf.zeroRational(), false,
+	// null, true);
+	// case GT0:
+	// return nf.newInterval(isInteger,
+	// isInteger ? nf.zeroInteger() : nf.zeroRational(), true,
+	// null, true);
+	// case LE0:
+	// return nf.newInterval(isInteger, null, true,
+	// isInteger ? nf.zeroInteger() : nf.zeroRational(), false);
+	// case LT0:
+	// return nf.newInterval(isInteger, null, true,
+	// isInteger ? nf.zeroInteger() : nf.zeroRational(), true);
+	// }
+	// throw new SARLInternalException("unreachable");
+	// }
 
 	/**
 	 * Determines whether <code>constraint</code> has the form a*X +b ? 0, where
@@ -616,6 +651,62 @@ public class SimplifierInfo {
 	// result.constraint = constraint;
 	// result.body = body;
 	// return result;
+	// }
+
+	// public static enum RangeSign {
+	// /**
+	// * Every element of the range is less than 0 and the range is not empty.
+	// */
+	// LT0,
+	// /**
+	// * Every element of the range is less than or equal to 0 and the range
+	// * contains 0 and a negative number.
+	// */
+	// LE0,
+	// /** The range consists exactly of 0 and nothing else. */
+	// EQ0,
+	// /**
+	// * The range contains 0 and a positive number and every element of the
+	// * range is greater than or equal to 0.
+	// */
+	// GE0,
+	// /**
+	// * Every element of the range is greater than 0 and the range is
+	// * non-empty.
+	// */
+	// GT0,
+	// /** The range is empty */
+	// EMPTY,
+	// /** The range contains a negative number, 0, and a positive number */
+	// ALL
+	// };
+
+	// private RangeSign sign(Range range) {
+	// // TODO: this will be a method in Range
+	// return null;
+	// }
+
+	// public Range rangeOf(RangeSign sign, boolean integral) {
+	// int i = integral ? 0 : 1;
+	//
+	// switch (sign) {
+	// case ALL: // (-infty,infty)
+	// return signRanges[i][0];
+	// case EMPTY: // empty
+	// return signRanges[i][1];
+	// case EQ0: // [0,0]
+	// return signRanges[i][2];
+	// case GE0: // [0,infty)
+	// return signRanges[i][3];
+	// case GT0: // (0,infty)
+	// return signRanges[i][4];
+	// case LE0: // (-infty, 0]
+	// return signRanges[i][5];
+	// case LT0: // (-infty, 0)
+	// return signRanges[i][6];
+	// default:
+	// throw new SARLException("unreachable");
+	// }
 	// }
 
 }

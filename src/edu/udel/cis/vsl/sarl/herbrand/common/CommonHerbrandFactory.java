@@ -490,8 +490,23 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 	@Override
 	public NumericExpression cast(NumericExpression numericExpression,
 			SymbolicType newType) {
-		if (newType.equals(numericExpression.type()))
+		SymbolicType oldType = numericExpression.type();
+		
+		if (newType.equals(oldType))
 			return numericExpression;
+		if (newType.isHerbrand()
+				&& numericExpression.operator() == SymbolicOperator.CAST
+				&& oldType.isIdeal()) {
+			// if numericExpression is a cast from herbrand to ideal,
+			// and the new type is herbrand, the two casts cancel...
+			NumericExpression originalExpression = (NumericExpression) numericExpression
+					.argument(0);
+			SymbolicType originalType = originalExpression.type();
+
+			if (originalType.equals(newType)
+					&& oldType.isInteger() == newType.isInteger())
+				return originalExpression;
+		}
 		return expression(SymbolicOperator.CAST, newType, numericExpression);
 	}
 

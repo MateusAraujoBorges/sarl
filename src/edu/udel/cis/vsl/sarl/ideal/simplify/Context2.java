@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import edu.udel.cis.vsl.sarl.IF.CoreUniverse.ForallStructure;
-import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
@@ -179,7 +178,8 @@ public class Context2 implements ContextIF {
 	 * Returns the boolean formula represented by this context.
 	 * 
 	 * @param full
-	 *            should the formula include the solved variables?
+	 *            should the formula include the equalities giving the values of
+	 *            the solved variables?
 	 * @return the boolean formula as specified
 	 */
 	private BooleanExpression getAssumption(boolean full) {
@@ -204,38 +204,14 @@ public class Context2 implements ContextIF {
 	}
 
 	/**
-	 * TODO: call this whenever a numeric entry is made to the subMap.
+	 * Prints the entries of a {@link Map}, putting one entry on each line for
+	 * better readability of large {@link Map}s. Flushes the stream at the end.
 	 * 
-	 * If <code>monomial</code> is a cast of x from Herbrand integer to integer
-	 * or from Herbrand real to real, and <code>value</code> is the known
-	 * constant value of that monomial, caches a simplification which maps x to
-	 * the result of casting <code>value</code> to the original Herbrand type.
-	 * Otherwise, does nothing.
-	 * 
-	 * @param monomial
-	 *            and non-<code>null</code> {@link Monomial}
-	 * @param value
-	 *            the known concrete value of <code>monomial</code>
+	 * @param out
+	 *            the stream to which to print the map
+	 * @param map
+	 *            a non-<code>null</code> {@link Map} to print
 	 */
-	private void processHerbrandCast(Monomial monomial, Number value) {
-		if (monomial.operator() == SymbolicOperator.CAST) {
-			SymbolicType type = monomial.type();
-			SymbolicExpression original = (SymbolicExpression) monomial
-					.argument(0);
-			SymbolicType originalType = original.type();
-
-			if (originalType.isHerbrand()
-					&& (originalType.isInteger() && type.isInteger()
-							|| originalType.isReal() && type.isReal())) {
-
-				SymbolicExpression constant = info.universe
-						.cast(original.type(), info.universe.number(value));
-
-				cacheSimplification(original, constant);
-			}
-		}
-	}
-
 	private <S, T> void printMap(PrintStream out, Map<S, T> map) {
 		for (Entry<S, T> entry : map.entrySet()) {
 			out.println("  " + entry.getKey() + " : " + entry.getValue());
@@ -244,17 +220,28 @@ public class Context2 implements ContextIF {
 	}
 
 	/**
+	 * <p>
 	 * Transforms a pair of {@link Monomial} by dividing both elements by an
 	 * appropriate constant so that (1) if the type is real, the coefficient for
 	 * the left component is 1; (2) if the type is integer, the coefficient for
 	 * the left component is positive and the GCD of the absolute values of the
 	 * left and right coefficients is 1.
+	 * </p>
+	 * 
+	 * <p>
+	 * Example: x is an int, (3x,2). This should be an inconsistency. But
+	 * (3x,2y) could be OK. It implies x=(2y) INTDIV 3, but is stronger than
+	 * that formula. It is equivalent to (real)x = 2((real)y)/3, but it is
+	 * debatable whether you should make this substitution.
+	 * </p>
 	 * 
 	 * @param pair
 	 *            a pair of non-<code>null</code> {@link Monomial}s of the same
 	 *            type
+	 * @throws InconsistentContextException
 	 */
-	private void monicizeMonomialPair(Pair<Monomial, Monomial> pair) {
+	private void monicizeMonomialPair(Pair<Monomial, Monomial> pair)
+			throws InconsistentContextException {
 		Monomial x = pair.left;
 
 		if (x instanceof Monic)
@@ -264,8 +251,8 @@ public class Context2 implements ContextIF {
 		IdealFactory idf = info.idealFactory;
 		NumberFactory nf = info.numberFactory;
 		PreUniverse universe = info.universe;
-		Constant constant = ((Monomial) x).monomialConstant(idf);
-		Monic xMonic = ((Monomial) x).monic(idf);
+		Constant constant = x.monomialConstant(idf);
+		Monic xMonic = x.monic(idf);
 
 		if (x.type().isReal()) {
 			pair.left = xMonic;
@@ -279,6 +266,7 @@ public class Context2 implements ContextIF {
 					: xCoefficient;
 			IntegerNumber gcd = nf.gcd(xCoefficientAbs,
 					(IntegerNumber) nf.abs(yCoefficient));
+			Monic yMonic = y.monic(idf);
 
 			if (gcd.isOne()) {
 				if (negate) {
@@ -286,6 +274,10 @@ public class Context2 implements ContextIF {
 					pair.right = (Monomial) universe.minus(y);
 				}
 			} else {
+				if (yMonic.isOne() && gcd != xCoefficientAbs) {
+					// something like 3x=2 can't hold, but 2x=4 is fine...
+					throw new InconsistentContextException();
+				}
 				pair.left = idf.monomial(
 						idf.constant(nf.divide(xCoefficientAbs, gcd)), xMonic);
 				pair.right = idf
@@ -294,27 +286,28 @@ public class Context2 implements ContextIF {
 										? nf.negate(
 												nf.divide(yCoefficient, gcd))
 										: nf.divide(yCoefficient, gcd)),
-								y.monic(idf));
+								yMonic);
 			}
 		}
 	}
 
 	/**
 	 * Given a substitution x->y in which both x and y are {@link Monomial}s,
-	 * transform that substitution into a standard form. In the standard form, x
-	 * and y are the equivalent symbolic expressions, x is a {@link Monic}, and
-	 * if x is a {@link Polynomial} then its constant term is 0. If in the
+	 * transforms that substitution into a standard form. In the standard form,
+	 * x and y are the equivalent symbolic expressions, x is a {@link Monic},
+	 * and if x is a {@link Polynomial} then its constant term is 0. If in the
 	 * process of transformation it is determined that x and y are equivalent,
-	 * both fields of the pair will be set to <code>null</code>
-	 * 
-	 * TODO: don't you want pseudo form? Leading coefficient of x to be 1 if
-	 * real, else gcd=1 ?  (YES, the comment just doesn't say it)
+	 * both fields of the pair will be set to <code>null</code>.
 	 * 
 	 * @param pair
 	 *            a substitution pair specifying a value x and the value y that
 	 *            is to be substituted for x
+	 * @throws InconsistentContextException
+	 *             if the type is integer and an inconsistency is detected such
+	 *             as 2x->3
 	 */
-	private void standardizeMonomialPair(Pair<Monomial, Monomial> pair) {
+	private void standardizeMonomialPair(Pair<Monomial, Monomial> pair)
+			throws InconsistentContextException {
 		IdealFactory idf = info.idealFactory;
 		PreUniverse universe = info.universe;
 
@@ -341,24 +334,58 @@ public class Context2 implements ContextIF {
 	}
 
 	/**
+	 * <p>
 	 * Places a substitution pair into a standard form. If the original pair is
 	 * (x,y) and the new pair is (x',y') then the following formula will be
 	 * valid: x=y -> x'=y'.
-	 * 
+	 * </p>
+	 * <p>
 	 * If in the new pair, x and y are the same symbolic expression, both
 	 * components of the pair will be set to <code>null</code>.
+	 * </p>
 	 * 
 	 * @param pair
 	 *            a substitution pair
+	 * @throws InconsistentContextException
+	 *             if the type is integer and an inconsistency is detected such
+	 *             as 2x->3
 	 */
 	private void standardizePair(
-			Pair<SymbolicExpression, SymbolicExpression> pair) {
+			Pair<SymbolicExpression, SymbolicExpression> pair)
+			throws InconsistentContextException {
 		if (!pair.left.isNumeric()) {
 			if (pair.left.equals(pair.right)) {
 				pair.left = null;
 				pair.right = null;
 			}
-		} else {
+		} else { // pair.left and pair.right have same numeric type
+			if (pair.left.operator() == SymbolicOperator.CAST) {
+				// if x has type hint, (int)x->y should be changed to x->(hint)y
+				SymbolicType type = pair.left.type();
+				SymbolicExpression original = (SymbolicExpression) pair.left
+						.argument(0);
+				SymbolicType originalType = original.type();
+
+				if (originalType.isHerbrand()
+						&& originalType.isInteger() == type.isInteger()) {
+					// problem: original expression might not be Monomial. Could
+					// be RationalExpression like x/y. Questionable whether such
+					// a thing should occur on right side of substitution. If it
+					// does, should form the equality expression and process
+					// from
+					// the beginning.
+					pair.left = original;
+					pair.right = info.universe.cast(originalType, pair.right);
+				}
+			}
+			if (!(pair.left instanceof Monomial
+					&& pair.right instanceof Monomial)) {
+				BooleanExpression equation = info.universe.equals(pair.left,
+						pair.right);
+
+				pair.left = (Monomial) equation.argument(0);
+				pair.right = (Monomial) equation.argument(0);
+			}
 			assert pair.left instanceof Monomial;
 			assert pair.right instanceof Monomial;
 
@@ -375,6 +402,18 @@ public class Context2 implements ContextIF {
 		// this should do transitive closure of substitution
 	}
 
+	/**
+	 * Repeatedly applies {@code op} to {@code x} until stabilization occurs.
+	 * 
+	 * @param op
+	 *            a unary operator on symbolic expressions
+	 * @param x
+	 *            a non-{@code null} symbolic expression
+	 * @return the first element of the sequence
+	 *         <code>x, op(x), op(op(x)), ...</code> which is equal to its
+	 *         predecessor in that sequence. If there is no such element, this
+	 *         method will not return.
+	 */
 	private SymbolicExpression transClose(UnaryOperator<SymbolicExpression> op,
 			SymbolicExpression x) {
 		SymbolicExpression y = op.apply(x);
@@ -391,8 +430,8 @@ public class Context2 implements ContextIF {
 	 * <code>range</code>, modifying the state of this context accordingly. An
 	 * existing range R associated to <code>key</code> will be replaced by the
 	 * intersection of R and <code>range</code>. If this results in a singleton
-	 * value, the entry is removed from the {@link #rangeMap} altogether and and
-	 * is entered into the {@link #subMap}.
+	 * value, the entry is removed from the {@link #rangeMap} altogether and is
+	 * entered into the {@link #subMap}.
 	 * 
 	 * @param key
 	 *            a non-<code>null</code> {@link Monic}
@@ -432,47 +471,21 @@ public class Context2 implements ContextIF {
 		return new Pair<>(original, result);
 	}
 
-	private Range getGeneralRange(Monic monic) {
-		Range range = rangeMap.get(monic);
-
-		if (range == null) {
-			SymbolicExpression value = subMap.get(monic);
-
-			if (value instanceof Constant)
-				range = info.rangeFactory
-						.singletonSet(((Constant) value).number());
-		}
-		return range;
-	}
-
-	private boolean containsZero(Range range) {
-		Number zero = range.isIntegral() ? info.numberFactory.zeroInteger()
-				: info.numberFactory.zeroRational();
-
-		return range.containsNumber(zero);
-	}
-
-	// /**
-	// * Attempts to determine whether the formula <code>value1==value2</code>
-	// is
-	// * unsatisfiable.
-	// *
-	// * @param value1
-	// * a non-<code>null</code> symbolic expression
-	// * @param value2
-	// * a non-<code>null</code> symbolic expression of type compatible
-	// * with that of <code>value1</code>
-	// * @return
-	// */
-	// private boolean inconsistent(SymbolicExpression value1,
-	// SymbolicExpression value2) {
-	// if (value1.operator() == SymbolicOperator.CONCRETE
-	// && value2.operator() == SymbolicOperator.CONCRETE) {
-	// return !value1.equals(value2);
-	// }
-	// return false;
-	// }
-
+	/**
+	 * Inserts an entry into the {@link #subMap} and also checks for an
+	 * inconsistency between the old and new values, if an old value existed.
+	 * 
+	 * @param key
+	 *            the expression on the left side of the substitution
+	 * @param value
+	 *            the expression on the right side which will replace the
+	 *            {@code key}
+	 * @return the old value associated to {@code key}, or {@code null} if there
+	 *         was no entry for {@code key}
+	 * @throws InconsistentContextException
+	 *             if the old value was a concrete value and not equal to the
+	 *             new value
+	 */
 	private SymbolicExpression updateSub(SymbolicExpression key,
 			SymbolicExpression value) throws InconsistentContextException {
 		SymbolicExpression old = subMap.put(key, value);
@@ -493,8 +506,8 @@ public class Context2 implements ContextIF {
 	 * (2) the new substitution cannot introduce a cycle in the {@link #subMap};
 	 * (3) the substitution may not involve any {@link RationalExpression}s.
 	 * 
-	 * Inconsistency can be determined if the same key is mapped to two nonequal
-	 * constants.
+	 * Inconsistency can be determined if the same key is mapped to two
+	 * constants that are not equal.
 	 * 
 	 * 
 	 * @param x
@@ -676,59 +689,6 @@ public class Context2 implements ContextIF {
 		subMap.put(info.falseExpr, info.trueExpr);
 	}
 
-	// /**
-	// * Removes any bound associated to <code>key</code> Updates the change
-	// flag
-	// * if a bound was previously present.
-	// *
-	// * @param key
-	// * a non-<code>null</code> {@link Monic}
-	// * @return the old interval bound associated to <code>key</code>, or
-	// * <code>null</code> if no bound was associated to <code>key</code>
-	// */
-	// private Range removeRange(Monic key) {
-	// Range result = rangeMap.remove(key);
-	//
-	// return result;
-	// }
-	//
-	// private Range restrictLowerBound(Monic key, Number value, boolean strict)
-	// {
-	// Range original = getRange(key);
-	// boolean isIntegral = key.type().isInteger();
-	// Range result = info.rangeFactory.interval(isIntegral, value, strict,
-	// info.numberFactory.infiniteNumber(isIntegral, true), true);
-	//
-	// if (original == null) {
-	// rangeMap.put(key, result);
-	// } else {
-	// result = info.rangeFactory.intersect(original, result);
-	// if (!result.equals(original)) {
-	// rangeMap.put(key, result);
-	// }
-	// }
-	// return result;
-	// }
-	//
-	// private Range restrictUpperBound(Monic key, Number value, boolean strict)
-	// {
-	// Range original = getRange(key);
-	// boolean isIntegral = key.type().isInteger();
-	// Range result = info.rangeFactory.interval(isIntegral,
-	// info.numberFactory.infiniteNumber(isIntegral, false), true,
-	// value, strict);
-	//
-	// if (original == null) {
-	// rangeMap.put(key, result);
-	// } else {
-	// result = info.rangeFactory.intersect(original, result);
-	// if (!result.equals(original)) {
-	// rangeMap.put(key, result);
-	// }
-	// }
-	// return result;
-	// }
-
 	private void addMonicConstantsToMap(Map<Monic, Number> map) {
 		for (Entry<SymbolicExpression, SymbolicExpression> entry : subMap
 				.entrySet()) {
@@ -744,11 +704,16 @@ public class Context2 implements ContextIF {
 		}
 	}
 
+	/**
+	 * TOOD: if this is a SubContext, do we get the parent entries???
+	 * 
+	 * @return
+	 */
 	private Map<Monic, Number> getMonicConstantMap() {
-		Map<Monic, Number> result = new TreeMap<>(info.monicComparator);
+		Map<Monic, Number> map = new TreeMap<>(info.monicComparator);
 
-		addMonicConstantsToMap(result);
-		return result;
+		addMonicConstantsToMap(map);
+		return map;
 	}
 
 	/**
@@ -823,21 +788,22 @@ public class Context2 implements ContextIF {
 	 * {@link SymbolicOperator#AND}. In the CNF form, this expression is a
 	 * clause of the outer "and" expression.
 	 * 
-	 * @param or
+	 * @param expr
 	 *            the boolean expression to process
 	 * @throws InconsistentContextException
 	 *             if this context is determined to be inconsistent
 	 */
-	private void extractOr(BooleanExpression or)
+	private void extractOr(BooleanExpression expr)
 			throws InconsistentContextException {
-		if (or.operator() != SymbolicOperator.OR)
-			extractClause(or);
-		or = info.universe.not(new SubContext(info, this, info.universe.not(or))
-				.getFullAssumption());
-		if (or.operator() == SymbolicOperator.OR) {
-			addSub(or, info.trueExpr);
+		if (expr.operator() != SymbolicOperator.OR)
+			extractClause(expr);
+		expr = info.universe
+				.not(new SubContext(info, this, info.universe.not(expr))
+						.getFullAssumption());
+		if (expr.operator() == SymbolicOperator.OR) {
+			addSub(expr, info.trueExpr);
 		} else {
-			addFact(or);
+			addFact(expr);
 		}
 	}
 
@@ -882,9 +848,9 @@ public class Context2 implements ContextIF {
 					arg1 = (SymbolicExpression) clause.argument(1);
 
 			if (arg0.isZero()) {
-				extractIneq((Monic) arg1, true, op == LESS_THAN);
+				extractIneqMonic((Monic) arg1, true, op == LESS_THAN);
 			} else {
-				extractIneq((Monic) arg0, false, op == LESS_THAN);
+				extractIneqMonic((Monic) arg0, false, op == LESS_THAN);
 			}
 			break;
 		}
@@ -893,6 +859,18 @@ public class Context2 implements ContextIF {
 		}
 	}
 
+	/**
+	 * Processes the assumption that <code>pred</code> is <i>false</i>, updating
+	 * the state of this context appropriately.
+	 * 
+	 * @param pred
+	 *            a non-<code>null</code> boolean expression, asserted to be
+	 *            equivalent to <i>false</i> in this context
+	 * @throws InconsistentContextException
+	 *             if an inconsistency is detected in the context in the process
+	 *             of consuming this assumption
+	 * 
+	 */
 	private void extractNot(BooleanExpression pred)
 			throws InconsistentContextException {
 		addSub(pred, info.falseExpr);
@@ -944,6 +922,7 @@ public class Context2 implements ContextIF {
 	private void extractEQ0(Primitive primitive)
 			throws InconsistentContextException {
 		// TODO: probabilistic technique?
+
 		addSub(primitive, info.idealFactory.zero(primitive.type()));
 	}
 
@@ -957,53 +936,302 @@ public class Context2 implements ContextIF {
 			Number zero = type.isInteger() ? info.numberFactory.zeroInteger()
 					: info.numberFactory.zeroRational();
 
+			// TODO: what about is polynomial is not pseudo?
 			restrictRange(primitive, rf.complement(rf.singletonSet(zero)));
 		} else {
 			addSub(info.universe.equals(arg0, arg1), info.falseExpr);
 		}
 	}
 
-	/**
-	 * Processes a numeric inequality and updates the state of this context
-	 * accordingly. The inequality has one of the forms: 0&lt;x, 0&le;x, x&lt;0,
-	 * or x&le;0.
-	 * 
-	 * @param monic
-	 *            a non-<code>null</code> {@link Monic} (x) which is being
-	 *            compared to 0
-	 * @param gt
-	 *            is the inequality stating that <code>monic</code> is greater
-	 *            than (or greater than or equal to) 0? I.e., is the inequality
-	 *            form one of 0&lt;x, 0&le;x ?
-	 * @param strict
-	 *            is the inequality strict, i.e., either of the form 0&lt;x or
-	 *            x&lt;0 ?
-	 * @throws InconsistentContextException
-	 *             if an inconsistency is this context is detected
-	 */
-	private void extractIneq(Monic monic, boolean gt, boolean strict)
-			throws InconsistentContextException {
-		NumberFactory nf = info.numberFactory;
+	private Range intersectWithRangeOf(Monic monic, Range range) {
+		SymbolicExpression value = getSub(monic);
+
+		if (value instanceof Constant) {
+			Number number = ((Constant) value).number();
+
+			if (range.containsNumber(number)) {
+				range = info.rangeFactory.singletonSet(number);
+			} else {
+				range = info.rangeFactory.emptySet(range.isIntegral());
+			}
+		} else {
+			Range oldRange = getRange(monic);
+
+			if (oldRange != null)
+				range = info.rangeFactory.intersect(range, oldRange);
+		}
+		return range;
+	}
+
+	private Range computeRange(Polynomial poly) {
+		IdealFactory idf = info.idealFactory;
 		RangeFactory rf = info.rangeFactory;
-		boolean isIntegral = monic.type().isInteger();
-		Number zero = isIntegral ? nf.zeroInteger() : nf.zeroRational();
-		Range range;
-		
-		if (monic instanceof Polynomial) {
-			// example: 0<=2x+2y+3 ---> -3<=2(x+y) ---> -3/2<=x+y ---> 
+		Constant constantTerm = poly.constantTerm(idf);
+		Number constant = constantTerm.number();
+		Range result;
+
+		if (constant.isZero()) {
+			result = rf.singletonSet(constant);
+			for (Monomial term : poly.termMap(idf)) {
+				result = rf.add(result, computeRange(term));
+				// TODO: if (result.isUniversal()) break;
+			}
+			result = intersectWithRangeOf(poly, result);
+		} else {
+			result = rf.add(
+					computeRange((Monomial) idf.subtract(poly, constantTerm)),
+					constant);
+		}
+		return result;
+	}
+
+	private Range computeRangeOfPower(NumericExpression base,
+			NumericExpression exponent) {
+		// TODO
+
+		return null;
+
+	}
+
+	/**
+	 * 
+	 * Do we assume primitive is simplified?
+	 * 
+	 * @param primitive
+	 * @return
+	 */
+	private Range computeRange(Primitive primitive) {
+		if (primitive instanceof Polynomial)
+			return computeRange((Polynomial) primitive);
+		if (primitive.operator() == SymbolicOperator.POWER)
+			return computeRangeOfPower(
+					(NumericExpression) primitive.argument(0),
+					(NumericExpression) primitive.argument(1));
+
+		SymbolicExpression value = getSub(primitive);
+
+		if (value instanceof Constant) {
+			return info.rangeFactory.singletonSet(((Constant) value).number());
+		} else {
+			Range oldRange = getRange(primitive);
+
+			if (oldRange != null)
+				return oldRange;
 		}
 
-		if (gt) {
-			range = rf.interval(isIntegral, zero, strict,
-					nf.infiniteNumber(isIntegral, true), true);
-		} else {
-			range = rf.interval(isIntegral,
-					nf.infiniteNumber(isIntegral, false), true, zero, strict);
-		}
-		// Convert monic and range together...
-		// if monic is a polynomial, get it into affine form
-		
+		boolean isIntegral = primitive.type().isInteger();
+		NumberFactory nf = info.numberFactory;
+
+		// TODO: change to universalSet():
+		return info.rangeFactory.interval(isIntegral,
+				nf.infiniteNumber(isIntegral, false), true,
+				nf.infiniteNumber(isIntegral, true), true);
 	}
+
+	/**
+	 * Do we assume pp is simplified?
+	 * 
+	 * @param pp
+	 * @return
+	 */
+	private Range computeRange(PrimitivePower pp) {
+		if (pp instanceof Primitive)
+			return computeRange((Primitive) pp);
+
+		// TODO: add method in rangeFactory so power takes IntegerNumber
+
+		IntegerNumber exponent = pp.monomialDegree(info.numberFactory);
+		Range result = info.rangeFactory.power(
+				computeRange(pp.primitive(info.idealFactory)),
+				exponent.intValue());
+
+		result = intersectWithRangeOf(pp, result);
+		return result;
+	}
+
+	/**
+	 * Do we assume monic is simplified?
+	 * 
+	 * @param monic
+	 * @return
+	 */
+	private Range computeRange(Monic monic) {
+		if (monic instanceof PrimitivePower)
+			return computeRange((PrimitivePower) monic);
+
+		RangeFactory rf = info.rangeFactory;
+		NumberFactory nf = info.numberFactory;
+		Range result = rf.singletonSet(
+				monic.type().isInteger() ? nf.oneInteger() : nf.oneRational());
+
+		for (PrimitivePower pp : monic.monicFactors(info.idealFactory)) {
+			result = rf.multiply(result, computeRange(pp));
+			// TODO: if result.isUniversal() break;
+		}
+		result = intersectWithRangeOf(monic, result);
+		return result;
+	}
+
+	/**
+	 * Do we assume monomial is simplified?
+	 * 
+	 * @param monomial
+	 * @return
+	 */
+	private Range computeRange(Monomial monomial) {
+		if (monomial instanceof Monic)
+			return computeRange((Monic) monomial);
+		if (monomial instanceof Constant)
+			return info.rangeFactory
+					.singletonSet(((Constant) monomial).number());
+		return info.rangeFactory.multiply(
+				computeRange(monomial.monic(info.idealFactory)),
+				monomial.monomialConstant(info.idealFactory).number());
+	}
+
+	/**
+	 * Extracts information from an inequality of one of the forms: x&gt;0,
+	 * x&ge;0, x&lt;0, x&le;0, where x is a {@link Monic} in which the maximum
+	 * degree of any {@link Primitive} is 1. Updates the state of this context
+	 * accordingly.
+	 * 
+	 * Strategy:
+	 * 
+	 * 
+	 * Need method Range getBound(Monomial) which does everything possible to
+	 * get the most precise bound on the monomial from the existing context:
+	 * First, simplify the Monomial. This should yield a Monomial.
+	 * 
+	 * - if polynomial, reduce to pseudo. If this is non-trivial, get best bound
+	 * on pseudo, convert to bound on original polynomial, return. - else: look
+	 * in rangeMap, store the result - if non-trivial product, get best bounds
+	 * on factors and multiply - if non-trivial sum, get best bounds on factors
+	 * and add - if non-trivial primitive power, get bound on base, raise to
+	 * power - if POWER operation : if exponent is constant, ditto, else:? -
+	 * intersect result with whatever you got from rangeMap
+	 * 
+	 * Then: intersect with bound specified by these arguments. Restrict bound
+	 * on the monic accordingly.
+	 * 
+	 * @param monic
+	 *            a non-<code>null</code> {@link Monic}
+	 * @param gt
+	 *            is the condition one of x&gt;0 or x&ge;0 (i.e., not x&lt;0 or
+	 *            x&le;0)
+	 * @param strict
+	 *            is the form one of x&gt;0 or x&lt;0 (strict inequality)
+	 */
+	private void extractIneqMonic(Monic monic, boolean gt, boolean strict)
+			throws InconsistentContextException {
+		RangeFactory rf = info.rangeFactory;
+		NumberFactory nf = info.numberFactory;
+		Range result = computeRange(monic);
+		SymbolicType type = monic.type();
+		boolean isIntegral = type.isInteger();
+		Number zero = isIntegral ? nf.zeroInteger() : nf.zeroRational();
+		Range interval = gt
+				? rf.interval(isIntegral, zero, strict,
+						nf.infiniteNumber(isIntegral, true), true)
+				: rf.interval(isIntegral, nf.infiniteNumber(isIntegral, false),
+						true, zero, strict);
+
+		result = rf.intersect(result, interval);
+		restrictRange(monic, result);
+	}
+
+	// private RangeSign getBoundTypeMonic(Monic monic) {
+	// if (monic.isOne())
+	// return RangeSign.GT0;
+	//
+	// Range monicRange = getRange(monic);
+	//
+	// if (monicRange != null)
+	// return boundType(monicRange);
+	//
+	// SymbolicOperator op = monic.operator();
+	//
+	// if (op == SymbolicOperator.POWER) {
+	// // a general power expression in which the exponent
+	// // can be an arbitrary numeric expression; it is a kind
+	// // of Primitive
+	// return getBoundTypePower((Primitive) monic);
+	// }
+	// return null;
+	// }
+
+	// /**
+	// * Processes a numeric inequality and updates the state of this context
+	// * accordingly. The inequality has one of the forms: 0&lt;x, 0&le;x,
+	// x&lt;0,
+	// * or x&le;0.
+	// *
+	// * @param monic
+	// * a non-<code>null</code> {@link Monic} (x) which is being
+	// * compared to 0
+	// * @param gt
+	// * is the inequality stating that <code>monic</code> is greater
+	// * than (or greater than or equal to) 0? I.e., is the inequality
+	// * form one of 0&lt;x, 0&le;x ?
+	// * @param strict
+	// * is the inequality strict, i.e., either of the form 0&lt;x or
+	// * x&lt;0 ?
+	// * @throws InconsistentContextException
+	// * if an inconsistency is this context is detected
+	// */
+	// private void extractIneqPoly(Polynomial poly, boolean gt, boolean strict)
+	// throws InconsistentContextException {
+	// IdealFactory idf = info.idealFactory;
+	// NumberFactory nf = info.numberFactory;
+	// RangeFactory rf = info.rangeFactory;
+	// boolean isIntegral = poly.type().isInteger();
+	// Number zero = isIntegral ? nf.zeroInteger() : nf.zeroRational();
+	// Number bound = zero; // the current bound on monic
+	// boolean upper = !gt; // is current bound an upper (not lower) bound?
+	// Monic monic = poly;
+	//
+	// while (monic instanceof Polynomial) {
+	// Constant constantTerm = ((Polynomial) monic).constantTerm(idf);
+	//
+	// if (constantTerm.isZero())
+	// break;
+	//
+	// Monomial diff = (Monomial) idf.subtract(monic, constantTerm);
+	//
+	// bound = nf.subtract(bound, constantTerm.number());
+	// if (diff instanceof Monic) {
+	// monic = (Monic) diff;
+	// break;
+	// }
+	//
+	// Constant coefficient = diff.monomialConstant(idf);
+	// Number coefficientNum = coefficient.number();
+	// int sign = coefficientNum.signum();
+	//
+	// monic = diff.monic(idf);
+	// if (sign < 0)
+	// upper = !upper;
+	// if (isIntegral) {
+	// RationalNumber quotient = nf.divide(nf.rational(bound),
+	// nf.rational(coefficientNum));
+	//
+	// assert !strict;
+	// bound = upper ? nf.floor(quotient) : nf.ceil(quotient);
+	// } else {
+	// bound = nf.divide(bound, coefficientNum);
+	// }
+	// }
+	//
+	// // Now you have a Monic, but make sure it is of the right form for
+	// // inequality?
+	//
+	// Range range = upper
+	// ? rf.interval(isIntegral, nf.infiniteNumber(isIntegral, false),
+	// true, bound, strict)
+	// : rf.interval(isIntegral, bound, strict,
+	// nf.infiniteNumber(isIntegral, true), true);
+	//
+	// restrictRange(monic, range);
+	// }
 
 	/**
 	 * Looks for the pattern: <code>forall int i . 0<=i<=n-1 -> a[i]=expr</code>
@@ -1037,13 +1265,13 @@ public class Context2 implements ContextIF {
 	// Begin array term analysis....
 
 	/**
-	 * Given an <code>equation</code> and a {@link Primitive} <code>p</code>,
-	 * attempts to solve for <code>p</code>.
+	 * Given a {@link Primitive} <code>p</code> and a set of numeric expressions
+	 * whose sum is posited to be equal to <code>p</code>, this method attempts
+	 * to solve that equation for <code>p</code>.
 	 * 
-	 * @param equation
-	 *            an equation that must be off the form 0==x for some numeric
-	 *            {@link Primitive} x (this is the canonical form of all numeric
-	 *            equations in the {@link IdealFactory}
+	 * @param terms
+	 *            the expressions whose sum is asserted to be equal to
+	 *            <code>p</code>
 	 * @param p
 	 *            a numeric {@link Primitive}
 	 * @return an expression which must be equal to <code>p</code> and does not
@@ -1331,7 +1559,7 @@ public class Context2 implements ContextIF {
 		return null;
 	}
 
-	// protected
+	// ************************ Protected methods ************************
 
 	protected void initialize(BooleanExpression assumption) {
 		try {

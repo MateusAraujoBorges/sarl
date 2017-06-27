@@ -41,7 +41,7 @@ import edu.udel.cis.vsl.sarl.util.EmptySet;
 
 /**
  * Empty monic: equivalent to 1. The number 1 is the only thing which is both a
- * {@link Monic} and a {@link Constant}. Can have either integer of real type.
+ * {@link Monic} and a {@link Constant}. Can have either integer or real type.
  * 
  * @author siegel
  */

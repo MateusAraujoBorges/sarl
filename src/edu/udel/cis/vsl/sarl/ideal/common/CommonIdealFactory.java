@@ -1981,21 +1981,32 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public NumericExpression cast(NumericExpression numericExpression,
 			SymbolicType newType) {
-		if (numericExpression.type().isIdeal() && newType.equals(realType))
+		SymbolicType oldType = numericExpression.type();
+
+		if (newType.equals(oldType))
+			return numericExpression;
+		if (oldType.isIdeal() && newType.equals(realType))
 			return castToReal(numericExpression);
-		if (numericExpression.type().isReal() && newType.equals(integerType)) {
+		if (oldType.isReal() && newType.equals(integerType)) {
 			RationalNumber number = (RationalNumber) extractNumber(
 					numericExpression);
 
-			if (number != null) {
-				int sign = number.signum();
+			if (number != null)
+				return number.signum() >= 0
+						? constant(numberFactory.floor(number))
+						: constant(numberFactory.ceil(number));
+		} else if (newType.isIdeal()
+				&& numericExpression.operator() == SymbolicOperator.CAST
+				&& oldType.isHerbrand()) {
+			// if numericExpression is a cast from ideal to herbrand,
+			// and the new type is ideal, the two casts cancel...
+			NumericExpression originalExpression = (NumericExpression) numericExpression
+					.argument(0);
+			SymbolicType originalType = originalExpression.type();
 
-				if (sign >= 0) {
-					return constant(numberFactory.floor(number));
-				} else {
-					return constant(numberFactory.ceil(number));
-				}
-			}
+			if (originalType.equals(newType)
+					&& oldType.isInteger() == newType.isInteger())
+				return originalExpression;
 		}
 		return expression(SymbolicOperator.CAST, newType, numericExpression);
 	}
