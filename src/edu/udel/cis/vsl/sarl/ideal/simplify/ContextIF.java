@@ -6,8 +6,8 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
 
 /**
- * An object which provides some constraints on symbolic expressions which can
- * be used as a "simplification context" when simplifying expressions.
+ * An object which provides some constraints on symbolic expressions and which
+ * can be used as a "simplification context" when simplifying expressions.
  * 
  * @author siegel
  *
@@ -15,7 +15,7 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Range;
 public interface ContextIF {
 
 	/**
-	 * Retrieves the range associated to <code>key</code>.
+	 * Retrieves the range associated to <code>key</code>.  
 	 * 
 	 * @param key
 	 *            a non-<code>null</code> {@link Monic}

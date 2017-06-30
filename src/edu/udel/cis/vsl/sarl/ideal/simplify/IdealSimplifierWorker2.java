@@ -37,24 +37,7 @@ import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifierWorker;
 public class IdealSimplifierWorker2 extends CommonSimplifierWorker {
 
 	// static members...
-	
-	// TODO: move:
 
-//	/**
-//	 * A random number generator with seed very likely to be distinct from all
-//	 * other seeds. TODO: this must be made thread-safe.
-//	 */
-//	private static Random random = new Random();
-
-//	/**
-//	 * Used in a heuristic to determine when to use probabilistic methods to
-//	 * determine polynomial zero-ness. If the product of the number of variables
-//	 * and the total detree is greater than or equal to this number, the
-//	 * polynomial is considered too big to be expanded, and probabilistic
-//	 * techniques will be used instead (unless the probabilistic bound is 0).
-//	 */
-//	private final static IntegerNumber polyProbThreshold = Numbers.REAL_FACTORY
-//			.integer(100);
 
 	// Instance fields...
 
@@ -98,25 +81,25 @@ public class IdealSimplifierWorker2 extends CommonSimplifierWorker {
 		return info.numberFactory;
 	}
 
-//	private PreUniverse universe() {
-//		return info.universe;
-//	}
+	// private PreUniverse universe() {
+	// return info.universe;
+	// }
 
 	private BooleanExpressionFactory booleanFactory() {
 		return info.booleanFactory;
 	}
 
-//	private BooleanExpression falseExpr() {
-//		return info.falseExpr;
-//	}
-//
-//	private BooleanExpression trueExpr() {
-//		return info.trueExpr;
-//	}
-//
-//	private AffineFactory affineFactory() {
-//		return info.affineFactory;
-//	}
+	// private BooleanExpression falseExpr() {
+	// return info.falseExpr;
+	// }
+	//
+	// private BooleanExpression trueExpr() {
+	// return info.trueExpr;
+	// }
+	//
+	// private AffineFactory affineFactory() {
+	// return info.affineFactory;
+	// }
 
 	/**
 	 * Build up entries in power map from the monic factors of a {@link Monic}.
@@ -361,35 +344,36 @@ public class IdealSimplifierWorker2 extends CommonSimplifierWorker {
 		return null;
 	}
 
-//	/**
-//	 * Computes a simplified version of the expression <code>monic</code>=0.
-//	 * 
-//	 * @param monic
-//	 *            a non-<code>null</code> {@link Monic}
-//	 * @return simplified expression equivalent to <code>monic</code>=0
-//	 */
-//	private BooleanExpression simplifiedEQ0Monic(Monic monic) {
-//		NumericExpression zero = idealFactory().zero(monic.type());
-//		BooleanExpression expr = idealFactory().equals(zero, monic);
-//		BooleanExpression result = (BooleanExpression) simplifyExpression(expr);
-//
-//		return result;
-//	}
+	// /**
+	// * Computes a simplified version of the expression <code>monic</code>=0.
+	// *
+	// * @param monic
+	// * a non-<code>null</code> {@link Monic}
+	// * @return simplified expression equivalent to <code>monic</code>=0
+	// */
+	// private BooleanExpression simplifiedEQ0Monic(Monic monic) {
+	// NumericExpression zero = idealFactory().zero(monic.type());
+	// BooleanExpression expr = idealFactory().equals(zero, monic);
+	// BooleanExpression result = (BooleanExpression) simplifyExpression(expr);
+	//
+	// return result;
+	// }
 
-//	/**
-//	 * Computes a simplified version of the expression <code>monic</code>&ne;0.
-//	 * 
-//	 * @param monic
-//	 *            a non-<code>null</code> {@link Monic}
-//	 * @return simplified expression equivalent to <code>monic</code>&ne;0
-//	 */
-//	private BooleanExpression simplifiedNEQ0Monic(Monic monic) {
-//		NumericExpression zero = idealFactory().zero(monic.type());
-//		BooleanExpression expr = idealFactory().neq(zero, monic);
-//		BooleanExpression result = (BooleanExpression) simplifyExpression(expr);
-//
-//		return result;
-//	}
+	// /**
+	// * Computes a simplified version of the expression
+	// <code>monic</code>&ne;0.
+	// *
+	// * @param monic
+	// * a non-<code>null</code> {@link Monic}
+	// * @return simplified expression equivalent to <code>monic</code>&ne;0
+	// */
+	// private BooleanExpression simplifiedNEQ0Monic(Monic monic) {
+	// NumericExpression zero = idealFactory().zero(monic.type());
+	// BooleanExpression expr = idealFactory().neq(zero, monic);
+	// BooleanExpression result = (BooleanExpression) simplifyExpression(expr);
+	//
+	// return result;
+	// }
 
 	// /**
 	// * Given the fact that x is in the set specified by the {@link BoundType}
@@ -432,262 +416,171 @@ public class IdealSimplifierWorker2 extends CommonSimplifierWorker {
 	// }
 
 	// TODO: use this logic in the Context2:
-	
-//	private BoundType getBoundTypePower(Primitive powerExpr) {
-//		IdealFactory idf = idealFactory();
-//		RationalExpression base = (RationalExpression) powerExpr.argument(0);
-//
-//		// if base>0, then base^exponent>0:
-//		if (simplifyExpression(idf.isPositive(base)).isTrue())
-//			return BoundType.GT0;
-//		// if base>=0, then base^exponent>=0:
-//		if (simplifyExpression(idf.isNonnegative(base)).isTrue())
-//			return BoundType.GE0;
-//
-//		// if exponent is not integral or is even, base^exponent>=0:
-//		RationalExpression exponent = (RationalExpression) powerExpr
-//				.argument(1);
-//		Number exponentNumber = idf.extractNumber(exponent);
-//		NumberFactory nf = numberFactory();
-//
-//		if (exponentNumber != null) {
-//			if (exponentNumber instanceof IntegerNumber) {
-//				IntegerNumber exponentInteger = (IntegerNumber) exponentNumber;
-//
-//				if (nf.mod(exponentInteger, nf.integer(2)).isZero()) {
-//					return BoundType.GE0;
-//				}
-//			} else {
-//				if (!nf.isIntegral((RationalNumber) exponentNumber))
-//					return BoundType.GE0;
-//				else {
-//					IntegerNumber exponentInteger = nf
-//							.integerValue((RationalNumber) exponentNumber);
-//
-//					if (nf.mod(exponentInteger, nf.integer(2)).isZero())
-//						return BoundType.GE0;
-//				}
-//			}
-//		}
-//		return null;
-//	}
 
-//	private Range getGeneralRange(Monic monic) {
-//		Range range = theContext.getRange(monic);
-//
-//		if (range == null) {
-//			SymbolicExpression value = theContext.getSub(monic);
-//
-//			if (value instanceof Constant)
-//				range = info.rangeFactory
-//						.singletonSet(((Constant) value).number());
-//		}
-//		return range;
-//	}
+	// private BoundType getBoundTypePower(Primitive powerExpr) {
+	// IdealFactory idf = idealFactory();
+	// RationalExpression base = (RationalExpression) powerExpr.argument(0);
+	//
+	// // if base>0, then base^exponent>0:
+	// if (simplifyExpression(idf.isPositive(base)).isTrue())
+	// return BoundType.GT0;
+	// // if base>=0, then base^exponent>=0:
+	// if (simplifyExpression(idf.isNonnegative(base)).isTrue())
+	// return BoundType.GE0;
+	//
+	// // if exponent is not integral or is even, base^exponent>=0:
+	// RationalExpression exponent = (RationalExpression) powerExpr
+	// .argument(1);
+	// Number exponentNumber = idf.extractNumber(exponent);
+	// NumberFactory nf = numberFactory();
+	//
+	// if (exponentNumber != null) {
+	// if (exponentNumber instanceof IntegerNumber) {
+	// IntegerNumber exponentInteger = (IntegerNumber) exponentNumber;
+	//
+	// if (nf.mod(exponentInteger, nf.integer(2)).isZero()) {
+	// return BoundType.GE0;
+	// }
+	// } else {
+	// if (!nf.isIntegral((RationalNumber) exponentNumber))
+	// return BoundType.GE0;
+	// else {
+	// IntegerNumber exponentInteger = nf
+	// .integerValue((RationalNumber) exponentNumber);
+	//
+	// if (nf.mod(exponentInteger, nf.integer(2)).isZero())
+	// return BoundType.GE0;
+	// }
+	// }
+	// }
+	// return null;
+	// }
 
-//	private boolean containsZero(Range range) {
-//		Number zero = range.isIntegral() ? info.numberFactory.zeroInteger()
-//				: info.numberFactory.zeroRational();
-//
-//		return range.containsNumber(zero);
-//	}
+	// private Range getGeneralRange(Monic monic) {
+	// Range range = theContext.getRange(monic);
+	//
+	// if (range == null) {
+	// SymbolicExpression value = theContext.getSub(monic);
+	//
+	// if (value instanceof Constant)
+	// range = info.rangeFactory
+	// .singletonSet(((Constant) value).number());
+	// }
+	// return range;
+	// }
 
-//	/**
-//	 * <p>
-//	 * Tries to compute a simplified version of the expression
-//	 * <code>primitive</code>=0. Returns <code>null</code> if no simplification
-//	 * is possible, else returns a {@link BooleanExpression} equivalent to
-//	 * <code>primitive</code>=0.
-//	 * </p>
-//	 * 
-//	 * <p>
-//	 * Precondition: primitive has been simplified
-//	 * </p>
-//	 * 
-//	 * @param primitive
-//	 *            a non-<code>null</code>, non-constant {@link Primitive}
-//	 * @return <code>null</code> or a {@link BooleanExpression} equivalent to
-//	 *         <code>primitive</code>=0
-//	 */
-//	private BooleanExpression simplifyEQ0(Primitive primitive) {
-//		Range range = theContext.getRange(primitive);
-//
-//		if (range != null && !containsZero(range))
-//			return info.falseExpr;
-//		if (primitive instanceof Polynomial)
-//			return simplifyEQ0Poly((Polynomial) primitive);
-//		return null;
-//	}
+	// private boolean containsZero(Range range) {
+	// Number zero = range.isIntegral() ? info.numberFactory.zeroInteger()
+	// : info.numberFactory.zeroRational();
+	//
+	// return range.containsNumber(zero);
+	// }
 
-	
 	// TODO: use some of this logic in Context2 to simplify poly=0?
-	
-//	/**
-//	 * <p>
-//	 * Tries to compute a simplified version of the expression <code>poly</code>
-//	 * =0. Returns <code>null</code> if no simplification is possible, else
-//	 * returns a {@link BooleanExpression} equivalent to <code>poly</code>=0.
-//	 * </p>
-//	 * 
-//	 * <p>
-//	 * Pre-condition: <code>poly</code> has already gone through generic
-//	 * simplification and the method {@link #simplifiedEQ0Monic(Monic)}.
-//	 * </p>
-//	 * 
-//	 * @param primitive
-//	 *            a non-<code>null</code>, non-constant {@link Polynomial}
-//	 * @return <code>null</code> or a {@link BooleanExpression} equivalent to
-//	 *         <code>poly</code>=0
-//	 */
-//	private BooleanExpression simplifyEQ0Poly(Polynomial poly) {
-//		NumberFactory nf = numberFactory();
-//		IdealFactory id = idealFactory();
-//		SymbolicType type = poly.type();
-//		AffineExpression affine = affineFactory().affine(poly);
-//		Monic pseudo = affine.pseudo(); // non-null since poly non-constant
-//
-//		// if pseudo==poly, you have already tried looking it up
-//		// in the bound map in the monic method
-//		if (pseudo != poly) {
-//			// aX+b=0 => -b/a=X is an integer
-//			if (type.isInteger() && !nf
-//					.mod((IntegerNumber) affine.offset(),
-//							(IntegerNumber) nf
-//									.abs((IntegerNumber) affine.coefficient()))
-//					.isZero())
-//				return falseExpr();
-//
-//			Range range = getGeneralRange(pseudo);
-//
-//			if (range == null)
-//				return null;
-//
-//			Number pseudoValue = nf
-//					.negate(nf.divide(affine.offset(), affine.coefficient()));
-//
-//			if (!range.containsNumber(pseudoValue))
-//				return info.falseExpr;
-//		}
-//
-//		RationalNumber prob = universe.getProbabilisticBound();
-//
-//		if (!prob.isZero()) {
-//			Set<Primitive> vars = poly.getTruePrimitives();
-//			IntegerNumber totalDegree = poly.totalDegree(nf);
-//			int numVars = vars.size();
-//			IntegerNumber numVarsNumber = nf.integer(numVars);
-//			IntegerNumber product = nf.multiply(totalDegree, numVarsNumber);
-//
-//			if (debug) {
-//				info.out.println("Poly0: product = " + product
-//						+ ", threshold = " + polyProbThreshold);
-//				info.out.flush();
-//			}
-//			if (nf.compare(product, polyProbThreshold) >= 0) {
-//				if (debug) {
-//					info.out.println("Entering probabalistic mode...");
-//					info.out.flush();
-//				}
-//
-//				boolean answer = is0WithProbability(poly, totalDegree, vars,
-//						prob);
-//
-//				if (answer) {
-//					info.out.print(
-//							"Warning: verified probabilistically with probability of error < ");
-//					info.out.println(nf.scientificString(prob, 4));
-//					info.out.flush();
-//					return info.trueExpr;
-//				} else {
-//					return info.falseExpr;
-//				}
-//			}
-//		}
-//		// is the expansion different from the term map?
-//		if (poly.hasTermWithNontrivialExpansion(id)) {
-//			Monomial[] termMap = poly.expand(id);
-//
-//			if (termMap.length == 0)
-//				return trueExpr();
-//
-//			Monomial newMonomial = id.factorTermMap(termMap);
-//			BooleanExpression newExpression = id.isZero(newMonomial);
-//			BooleanExpression result = (BooleanExpression) simplifyExpression(
-//					newExpression);
-//
-//			if (result != poly)
-//				return result;
-//		}
-//		return null;
-//	}
+
+	// /**
+	// * <p>
+	// * Tries to compute a simplified version of the expression
+	// <code>poly</code>
+	// * =0. Returns <code>null</code> if no simplification is possible, else
+	// * returns a {@link BooleanExpression} equivalent to <code>poly</code>=0.
+	// * </p>
+	// *
+	// * <p>
+	// * Pre-condition: <code>poly</code> has already gone through generic
+	// * simplification and the method {@link #simplifiedEQ0Monic(Monic)}.
+	// * </p>
+	// *
+	// * @param primitive
+	// * a non-<code>null</code>, non-constant {@link Polynomial}
+	// * @return <code>null</code> or a {@link BooleanExpression} equivalent to
+	// * <code>poly</code>=0
+	// */
+	// private BooleanExpression simplifyEQ0Poly(Polynomial poly) {
+	// NumberFactory nf = numberFactory();
+	// IdealFactory id = idealFactory();
+	// SymbolicType type = poly.type();
+	// AffineExpression affine = affineFactory().affine(poly);
+	// Monic pseudo = affine.pseudo(); // non-null since poly non-constant
+	//
+	// // if pseudo==poly, you have already tried looking it up
+	// // in the bound map in the monic method
+	// if (pseudo != poly) {
+	// // aX+b=0 => -b/a=X is an integer
+	// if (type.isInteger() && !nf
+	// .mod((IntegerNumber) affine.offset(),
+	// (IntegerNumber) nf
+	// .abs((IntegerNumber) affine.coefficient()))
+	// .isZero())
+	// return falseExpr();
+	//
+	// Range range = getGeneralRange(pseudo);
+	//
+	// if (range == null)
+	// return null;
+	//
+	// Number pseudoValue = nf
+	// .negate(nf.divide(affine.offset(), affine.coefficient()));
+	//
+	// if (!range.containsNumber(pseudoValue))
+	// return info.falseExpr;
+	// }
+	//
+	// RationalNumber prob = universe.getProbabilisticBound();
+	//
+	// if (!prob.isZero()) {
+	// Set<Primitive> vars = poly.getTruePrimitives();
+	// IntegerNumber totalDegree = poly.totalDegree(nf);
+	// int numVars = vars.size();
+	// IntegerNumber numVarsNumber = nf.integer(numVars);
+	// IntegerNumber product = nf.multiply(totalDegree, numVarsNumber);
+	//
+	// if (debug) {
+	// info.out.println("Poly0: product = " + product
+	// + ", threshold = " + polyProbThreshold);
+	// info.out.flush();
+	// }
+	// if (nf.compare(product, polyProbThreshold) >= 0) {
+	// if (debug) {
+	// info.out.println("Entering probabalistic mode...");
+	// info.out.flush();
+	// }
+	//
+	// boolean answer = is0WithProbability(poly, totalDegree, vars,
+	// prob);
+	//
+	// if (answer) {
+	// info.out.print(
+	// "Warning: verified probabilistically with probability of error < ");
+	// info.out.println(nf.scientificString(prob, 4));
+	// info.out.flush();
+	// return info.trueExpr;
+	// } else {
+	// return info.falseExpr;
+	// }
+	// }
+	// }
+	// // is the expansion different from the term map?
+	// if (poly.hasTermWithNontrivialExpansion(id)) {
+	// Monomial[] termMap = poly.expand(id);
+	//
+	// if (termMap.length == 0)
+	// return trueExpr();
+	//
+	// Monomial newMonomial = id.factorTermMap(termMap);
+	// BooleanExpression newExpression = id.isZero(newMonomial);
+	// BooleanExpression result = (BooleanExpression) simplifyExpression(
+	// newExpression);
+	//
+	// if (result != poly)
+	// return result;
+	// }
+	// return null;
+	// }
 
 	// TODO: move:
-	
-//	/**
-//	 * Chooses a random integer with uniform probability from the set of all
-//	 * 2^32 ints for each variable.
-//	 * 
-//	 * @param poly
-//	 * @return
-//	 */
-//	private NumericExpression evaluateAtRandomPoint32(Polynomial poly,
-//			Map<SymbolicExpression, SymbolicExpression> subMap) {
-//
-//		for (Entry<SymbolicExpression, SymbolicExpression> entry : subMap
-//				.entrySet()) {
-//			// an int randomly chosen with uniform probability from
-//			// the set of all 2^32 ints:
-//			int randomInt = random.nextInt();
-//			SymbolicExpression concrete = entry.getKey().type().isInteger()
-//					? universe.integer(randomInt)
-//					: universe.rational(randomInt);
-//
-//			entry.setValue(concrete);
-//		}
-//
-//		NumericExpression result = (NumericExpression) universe
-//				.mapSubstituter(subMap).apply(poly);
-//
-//		return result;
-//	}
-//	
-	// TODO: move logic:
 
-//	/**
-//	 * Can you show that <code>poly</code> is equivalent to 0 with probability
-//	 * of being wrong less than or equal to epsilon?
-//	 * 
-//	 * @param poly
-//	 *            the {@link Polynomial} being tested for zero-ness
-//	 * @param epsilon
-//	 *            a real number in (0,1)
-//	 * @return if this method returns true, then poly is probably 0 and the
-//	 *         probability that it is not 0 is less than or equal to epsilon. If
-//	 *         this method returns false, then poly is not zero.
-//	 */
-//	private boolean is0WithProbability(Polynomial poly,
-//			IntegerNumber totalDegree, Set<Primitive> vars,
-//			RationalNumber epsilon) {
-//		NumberFactory nf = info.numberFactory;
-//		RationalNumber prob = nf.oneRational();
-//		// IntegerNumber totalDegree = poly.totalDegree(nf);
-//		RationalNumber twoTo32 = nf.power(nf.rational(nf.integer(2)), 32);
-//		RationalNumber ratio = nf.divide(nf.rational(totalDegree), twoTo32);
-//		// Set<Primitive> vars = getTruePrimitives(poly);
-//		Map<SymbolicExpression, SymbolicExpression> subMap = new HashMap<>();
-//
-//		for (Primitive var : vars)
-//			subMap.put(var, null);
-//		do {
-//			NumericExpression evaluation = evaluateAtRandomPoint32(poly,
-//					subMap);
-//
-//			if (!evaluation.isZero())
-//				return false;
-//			prob = nf.multiply(prob, ratio);
-//		} while (nf.compare(epsilon, prob) < 0);
-//		return true;
-//	}
+	
 
 	private RationalExpression simplifyRationalExpression(
 			RationalExpression expression) {

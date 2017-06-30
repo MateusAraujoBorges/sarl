@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -25,6 +26,7 @@ import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
@@ -39,6 +41,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
+import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
 import edu.udel.cis.vsl.sarl.simplify.IF.RangeFactory;
@@ -64,6 +67,22 @@ public class Context2 implements ContextIF {
 
 	public final static boolean debug = false;
 
+	/**
+	 * A random number generator with seed very likely to be distinct from all
+	 * other seeds. TODO: this must be made thread-safe.
+	 */
+	private static Random random = new Random();
+
+	/**
+	 * Used in a heuristic to determine when to use probabilistic methods to
+	 * determine polynomial zero-ness. If the product of the number of variables
+	 * and the total degree is greater than or equal to this number, the
+	 * polynomial is considered too big to be expanded, and probabilistic
+	 * techniques will be used instead (unless the probabilistic bound is 0).
+	 */
+	private final static IntegerNumber polyProbThreshold = Numbers.REAL_FACTORY
+			.integer(100);
+
 	// Instance Fields ...
 
 	/**
@@ -76,17 +95,30 @@ public class Context2 implements ContextIF {
 	 * Invariants:
 	 * 
 	 * <ul>
+	 * 
 	 * <li>If the value of an entry is non-null, it will have a type compatible
 	 * with that of the key.</li>
+	 * 
 	 * <li>No key occurs as a subexpression of any value or of any other key.
 	 * </li>
+	 * 
 	 * <li>For each entry, the key is a {@link SymbolicConstant} or the value is
-	 * a constant. [Note: this may change in the future.]</li>
+	 * concrete. [Note: this may change in the future.]</li>
+	 * 
 	 * <li>If the type of an entry is real, the key is a {@link Monic}. If that
 	 * {@link Monic} is a {@link Polynomial}, its constant term is 0.</li>
+	 * 
 	 * <li>If the type of an entry is integer, the key and value are
 	 * {@link Monomial}s, the coefficients of those two {@link Monomials} are
-	 * relatively prime, and the key's coefficient is positive.</li>
+	 * relatively prime, and the key's coefficient is positive. WHY? Suppose
+	 * 2X=3Y is an entry. Then X=(3*Y)/2. But the latter form loses information
+	 * because the "/" is integer division. It loses the information that Y is
+	 * even. However, if the key is a symbolic constant, it is a monic, and if
+	 * the value is concrete, then you can always divide both side by the
+	 * coefficient, so under the current assumption, the key will always be
+	 * monic, and if a polynomial the constant term is 0, exactly as for reals.
+	 * </li>
+	 * 
 	 * </ul>
 	 * 
 	 * Example: subMap: wx->1, y->x Applied to wy -> wx -> 1. Hence substitution
@@ -174,34 +206,10 @@ public class Context2 implements ContextIF {
 
 	// ************************** Private methods **************************
 
-	/**
-	 * Returns the boolean formula represented by this context.
-	 * 
-	 * @param full
-	 *            should the formula include the equalities giving the values of
-	 *            the solved variables?
-	 * @return the boolean formula as specified
-	 */
-	private BooleanExpression getAssumption(boolean full) {
-		BooleanExpression result = info.trueExpr;
-
-		for (Entry<SymbolicExpression, SymbolicExpression> subEntry : subMap
-				.entrySet()) {
-			SymbolicExpression key = subEntry.getKey();
-
-			if (full || !(key instanceof SymbolicConstant))
-				result = info.universe.and(result,
-						info.universe.equals(key, subEntry.getValue()));
-		}
-		for (Entry<Monic, Range> rangeEntry : rangeMap.entrySet())
-			result = info.universe.and(result,
-					rangeEntry.getValue().symbolicRepresentation(
-							rangeEntry.getKey(), info.universe));
-		// for (List<ArrayFact> list : arrayFacts.values())
-		// for (ArrayFact fact : list)
-		// result = info.universe.and(result, arrayFactToExpression(fact));
-		return result;
-	}
+	// *********************************************************************
+	// *........................ Utility functions ........................*
+	// * These do not use the state. They do not access subMap,rangeMap. ..*
+	// *********************************************************************
 
 	/**
 	 * Prints the entries of a {@link Map}, putting one entry on each line for
@@ -372,8 +380,7 @@ public class Context2 implements ContextIF {
 					// be RationalExpression like x/y. Questionable whether such
 					// a thing should occur on right side of substitution. If it
 					// does, should form the equality expression and process
-					// from
-					// the beginning.
+					// from the beginning.
 					pair.left = original;
 					pair.right = info.universe.cast(originalType, pair.right);
 				}
@@ -396,176 +403,12 @@ public class Context2 implements ContextIF {
 		}
 	}
 
-	private SymbolicExpression simplify(SymbolicExpression expr) {
-		return new IdealSimplifierWorker2(info, this)
-				.simplifyExpressionWork(expr);
-		// this should do transitive closure of substitution
-	}
-
-	/**
-	 * Repeatedly applies {@code op} to {@code x} until stabilization occurs.
-	 * 
-	 * @param op
-	 *            a unary operator on symbolic expressions
-	 * @param x
-	 *            a non-{@code null} symbolic expression
-	 * @return the first element of the sequence
-	 *         <code>x, op(x), op(op(x)), ...</code> which is equal to its
-	 *         predecessor in that sequence. If there is no such element, this
-	 *         method will not return.
-	 */
-	private SymbolicExpression transClose(UnaryOperator<SymbolicExpression> op,
-			SymbolicExpression x) {
-		SymbolicExpression y = op.apply(x);
-
-		while (x != y) {
-			x = y;
-			y = op.apply(x);
-		}
-		return y;
-	}
-
-	/**
-	 * Declares that the values taken on by <code>key</code> are contained in
-	 * <code>range</code>, modifying the state of this context accordingly. An
-	 * existing range R associated to <code>key</code> will be replaced by the
-	 * intersection of R and <code>range</code>. If this results in a singleton
-	 * value, the entry is removed from the {@link #rangeMap} altogether and is
-	 * entered into the {@link #subMap}.
-	 * 
-	 * @param key
-	 *            a non-<code>null</code> {@link Monic}
-	 * @param range
-	 *            a non-empty range of the same type as <code>key</code>
-	 *            containing all possible values of <code>key</code>
-	 * @return a {@link Pair} consisting of the old range associated to
-	 *         <code>key</code> (or <code>null</code> if there was none) and the
-	 *         new range associated to <code>key</code>
-	 * @throws InconsistentContextException
-	 *             if the new restricted range is empty or an inconsistency is
-	 *             detected when updating the {@link #subMap}
-	 */
-	private Pair<Range, Range> restrictRange(Monic key, Range range)
-			throws InconsistentContextException {
-		Range original = rangeMap.get(key), result;
-
-		if (original == null) {
-			result = range;
-		} else {
-			result = info.rangeFactory.intersect(original, range);
-			if (result == original)
-				return new Pair<>(original, result);
-		}
-		if (result.isEmpty())
-			throw new InconsistentContextException();
-
-		Number value = result.getSingletonValue();
-
-		if (value == null) {
-			rangeMap.put(key, result);
-		} else {
-			addSub(key, info.universe.number(value));
-			if (original != null)
-				rangeMap.remove(key);
-		}
-		return new Pair<>(original, result);
-	}
-
-	/**
-	 * Inserts an entry into the {@link #subMap} and also checks for an
-	 * inconsistency between the old and new values, if an old value existed.
-	 * 
-	 * @param key
-	 *            the expression on the left side of the substitution
-	 * @param value
-	 *            the expression on the right side which will replace the
-	 *            {@code key}
-	 * @return the old value associated to {@code key}, or {@code null} if there
-	 *         was no entry for {@code key}
-	 * @throws InconsistentContextException
-	 *             if the old value was a concrete value and not equal to the
-	 *             new value
-	 */
-	private SymbolicExpression updateSub(SymbolicExpression key,
-			SymbolicExpression value) throws InconsistentContextException {
-		SymbolicExpression old = subMap.put(key, value);
-
-		if (old != null && value.operator() == SymbolicOperator.CONCRETE
-				&& old.operator() == SymbolicOperator.CONCRETE
-				&& old != value) {
-			throw new InconsistentContextException();
-		}
-		return old;
-	}
-
-	/**
-	 * Incorporates a new substitution into the {@link #subMap}. Updates the
-	 * {@link #subMap} as needed in order to maintain its invariants.
-	 * 
-	 * Preconditions: (1) both expressions are non-null and have the same type;
-	 * (2) the new substitution cannot introduce a cycle in the {@link #subMap};
-	 * (3) the substitution may not involve any {@link RationalExpression}s.
-	 * 
-	 * Inconsistency can be determined if the same key is mapped to two
-	 * constants that are not equal.
-	 * 
-	 * 
-	 * @param x
-	 *            the expression to be replaced
-	 * @param y
-	 *            the expression that will be substituted for <code>x</code>
-	 */
-	private void addSub(SymbolicExpression x, SymbolicExpression y)
-			throws InconsistentContextException {
-		LinkedList<Pair<SymbolicExpression, SymbolicExpression>> workList = new LinkedList<>();
-
-		workList.add(new Pair<>(x, y));
-		while (!workList.isEmpty()) {
-			Pair<SymbolicExpression, SymbolicExpression> pair = workList
-					.removeFirst();
-
-			pair.left = simplify(pair.left);
-			pair.right = simplify(pair.right);
-			standardizePair(pair);
-
-			SymbolicExpression newKey = pair.left;
-
-			if (newKey == null)
-				continue; // a trivial substitution
-
-			SymbolicExpression newValue = pair.right;
-			SymbolicExpression oldValue = subMap.get(newKey);
-
-			if (oldValue.equals(newValue))
-				continue; // this sub is already in the subMap
-			// apply newKey->newValue to every entry of subMap...
-			UnaryOperator<SymbolicExpression> singleSubstituter = info.universe
-					.mapSubstituter(new SingletonMap<>(newKey, newValue));
-			Iterator<Entry<SymbolicExpression, SymbolicExpression>> iter = subMap
-					.entrySet().iterator();
-
-			while (iter.hasNext()) {
-				Entry<SymbolicExpression, SymbolicExpression> entry = iter
-						.next();
-				SymbolicExpression value = entry.getValue();
-				SymbolicExpression key = entry.getKey(),
-						subKey = transClose(singleSubstituter, key),
-						subValue = transClose(singleSubstituter, value);
-
-				if (subKey != key || subValue != value) {
-					iter.remove();
-					workList.add(new Pair<>(subKey, subValue));
-				}
-			}
-			updateSub(newKey, newValue);
-		}
-	}
-
 	/**
 	 * Transforms a claim that a non-constant monomial lies in a range to an
 	 * equivalent (normalized) form in which the monomial is a {@link Monic},
 	 * and if that {@link Monic} is a {@link Polynomial}, its constant term is
-	 * 0.
+	 * 0. It has the property that the original monomial is in the original
+	 * range iff the new monic is in the new range. The new range may be empty.
 	 * 
 	 * @param monomial
 	 *            a non-<code>null</code>, non-{@link Constant} {@link Monomial}
@@ -574,13 +417,17 @@ public class Context2 implements ContextIF {
 	 *            <code>monomial</code>
 	 * @return a pair consisting of a {@link Monic} and a {@link Range}
 	 */
-	private Pair<Monic, Range> getMonicRange(Monomial monomial, Range range) {
+	private Pair<Monic, Range> normalize(Monomial monomial, Range range) {
 		IdealFactory idf = info.idealFactory;
 
 		while (true) {
 			if (!(monomial instanceof Monic)) {
 				Constant c = monomial.monomialConstant(idf);
 
+				// cx in R -> x in R/c
+				// Note that the "divide" method below is precise for integer.
+				// ex: 2x in [3,5] -> x in [2,2].
+				// ex: 2x in [3,3] -> x in emptyset.
 				monomial = monomial.monic(idf);
 				range = info.rangeFactory.divide(range, c.number());
 			}
@@ -601,668 +448,133 @@ public class Context2 implements ContextIF {
 	}
 
 	/**
-	 * Simplifies the {@link #rangeMap}. Removes one entry from the map,
-	 * simplifies it, places it back. Repeats cyclically until stabilization. If
-	 * an entry ever resolves to a single value, it is removed completely and
-	 * added to the {@link #subMap}.
-	 * 
-	 * @return <code>true</code> iff any change was made to the
-	 *         {@link #rangeMap}
-	 */
-	private boolean simplifyRangeMap() throws InconsistentContextException {
-		FastList<Monic> keyList = new FastList<>();
-		boolean change = false;
-
-		for (Monic key : rangeMap.keySet())
-			keyList.add(key);
-
-		FastNode<Monic> curr = keyList.getFirst(),
-				lastChanged = keyList.getLast();
-
-		// idea: keep iterating cyclically over the keys of the
-		// rangeMap until it stabilizes. They keys are changing
-		// as you iterate.
-		// invariant: keyList is a list containing all the keys in the rangeMap
-		// (and possibly additional expressions not keys in the rangeMap)
-		// lastChanged is the last node to have changed in some way.
-		// curr is the current node.
-		while (true) {
-			Monic oldKey = curr.getData();
-			NumericExpression simpKey = (NumericExpression) simplify(oldKey);
-
-			if (simpKey == oldKey) { // no change
-				if (lastChanged == curr)
-					break; // complete cycle with no change: done!
-				curr = keyList.getNextCyclic(curr);
-				continue;
-			}
-			// a change has occurred: simpKey!=oldKey
-			// remove oldKey, update rangeMap and/or subMap
-
-			Range oldRange = rangeMap.remove(oldKey);
-
-			if (oldRange != null) {
-				change = true;
-
-				// if simpKey is Constant, it is either in the range or not
-				if (simpKey instanceof Constant) {
-					if (!oldRange.containsNumber(((Constant) simpKey).number()))
-						throw new InconsistentContextException();
-				} else {
-					// We assume simpKey is not a RationalExpression...
-					Pair<Monic, Range> normalization = getMonicRange(
-							(Monomial) simpKey, oldRange);
-					Monic newKey = normalization.left;
-					Pair<Range, Range> pair = restrictRange(newKey,
-							normalization.right);
-
-					if (pair.left == null
-							&& pair.right.getSingletonValue() == null) {
-						// oldKey has been removed. newKey was not in the map
-						// and now it is. So replace oldKey with newKey in the
-						// list.
-						curr.setData(newKey);
-						lastChanged = curr;
-						curr = keyList.getNextCyclic(curr);
-						continue;
-					}
-				}
-			}
-
-			// remove current node...
-			FastNode<Monic> next = keyList.getNextCyclic(curr);
-
-			keyList.remove(curr);
-			if (keyList.isEmpty())
-				break;
-			curr = next;
-			lastChanged = keyList.getPrevCyclic(curr);
-		}
-		return change;
-	}
-
-	private void makeInconsistent() {
-		rangeMap.clear();
-		subMap.clear();
-		subMap.clear();
-		// arrayFacts.clear();
-		subMap.put(info.falseExpr, info.trueExpr);
-	}
-
-	private void addMonicConstantsToMap(Map<Monic, Number> map) {
-		for (Entry<SymbolicExpression, SymbolicExpression> entry : subMap
-				.entrySet()) {
-			SymbolicExpression key = entry.getKey();
-
-			if (key instanceof Monic) {
-				SymbolicExpression value = entry.getValue();
-
-				if (value instanceof Constant) {
-					map.put((Monic) key, ((Constant) value).number());
-				}
-			}
-		}
-	}
-
-	/**
-	 * TOOD: if this is a SubContext, do we get the parent entries???
-	 * 
-	 * @return
-	 */
-	private Map<Monic, Number> getMonicConstantMap() {
-		Map<Monic, Number> map = new TreeMap<>(info.monicComparator);
-
-		addMonicConstantsToMap(map);
-		return map;
-	}
-
-	/**
-	 * Performs Gaussian Elimination on the numeric entries of the
-	 * {@link #subMap}.
-	 * 
-	 * Does not read or modify {@link #rangeMap}
-	 * 
-	 * @return <code>true</code> iff there is a change made to the
-	 *         {@link #subMap}
-	 * 
-	 * @throws InconsistentContextException
-	 *             if an inconsistency is detected when modifying the
-	 *             {@link #subMap}
-	 */
-	private boolean gauss() throws InconsistentContextException {
-		Map<Monic, Number> constantMap = getMonicConstantMap();
-		boolean change = false;
-
-		if (!LinearSolver.reduceConstantMap(info.idealFactory, constantMap))
-			throw new InconsistentContextException();
-		for (Entry<Monic, Number> entry : constantMap.entrySet()) {
-			Monic key = entry.getKey();
-			Number newNumber = entry.getValue();
-			SymbolicExpression oldValue = subMap.get(key);
-
-			if (oldValue instanceof Constant) {
-				assert ((Constant) oldValue).number().equals(newNumber);
-				// must be the case, else the LinearSolver would
-				// have returned inconsistent (false)
-			} else {
-				SymbolicExpression newValue = info.universe.number(newNumber);
-
-				if (oldValue != newValue) {
-					change = true;
-					addSub(key, newValue);
-				}
-			}
-		}
-		if (debug) {
-			info.out.println("Result of updateConstantMap():");
-			print(info.out);
-		}
-		return change;
-	}
-
-	/**
-	 * Processes a boolean expression, updating the state of this context
-	 * appropriately. The boolean expression must be in CNF (conjunctive normal
-	 * form).
-	 * 
-	 * @param assumption
-	 *            the boolean expression to process
-	 * @throws InconsistentContextException
-	 *             if this context is determined to be inconsistent
-	 */
-	private void addFact(BooleanExpression assumption)
-			throws InconsistentContextException {
-		if (assumption.operator() == SymbolicOperator.AND) {
-			for (SymbolicObject arg : assumption.getArguments()) {
-				BooleanExpression clause = (BooleanExpression) arg;
-
-				extractOr(clause);
-			}
-		} else {
-			extractOr(assumption);
-		}
-	}
-
-	/**
-	 * Processes an expression in which the operator is not
-	 * {@link SymbolicOperator#AND}. In the CNF form, this expression is a
-	 * clause of the outer "and" expression.
-	 * 
-	 * @param expr
-	 *            the boolean expression to process
-	 * @throws InconsistentContextException
-	 *             if this context is determined to be inconsistent
-	 */
-	private void extractOr(BooleanExpression expr)
-			throws InconsistentContextException {
-		if (expr.operator() != SymbolicOperator.OR)
-			extractClause(expr);
-		expr = info.universe
-				.not(new SubContext(info, this, info.universe.not(expr))
-						.getFullAssumption());
-		if (expr.operator() == SymbolicOperator.OR) {
-			addSub(expr, info.trueExpr);
-		} else {
-			addFact(expr);
-		}
-	}
-
-	/**
-	 * Processes a basic boolean expression --- one in which the operator is
-	 * neither {@link SymbolicOperator#AND} nor {@link SymbolicOperator#OR} ---
-	 * and updates this context accordingly.
-	 * 
-	 * @param clause
-	 *            the expression which is not an "and" or "or" expression
-	 * @throws InconsistentContextException
-	 *             if this context is determined to be inconsistent
-	 */
-	private void extractClause(BooleanExpression clause)
-			throws InconsistentContextException {
-		SymbolicOperator op = clause.operator();
-
-		switch (op) {
-		case CONCRETE:
-			if (!((BooleanObject) clause.argument(0)).getBoolean())
-				throw new InconsistentContextException();
-			break;
-		case NOT:
-			extractNot((BooleanExpression) clause.argument(0));
-			break;
-		case FORALL:
-			extractForall(clause);
-			break;
-		case EXISTS:
-			extractExists(clause);
-			break;
-		case EQUALS:
-			extractEquals(clause);
-			break;
-		case NEQ:
-			extractNEQ((SymbolicExpression) clause.argument(0),
-					(SymbolicExpression) clause.argument(1));
-			break;
-		case LESS_THAN: // 0<x or x<0
-		case LESS_THAN_EQUALS: {// 0<=x or x<=0
-			SymbolicExpression arg0 = (SymbolicExpression) clause.argument(0),
-					arg1 = (SymbolicExpression) clause.argument(1);
-
-			if (arg0.isZero()) {
-				extractIneqMonic((Monic) arg1, true, op == LESS_THAN);
-			} else {
-				extractIneqMonic((Monic) arg0, false, op == LESS_THAN);
-			}
-			break;
-		}
-		default:
-			addSub(clause, info.trueExpr);
-		}
-	}
-
-	/**
-	 * Processes the assumption that <code>pred</code> is <i>false</i>, updating
-	 * the state of this context appropriately.
-	 * 
-	 * @param pred
-	 *            a non-<code>null</code> boolean expression, asserted to be
-	 *            equivalent to <i>false</i> in this context
-	 * @throws InconsistentContextException
-	 *             if an inconsistency is detected in the context in the process
-	 *             of consuming this assumption
-	 * 
-	 */
-	private void extractNot(BooleanExpression pred)
-			throws InconsistentContextException {
-		addSub(pred, info.falseExpr);
-	}
-
-	/**
-	 * Processes an equality expression and updates the state of this context
-	 * accordingly.
-	 * 
-	 * @param eqExpr
-	 *            a symbolic expression in which the operator is
-	 *            {@link SymbolicOperator#EQUALS}
-	 * @throws InconsistentContextException
-	 *             if this context is determined to be inconsistent
-	 */
-	private void extractEquals(SymbolicExpression eqExpr)
-			throws InconsistentContextException {
-		SymbolicExpression arg0 = (SymbolicExpression) eqExpr.argument(0);
-		SymbolicExpression arg1 = (SymbolicExpression) eqExpr.argument(1);
-
-		if (arg0.type().isNumeric()) { // 0=x for a Primitive x
-			extractEQ0((Primitive) arg1);
-		} else {
-			boolean const0 = arg0.operator() == SymbolicOperator.CONCRETE;
-			boolean const1 = arg1.operator() == SymbolicOperator.CONCRETE;
-
-			if (const1 && !const0) {
-				addSub(arg0, arg1);
-			} else if (const0 && !const1) {
-				addSub(arg1, arg0);
-			} else if (const0 && const1) {
-				if (!arg0.equals(arg1))
-					throw new InconsistentContextException();
-			} else { // neither is constant
-				addSub(eqExpr, info.trueExpr);
-			}
-		}
-	}
-
-	/**
-	 * Processes an equality of the form x=0, for a {@link Primitive} x,
-	 * updating the state of this context based on that fact.
-	 * 
-	 * @param primitive
-	 *            a non-<code>null</code> numeric {@link Primitive}
-	 * @throws InconsistentContextException
-	 *             if this context is determined to be inconsistent
-	 */
-	private void extractEQ0(Primitive primitive)
-			throws InconsistentContextException {
-		// TODO: probabilistic technique?
-
-		addSub(primitive, info.idealFactory.zero(primitive.type()));
-	}
-
-	private void extractNEQ(SymbolicExpression arg0, SymbolicExpression arg1)
-			throws InconsistentContextException {
-		SymbolicType type = arg0.type();
-
-		if (type.isNumeric()) { // 0!=x, for a Primitive x
-			Primitive primitive = (Primitive) arg1;
-			RangeFactory rf = info.rangeFactory;
-			Number zero = type.isInteger() ? info.numberFactory.zeroInteger()
-					: info.numberFactory.zeroRational();
-
-			// TODO: what about is polynomial is not pseudo?
-			restrictRange(primitive, rf.complement(rf.singletonSet(zero)));
-		} else {
-			addSub(info.universe.equals(arg0, arg1), info.falseExpr);
-		}
-	}
-
-	private Range intersectWithRangeOf(Monic monic, Range range) {
-		SymbolicExpression value = getSub(monic);
-
-		if (value instanceof Constant) {
-			Number number = ((Constant) value).number();
-
-			if (range.containsNumber(number)) {
-				range = info.rangeFactory.singletonSet(number);
-			} else {
-				range = info.rangeFactory.emptySet(range.isIntegral());
-			}
-		} else {
-			Range oldRange = getRange(monic);
-
-			if (oldRange != null)
-				range = info.rangeFactory.intersect(range, oldRange);
-		}
-		return range;
-	}
-
-	private Range computeRange(Polynomial poly) {
-		IdealFactory idf = info.idealFactory;
-		RangeFactory rf = info.rangeFactory;
-		Constant constantTerm = poly.constantTerm(idf);
-		Number constant = constantTerm.number();
-		Range result;
-
-		if (constant.isZero()) {
-			result = rf.singletonSet(constant);
-			for (Monomial term : poly.termMap(idf)) {
-				result = rf.add(result, computeRange(term));
-				// TODO: if (result.isUniversal()) break;
-			}
-			result = intersectWithRangeOf(poly, result);
-		} else {
-			result = rf.add(
-					computeRange((Monomial) idf.subtract(poly, constantTerm)),
-					constant);
-		}
-		return result;
-	}
-
-	private Range computeRangeOfPower(NumericExpression base,
-			NumericExpression exponent) {
-		// TODO
-
-		return null;
-
-	}
-
-	/**
-	 * 
-	 * Do we assume primitive is simplified?
-	 * 
-	 * @param primitive
-	 * @return
-	 */
-	private Range computeRange(Primitive primitive) {
-		if (primitive instanceof Polynomial)
-			return computeRange((Polynomial) primitive);
-		if (primitive.operator() == SymbolicOperator.POWER)
-			return computeRangeOfPower(
-					(NumericExpression) primitive.argument(0),
-					(NumericExpression) primitive.argument(1));
-
-		SymbolicExpression value = getSub(primitive);
-
-		if (value instanceof Constant) {
-			return info.rangeFactory.singletonSet(((Constant) value).number());
-		} else {
-			Range oldRange = getRange(primitive);
-
-			if (oldRange != null)
-				return oldRange;
-		}
-
-		boolean isIntegral = primitive.type().isInteger();
-		NumberFactory nf = info.numberFactory;
-
-		// TODO: change to universalSet():
-		return info.rangeFactory.interval(isIntegral,
-				nf.infiniteNumber(isIntegral, false), true,
-				nf.infiniteNumber(isIntegral, true), true);
-	}
-
-	/**
-	 * Do we assume pp is simplified?
-	 * 
-	 * @param pp
-	 * @return
-	 */
-	private Range computeRange(PrimitivePower pp) {
-		if (pp instanceof Primitive)
-			return computeRange((Primitive) pp);
-
-		// TODO: add method in rangeFactory so power takes IntegerNumber
-
-		IntegerNumber exponent = pp.monomialDegree(info.numberFactory);
-		Range result = info.rangeFactory.power(
-				computeRange(pp.primitive(info.idealFactory)),
-				exponent.intValue());
-
-		result = intersectWithRangeOf(pp, result);
-		return result;
-	}
-
-	/**
-	 * Do we assume monic is simplified?
-	 * 
-	 * @param monic
-	 * @return
-	 */
-	private Range computeRange(Monic monic) {
-		if (monic instanceof PrimitivePower)
-			return computeRange((PrimitivePower) monic);
-
-		RangeFactory rf = info.rangeFactory;
-		NumberFactory nf = info.numberFactory;
-		Range result = rf.singletonSet(
-				monic.type().isInteger() ? nf.oneInteger() : nf.oneRational());
-
-		for (PrimitivePower pp : monic.monicFactors(info.idealFactory)) {
-			result = rf.multiply(result, computeRange(pp));
-			// TODO: if result.isUniversal() break;
-		}
-		result = intersectWithRangeOf(monic, result);
-		return result;
-	}
-
-	/**
-	 * Do we assume monomial is simplified?
+	 * Normalizes a constraint of the form <code>monomial = number</code>. This
+	 * returns a {@link Pair} (m,a) in which the {@link Monic} m is normal,
+	 * i.e., if m is a {@link Polynomial} then its constant term is 0. It has
+	 * the property that m=a iff <code>monomial = number</code>. If it is
+	 * determined that the equality is unsatisfiable (e.g., 2x=3, where x is an
+	 * integer), then this method returns {@code null}.
 	 * 
 	 * @param monomial
-	 * @return
+	 *            a non-{@code null} {@link Monomial} m
+	 * @param number
+	 *            a SARL {@link Number} of the same type as {@code monomial}
+	 * @return a pair (m,a) where m is normal and m=a iff monomial=number, or
+	 *         {@code null} if the equality is unsatisfiable.
 	 */
-	private Range computeRange(Monomial monomial) {
-		if (monomial instanceof Monic)
-			return computeRange((Monic) monomial);
-		if (monomial instanceof Constant)
-			return info.rangeFactory
-					.singletonSet(((Constant) monomial).number());
-		return info.rangeFactory.multiply(
-				computeRange(monomial.monic(info.idealFactory)),
-				monomial.monomialConstant(info.idealFactory).number());
-	}
-
-	/**
-	 * Extracts information from an inequality of one of the forms: x&gt;0,
-	 * x&ge;0, x&lt;0, x&le;0, where x is a {@link Monic} in which the maximum
-	 * degree of any {@link Primitive} is 1. Updates the state of this context
-	 * accordingly.
-	 * 
-	 * Strategy:
-	 * 
-	 * 
-	 * Need method Range getBound(Monomial) which does everything possible to
-	 * get the most precise bound on the monomial from the existing context:
-	 * First, simplify the Monomial. This should yield a Monomial.
-	 * 
-	 * - if polynomial, reduce to pseudo. If this is non-trivial, get best bound
-	 * on pseudo, convert to bound on original polynomial, return. - else: look
-	 * in rangeMap, store the result - if non-trivial product, get best bounds
-	 * on factors and multiply - if non-trivial sum, get best bounds on factors
-	 * and add - if non-trivial primitive power, get bound on base, raise to
-	 * power - if POWER operation : if exponent is constant, ditto, else:? -
-	 * intersect result with whatever you got from rangeMap
-	 * 
-	 * Then: intersect with bound specified by these arguments. Restrict bound
-	 * on the monic accordingly.
-	 * 
-	 * @param monic
-	 *            a non-<code>null</code> {@link Monic}
-	 * @param gt
-	 *            is the condition one of x&gt;0 or x&ge;0 (i.e., not x&lt;0 or
-	 *            x&le;0)
-	 * @param strict
-	 *            is the form one of x&gt;0 or x&lt;0 (strict inequality)
-	 */
-	private void extractIneqMonic(Monic monic, boolean gt, boolean strict)
-			throws InconsistentContextException {
-		RangeFactory rf = info.rangeFactory;
+	private Pair<Monic, Number> normalize(Monomial monomial, Number number) {
+		IdealFactory idf = info.idealFactory;
 		NumberFactory nf = info.numberFactory;
-		Range result = computeRange(monic);
-		SymbolicType type = monic.type();
-		boolean isIntegral = type.isInteger();
-		Number zero = isIntegral ? nf.zeroInteger() : nf.zeroRational();
-		Range interval = gt
-				? rf.interval(isIntegral, zero, strict,
-						nf.infiniteNumber(isIntegral, true), true)
-				: rf.interval(isIntegral, nf.infiniteNumber(isIntegral, false),
-						true, zero, strict);
+		boolean isInt = monomial.type().isInteger();
 
-		result = rf.intersect(result, interval);
-		restrictRange(monic, result);
+		while (true) {
+			if (!(monomial instanceof Monic)) {
+				Number c = monomial.monomialConstant(idf).number();
+
+				if (isInt && !nf.mod((IntegerNumber) number, (IntegerNumber) c)
+						.isZero())
+					return null;
+				monomial = monomial.monic(idf);
+				number = nf.divide(number, c);
+			}
+			// now monomial is a Monic
+			if (monomial instanceof Polynomial) {
+				Polynomial poly = (Polynomial) monomial;
+				Constant constantTerm = poly.constantTerm(idf);
+				Number constantTermNumber = constantTerm.number();
+
+				if (constantTermNumber.isZero())
+					break;
+				number = nf.subtract(number, constantTermNumber);
+				monomial = (Monomial) info.universe.subtract(poly,
+						constantTerm);
+			}
+		}
+		return new Pair<>((Monic) monomial, number);
 	}
-
-	// private RangeSign getBoundTypeMonic(Monic monic) {
-	// if (monic.isOne())
-	// return RangeSign.GT0;
-	//
-	// Range monicRange = getRange(monic);
-	//
-	// if (monicRange != null)
-	// return boundType(monicRange);
-	//
-	// SymbolicOperator op = monic.operator();
-	//
-	// if (op == SymbolicOperator.POWER) {
-	// // a general power expression in which the exponent
-	// // can be an arbitrary numeric expression; it is a kind
-	// // of Primitive
-	// return getBoundTypePower((Primitive) monic);
-	// }
-	// return null;
-	// }
-
-	// /**
-	// * Processes a numeric inequality and updates the state of this context
-	// * accordingly. The inequality has one of the forms: 0&lt;x, 0&le;x,
-	// x&lt;0,
-	// * or x&le;0.
-	// *
-	// * @param monic
-	// * a non-<code>null</code> {@link Monic} (x) which is being
-	// * compared to 0
-	// * @param gt
-	// * is the inequality stating that <code>monic</code> is greater
-	// * than (or greater than or equal to) 0? I.e., is the inequality
-	// * form one of 0&lt;x, 0&le;x ?
-	// * @param strict
-	// * is the inequality strict, i.e., either of the form 0&lt;x or
-	// * x&lt;0 ?
-	// * @throws InconsistentContextException
-	// * if an inconsistency is this context is detected
-	// */
-	// private void extractIneqPoly(Polynomial poly, boolean gt, boolean strict)
-	// throws InconsistentContextException {
-	// IdealFactory idf = info.idealFactory;
-	// NumberFactory nf = info.numberFactory;
-	// RangeFactory rf = info.rangeFactory;
-	// boolean isIntegral = poly.type().isInteger();
-	// Number zero = isIntegral ? nf.zeroInteger() : nf.zeroRational();
-	// Number bound = zero; // the current bound on monic
-	// boolean upper = !gt; // is current bound an upper (not lower) bound?
-	// Monic monic = poly;
-	//
-	// while (monic instanceof Polynomial) {
-	// Constant constantTerm = ((Polynomial) monic).constantTerm(idf);
-	//
-	// if (constantTerm.isZero())
-	// break;
-	//
-	// Monomial diff = (Monomial) idf.subtract(monic, constantTerm);
-	//
-	// bound = nf.subtract(bound, constantTerm.number());
-	// if (diff instanceof Monic) {
-	// monic = (Monic) diff;
-	// break;
-	// }
-	//
-	// Constant coefficient = diff.monomialConstant(idf);
-	// Number coefficientNum = coefficient.number();
-	// int sign = coefficientNum.signum();
-	//
-	// monic = diff.monic(idf);
-	// if (sign < 0)
-	// upper = !upper;
-	// if (isIntegral) {
-	// RationalNumber quotient = nf.divide(nf.rational(bound),
-	// nf.rational(coefficientNum));
-	//
-	// assert !strict;
-	// bound = upper ? nf.floor(quotient) : nf.ceil(quotient);
-	// } else {
-	// bound = nf.divide(bound, coefficientNum);
-	// }
-	// }
-	//
-	// // Now you have a Monic, but make sure it is of the right form for
-	// // inequality?
-	//
-	// Range range = upper
-	// ? rf.interval(isIntegral, nf.infiniteNumber(isIntegral, false),
-	// true, bound, strict)
-	// : rf.interval(isIntegral, bound, strict,
-	// nf.infiniteNumber(isIntegral, true), true);
-	//
-	// restrictRange(monic, range);
-	// }
 
 	/**
-	 * Looks for the pattern: <code>forall int i . 0<=i<=n-1 -> a[i]=expr</code>
-	 * . If that pattern is found, adds the substitution to the {@link #subMap}:
-	 * <code>a = (T[n]) lambda i . expr</code>. Otherwise, just adds the default
-	 * substitution mapping <code>forallExpr</code> to <code>true</code>.
-	 * 
-	 * @param forallExpr
-	 *            an expression in which the operator is
-	 *            {@link SymbolicOperator#FORALL}.
-	 * @throws InconsistentContextException
-	 *             this context is determined to be inconsistent
+	 * Chooses a random integer with uniform probability from the set of all
+	 * 2^32 ints for each "variable" occurring in the polynomial, and evaluates
+	 * the polynomial. A "variable" is any maximal sub-expression which is not a
+	 * sum or product or difference or negation. Hence the polynomial should
+	 * only use +, -, and * to combine the "variable"s into an expression.
+	 *
+	 * @param poly
+	 *            the {@link Polynomial} to evaluate
+	 * @param map
+	 *            a {@link Map} with one {@link Entry} for each "variable"
+	 *            occurring in {@code poly}. The key of the {@link Entry} is the
+	 *            variable; the value is not used and will be overwritten with
+	 *            the random integers
+	 * @return the result of evaluating; this is guaranteed to be a concrete
+	 *         number as long as {@code map} includes every variable occurring
+	 *         in {@code poly}
 	 */
-	private void extractForall(BooleanExpression forallExpr)
-			throws InconsistentContextException {
-		ArrayDefinition defn = extractArrayDefinition(forallExpr);
+	private NumericExpression evaluateAtRandomPoint32(Polynomial poly,
+			Map<SymbolicExpression, SymbolicExpression> map) {
 
-		if (defn != null && defn.array
-				.operator() == SymbolicOperator.SYMBOLIC_CONSTANT) {
-			addSub(defn.array, defn.lambda);
-		} else {
-			addSub(forallExpr, info.trueExpr);
+		for (Entry<SymbolicExpression, SymbolicExpression> entry : map
+				.entrySet()) {
+			// an int randomly chosen with uniform probability from
+			// the set of all 2^32 ints:
+			int randomInt = random.nextInt();
+			SymbolicExpression concrete = entry.getKey().type().isInteger()
+					? info.universe.integer(randomInt)
+					: info.universe.rational(randomInt);
+
+			entry.setValue(concrete);
 		}
+
+		NumericExpression result = (NumericExpression) info.universe
+				.mapSubstituter(map).apply(poly);
+
+		return result;
 	}
 
-	private void extractExists(SymbolicExpression existsExpr)
-			throws InconsistentContextException {
-		addSub(existsExpr, info.trueExpr);
-	}
+	/**
+	 * Can you show that <code>poly</code> is equivalent to 0 with probability
+	 * of being wrong less than or equal to epsilon?
+	 *
+	 * @param poly
+	 *            the {@link Polynomial} being tested for zero-ness
+	 * @param totalDegree
+	 *            the total degree of {@code poly}; see
+	 *            {@link Monomial#totalDegree(NumberFactory)}
+	 * 
+	 * @param vars
+	 *            the set of all "variables" occurring in {@code poly}. A
+	 *            "variable" is a maximal sub-expression which is not a sum or
+	 *            product or difference or negation. Hence the polynomial should
+	 *            only use +, -, and * to combine the "variable"s into an
+	 *            expression. See {@link Monomial#getTruePrimitives()}.
+	 * @param epsilon
+	 *            a real number in (0,1)
+	 * @return if this method returns true, then poly is probably 0 and the
+	 *         probability that it is not 0 is less than or equal to epsilon. If
+	 *         this method returns false, then poly is not zero.
+	 */
+	private boolean is0WithProbability(Polynomial poly,
+			IntegerNumber totalDegree, Set<Primitive> vars,
+			RationalNumber epsilon) {
+		NumberFactory nf = info.numberFactory;
+		RationalNumber prob = nf.oneRational();
+		RationalNumber twoTo32 = nf.power(nf.rational(nf.integer(2)), 32);
+		RationalNumber ratio = nf.divide(nf.rational(totalDegree), twoTo32);
+		Map<SymbolicExpression, SymbolicExpression> localSubMap = new HashMap<>();
 
-	// Begin array term analysis....
+		for (Primitive var : vars)
+			localSubMap.put(var, null);
+		do {
+			NumericExpression evaluation = evaluateAtRandomPoint32(poly,
+					localSubMap);
+
+			if (!evaluation.isZero())
+				return false;
+			prob = nf.multiply(prob, ratio);
+		} while (nf.compare(epsilon, prob) < 0);
+		return true;
+	}
 
 	/**
 	 * Given a {@link Primitive} <code>p</code> and a set of numeric expressions
@@ -1278,7 +590,7 @@ public class Context2 implements ContextIF {
 	 *         involve <code>p</code>, or <code>null</code> if it could not be
 	 *         solved
 	 */
-	NumericExpression solveFor(Monomial[] terms, Primitive p) {
+	private NumericExpression solveFor(Monomial[] terms, Primitive p) {
 		int nterms = terms.length;
 
 		if (nterms == 0)
@@ -1514,6 +826,900 @@ public class Context2 implements ContextIF {
 			return result;
 		}
 		return null;
+	}
+
+	/**
+	 * Repeatedly applies {@code op} to {@code x} until stabilization occurs.
+	 * 
+	 * @param op
+	 *            a unary operator on symbolic expressions
+	 * @param x
+	 *            a non-{@code null} symbolic expression
+	 * @return the first element of the sequence
+	 *         <code>x, op(x), op(op(x)), ...</code> which is equal to its
+	 *         predecessor in that sequence. If there is no such element, this
+	 *         method will not return.
+	 */
+	private SymbolicExpression transClose(UnaryOperator<SymbolicExpression> op,
+			SymbolicExpression x) {
+		SymbolicExpression y = op.apply(x);
+
+		while (x != y) {
+			x = y;
+			y = op.apply(x);
+		}
+		return y;
+	}
+
+	// *********************************************************************
+	// *........................... Read methods ..........................*
+	// * These methods, only read, but do not modify, the state............*
+	// *********************************************************************
+
+	private SymbolicExpression simplify(SymbolicExpression expr) {
+		return new IdealSimplifierWorker2(info, this)
+				.simplifyExpressionWork(expr);
+		// this should do transitive closure of substitution
+	}
+
+	private Range intersectWithRangeOf(Monic monic, Range range) {
+		SymbolicExpression value = getSub(monic);
+
+		if (value instanceof Constant) {
+			Number number = ((Constant) value).number();
+
+			if (range.containsNumber(number)) {
+				range = info.rangeFactory.singletonSet(number);
+			} else {
+				range = info.rangeFactory.emptySet(range.isIntegral());
+			}
+		} else {
+			Range oldRange = getRange(monic);
+
+			if (oldRange != null)
+				range = info.rangeFactory.intersect(range, oldRange);
+		}
+		return range;
+	}
+
+	private Range computeRange(Polynomial poly) {
+		IdealFactory idf = info.idealFactory;
+		RangeFactory rf = info.rangeFactory;
+		Constant constantTerm = poly.constantTerm(idf);
+		Number constant = constantTerm.number();
+		Range result;
+
+		if (constant.isZero()) {
+			result = rf.singletonSet(constant);
+			for (Monomial term : poly.termMap(idf)) {
+				result = rf.add(result, computeRange(term));
+				if (result.isUniversal())
+					break;
+			}
+			result = intersectWithRangeOf(poly, result);
+		} else {
+			result = rf.add(
+					computeRange((Monomial) idf.subtract(poly, constantTerm)),
+					constant);
+		}
+		return result;
+	}
+
+	private Range computeRangeOfPower(NumericExpression base,
+			NumericExpression exponent) {
+		// TODO
+
+		return null;
+
+	}
+
+	/**
+	 * 
+	 * Do we assume primitive is simplified?
+	 * 
+	 * @param primitive
+	 * @return
+	 */
+	private Range computeRange(Primitive primitive) {
+		if (primitive instanceof Polynomial)
+			return computeRange((Polynomial) primitive);
+		if (primitive.operator() == SymbolicOperator.POWER)
+			return computeRangeOfPower(
+					(NumericExpression) primitive.argument(0),
+					(NumericExpression) primitive.argument(1));
+
+		SymbolicExpression value = getSub(primitive);
+
+		if (value instanceof Constant) {
+			return info.rangeFactory.singletonSet(((Constant) value).number());
+		} else {
+			Range oldRange = getRange(primitive);
+
+			if (oldRange != null)
+				return oldRange;
+		}
+		return info.rangeFactory.universalSet(primitive.type().isInteger());
+	}
+
+	/**
+	 * Do we assume pp is simplified?
+	 * 
+	 * @param pp
+	 * @return
+	 */
+	private Range computeRange(PrimitivePower pp) {
+		if (pp instanceof Primitive)
+			return computeRange((Primitive) pp);
+
+		IntegerNumber exponent = pp.monomialDegree(info.numberFactory);
+		Range result = info.rangeFactory
+				.power(computeRange(pp.primitive(info.idealFactory)), exponent);
+
+		result = intersectWithRangeOf(pp, result);
+		return result;
+	}
+
+	/**
+	 * Do we assume monic is simplified?
+	 * 
+	 * @param monic
+	 * @return
+	 */
+	private Range computeRange(Monic monic) {
+		if (monic instanceof PrimitivePower)
+			return computeRange((PrimitivePower) monic);
+
+		RangeFactory rf = info.rangeFactory;
+		NumberFactory nf = info.numberFactory;
+		Range result = rf.singletonSet(
+				monic.type().isInteger() ? nf.oneInteger() : nf.oneRational());
+
+		for (PrimitivePower pp : monic.monicFactors(info.idealFactory)) {
+			result = rf.multiply(result, computeRange(pp));
+			if (result.isUniversal())
+				break;
+		}
+		result = intersectWithRangeOf(monic, result);
+		return result;
+	}
+
+	/**
+	 * Do we assume monomial is simplified?
+	 * 
+	 * @param monomial
+	 * @return
+	 */
+	private Range computeRange(Monomial monomial) {
+		if (monomial instanceof Monic)
+			return computeRange((Monic) monomial);
+		if (monomial instanceof Constant)
+			return info.rangeFactory
+					.singletonSet(((Constant) monomial).number());
+		return info.rangeFactory.multiply(
+				computeRange(monomial.monic(info.idealFactory)),
+				monomial.monomialConstant(info.idealFactory).number());
+	}
+
+	/**
+	 * Returns the boolean formula represented by this context.
+	 * 
+	 * @param full
+	 *            should the formula include the equalities giving the values of
+	 *            the solved variables?
+	 * @return the boolean formula as specified
+	 */
+	private BooleanExpression getAssumption(boolean full) {
+		BooleanExpression result = info.trueExpr;
+
+		for (Entry<SymbolicExpression, SymbolicExpression> subEntry : subMap
+				.entrySet()) {
+			SymbolicExpression key = subEntry.getKey();
+
+			if (full || !(key instanceof SymbolicConstant))
+				result = info.universe.and(result,
+						info.universe.equals(key, subEntry.getValue()));
+		}
+		for (Entry<Monic, Range> rangeEntry : rangeMap.entrySet())
+			result = info.universe.and(result,
+					rangeEntry.getValue().symbolicRepresentation(
+							rangeEntry.getKey(), info.universe));
+		// for (List<ArrayFact> list : arrayFacts.values())
+		// for (ArrayFact fact : list)
+		// result = info.universe.and(result, arrayFactToExpression(fact));
+		return result;
+	}
+
+	private void addMonicConstantsToMap(Map<Monic, Number> map) {
+		for (Entry<SymbolicExpression, SymbolicExpression> entry : subMap
+				.entrySet()) {
+			SymbolicExpression key = entry.getKey();
+
+			if (key instanceof Monic) {
+				SymbolicExpression value = entry.getValue();
+
+				if (value instanceof Constant) {
+					map.put((Monic) key, ((Constant) value).number());
+				}
+			}
+		}
+	}
+
+	/**
+	 * TODO: if this is a SubContext, do we get the parent entries??? It is used
+	 * to do Gaussian elim.
+	 * 
+	 * @return
+	 */
+	private Map<Monic, Number> getMonicConstantMap() {
+		Map<Monic, Number> map = new TreeMap<>(info.monicComparator);
+
+		addMonicConstantsToMap(map);
+		return map;
+	}
+
+	// ************ Modification methods for subMap and rangeMap ************
+	// * These are basic modification methods for the state.................*
+	// **********************************************************************
+
+	/**
+	 * Inserts an entry into the {@link #subMap} and also checks for an
+	 * inconsistency between the old and new values, if an old value existed.
+	 * 
+	 * @param key
+	 *            the expression on the left side of the substitution
+	 * @param value
+	 *            the expression on the right side which will replace the
+	 *            {@code key}
+	 * @return the old value associated to {@code key}, or {@code null} if there
+	 *         was no entry for {@code key}
+	 * @throws InconsistentContextException
+	 *             if the old value was a concrete value and not equal to the
+	 *             new value
+	 */
+	private SymbolicExpression updateSub(SymbolicExpression key,
+			SymbolicExpression value) throws InconsistentContextException {
+		SymbolicExpression old = subMap.put(key, value);
+
+		if (old != null && value.operator() == SymbolicOperator.CONCRETE
+				&& old.operator() == SymbolicOperator.CONCRETE
+				&& old != value) {
+			throw new InconsistentContextException();
+		}
+		return old;
+	}
+
+	/**
+	 * Incorporates a new substitution into the {@link #subMap}. Updates the
+	 * {@link #subMap} as needed in order to maintain its invariants.
+	 * 
+	 * Preconditions: (1) both expressions are non-null and have the same type;
+	 * (2) the new substitution cannot introduce a cycle in the {@link #subMap};
+	 * (3) the substitution may not involve any {@link RationalExpression}s.
+	 * 
+	 * Inconsistency can be determined if the same key is mapped to two
+	 * constants that are not equal.
+	 * 
+	 * 
+	 * @param x
+	 *            the expression to be replaced
+	 * @param y
+	 *            the expression that will be substituted for <code>x</code>
+	 */
+	private void addSub(SymbolicExpression x, SymbolicExpression y)
+			throws InconsistentContextException {
+		LinkedList<Pair<SymbolicExpression, SymbolicExpression>> workList = new LinkedList<>();
+
+		workList.add(new Pair<>(x, y));
+		while (!workList.isEmpty()) {
+			Pair<SymbolicExpression, SymbolicExpression> pair = workList
+					.removeFirst();
+
+			pair.left = simplify(pair.left);
+			pair.right = simplify(pair.right);
+			standardizePair(pair);
+
+			SymbolicExpression newKey = pair.left;
+
+			if (newKey == null)
+				continue; // a trivial substitution
+
+			SymbolicExpression newValue = pair.right;
+			SymbolicExpression oldValue = getSub(newKey); // subMap.get(newKey);
+
+			if (oldValue.equals(newValue))
+				continue; // this sub is already in the subMap
+			// apply newKey->newValue to every entry of subMap...
+			UnaryOperator<SymbolicExpression> singleSubstituter = info.universe
+					.mapSubstituter(new SingletonMap<>(newKey, newValue));
+			Iterator<Entry<SymbolicExpression, SymbolicExpression>> iter = subMap
+					.entrySet().iterator();
+
+			while (iter.hasNext()) {
+				Entry<SymbolicExpression, SymbolicExpression> entry = iter
+						.next();
+				SymbolicExpression value = entry.getValue();
+				SymbolicExpression key = entry.getKey(),
+						subKey = transClose(singleSubstituter, key),
+						subValue = transClose(singleSubstituter, value);
+
+				if (subKey != key || subValue != value) {
+					iter.remove();
+					workList.add(new Pair<>(subKey, subValue));
+				}
+			}
+			updateSub(newKey, newValue);
+		}
+	}
+
+	/**
+	 * Given a normal {@link Monic} and its value, update state appropriately to
+	 * indicate that the key equals the value.
+	 * 
+	 * @param key
+	 *            normal {@link Monic}
+	 * @param value
+	 *            a number of the same type as {@code key}
+	 * @throws InconsistentContextException
+	 *             if the new value contradicts an existing {@link Range} or
+	 *             value for {@code key}
+	 */
+	private void updateValue(Monic key, Number value)
+			throws InconsistentContextException {
+		// look in the range map, then sub map
+		Range range = getRange(key);
+
+		if (range == null) {
+			SymbolicExpression oldValue = getSub(key);
+
+			if (oldValue == null) {
+				addSub(key, info.universe.number(value));
+			} else {
+
+			}
+		} else {
+
+		}
+	}
+
+	/**
+	 * Updates the state of this {@link Context} by restricting the range of a
+	 * normal {@link Monic}. This may result in changes to the {@link #rangeMap}
+	 * , {@link #subMap}, or both.
+	 * 
+	 * @param key
+	 *            a normal {@link Monic}
+	 * @param range
+	 *            a {@link Range} for {@code key}, with the same tyep
+	 * @throws InconsistentContextException
+	 *             if the restriction results in the {@code key} having an empty
+	 *             range
+	 */
+	private void restrictRange(Monic key, Range range)
+			throws InconsistentContextException {
+		Range original = getRange(key);
+
+		if (original == null) {
+			SymbolicExpression value = getSub(key);
+
+			if (value instanceof Constant) {
+				Number number = ((Constant) value).number();
+
+				if (range.containsNumber(number)) {
+					return;
+				} else {
+					throw new InconsistentContextException();
+				}
+			}
+		} else {
+			range = info.rangeFactory.intersect(original, range);
+			if (range.equals(original))
+				return;
+		}
+		if (range.isEmpty())
+			throw new InconsistentContextException();
+
+		Number value = range.getSingletonValue();
+
+		if (value == null) {
+			rangeMap.put(key, range);
+		} else {
+			addSub(key, info.universe.number(value));
+			if (original != null)
+				rangeMap.remove(key);
+		}
+	}
+
+	/**
+	 * Simplifies the {@link #rangeMap}. Removes one entry from the map,
+	 * simplifies it, places it back. Repeats cyclically until stabilization. If
+	 * an entry ever resolves to a single value, it is removed completely and
+	 * added to the {@link #subMap}.
+	 * 
+	 * @return <code>true</code> iff any change was made to the
+	 *         {@link #rangeMap}
+	 */
+	private boolean simplifyRangeMap() throws InconsistentContextException {
+		FastList<Monic> keyList = new FastList<>();
+		boolean change = false;
+
+		for (Monic key : rangeMap.keySet())
+			keyList.add(key);
+
+		FastNode<Monic> curr = keyList.getFirst(),
+				lastChanged = keyList.getLast();
+
+		// idea: keep iterating cyclically over the keys of the
+		// rangeMap until it stabilizes. They keys are changing
+		// as you iterate.
+		// invariant: keyList is a list containing all the keys in the rangeMap
+		// (and possibly additional expressions not keys in the rangeMap)
+		// lastChanged is the last node to have changed in some way.
+		// curr is the current node.
+		while (true) {
+			Monic oldKey = curr.getData();
+			NumericExpression simpKey = (NumericExpression) simplify(oldKey);
+
+			if (simpKey == oldKey) { // no change
+				if (lastChanged == curr)
+					break; // complete cycle with no change: done!
+				curr = keyList.getNextCyclic(curr);
+				continue;
+			}
+			// a change has occurred: simpKey!=oldKey
+			// remove oldKey, update rangeMap and/or subMap
+
+			Range oldRange = rangeMap.remove(oldKey);
+
+			if (oldRange != null) {
+				change = true;
+
+				// if simpKey is Constant, it is either in the range or not
+				if (simpKey instanceof Constant) {
+					if (!oldRange.containsNumber(((Constant) simpKey).number()))
+						throw new InconsistentContextException();
+				} else {
+					// We assume simpKey is not a RationalExpression...
+					Pair<Monic, Range> normalization = normalize(
+							(Monomial) simpKey, oldRange);
+					Monic newKey = normalization.left;
+					int oldSize = rangeMap.size();
+
+					restrictRange(newKey, normalization.right);
+
+					int newSize = rangeMap.size();
+
+					if (newSize == oldSize + 1) {
+						// oldKey has been removed. newKey was not in the map
+						// and now it is. So replace oldKey with newKey in the
+						// list.
+						curr.setData(newKey);
+						lastChanged = curr;
+						curr = keyList.getNextCyclic(curr);
+						continue;
+					}
+				}
+			}
+
+			// remove current node...
+			FastNode<Monic> next = keyList.getNextCyclic(curr);
+
+			keyList.remove(curr);
+			if (keyList.isEmpty())
+				break;
+			curr = next;
+			lastChanged = keyList.getPrevCyclic(curr);
+		}
+		return change;
+	}
+
+	private void makeInconsistent() {
+		rangeMap.clear();
+		subMap.clear();
+		// arrayFacts.clear();
+		subMap.put(info.falseExpr, info.trueExpr);
+	}
+
+	// **********************************************************************
+	// *........................ Extraction methods ........................*
+	// * These are higher level methods that modify the state. They should..*
+	// * use only the methods above to modify the maps......................*
+	// **********************************************************************
+
+	/**
+	 * Processes a boolean expression, updating the state of this context
+	 * appropriately. The boolean expression must be in CNF (conjunctive normal
+	 * form).
+	 * 
+	 * @param assumption
+	 *            the boolean expression to process
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent
+	 */
+	private void addFact(BooleanExpression assumption)
+			throws InconsistentContextException {
+		if (assumption.operator() == SymbolicOperator.AND) {
+			for (SymbolicObject arg : assumption.getArguments()) {
+				BooleanExpression clause = (BooleanExpression) arg;
+
+				extractOr(clause);
+			}
+		} else {
+			extractOr(assumption);
+		}
+	}
+
+	/**
+	 * Performs Gaussian Elimination on the numeric entries of the
+	 * {@link #subMap}.
+	 * 
+	 * Does not read or modify {@link #rangeMap}
+	 * 
+	 * @return <code>true</code> iff there is a change made to the
+	 *         {@link #subMap}
+	 * 
+	 * @throws InconsistentContextException
+	 *             if an inconsistency is detected when modifying the
+	 *             {@link #subMap}
+	 */
+	private boolean gauss() throws InconsistentContextException {
+		Map<Monic, Number> constantMap = getMonicConstantMap();
+		boolean change = false;
+
+		if (!LinearSolver.reduceConstantMap(info.idealFactory, constantMap))
+			throw new InconsistentContextException();
+		for (Entry<Monic, Number> entry : constantMap.entrySet()) {
+			Monic key = entry.getKey();
+			Number newNumber = entry.getValue();
+			SymbolicExpression oldValue = subMap.get(key);
+
+			if (oldValue instanceof Constant) {
+				assert ((Constant) oldValue).number().equals(newNumber);
+				// must be the case, else the LinearSolver would
+				// have returned inconsistent (false)
+			} else {
+				SymbolicExpression newValue = info.universe.number(newNumber);
+
+				if (oldValue != newValue) {
+					change = true;
+					addSub(key, newValue);
+				}
+			}
+		}
+		if (debug) {
+			info.out.println("Result of updateConstantMap():");
+			print(info.out);
+		}
+		return change;
+	}
+
+	/**
+	 * Processes an expression in which the operator is not
+	 * {@link SymbolicOperator#AND}. In the CNF form, this expression is a
+	 * clause of the outer "and" expression.
+	 * 
+	 * @param expr
+	 *            the boolean expression to process
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent
+	 */
+	private void extractOr(BooleanExpression expr)
+			throws InconsistentContextException {
+		if (expr.operator() != SymbolicOperator.OR)
+			extractClause(expr);
+		expr = info.universe
+				.not(new SubContext(info, this, info.universe.not(expr))
+						.getFullAssumption());
+		if (expr.operator() == SymbolicOperator.OR) {
+			addSub(expr, info.trueExpr);
+		} else {
+			addFact(expr);
+		}
+	}
+
+	/**
+	 * Processes a basic boolean expression --- one in which the operator is
+	 * neither {@link SymbolicOperator#AND} nor {@link SymbolicOperator#OR} ---
+	 * and updates this context accordingly.
+	 * 
+	 * @param clause
+	 *            the expression which is not an "and" or "or" expression
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent
+	 */
+	private void extractClause(BooleanExpression clause)
+			throws InconsistentContextException {
+		SymbolicOperator op = clause.operator();
+
+		switch (op) {
+		case CONCRETE:
+			if (!((BooleanObject) clause.argument(0)).getBoolean())
+				throw new InconsistentContextException();
+			break;
+		case NOT:
+			extractNot((BooleanExpression) clause.argument(0));
+			break;
+		case FORALL:
+			extractForall(clause);
+			break;
+		case EXISTS:
+			extractExists(clause);
+			break;
+		case EQUALS:
+			extractEquals(clause);
+			break;
+		case NEQ:
+			extractNEQ((SymbolicExpression) clause.argument(0),
+					(SymbolicExpression) clause.argument(1));
+			break;
+		case LESS_THAN: // 0<x or x<0
+		case LESS_THAN_EQUALS: {// 0<=x or x<=0
+			SymbolicExpression arg0 = (SymbolicExpression) clause.argument(0),
+					arg1 = (SymbolicExpression) clause.argument(1);
+
+			if (arg0.isZero()) {
+				extractIneqMonic((Monic) arg1, true, op == LESS_THAN);
+			} else {
+				extractIneqMonic((Monic) arg0, false, op == LESS_THAN);
+			}
+			break;
+		}
+		default:
+			addSub(clause, info.trueExpr);
+		}
+	}
+
+	/**
+	 * Processes the assumption that <code>pred</code> is <i>false</i>, updating
+	 * the state of this context appropriately.
+	 * 
+	 * @param pred
+	 *            a non-<code>null</code> boolean expression, asserted to be
+	 *            equivalent to <i>false</i> in this context
+	 * @throws InconsistentContextException
+	 *             if an inconsistency is detected in the context in the process
+	 *             of consuming this assumption
+	 * 
+	 */
+	private void extractNot(BooleanExpression pred)
+			throws InconsistentContextException {
+		addSub(pred, info.falseExpr);
+	}
+
+	/**
+	 * Processes an equality expression and updates the state of this context
+	 * accordingly.
+	 * 
+	 * @param eqExpr
+	 *            a symbolic expression in which the operator is
+	 *            {@link SymbolicOperator#EQUALS}
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent
+	 */
+	private void extractEquals(SymbolicExpression eqExpr)
+			throws InconsistentContextException {
+		SymbolicExpression arg0 = (SymbolicExpression) eqExpr.argument(0);
+		SymbolicExpression arg1 = (SymbolicExpression) eqExpr.argument(1);
+
+		if (arg0.type().isNumeric()) { // 0=x for a Primitive x
+			extractEQ0((Primitive) arg1);
+		} else {
+			boolean const0 = arg0.operator() == SymbolicOperator.CONCRETE;
+			boolean const1 = arg1.operator() == SymbolicOperator.CONCRETE;
+
+			if (const1 && !const0) {
+				addSub(arg0, arg1);
+			} else if (const0 && !const1) {
+				addSub(arg1, arg0);
+			} else if (const0 && const1) {
+				if (!arg0.equals(arg1))
+					throw new InconsistentContextException();
+			} else { // neither is constant
+				addSub(eqExpr, info.trueExpr);
+			}
+		}
+	}
+
+	/**
+	 * Processes an equality of the form x=0, for a {@link Primitive} x,
+	 * updating the state of this context based on that fact.
+	 * 
+	 * @param primitive
+	 *            a non-<code>null</code> numeric {@link Primitive}
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent
+	 */
+	private void extractEQ0(Primitive primitive)
+			throws InconsistentContextException {
+		SymbolicType type = primitive.type();
+		boolean isInteger = type.isInteger();
+		NumberFactory nf = info.numberFactory;
+		Number zero = isInteger ? nf.zeroInteger() : nf.zeroRational();
+		Pair<Monic, Number> pair = normalize(primitive, zero);
+		Monic monic = pair.left;
+		Number value = pair.right; // monic=value <==> primitive=0
+		Range range = computeRange(monic);
+
+		if (!range.containsNumber(value))
+			throw new InconsistentContextException();
+		if (primitive instanceof Polynomial)
+			extractEQ0Poly((Polynomial) primitive, monic, value);
+		else {
+			updateSub(monic, info.universe.number(value));
+		}
+	}
+
+	/**
+	 * Processes an equality expression of the form p=0, where p is a
+	 * {@link Polynomial}, updating the state of this {@link Context}
+	 * accordingly. Probabilistic techniques may be used if the
+	 * {@link PreUniverse#getProbabilisticBound()} is non-0.
+	 * 
+	 * @param poly
+	 *            a non-{@code null} {@link Polynomial} asserted to be 0
+	 * @throws InconsistentContextException
+	 *             if an inconsistency is detected in this context upon adding
+	 *             this new assumption
+	 */
+	private void extractEQ0Poly(Polynomial poly, Monic monic, Number value)
+			throws InconsistentContextException {
+		RationalNumber prob = info.universe.getProbabilisticBound();
+		NumberFactory nf = info.numberFactory;
+
+		if (!prob.isZero()) {
+			Set<Primitive> vars = poly.getTruePrimitives();
+			IntegerNumber totalDegree = poly.totalDegree(nf);
+			int numVars = vars.size();
+			IntegerNumber numVarsNumber = nf.integer(numVars);
+			IntegerNumber product = nf.multiply(totalDegree, numVarsNumber);
+
+			if (debug) {
+				info.out.println("Poly0: product = " + product
+						+ ", threshold = " + polyProbThreshold);
+				info.out.flush();
+			}
+			if (nf.compare(product, polyProbThreshold) >= 0) {
+				if (debug) {
+					info.out.println("Entering probabilistic mode...");
+					info.out.flush();
+				}
+
+				boolean answer = is0WithProbability(poly, totalDegree, vars,
+						prob);
+
+				if (answer) {
+					info.out.print(
+							"Warning: verified probabilistically with probability of error < ");
+					info.out.println(nf.scientificString(prob, 4));
+					info.out.flush();
+				} else {
+					// there is no sense in expanding this polynomial
+					// since you know it cannot expand to 0
+					addSub(monic, info.universe.number(value));
+				}
+				return;
+			}
+		}
+
+		IdealFactory idf = info.idealFactory;
+
+		if (poly.hasTermWithNontrivialExpansion(idf)) {
+			Monomial[] termMap = poly.expand(idf);
+
+			if (termMap.length == 0)
+				return; // poly is 0 after all
+
+			Monomial newMonomial = idf.factorTermMap(termMap);
+			Number zero = newMonomial.type().isInteger() ? nf.zeroInteger()
+					: nf.zeroRational();
+			Pair<Monic, Number> pair = normalize(newMonomial, zero);
+
+			addSub(pair.left, info.universe.number(pair.right));
+		} else {
+			addSub(monic, info.universe.number(value));
+		}
+	}
+
+	private void extractNEQ(SymbolicExpression arg0, SymbolicExpression arg1)
+			throws InconsistentContextException {
+		SymbolicType type = arg0.type();
+
+		if (type.isNumeric()) { // 0!=x, for a Primitive x
+			Primitive primitive = (Primitive) arg1;
+			RangeFactory rf = info.rangeFactory;
+			Number zero = type.isInteger() ? info.numberFactory.zeroInteger()
+					: info.numberFactory.zeroRational();
+			Pair<Monic, Number> pair = normalize(primitive, zero);
+
+			restrictRange(pair.left,
+					rf.complement(rf.singletonSet(pair.right)));
+		} else {
+			addSub(info.universe.equals(arg0, arg1), info.falseExpr);
+		}
+	}
+
+	/**
+	 * Extracts information from an inequality of one of the forms: x&gt;0,
+	 * x&ge;0, x&lt;0, x&le;0, where x is a {@link Monic} in which the maximum
+	 * degree of any {@link Primitive} is 1. Updates the state of this context
+	 * accordingly.
+	 * 
+	 * Strategy:
+	 * 
+	 * 
+	 * Need method Range getBound(Monomial) which does everything possible to
+	 * get the most precise bound on the monomial from the existing context:
+	 * First, simplify the Monomial. This should yield a Monomial.
+	 * 
+	 * - if polynomial, reduce to pseudo. If this is non-trivial, get best bound
+	 * on pseudo, convert to bound on original polynomial, return. - else: look
+	 * in rangeMap, store the result - if non-trivial product, get best bounds
+	 * on factors and multiply - if non-trivial sum, get best bounds on factors
+	 * and add - if non-trivial primitive power, get bound on base, raise to
+	 * power - if POWER operation : if exponent is constant, ditto, else:? -
+	 * intersect result with whatever you got from rangeMap
+	 * 
+	 * Then: intersect with bound specified by these arguments. Restrict bound
+	 * on the monic accordingly.
+	 * 
+	 * @param monic
+	 *            a non-<code>null</code> {@link Monic}
+	 * @param gt
+	 *            is the condition one of x&gt;0 or x&ge;0 (i.e., not x&lt;0 or
+	 *            x&le;0)
+	 * @param strict
+	 *            is the form one of x&gt;0 or x&lt;0 (strict inequality)
+	 */
+	private void extractIneqMonic(Monic monic, boolean gt, boolean strict)
+			throws InconsistentContextException {
+		RangeFactory rf = info.rangeFactory;
+		NumberFactory nf = info.numberFactory;
+		SymbolicType type = monic.type();
+		boolean isIntegral = type.isInteger();
+		Number zero = isIntegral ? nf.zeroInteger() : nf.zeroRational();
+		Range range = gt
+				? rf.interval(isIntegral, zero, strict,
+						nf.infiniteNumber(isIntegral, true), true)
+				: rf.interval(isIntegral, nf.infiniteNumber(isIntegral, false),
+						true, zero, strict);
+		Pair<Monic, Range> pair = normalize(monic, range);
+
+		monic = pair.left;
+		range = pair.right;
+
+		Range result = computeRange(monic);
+
+		result = rf.intersect(result, range);
+		if (!result.equals(range))
+			restrictRange(monic, result);
+	}
+
+	/**
+	 * Looks for the pattern: <code>forall int i . 0<=i<=n-1 -> a[i]=expr</code>
+	 * . If that pattern is found, adds the substitution to the {@link #subMap}:
+	 * <code>a = (T[n]) lambda i . expr</code>. Otherwise, just adds the default
+	 * substitution mapping <code>forallExpr</code> to <code>true</code>.
+	 * 
+	 * @param forallExpr
+	 *            an expression in which the operator is
+	 *            {@link SymbolicOperator#FORALL}.
+	 * @throws InconsistentContextException
+	 *             this context is determined to be inconsistent
+	 */
+	private void extractForall(BooleanExpression forallExpr)
+			throws InconsistentContextException {
+		ArrayDefinition defn = extractArrayDefinition(forallExpr);
+
+		if (defn != null && defn.array
+				.operator() == SymbolicOperator.SYMBOLIC_CONSTANT) {
+			addSub(defn.array, defn.lambda);
+		} else {
+			addSub(forallExpr, info.trueExpr);
+		}
+	}
+
+	private void extractExists(SymbolicExpression existsExpr)
+			throws InconsistentContextException {
+		addSub(existsExpr, info.trueExpr);
 	}
 
 	/**
