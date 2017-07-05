@@ -35,6 +35,7 @@ import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
+import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
@@ -44,6 +45,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
+import edu.udel.cis.vsl.sarl.simplify.IF.Range.RangeSign;
 import edu.udel.cis.vsl.sarl.simplify.IF.RangeFactory;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplify;
 import edu.udel.cis.vsl.sarl.util.Pair;
@@ -57,7 +59,6 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  */
 public class SimplifierInfo {
 
-	// put this in info?
 	// private class ArrayFactComparator implements Comparator<ArrayFact> {
 	//
 	// private Comparator<SymbolicObject> ec;
@@ -128,7 +129,7 @@ public class SimplifierInfo {
 
 	BooleanExpression falseExpr;
 
-	// Range[][] signRanges;
+	Range[][] signRanges;
 
 	/**
 	 * An ordering on symbolic constants. [Could put this in info.]
@@ -177,75 +178,40 @@ public class SimplifierInfo {
 		// case GT0: // (0,infty)
 		// case LE0: // (-infty, 0]
 		// case LT0: // (-infty, 0)
-		// this.signRanges = new Range[2][];
-		// signRanges[0] = new Range[] {
-		// rangeFactory.interval(true,
-		// numberFactory.infiniteNumber(true, false), true,
-		// numberFactory.infiniteNumber(true, true), true),
-		// rangeFactory.emptySet(true),
-		// rangeFactory.singletonSet(numberFactory.zeroInteger()),
-		// rangeFactory.interval(true, numberFactory.zeroInteger(), false,
-		// numberFactory.infiniteNumber(true, true), true),
-		// rangeFactory.interval(true, numberFactory.zeroInteger(), true,
-		// numberFactory.infiniteNumber(true, true), true),
-		// rangeFactory.interval(true,
-		// numberFactory.infiniteNumber(true, false), true,
-		// numberFactory.zeroInteger(), false),
-		// rangeFactory.interval(true,
-		// numberFactory.infiniteNumber(true, false), true,
-		// numberFactory.integer(-1), false) };
-		// signRanges[1] = new Range[] {
-		// rangeFactory.interval(false,
-		// numberFactory.infiniteNumber(true, false), true,
-		// numberFactory.infiniteNumber(true, true), true),
-		// rangeFactory.emptySet(false),
-		// rangeFactory.singletonSet(numberFactory.zeroInteger()),
-		// rangeFactory.interval(false, numberFactory.zeroInteger(), false,
-		// numberFactory.infiniteNumber(true, true), true),
-		// rangeFactory.interval(false, numberFactory.zeroInteger(), true,
-		// numberFactory.infiniteNumber(true, true), true),
-		// rangeFactory.interval(false,
-		// numberFactory.infiniteNumber(true, false), true,
-		// numberFactory.zeroInteger(), false),
-		// rangeFactory.interval(false,
-		// numberFactory.infiniteNumber(true, false), true,
-		// numberFactory.zeroInteger(), true) };
+		this.signRanges = new Range[2][];
+		signRanges[0] = new Range[] {
+				rangeFactory.interval(true,
+						numberFactory.infiniteNumber(true, false), true,
+						numberFactory.infiniteNumber(true, true), true),
+				rangeFactory.emptySet(true),
+				rangeFactory.singletonSet(numberFactory.zeroInteger()),
+				rangeFactory.interval(true, numberFactory.zeroInteger(), false,
+						numberFactory.infiniteNumber(true, true), true),
+				rangeFactory.interval(true, numberFactory.zeroInteger(), true,
+						numberFactory.infiniteNumber(true, true), true),
+				rangeFactory.interval(true,
+						numberFactory.infiniteNumber(true, false), true,
+						numberFactory.zeroInteger(), false),
+				rangeFactory.interval(true,
+						numberFactory.infiniteNumber(true, false), true,
+						numberFactory.integer(-1), false) };
+		signRanges[1] = new Range[] {
+				rangeFactory.interval(false,
+						numberFactory.infiniteNumber(false, false), true,
+						numberFactory.infiniteNumber(false, true), true),
+				rangeFactory.emptySet(false),
+				rangeFactory.singletonSet(numberFactory.zeroRational()),
+				rangeFactory.interval(false, numberFactory.zeroRational(),
+						false, numberFactory.infiniteNumber(false, true), true),
+				rangeFactory.interval(false, numberFactory.zeroRational(), true,
+						numberFactory.infiniteNumber(false, true), true),
+				rangeFactory.interval(false,
+						numberFactory.infiniteNumber(false, false), true,
+						numberFactory.zeroRational(), false),
+				rangeFactory.interval(false,
+						numberFactory.infiniteNumber(false, false), true,
+						numberFactory.zeroRational(), true) };
 	}
-
-	// /**
-	// * A categorization of intervals based on their relationship to 0. Every
-	// * interval falls into exactly one of these categories.
-	// *
-	// * @author siegel
-	// */
-	// static enum BoundType {
-	// /**
-	// * Every element of the interval is less than 0 and the interval is not
-	// * empty.
-	// */
-	// LT0,
-	// /**
-	// * Every element of the interval is less than or equal to 0 and the
-	// * interval contains 0 and a negative number.
-	// */
-	// LE0,
-	// /** The interval consists exactly of 0 and nothing else. */
-	// EQ0,
-	// /**
-	// * The interval contains 0 and a positive number and every element of
-	// * the interval is greater than or equal to 0.
-	// */
-	// GE0,
-	// /**
-	// * Every element of the interval is greater than 0 and the interval is
-	// * non-empty.
-	// */
-	// GT0,
-	// /** The interval is empty */
-	// EMPTY,
-	// /** The interval contains a negative number, 0, and a positive number */
-	// ALL
-	// };
 
 	/**
 	 * Determines if the operator is one of the relation operators
@@ -653,60 +619,123 @@ public class SimplifierInfo {
 	// return result;
 	// }
 
-	// public static enum RangeSign {
-	// /**
-	// * Every element of the range is less than 0 and the range is not empty.
-	// */
-	// LT0,
-	// /**
-	// * Every element of the range is less than or equal to 0 and the range
-	// * contains 0 and a negative number.
-	// */
-	// LE0,
-	// /** The range consists exactly of 0 and nothing else. */
-	// EQ0,
-	// /**
-	// * The range contains 0 and a positive number and every element of the
-	// * range is greater than or equal to 0.
-	// */
-	// GE0,
-	// /**
-	// * Every element of the range is greater than 0 and the range is
-	// * non-empty.
-	// */
-	// GT0,
-	// /** The range is empty */
-	// EMPTY,
-	// /** The range contains a negative number, 0, and a positive number */
-	// ALL
-	// };
+	public Range rangeOf(RangeSign sign, boolean integral) {
+		int i = integral ? 0 : 1;
 
-	// private RangeSign sign(Range range) {
-	// // TODO: this will be a method in Range
-	// return null;
-	// }
+		switch (sign) {
+		case ALL: // (-infty,infty)
+			return signRanges[i][0];
+		case EMPTY: // empty
+			return signRanges[i][1];
+		case EQ0: // [0,0]
+			return signRanges[i][2];
+		case GE0: // [0,infty)
+			return signRanges[i][3];
+		case GT0: // (0,infty)
+			return signRanges[i][4];
+		case LE0: // (-infty, 0]
+			return signRanges[i][5];
+		case LT0: // (-infty, 0)
+			return signRanges[i][6];
+		default:
+			throw new SARLException("unreachable");
+		}
+	}
 
-	// public Range rangeOf(RangeSign sign, boolean integral) {
-	// int i = integral ? 0 : 1;
-	//
-	// switch (sign) {
-	// case ALL: // (-infty,infty)
-	// return signRanges[i][0];
-	// case EMPTY: // empty
-	// return signRanges[i][1];
-	// case EQ0: // [0,0]
-	// return signRanges[i][2];
-	// case GE0: // [0,infty)
-	// return signRanges[i][3];
-	// case GT0: // (0,infty)
-	// return signRanges[i][4];
-	// case LE0: // (-infty, 0]
-	// return signRanges[i][5];
-	// case LT0: // (-infty, 0)
-	// return signRanges[i][6];
-	// default:
-	// throw new SARLException("unreachable");
-	// }
-	// }
+	/**
+	 * Transforms a claim that a non-constant monomial lies in a range to an
+	 * equivalent (normalized) form in which the monomial is a {@link Monic},
+	 * and if that {@link Monic} is a {@link Polynomial}, its constant term is
+	 * 0. It has the property that the original monomial is in the original
+	 * range iff the new monic is in the new range. The new range may be empty.
+	 * 
+	 * @param monomial
+	 *            a non-<code>null</code>, non-{@link Constant} {@link Monomial}
+	 * @param range
+	 *            a non-<code>null</code> {@link Range}, with the same type as
+	 *            <code>monomial</code>
+	 * @return a pair consisting of a {@link Monic} and a {@link Range}
+	 */
+	public Pair<Monic, Range> normalize(Monomial monomial, Range range) {
+		while (true) {
+			if (!(monomial instanceof Monic)) {
+				Constant c = monomial.monomialConstant(idealFactory);
+
+				// cx in R -> x in R/c
+				// Note that the "divide" method below is precise for integer.
+				// ex: 2x in [3,5] -> x in [2,2].
+				// ex: 2x in [3,3] -> x in emptyset.
+				monomial = monomial.monic(idealFactory);
+				range = rangeFactory.divide(range, c.number());
+			}
+			// now monomial is a Monic
+			if (monomial instanceof Polynomial) {
+				Polynomial poly = (Polynomial) monomial;
+				Constant constantTerm = poly.constantTerm(idealFactory);
+				Number constantTermNumber = constantTerm.number();
+
+				if (constantTermNumber.isZero())
+					break;
+				range = rangeFactory.subtract(range, constantTermNumber);
+				monomial = (Monomial) universe.subtract(poly, constantTerm);
+			} else {
+				break;
+			}
+		}
+		return new Pair<>((Monic) monomial, range);
+	}
+
+	/**
+	 * <p>
+	 * Normalizes a constraint of the form <code>monomial = number</code>. This
+	 * returns a {@link Pair} (m,a) in which the {@link Monic} m is normal,
+	 * i.e., if m is a {@link Polynomial} then its constant term is 0. It has
+	 * the property that m=a iff <code>monomial = number</code>. If it is
+	 * determined that the equality is unsatisfiable (e.g., 2x=3, where x is an
+	 * integer), then this method returns {@code null}.
+	 * </p>
+	 * <p>
+	 * Effect is similar to that of {@link #standardizeMonomialPair(Pair)},
+	 * except this method is optimized for the case where the value is a
+	 * concrete {@link Number}.
+	 * </p>
+	 * 
+	 * @param monomial
+	 *            a non-{@code null} {@link Monomial} m
+	 * @param number
+	 *            a SARL {@link Number} of the same type as {@code monomial}
+	 * @return a pair (m,a) where m is normal and m=a iff monomial=number, or
+	 *         {@code null} if the equality is unsatisfiable.
+	 */
+	public Pair<Monic, Number> normalize(Monomial monomial, Number number) {
+		boolean isInt = monomial.type().isInteger();
+
+		while (true) {
+			if (!(monomial instanceof Monic)) {
+				Number c = monomial.monomialConstant(idealFactory).number();
+
+				if (isInt && !numberFactory
+						.mod((IntegerNumber) number, (IntegerNumber) c)
+						.isZero())
+					return null;
+				monomial = monomial.monic(idealFactory);
+				number = numberFactory.divide(number, c);
+			}
+			// now monomial is a Monic
+			if (monomial instanceof Polynomial) {
+				Polynomial poly = (Polynomial) monomial;
+				Constant constantTerm = poly.constantTerm(idealFactory);
+				Number constantTermNumber = constantTerm.number();
+
+				if (constantTermNumber.isZero())
+					break;
+				number = numberFactory.subtract(number, constantTermNumber);
+				monomial = (Monomial) universe.subtract(poly, constantTerm);
+			} else {
+				break;
+			}
+		}
+		return new Pair<>((Monic) monomial, number);
+	}
 
 }

@@ -17,6 +17,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 
 /**
  * Testing on IdealSimplifier based on Polynomials using methods -
@@ -82,8 +83,7 @@ public class IdealSimplifierTest {
 	 */
 	public void getFullContextTestTrivial1() {
 		boolArg1 = preUniv.lessThanEquals(rat25, preUniv.multiply(x, x));
-		IdealSimplifier simpEq1 = idealSimplifierFactory
-				.newSimplifier(boolArg1);
+		Simplifier simpEq1 = idealSimplifierFactory.newSimplifier(boolArg1);
 		BooleanExpression boolSimpEq1 = simpEq1.getFullContext();
 		assertEquals(
 				preUniv.lessThanEquals(rat0,
@@ -96,8 +96,7 @@ public class IdealSimplifierTest {
 	 */
 	public void getFullContextTestTrivial2() {
 		boolArg2 = preUniv.lessThanEquals(rat2, preUniv.multiply(x, x));
-		IdealSimplifier simpEq2 = idealSimplifierFactory
-				.newSimplifier(boolArg2);
+		Simplifier simpEq2 = idealSimplifierFactory.newSimplifier(boolArg2);
 		BooleanExpression boolSimpEq2 = simpEq2.getFullContext();
 		assertEquals(boolArg2, boolSimpEq2);
 	}
@@ -135,8 +134,7 @@ public class IdealSimplifierTest {
 		assertEquals(trueExpr, boolTrue);
 
 		boolArg2 = preUniv.lessThanEquals(rat2, preUniv.multiply(x, x));
-		IdealSimplifier simpEq2 = idealSimplifierFactory
-				.newSimplifier(boolArg2);
+		Simplifier simpEq2 = idealSimplifierFactory.newSimplifier(boolArg2);
 		BooleanExpression boolSimpEq2 = simpEq2.getReducedContext();
 		assertEquals(boolArg2, boolSimpEq2);
 	}

@@ -1,5 +1,7 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
+import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
@@ -13,9 +15,13 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Range;
  *
  */
 public interface ContextIF {
+	
+	SimplifierInfo getInfo();
+	
+	BooleanExpression getOriginalAssumption();
 
 	/**
-	 * Retrieves the range associated to <code>key</code>.  
+	 * Retrieves the range associated to <code>key</code>.
 	 * 
 	 * @param key
 	 *            a non-<code>null</code> {@link Monic}
@@ -31,5 +37,7 @@ public interface ContextIF {
 	void cacheSimplification(SymbolicObject key, SymbolicObject value);
 
 	void clearSimplificationCache();
+
+	Range computeRange(NumericExpression expression);
 
 }

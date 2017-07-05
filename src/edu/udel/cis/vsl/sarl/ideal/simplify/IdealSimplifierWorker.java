@@ -1194,7 +1194,9 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 			BooleanExpression result = (BooleanExpression) simplifyExpression(
 					newExpression);
 
-			if (result != poly)
+			if (result.operator() != SymbolicOperator.EQUALS
+					|| !((SymbolicExpression) result.argument(0)).isZero()
+					|| result.argument(1) != poly)
 				return result;
 		}
 		return null;

@@ -71,8 +71,7 @@ public class DivOrModuloTest {
 	}
 
 	/**
-	 * TODO: SARL solves it, cvc4 and z3 can not solve it assumption: x^2 + y =
-	 * 1 x^2 - y = 1
+	 * Assumption: x^2 + y = 1, x^2 - y = 1. Conclusion: y=0.
 	 * 
 	 * predicate: y = 0
 	 */

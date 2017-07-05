@@ -85,7 +85,7 @@ public interface NumberFactory {
 	 *            negative.
 	 * @return
 	 */
-	Number infiniteNumber(boolean isIntegeral, boolean isPositiveInfinity);
+	Number infiniteNumber(boolean isIntegral, boolean isPositiveInfinity);
 
 	/** Returns absolute value of number, preserving type. */
 	Number abs(Number number);

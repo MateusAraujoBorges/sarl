@@ -54,7 +54,7 @@ public class CommonObjects {
 
 	static IdentitySimplifierFactory identitySimplifierFactory;
 
-	static IdealSimplifier idealSimplifier, idealSimp2;
+	static Simplifier idealSimplifier, idealSimp2;
 
 	static Simplifier simp1ifier_xeq5;
 

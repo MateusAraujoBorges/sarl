@@ -21,6 +21,7 @@ package edu.udel.cis.vsl.sarl.ideal.simplify;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
+import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 
 /**
@@ -29,6 +30,8 @@ import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
  * @author Stephen F. Siegel (siegel)
  */
 public class IdealSimplifierFactory implements SimplifierFactory {
+
+	public final static boolean useNewSimplifier = false;
 
 	/**
 	 * A structure which packages references to several other factories and
@@ -63,8 +66,11 @@ public class IdealSimplifierFactory implements SimplifierFactory {
 	}
 
 	@Override
-	public IdealSimplifier newSimplifier(BooleanExpression assumption) {
-		return new IdealSimplifier(info, assumption);
+	public Simplifier newSimplifier(BooleanExpression assumption) {
+		if (useNewSimplifier)
+			return new IdealSimplifier2(info, assumption);
+		else
+			return new IdealSimplifier(info, assumption);
 	}
 
 }
