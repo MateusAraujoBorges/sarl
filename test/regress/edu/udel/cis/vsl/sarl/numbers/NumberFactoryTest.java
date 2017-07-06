@@ -2372,7 +2372,7 @@ public class NumberFactoryTest {
 		assertEquals("3.33 E-1", factory.scientificString(r, 3));
 		assertEquals("3. E-1", factory.scientificString(r, 1));
 	}
-	
+
 	@Test
 	public void scientific2() {
 		RationalNumber r = factory.rational("49900");
@@ -2380,7 +2380,7 @@ public class NumberFactoryTest {
 		assertEquals("4.99 E4", factory.scientificString(r, 3));
 		assertEquals("5.0 E4", factory.scientificString(r, 2));
 	}
-	
+
 	@Test
 	public void scientific3() {
 		RationalNumber r = factory.rational("99900");
@@ -2388,11 +2388,102 @@ public class NumberFactoryTest {
 		assertEquals("9.99 E4", factory.scientificString(r, 3));
 		assertEquals("1.0 E5", factory.scientificString(r, 2));
 	}
-	
+
 	@Test
 	public void scientific4() {
 		RationalNumber r = factory.rational("-.001");
 
 		assertEquals("-1.00 E-3", factory.scientificString(r, 3));
 	}
+
+	/**
+	 * [1,3] / 2 = [1,1]
+	 */
+	@Test
+	public void interval_dividedBy_num_test1() {
+		Interval interval = factory.newInterval(true, INT_ONE, false, INT_THREE,
+				false);
+		IntegerNumber divisor = INT_TWO;
+		Interval expected = factory.singletonInterval(INT_ONE);
+		Interval actual = factory.divide(interval, divisor);
+
+		assertEquals(expected, actual);
+	}
+
+	/**
+	 * [1,3] / -2 = [-1,-1]
+	 */
+	@Test
+	public void interval_dividedBy_num_test2() {
+		Interval interval = factory.newInterval(true, INT_ONE, false, INT_THREE,
+				false);
+		IntegerNumber divisor = factory.negate(INT_TWO);
+		Interval expected = factory.singletonInterval(factory.negate(INT_ONE));
+		Interval actual = factory.divide(interval, divisor);
+
+		assertEquals(expected, actual);
+	}
+
+	/**
+	 * [1,2] / 3 = empty
+	 */
+	@Test
+	public void interval_dividedBy_num_test3() {
+		Interval interval = factory.newInterval(true, INT_ONE, false, INT_TWO,
+				false);
+		IntegerNumber divisor = INT_THREE;
+		Interval expected = factory.emptyIntegerInterval();
+		Interval actual = factory.divide(interval, divisor);
+
+		assertEquals(expected, actual);
+	}
+
+	/**
+	 * (1.0,3.0) / 2.0 = (0.5,1.5)
+	 */
+	@Test
+	public void interval_dividedBy_num_test4() {
+		Interval interval = factory.newInterval(false, RAT_ONE, true, RAT_THREE,
+				true);
+		RationalNumber divisor = RAT_TWO;
+		Interval expected = factory.newInterval(false,
+				factory.divide(RAT_ONE, divisor), true,
+				factory.divide(RAT_THREE, divisor), true);
+		Interval actual = factory.divide(interval, divisor);
+
+		assertEquals(expected, actual);
+	}
+
+	/**
+	 * [1.0,3.0] / -2 = [-1.5,-0.5]
+	 */
+	@Test
+	public void interval_dividedBy_num_test5() {
+		Interval interval = factory.newInterval(false, RAT_ONE, false,
+				RAT_THREE, false);
+		RationalNumber divisor = factory.negate(RAT_TWO);
+		Interval expected = factory.newInterval(false,
+				factory.divide(RAT_THREE, divisor), false,
+				factory.divide(RAT_ONE, divisor), false);
+		Interval actual = factory.divide(interval, divisor);
+
+		assertEquals(expected, actual);
+	}
+
+	/**
+	 * [1.0,2.0) / 3 = [1.0/3.0, 2.0/3.0)
+	 */
+	@Test
+	public void interval_dividedBy_num_test6() {
+		Interval interval = factory.newInterval(false, RAT_ONE, false, RAT_TWO,
+				true);
+		RationalNumber divisor = RAT_THREE;
+		Interval expected = factory.newInterval(false,
+				factory.divide(RAT_ONE, divisor), false,
+				factory.divide(RAT_TWO, divisor), true);
+		Interval actual = factory.divide(interval, divisor);
+
+		assertEquals(expected, actual);
+	}
+
 }

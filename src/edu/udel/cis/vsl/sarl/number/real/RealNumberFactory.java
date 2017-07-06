@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
+import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
@@ -2388,16 +2389,12 @@ public class RealNumberFactory implements NumberFactory {
 		assert number != null && n != null;
 		assert !number.isInfinite() && !n.isInfinite();
 		assert n.signum() > 0;
-
 		// If number is negative, n could not be even.
-		if (number.signum() < 0) {
-			if (mod(n, integer(2)).isZero()) {
-				throw new IllegalArgumentException(
-						"When the argument 'number' to the method nthRootInt is negative, "
-								+ "\nThe argument 'n' should be greater than 0."
-								+ "\nThe n is: " + n);
-			}
-		}
+		if (number.signum() < 0 && mod(n, integer(2)).isZero())
+			throw new SARLInternalException(
+					"nthRootInt: Can not calculate the \'" + n
+							+ "\'th root for the number \'" + number
+							+ "\'. (If the given number is negative, the 'n' can not be even.)");
 		// Special Cases
 		if (n.isOne() || number.isZero() || abs(number).isOne())
 			return number;
@@ -2514,33 +2511,45 @@ public class RealNumberFactory implements NumberFactory {
 	@Override
 	public Interval divide(Interval interval, Number num) {
 		assert interval != null && num != null;
-
-		int sign = num.signum();
-
 		if (num.isZero())
 			throw new ArithmeticException("Interval divide by zero");
 
-		Boolean isIntegral = interval.isIntegral();
+		int sign = num.signum();
+		boolean isIntegral = interval.isIntegral();
+		boolean sl = interval.strictLower();
+		boolean su = interval.strictUpper();
+		RationalNumber lo = null;
+		RationalNumber up = null;
+		RationalNumber divisor = null;
 
 		assert isIntegral == num instanceof IntegerNumber;
 		if (interval.isEmpty() || interval.isUniversal())
 			return interval;
 		if (num.isInfinite())
 			return isIntegral ? zeroIntegerInterval : zeroRationalInterval;
-
-		Number lo = interval.lower();
-		Number up = interval.upper();
-		boolean sl = interval.strictLower();
-		boolean su = interval.strictUpper();
-
-		lo = lo.isInfinite() ? infiniteNumber(isIntegral, false)
-				: divide(lo, num);
-		up = up.isInfinite() ? infiniteNumber(isIntegral, true)
-				: divide(up, num);
-		if (sign < 0)
-			return newInterval(isIntegral, up, sl, lo, su);
-		else
-			return newInterval(isIntegral, lo, sl, up, su);
+		if (isIntegral) {
+			lo = interval.lower().isInfinite() ? infiniteRational(false)
+					: rational(interval.lower());
+			up = interval.upper().isInfinite() ? infiniteRational(true)
+					: rational(interval.upper());
+			divisor = rational(num);
+			lo = lo.isInfinite() ? lo : divide(lo, divisor);
+			up = up.isInfinite() ? up : divide(up, divisor);
+			if (sign < 0)
+				return newInterval(true, ceil(up), su, floor(lo), sl);
+			else
+				return newInterval(true, ceil(lo), sl, floor(up), su);
+		} else {
+			lo = (RationalNumber) interval.lower();
+			up = (RationalNumber) interval.upper();
+			divisor = (RationalNumber) num;
+			lo = lo.isInfinite() ? lo : divide(lo, divisor);
+			up = up.isInfinite() ? up : divide(up, divisor);
+			if (sign < 0)
+				return newInterval(false, up, su, lo, sl);
+			else
+				return newInterval(false, lo, sl, up, su);
+		}
 	}
 
 	@Override
@@ -2548,7 +2557,7 @@ public class RealNumberFactory implements NumberFactory {
 		assert interval != null && num != null;
 		assert !num.isInfinite();
 
-		Boolean isIntegral = interval.isIntegral();
+		boolean isIntegral = interval.isIntegral();
 
 		assert isIntegral == num instanceof IntegerNumber;
 		if (interval.isEmpty())
@@ -2574,7 +2583,7 @@ public class RealNumberFactory implements NumberFactory {
 	public Interval divide(Interval i1, Interval i2) {
 		assert i1 != null && i2 != null;
 
-		Boolean isIntegral = i1.isIntegral();
+		boolean isIntegral = i1.isIntegral();
 
 		assert isIntegral == i2.isIntegral();
 

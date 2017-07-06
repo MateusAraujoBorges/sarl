@@ -3922,8 +3922,8 @@ public class IntervalUnionSetTest {
 				false, INT_THREE, false);
 		IntervalUnionSet set = new IntervalUnionSet(interval);
 		IntervalUnionSet expected = new IntervalUnionSet(expectedInterval);
-		IntervalUnionSet actual = (IntervalUnionSet) rangeFactory
-				.divide(set, INT_THREE);
+		IntervalUnionSet actual = (IntervalUnionSet) rangeFactory.divide(set,
+				INT_THREE);
 
 		p(DEBUG, expected.toString());
 		p(DEBUG, actual.toString());
@@ -3939,8 +3939,31 @@ public class IntervalUnionSetTest {
 				true, rat_tenThird, false);
 		IntervalUnionSet set = new IntervalUnionSet(interval);
 		IntervalUnionSet expected = new IntervalUnionSet(expectedInterval);
-		IntervalUnionSet actual = (IntervalUnionSet) rangeFactory
-				.divide(set, RAT_THREE);
+		IntervalUnionSet actual = (IntervalUnionSet) rangeFactory.divide(set,
+				RAT_THREE);
+
+		p(DEBUG, expected.toString());
+		p(DEBUG, actual.toString());
+		assertEquals(expected.toString(), actual.toString());
+	}
+
+	/**
+	 * Get the approximation range from the given range <code>set</code>
+	 */
+	@Test
+	public void rangeApproximation_01() {
+		Interval interval1 = numberFactory.newInterval(true, INT_N_ONE, false,
+				INT_ZERO, true);
+		Interval interval2 = numberFactory.newInterval(true, INT_THREE, false,
+				INT_SIX, true);
+		Interval interval3 = numberFactory.newInterval(true, INT_SIX, false,
+				INT_TEN, true);
+		Interval expectedInterval = numberFactory.newInterval(true, INT_N_ONE,
+				false, INT_NINE, false);
+		IntervalUnionSet set = new IntervalUnionSet(interval1, interval2,
+				interval3);
+		IntervalUnionSet expected = new IntervalUnionSet(expectedInterval);
+		IntervalUnionSet actual = (IntervalUnionSet) set.rangeApproximation();
 
 		p(DEBUG, expected.toString());
 		p(DEBUG, actual.toString());

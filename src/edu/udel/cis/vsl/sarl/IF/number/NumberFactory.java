@@ -745,9 +745,13 @@ public interface NumberFactory {
 	IntegerNumber nthRootInt(IntegerNumber number, IntegerNumber n);
 
 	/**
-	 * Divides the given {@link Interval} with a given {@link Number} and
-	 * returns result. They must be of same type (integer or real), which is
-	 * also the type of the result.
+	 * Return the {@link Interval} consisting of all {@link Number}s that each
+	 * {@link Number} <code>x</code> in the {@link Interval} multiplies with the
+	 * given <code>num</code> is in the given <code>interval</code>. <br>
+	 * (i.e., for all <code>x</code> in the returned result, <code>x*num</code>
+	 * is in <code>interval</code>.)<br>
+	 * E.g., for integer intervals: [1,3]/2 = [1,1]; [1,4]/3 = [1,1]; [1,5]/6 =
+	 * empty, for rational intervals: [1,3]/2 = [0.5,1.5].
 	 * 
 	 * @param interval
 	 *            A non-<code>null</code> {@link Interval}

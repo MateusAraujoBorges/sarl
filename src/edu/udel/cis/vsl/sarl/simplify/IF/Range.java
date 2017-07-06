@@ -150,17 +150,19 @@ public interface Range {
 	Interval asInterval();
 
 	/**
-	 * Get all intervals contained in this range;<br>
-	 * If this range is empty, an array with size of zero will be returned.
-	 * 
-	 * @return
-	 */
-	Interval[] intervals();
-
-	/**
 	 * Get the {@link RangeSign} of <code>this</code> range.
 	 * 
 	 * @return
 	 */
 	RangeSign sign();
+
+	/**
+	 * Get the over-approximated {@link Range} of <code>this</code> range.
+	 * (E.g., for an integral range consisting of [-1, 0), [3, 6) and [6, 10);
+	 * the actual range should be [-1, -1] U [3, 9]; and its over-approximation
+	 * range should be [-1, 9].)
+	 * 
+	 * @return the over-approximation range of <code>this</code>
+	 */
+	Range rangeApproximation();
 }

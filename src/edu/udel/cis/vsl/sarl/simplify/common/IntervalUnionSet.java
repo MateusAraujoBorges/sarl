@@ -1,7 +1,6 @@
 package edu.udel.cis.vsl.sarl.simplify.common;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
@@ -245,8 +244,10 @@ public class IntervalUnionSet implements Range {
 	}
 
 	/**
-	 * To get the {@link Interval} array for <ccode>this</code>
-	 * {@link IntervalUnionSet}.
+	 * Get all {@link Interval}s contained in <code>this</code>
+	 * {@link IntervalUnionSet};<br>
+	 * If <code>this</code> is an empty set, an array with size of zero will be
+	 * returned.
 	 * 
 	 * @return An array of {@link Interval}s
 	 */
@@ -1275,23 +1276,52 @@ public class IntervalUnionSet implements Range {
 
 	@Override
 	public int hashCode() {
-		int numAttr = 4;
-		Object[] hashObjs = new Object[numAttr * intervalArray.length + 1];
+		int hashCode = 2147483647;
 
-		hashObjs[0] = isInt;
-		for (int i = 0; i < intervalArray.length; i++) {
-			int index = i * numAttr;
-			Interval interval = intervalArray[i];
-			hashObjs[index + 1] = interval.lower();
-			hashObjs[index + 2] = interval.strictLower();
-			hashObjs[index + 3] = interval.upper();
-			hashObjs[index + 4] = interval.strictUpper();
+		for (Interval i : intervalArray) {
+			hashCode ^= i.isIntegral() ? 127 : 131071;
+			hashCode ^= i.lower().hashCode();
+			hashCode ^= i.strictLower() ? 8191 : 8388607;
+			hashCode ^= i.upper().hashCode();
+			hashCode ^= i.strictUpper() ? 2047 : 536870911;
 		}
-		return Objects.hash(hashObjs);
+		return hashCode;
 	}
 
 	@Override
 	public RangeSign sign() {
 		return rSign;
+	}
+
+	@Override
+	public Range rangeApproximation() {
+		int startIndex = 0;
+		int endIndex = intervalArray.length - 1;
+
+		if (endIndex < 1)
+			return this;
+		return new IntervalUnionSet(numberFactory.newInterval(isInt,
+				intervalArray[startIndex].lower(),
+				intervalArray[startIndex].strictLower(),
+				intervalArray[endIndex].upper(),
+				intervalArray[endIndex].strictUpper()));
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof IntervalUnionSet))
+			return false;
+
+		boolean isEqual = true;
+		int numInterval = this.intervalArray.length;
+		IntervalUnionSet other = (IntervalUnionSet) obj;
+
+		if (numInterval != other.intervalArray.length)
+			return false;
+		for (int i = 0; i < numInterval; i++) {
+			isEqual = isEqual && numberFactory.compare(intervalArray[i],
+					other.intervalArray[i]) == 0;
+		}
+		return isEqual;
 	}
 }

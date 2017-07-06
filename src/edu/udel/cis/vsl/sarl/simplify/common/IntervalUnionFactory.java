@@ -501,7 +501,7 @@ public class IntervalUnionFactory implements RangeFactory {
 		assert b instanceof IntegerNumber == range.isIntegral();
 
 		Boolean isInt = range.isIntegral();
-		Interval[] thisIntervals = range.intervals();
+		Interval[] thisIntervals = ((IntervalUnionSet) range).intervals();
 		int index = 0;
 		int size = thisIntervals.length;
 		Interval[] intervals = new Interval[size];
@@ -713,8 +713,8 @@ public class IntervalUnionFactory implements RangeFactory {
 
 		boolean isInt = lRange.isIntegral();
 		ArrayList<Interval> list = new ArrayList<Interval>();
-		Interval[] thisArray = lRange.intervals();
-		Interval[] otherArray = rRange.intervals();
+		Interval[] thisArray = ((IntervalUnionSet) lRange).intervals();
+		Interval[] otherArray = ((IntervalUnionSet) rRange).intervals();
 		Interval thisInterval = null;
 		int thisSize = thisArray.length;
 		int otherSize = otherArray.length;
@@ -829,8 +829,8 @@ public class IntervalUnionFactory implements RangeFactory {
 
 		boolean isInt = lRange.isIntegral();
 		ArrayList<Interval> list = new ArrayList<Interval>();
-		Interval[] thisArray = lRange.intervals();
-		Interval[] otherArray = rRange.intervals();
+		Interval[] thisArray = ((IntervalUnionSet) lRange).intervals();
+		Interval[] otherArray = ((IntervalUnionSet) rRange).intervals();
 		Interval thisInterval = null;
 		int thisSize = thisArray.length;
 		int otherSize = otherArray.length;
@@ -976,7 +976,7 @@ public class IntervalUnionFactory implements RangeFactory {
 		assert constant instanceof IntegerNumber == range.isIntegral();
 
 		Boolean isInt = range.isIntegral();
-		Interval[] thisIntervals = range.intervals();
+		Interval[] thisIntervals = ((IntervalUnionSet) range).intervals();
 		int index = 0;
 		int size = thisIntervals.length;
 		Interval[] intervals = new Interval[size];
@@ -1017,7 +1017,7 @@ public class IntervalUnionFactory implements RangeFactory {
 		assert constant instanceof IntegerNumber == range.isIntegral();
 
 		Boolean isInt = range.isIntegral();
-		Interval[] thisIntervals = range.intervals();
+		Interval[] thisIntervals = ((IntervalUnionSet) range).intervals();
 		int index = 0;
 		int size = thisIntervals.length;
 		Interval[] intervals = new Interval[size];
@@ -1052,8 +1052,8 @@ public class IntervalUnionFactory implements RangeFactory {
 
 	@Override
 	public Range subtract(Range lRange, Range rRange) {
-		Interval[] lIntervals = lRange.intervals();
-		Interval[] rIntervals = rRange.intervals();
+		Interval[] lIntervals = ((IntervalUnionSet) lRange).intervals();
+		Interval[] rIntervals = ((IntervalUnionSet) rRange).intervals();
 		ArrayList<Interval> rawIntervals = new ArrayList<Interval>();
 
 		for (int i = 0; i < lIntervals.length; i++)
