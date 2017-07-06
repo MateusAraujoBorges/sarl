@@ -26,12 +26,13 @@ public abstract class CommonSimplifier implements Simplifier {
 	 * Print general debugging information?
 	 */
 	public final static boolean debug = false;
-
+	
 	/**
 	 * Keeps count of the number of simplifications performed, for performance
 	 * debugging.
 	 */
 	public static int simplifyCount = 0;
+
 
 	// Instance fields...
 

@@ -73,11 +73,11 @@ public class IdealSimplifierBBTest {
 	public void xGreater0Test() {
 		assumption = preUniv.lessThan(rat0, xNE); // 0<x
 		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
-		// out.println(idealSimplifier.simplifyExpression(bigMixedXYTermPoly));
+		out.println("full: " + idealSimplifier.getFullContext() + " reduced: "
+				+ idealSimplifier.getReducedContext());
 		assertEquals("0 < x", idealSimplifier.getReducedContext().toString());
-		// out.println("full: " + idealSimplifier.getFullContext() +
-		// " reduced: " + idealSimplifier.getReducedContext());
-		// out.println(idealSimplifier.apply(bigMixedXYTermPoly));
+
+		out.println(idealSimplifier.apply(bigMixedXYTermPoly));
 		assertEquals(idealSimplifier.getReducedContext(),
 				idealSimplifier.getFullContext());
 	}

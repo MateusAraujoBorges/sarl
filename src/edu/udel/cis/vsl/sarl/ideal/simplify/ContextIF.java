@@ -1,8 +1,11 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
+import java.util.Map;
+
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
@@ -15,9 +18,9 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Range;
  *
  */
 public interface ContextIF {
-	
+
 	SimplifierInfo getInfo();
-	
+
 	BooleanExpression getOriginalAssumption();
 
 	/**
@@ -39,5 +42,17 @@ public interface ContextIF {
 	void clearSimplificationCache();
 
 	Range computeRange(NumericExpression expression);
+
+	Map<Monic, Number> getMonicConstantMap();
+
+	SymbolicExpression simplify(SymbolicExpression expr);
+
+	BooleanExpression getReducedAssumption();
+
+	BooleanExpression getFullAssumption();
+
+	boolean isInconsistent();
+	
+	boolean isInitialized();
 
 }

@@ -148,7 +148,7 @@ public class Context2 implements ContextIF {
 	 * A cache of all simplifications computed under this {@link Context2}. For
 	 * any entry (x,y), the following formula must be valid: context -> x=y.
 	 */
-	private Map<SymbolicObject, SymbolicObject> simplificationCache;
+	private Map<SymbolicObject, SymbolicObject> simplificationCache = null;
 
 	/**
 	 * An object that gathers together references to various tools that are
@@ -174,10 +174,6 @@ public class Context2 implements ContextIF {
 		this.info = info;
 		this.subMap = subMap;
 		this.rangeMap = rangeMap;
-		// can also use a TreeMap, but HashMap seems faster...
-		// this.simplificationCache = new TreeMap<SymbolicObject,
-		// SymbolicObject>(info.universe.comparator());
-		this.simplificationCache = new HashMap<>();
 	}
 
 	/**
@@ -379,7 +375,7 @@ public class Context2 implements ContextIF {
 			pair.right = null;
 			return;
 		}
-		if (pair.left.isNumeric()) {
+		if (pair.left.type().isIdeal()) {
 			if (pair.left.operator() == SymbolicOperator.CAST) {
 				// if x has type hint, (int)x->y should be changed to x->(hint)y
 				SymbolicType type = pair.left.type();
@@ -396,6 +392,7 @@ public class Context2 implements ContextIF {
 					// from the beginning.
 					pair.left = original;
 					pair.right = info.universe.cast(originalType, pair.right);
+					return;
 				}
 			}
 			if (!(pair.left instanceof Monomial
@@ -404,7 +401,7 @@ public class Context2 implements ContextIF {
 						pair.right);
 
 				pair.left = (Monomial) equation.argument(0);
-				pair.right = (Monomial) equation.argument(0);
+				pair.right = (Monomial) equation.argument(1);
 			}
 			assert pair.left instanceof Monomial;
 			assert pair.right instanceof Monomial;
@@ -642,7 +639,7 @@ public class Context2 implements ContextIF {
 			result.rhs = arg0;
 			return result;
 		}
-		if (arg0.type().isNumeric()) {
+		if (arg0.type().isIdeal()) {
 			assert arg0.isZero();
 			assert arg1 instanceof Primitive;
 
@@ -787,7 +784,8 @@ public class Context2 implements ContextIF {
 	 *            the expression to simplify
 	 * @return the simplified expression
 	 */
-	private SymbolicExpression simplify(SymbolicExpression expr) {
+	@Override
+	public SymbolicExpression simplify(SymbolicExpression expr) {
 		return new IdealSimplifierWorker2(this).simplifyExpressionWork(expr);
 		// this should do transitive closure of substitution
 	}
@@ -1116,7 +1114,8 @@ public class Context2 implements ContextIF {
 	 * @return a map mapping each {@link Monic} to the {@link Number} value
 	 *         associated to that monic in this context
 	 */
-	protected Map<Monic, Number> getMonicConstantMap() {
+	@Override
+	public Map<Monic, Number> getMonicConstantMap() {
 		Map<Monic, Number> map = new TreeMap<>(info.monicComparator);
 
 		addMonicConstantsToMap(map);
@@ -1594,7 +1593,7 @@ public class Context2 implements ContextIF {
 		SymbolicExpression arg0 = (SymbolicExpression) eqExpr.argument(0);
 		SymbolicExpression arg1 = (SymbolicExpression) eqExpr.argument(1);
 
-		if (arg0.type().isNumeric()) { // 0=x for a Primitive x
+		if (arg0.type().isIdeal()) { // 0=x for a Primitive x
 			extractEQ0((Primitive) arg1);
 		} else {
 			boolean const0 = arg0.operator() == SymbolicOperator.CONCRETE;
@@ -1723,7 +1722,7 @@ public class Context2 implements ContextIF {
 			throws InconsistentContextException {
 		SymbolicType type = arg0.type();
 
-		if (type.isNumeric()) { // 0!=x, for a Primitive x
+		if (type.isIdeal()) { // 0!=x, for a Primitive x
 			Primitive primitive = (Primitive) arg1;
 			RangeFactory rf = info.rangeFactory;
 			Number zero = type.isInteger() ? info.numberFactory.zeroInteger()
@@ -1786,11 +1785,26 @@ public class Context2 implements ContextIF {
 		monic = pair.left;
 		range = pair.right;
 
-		Range result = computeRange(monic);
+		Range oldRange = computeRange(monic);
+		Range newRange = rf.intersect(oldRange, range);
 
-		result = rf.intersect(result, range);
-		if (!result.equals(range))
-			restrictRange(monic, result);
+		// TODO: need temporary fix to lack of equals method for Range...
+		if (!equals(oldRange, newRange))
+			// if (!result.equals(range))
+			restrictRange(monic, newRange);
+	}
+
+	private boolean equals(Range r1, Range r2) {
+		PrintStream out = System.out;
+
+		if (r1 == r2)
+			return true;
+		if (r1.hashCode() == r2.hashCode()) {
+			out.println("equals: " + r1 + ", " + r2);
+			out.flush();
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -1875,20 +1889,27 @@ public class Context2 implements ContextIF {
 		} catch (InconsistentContextException e) {
 			makeInconsistent();
 		}
+		// can also use a TreeMap, but HashMap seems faster...
+		// this.simplificationCache = new TreeMap<SymbolicObject,
+		// SymbolicObject>(info.universe.comparator());
+		simplificationCache = new HashMap<>();
 	}
 
 	// ************************** Public methods **************************
 
 	// public methods not specified in other interfaces...
 
+	@Override
 	public BooleanExpression getReducedAssumption() {
 		return getAssumption(false);
 	}
 
+	@Override
 	public BooleanExpression getFullAssumption() {
 		return getAssumption(true);
 	}
 
+	@Override
 	public boolean isInconsistent() {
 		SymbolicExpression result = subMap.get(info.falseExpr);
 
@@ -1991,12 +2012,15 @@ public class Context2 implements ContextIF {
 
 	@Override
 	public void cacheSimplification(SymbolicObject key, SymbolicObject value) {
-		simplificationCache.put(key, value);
+		if (simplificationCache != null)
+			simplificationCache.put(key, value);
 	}
 
 	@Override
 	public SymbolicObject getSimplification(SymbolicObject key) {
-		return simplificationCache.get(key);
+		if (simplificationCache != null)
+			return simplificationCache.get(key);
+		return null;
 	}
 
 	@Override
@@ -2007,6 +2031,11 @@ public class Context2 implements ContextIF {
 	@Override
 	public BooleanExpression getOriginalAssumption() {
 		return originalAssumption;
+	}
+
+	@Override
+	public boolean isInitialized() {
+		return simplificationCache != null;
 	}
 
 }

@@ -10,21 +10,21 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Range;
 
 public class SubContext extends Context2 {
 
-	private Context2 superContext;
+	private ContextIF superContext;
 
-	public SubContext(Context2 superContext) {
-		super(superContext.info);
+	public SubContext(ContextIF superContext) {
+		super(superContext.getInfo());
 		this.superContext = superContext;
 	}
 
-	public SubContext(Context2 superContext, BooleanExpression assumption) {
+	public SubContext(ContextIF superContext, BooleanExpression assumption) {
 		this(superContext);
 		this.originalAssumption = assumption;
 		initialize(assumption);
 	}
 
 	@Override
-	protected Map<Monic, Number> getMonicConstantMap() {
+	public Map<Monic, Number> getMonicConstantMap() {
 		Map<Monic, Number> map = superContext.getMonicConstantMap();
 
 		addMonicConstantsToMap(map); // overwrites any previous entries
