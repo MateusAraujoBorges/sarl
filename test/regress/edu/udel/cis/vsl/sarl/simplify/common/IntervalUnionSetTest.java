@@ -3969,4 +3969,26 @@ public class IntervalUnionSetTest {
 		p(DEBUG, actual.toString());
 		assertEquals(expected.toString(), actual.toString());
 	}
+
+	@Test
+	public void multiply_one_with_univ() {
+		IntervalUnionSet int_univ_set = (IntervalUnionSet) rangeFactory
+				.universalSet(true);
+		IntervalUnionSet rat_univ_set = (IntervalUnionSet) rangeFactory
+				.universalSet(false);
+		IntervalUnionSet int_one_set = (IntervalUnionSet) rangeFactory
+				.singletonSet(INT_ONE);
+		IntervalUnionSet rat_one_set = (IntervalUnionSet) rangeFactory
+				.singletonSet(RAT_ONE);
+		IntervalUnionSet int_actual = ((IntervalUnionSet) rangeFactory
+				.multiply(int_one_set, int_univ_set));
+		IntervalUnionSet int_expected = ((IntervalUnionSet) rangeFactory
+				.universalSet(true));
+		IntervalUnionSet rat_actual = ((IntervalUnionSet) rangeFactory
+				.multiply(rat_one_set, rat_univ_set));
+		IntervalUnionSet rat_expected = ((IntervalUnionSet) rangeFactory
+				.universalSet(false));
+		assertEquals(int_actual, int_expected);
+		assertEquals(rat_actual, rat_expected);
+	}
 }

@@ -464,7 +464,7 @@ public class IntervalUnionFactory implements RangeFactory {
 	@Override
 	public Range multiply(Range lRange, Range rRange) {
 		IntervalUnionSet lSet = (IntervalUnionSet) lRange;
-		IntervalUnionSet rSet = (IntervalUnionSet) lRange;
+		IntervalUnionSet rSet = (IntervalUnionSet) rRange;
 		Interval[] lIntervals = lSet.intervals();
 		Interval[] rIntervals = rSet.intervals();
 		int lSize = lIntervals.length;
