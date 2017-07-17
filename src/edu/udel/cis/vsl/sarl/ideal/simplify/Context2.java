@@ -88,6 +88,8 @@ public class Context2 implements ContextIF {
 	/** The original, unaltered, assumption used to initialize this context. */
 	BooleanExpression originalAssumption;
 
+	private boolean initialized = false;
+
 	/**
 	 * <p>
 	 * The essential substitution map. When simplifying an expression, any
@@ -1152,10 +1154,21 @@ public class Context2 implements ContextIF {
 			SymbolicExpression value) throws InconsistentContextException {
 		SymbolicExpression old = subMap.put(key, value);
 
-		if (old != null && value.operator() == SymbolicOperator.CONCRETE
-				&& old.operator() == SymbolicOperator.CONCRETE
-				&& old != value) {
-			throw new InconsistentContextException();
+		if (old != value) {
+			simplificationCache.clear();
+			if (old != null) {
+				switch (value.type().typeKind()) {
+				case BOOLEAN:
+				case CHAR:
+				case INTEGER:
+				case REAL:
+					if (value.operator() == SymbolicOperator.CONCRETE
+							&& old.operator() == SymbolicOperator.CONCRETE) {
+						throw new InconsistentContextException();
+					}
+				default:
+				}
+			}
 		}
 		return old;
 	}
@@ -1216,7 +1229,7 @@ public class Context2 implements ContextIF {
 				continue; // a trivial substitution
 
 			SymbolicExpression newValue = pair.right;
-			SymbolicExpression oldValue = getSub(newKey); // subMap.get(newKey);
+			SymbolicExpression oldValue = getSub(newKey);
 
 			if (oldValue != null && oldValue.equals(newValue))
 				continue; // this sub is already in the subMap
@@ -1236,6 +1249,7 @@ public class Context2 implements ContextIF {
 
 				if (subKey != key || subValue != value) {
 					iter.remove();
+					simplificationCache.clear();
 					workList.add(new Pair<>(subKey, subValue));
 				}
 			}
@@ -1314,10 +1328,13 @@ public class Context2 implements ContextIF {
 
 		if (value == null) {
 			rangeMap.put(key, range);
+			simplificationCache.clear();
 		} else {
 			addSub(key, info.universe.number(value));
-			if (original != null)
+			if (original != null) {
 				rangeMap.remove(key);
+				simplificationCache.clear();
+			}
 		}
 	}
 
@@ -1330,6 +1347,7 @@ public class Context2 implements ContextIF {
 	 * @return <code>true</code> iff any change was made to the
 	 *         {@link #rangeMap}
 	 */
+
 	private boolean simplifyRangeMap() throws InconsistentContextException {
 		FastList<Monic> keyList = new FastList<>();
 		boolean change = false;
@@ -1362,6 +1380,7 @@ public class Context2 implements ContextIF {
 
 			Range oldRange = rangeMap.remove(oldKey);
 
+			simplificationCache.clear();
 			if (oldRange != null) {
 				change = true;
 
@@ -1407,6 +1426,7 @@ public class Context2 implements ContextIF {
 	private void makeInconsistent() {
 		rangeMap.clear();
 		subMap.clear();
+		simplificationCache.clear();
 		// arrayFacts.clear();
 		subMap.put(info.falseExpr, info.trueExpr);
 	}
@@ -1788,23 +1808,8 @@ public class Context2 implements ContextIF {
 		Range oldRange = computeRange(monic);
 		Range newRange = rf.intersect(oldRange, range);
 
-		// TODO: need temporary fix to lack of equals method for Range...
-		if (!equals(oldRange, newRange))
-			// if (!result.equals(range))
+		if (!oldRange.equals(newRange))
 			restrictRange(monic, newRange);
-	}
-
-	private boolean equals(Range r1, Range r2) {
-		PrintStream out = System.out;
-
-		if (r1 == r2)
-			return true;
-		if (r1.hashCode() == r2.hashCode()) {
-			out.println("equals: " + r1 + ", " + r2);
-			out.flush();
-			return true;
-		}
-		return false;
 	}
 
 	/**
@@ -1883,6 +1888,12 @@ public class Context2 implements ContextIF {
 
 	protected void initialize(BooleanExpression assumption) {
 		this.originalAssumption = assumption;
+		simplificationCache = new HashMap<>();
+
+		if (debug) {
+			System.out.println("Creating context : " + assumption);
+		}
+
 		try {
 			addFact(assumption);
 			reduce();
@@ -1892,7 +1903,7 @@ public class Context2 implements ContextIF {
 		// can also use a TreeMap, but HashMap seems faster...
 		// this.simplificationCache = new TreeMap<SymbolicObject,
 		// SymbolicObject>(info.universe.comparator());
-		simplificationCache = new HashMap<>();
+		initialized = true;
 	}
 
 	// ************************** Public methods **************************
@@ -2012,15 +2023,12 @@ public class Context2 implements ContextIF {
 
 	@Override
 	public void cacheSimplification(SymbolicObject key, SymbolicObject value) {
-		if (simplificationCache != null)
-			simplificationCache.put(key, value);
+		simplificationCache.put(key, value);
 	}
 
 	@Override
 	public SymbolicObject getSimplification(SymbolicObject key) {
-		if (simplificationCache != null)
-			return simplificationCache.get(key);
-		return null;
+		return simplificationCache.get(key);
 	}
 
 	@Override
@@ -2035,7 +2043,7 @@ public class Context2 implements ContextIF {
 
 	@Override
 	public boolean isInitialized() {
-		return simplificationCache != null;
+		return initialized;
 	}
 
 }

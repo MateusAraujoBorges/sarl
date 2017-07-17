@@ -482,6 +482,10 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 			int size = termMap.length;
 			Monomial[] terms = new Monomial[size];
 			boolean simplified = false;
+			
+			// TODO: delete me
+			System.out.println("size = " + size + "...");
+			assert size >= 2;
 
 			for (int i = 0; i < size; i++) {
 				Monomial term = termMap[i];
@@ -490,6 +494,12 @@ public class IdealSimplifierWorker extends CommonSimplifierWorker {
 				simplified = simplified || term != simplifiedTerm;
 				terms[i] = simplifiedTerm;
 			}
+			
+			// TODO: delete me
+			if (simplified)
+				System.out.println(" simplified!");
+			else
+				System.out.println(" not simplified :-(");
 
 			Monomial result = simplified ? id.addMonomials(terms) : poly;
 

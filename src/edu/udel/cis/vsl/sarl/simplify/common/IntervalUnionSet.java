@@ -1031,60 +1031,60 @@ public class IntervalUnionSet implements Range {
 		assert x != null;
 		assert universe != null;
 
-		BooleanExpression result = universe.bool(false);
-		NumericExpression lowerExpression = null;
-		NumericExpression upperExpression = null;
-		Interval temp = null;
-		int index = 0;
-		int size = intervalArray.length;
+		BooleanExpression trueExpr = universe.trueExpression();
 
-		if (0 == size) {
-			// This set is empty
-			return result;
-		}
+		if (this.isUniversal())
+			return trueExpr;
+
+		BooleanExpression result = universe.falseExpression();
+		int size = intervalArray.length;
+		int index = 0;
+
 		while (index < size) {
-			temp = intervalArray[index];
+			Interval interval = intervalArray[index];
 			index++;
 
-			boolean strictLower = temp.strictLower();
-			boolean strictUpper = temp.strictUpper();
-			Number lower = temp.lower();
-			Number upper = temp.upper();
-			BooleanExpression lowerWithXExpression, upperWithXExpression,
-					tempExpression;
+			Number lower = interval.lower();
+			Number upper = interval.upper();
+			boolean strictLower = interval.strictLower();
+			boolean strictUpper = interval.strictUpper();
+			BooleanExpression orClause;
 
-			if (lower.isInfinite() && upper.isInfinite()) {
-				// This set is universal
-				result = universe.bool(true);
-				return result;
-			} else if (lower.isInfinite()) {
-				upperExpression = universe.number(upper);
-				tempExpression = strictUpper
-						? universe.lessThan(x, upperExpression)
-						: universe.lessThanEquals(x, upperExpression);
-			} else if (upper.isInfinite()) {
-				lowerExpression = universe.number(lower);
-				tempExpression = strictLower
-						? universe.lessThan(lowerExpression, x)
-						: universe.lessThanEquals(lowerExpression, x);
+			if (lower.equals(upper)) {
+				// This interval represents a single number.
+				assert !strictLower && !strictUpper;
+				orClause = universe.equals(x, universe.number(lower));
 			} else {
-				lowerExpression = universe.number(lower);
-				upperExpression = universe.number(upper);
-				lowerWithXExpression = strictLower
-						? universe.lessThan(lowerExpression, x)
-						: universe.lessThanEquals(lowerExpression, x);
-				upperWithXExpression = strictUpper
-						? universe.lessThan(x, upperExpression)
-						: universe.lessThanEquals(x, upperExpression);
-				tempExpression = universe.and(lowerWithXExpression,
-						upperWithXExpression);
-				if (lower.compareTo(upper) == 0) {
-					// This interval represents a single number.
-					assert !strictLower && !strictUpper;
-					tempExpression = universe.equals(x, lowerExpression);
+				orClause = trueExpr;
+				while (strictUpper && index < size) {
+					interval = intervalArray[index];
+					if (!interval.strictLower()
+							|| !interval.lower().equals(upper))
+						break;
+					// ... U (lower,upper) U (upper,c) U ...
+					orClause = universe.and(orClause,
+							(BooleanExpression) universe.neq(x,
+									universe.number(upper)));
+					upper = interval.upper();
+					strictUpper = interval.strictUpper();
+					index++;
+				}
+				if (!lower.isInfinite()) {
+					NumericExpression lowerExpression = universe.number(lower);
+
+					orClause = universe.and(orClause, strictLower
+							? universe.lessThan(lowerExpression, x)
+							: universe.lessThanEquals(lowerExpression, x));
+				}
+				if (!upper.isInfinite()) {
+					NumericExpression upperExpression = universe.number(upper);
+
+					orClause = universe.and(orClause, strictUpper
+							? universe.lessThan(x, upperExpression)
+							: universe.lessThanEquals(x, upperExpression));
 				}
 			}
-			result = universe.or(result, tempExpression);
+			result = universe.or(result, orClause);
 		}
 		return result;
 	}

@@ -268,8 +268,15 @@ public class IdealSimplifierWorker2 {
 
 		Monomial[] termMap = poly.termMap(idf);
 		int size = termMap.length;
+
+		// TODO: why allocate this array if you may never use it...
+
 		Monomial[] terms = new Monomial[size];
 		boolean simplified = false;
+
+		// TODO: this is slow for CG. Find out why...
+		// System.out.println("size = " + size + "...");
+		assert size >= 2;
 
 		for (int i = 0; i < size; i++) {
 			Monomial term = termMap[i];
@@ -278,6 +285,12 @@ public class IdealSimplifierWorker2 {
 			simplified = simplified || term != simplifiedTerm;
 			terms[i] = simplifiedTerm;
 		}
+
+		// TODO: delete me
+		// if (simplified)
+		// System.out.println(" simplified!");
+		// else
+		// System.out.println(" not simplified :-(");
 
 		Monomial result = simplified ? idf.addMonomials(terms) : poly;
 
@@ -383,8 +396,8 @@ public class IdealSimplifierWorker2 {
 					.getFullAssumption();
 		case EXISTS:
 		case FORALL:
-			if (seenBefore(expression))
-				break;
+			// if (seenBefore(expression))
+			// break;
 			return simplifyQuantifiedBooleanExpression(expression);
 		// case APPLY:
 		// case ARRAY_READ:

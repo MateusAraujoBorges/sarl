@@ -102,15 +102,15 @@ public class MixedArithmeticTest {
 				.cast(herbrandInteger, universe.integer(2));
 		NumericSymbolicConstant x = (NumericSymbolicConstant) universe
 				.symbolicConstant(universe.stringObject("X"), herbrandInteger);
-		NumericExpression e1 = universe.add(x, one);
-		BooleanExpression p = universe.equals(x, two);
+		NumericExpression e1 = universe.add(x, one); // X+1h
+		BooleanExpression p = universe.equals(x, two); // X=2h
 		Reasoner reasoner = universe.reasoner(p);
 		NumericExpression e2 = (NumericExpression) reasoner.simplify(e1);
 		NumericExpression expected = universe.add(two, one);
 
-		out.println("herbrandSimplify: e1 = " + e1);
-		out.println("herbrandSimplify: p  = " + p);
-		out.println("herbrandSimplify: e2 = " + e2);
+		out.println("herbrandSimplify: e1 = " + e1); // X+1h
+		out.println("herbrandSimplify: p  = " + p); // X=2h
+		out.println("herbrandSimplify: e2 = " + e2); // 2h+1h
 		assertEquals(expected, e2);
 	}
 
