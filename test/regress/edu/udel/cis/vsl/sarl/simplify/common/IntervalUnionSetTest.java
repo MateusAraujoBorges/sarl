@@ -8,6 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -15,6 +16,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
@@ -3990,5 +3992,83 @@ public class IntervalUnionSetTest {
 				.universalSet(false));
 		assertEquals(int_actual, int_expected);
 		assertEquals(rat_actual, rat_expected);
+	}
+
+	@Test
+	public void symbolicRepresentationIntegerTest() {
+		DEBUG = true;
+
+		Interval interval0 = numberFactory.newInterval(true,
+				numberFactory.negativeInfinityInteger(), true, INT_N_ONE,
+				false);
+		Interval interval1 = numberFactory.newInterval(true, INT_ONE, false,
+				INT_TWO, false);
+		Interval interval2 = numberFactory.newInterval(true, INT_FOUR, false,
+				INT_FIVE, false);
+		Interval interval3 = numberFactory.newInterval(true, INT_SEVEN, false,
+				numberFactory.positiveInfinityInteger(), true);
+		Interval interval4 = numberFactory.newInterval(true, INT_EIGHT, false,
+				INT_SEVEN, true);
+		IntervalUnionSet intervalUnionSet = new IntervalUnionSet(interval1,
+				interval2, interval3, interval0, interval4);
+
+		p(DEBUG, "set = " + intervalUnionSet);
+
+		BooleanExpression result = intervalUnionSet
+				.symbolicRepresentation(INT_X, universe);
+
+		p(DEBUG, "symbolic expression = " + result);
+
+		// below is the expected answer.
+		BooleanExpression xNotEqualSix = universe
+				.not(universe.equals(INT_X, universe.number(INT_SIX)));
+		BooleanExpression xNotEqualThree = universe
+				.not(universe.equals(INT_X, universe.number(INT_THREE)));
+		BooleanExpression xNotEqualZero = universe
+				.not(universe.equals(INT_X, universe.number(INT_ZERO)));
+
+		assertEquals(universe.and(
+				Arrays.asList(xNotEqualZero, xNotEqualThree, xNotEqualSix)),
+				result);
+	}
+
+	@Test
+	public void symbolicRepresentationRealTest() {
+		DEBUG = true;
+
+		Interval interval0 = numberFactory.newInterval(false,
+				numberFactory.negativeInfinityRational(), true, RAT_ZERO,
+				false);
+		Interval interval1 = numberFactory.newInterval(false, RAT_ONE, true,
+				RAT_FOUR, true); // (1, 4)
+		Interval interval2 = numberFactory.newInterval(false, RAT_FOUR, true,
+				RAT_FIVE, true); // (4, 5)
+		// Interval interval3 = numberFactory.newInterval(false,
+		// numberFactory.negativeInfinityRational(), true, RAT_ZERO, false);
+
+		IntervalUnionSet intervalUnionSet = new IntervalUnionSet(interval1,
+				interval2, interval0);
+
+		p(DEBUG, "set = " + intervalUnionSet);
+
+		BooleanExpression result = intervalUnionSet
+				.symbolicRepresentation(RAT_X, universe);
+
+		p(DEBUG, "symbolic expression = " + result);
+
+		BooleanExpression gtOne = universe.lessThan(universe.number(RAT_ONE),
+				RAT_X);
+		BooleanExpression leFive = universe.lessThan(RAT_X,
+				universe.number(RAT_FIVE));
+		BooleanExpression xNotEqualFour = universe
+				.not(universe.equals(RAT_X, universe.number(RAT_FOUR)));
+		BooleanExpression leZero = universe.lessThanEquals(RAT_X,
+				universe.number(RAT_ZERO));
+
+		assertEquals(
+				universe.or(leZero,
+						universe.and(
+								Arrays.asList(gtOne, leFive, xNotEqualFour))),
+				result);
 	}
 }

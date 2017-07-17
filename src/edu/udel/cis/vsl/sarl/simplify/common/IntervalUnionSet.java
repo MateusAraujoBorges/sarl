@@ -58,6 +58,11 @@ public class IntervalUnionSet implements Range {
 	// TODO: Add pre-cond for necessary construcors or functions.
 	private static NumberFactory numberFactory = Numbers.REAL_FACTORY;
 
+	private static int GAP_THRESHOLD_VALUE = 2;
+
+	private static Number GAP_THRESHOLD_NUMBER = numberFactory
+			.integer(GAP_THRESHOLD_VALUE);
+
 	/**
 	 * {@link #rSign} stores the categorization of <code>this</code>
 	 * {@link IntervalUnionSet} based on their relationship to <code>0</code>
@@ -1040,52 +1045,97 @@ public class IntervalUnionSet implements Range {
 		int size = intervalArray.length;
 		int index = 0;
 
-		while (index < size) {
-			Interval interval = intervalArray[index];
-			index++;
+		if (isInt)
+			while (index < size) {
+				Interval interval = intervalArray[index];
+				index++;
 
-			Number lower = interval.lower();
-			Number upper = interval.upper();
-			boolean strictLower = interval.strictLower();
-			boolean strictUpper = interval.strictUpper();
-			BooleanExpression orClause;
+				IntegerNumber intOne = numberFactory.oneInteger();
+				Number lower = interval.lower();
+				Number upper = interval.upper();
+				BooleanExpression orClause;
 
-			if (lower.equals(upper)) {
-				// This interval represents a single number.
-				assert !strictLower && !strictUpper;
-				orClause = universe.equals(x, universe.number(lower));
-			} else {
-				orClause = trueExpr;
-				while (strictUpper && index < size) {
-					interval = intervalArray[index];
-					if (!interval.strictLower()
-							|| !interval.lower().equals(upper))
-						break;
-					// ... U (lower,upper) U (upper,c) U ...
-					orClause = universe.and(orClause,
-							(BooleanExpression) universe.neq(x,
-									universe.number(upper)));
-					upper = interval.upper();
-					strictUpper = interval.strictUpper();
-					index++;
+				if (lower.equals(upper)) {
+					// This interval represents a single number.
+					assert !interval.strictLower() && !interval.strictUpper();
+					orClause = universe.equals(x, universe.number(lower));
+				} else {
+					orClause = trueExpr;
+					while (index < size) {
+						interval = intervalArray[index];
+						if (numberFactory.subtract(interval.lower(), upper)
+								.numericalCompareTo(GAP_THRESHOLD_NUMBER) > 0)
+							break;
+						// ... U (lower,upper) U (upper,c) U ...
+						for (IntegerNumber i = intOne; i.numericalCompareTo(
+								GAP_THRESHOLD_NUMBER) < 0; i = numberFactory
+										.add(i, intOne)) {
+							orClause = universe.and(orClause,
+									(BooleanExpression) universe.neq(x,
+											universe.number(numberFactory
+													.add(upper, i))));
+						}
+						upper = interval.upper();
+						index++;
+					}
+					if (!lower.isInfinite())
+						orClause = universe.and(orClause, universe
+								.lessThanEquals(universe.number(lower), x));
+					if (!upper.isInfinite())
+						orClause = universe.and(orClause, universe
+								.lessThanEquals(x, universe.number(upper)));
 				}
-				if (!lower.isInfinite()) {
-					NumericExpression lowerExpression = universe.number(lower);
-
-					orClause = universe.and(orClause, strictLower
-							? universe.lessThan(lowerExpression, x)
-							: universe.lessThanEquals(lowerExpression, x));
-				}
-				if (!upper.isInfinite()) {
-					NumericExpression upperExpression = universe.number(upper);
-
-					orClause = universe.and(orClause, strictUpper
-							? universe.lessThan(x, upperExpression)
-							: universe.lessThanEquals(x, upperExpression));
-				}
+				result = universe.or(result, orClause);
 			}
-			result = universe.or(result, orClause);
-		}
+		else
+			while (index < size) {
+				Interval interval = intervalArray[index];
+				index++;
+
+				Number lower = interval.lower();
+				Number upper = interval.upper();
+				boolean strictLower = interval.strictLower();
+				boolean strictUpper = interval.strictUpper();
+				BooleanExpression orClause;
+
+				if (lower.equals(upper)) {
+					// This interval represents a single number.
+					assert !strictLower && !strictUpper;
+					orClause = universe.equals(x, universe.number(lower));
+				} else {
+					orClause = trueExpr;
+					while (strictUpper && index < size) {
+						interval = intervalArray[index];
+						if (!interval.strictLower()
+								|| !interval.lower().equals(upper))
+							break;
+						// ... U (lower,upper) U (upper,c) U ...
+						orClause = universe.and(orClause,
+								(BooleanExpression) universe.neq(x,
+										universe.number(upper)));
+						upper = interval.upper();
+						strictUpper = interval.strictUpper();
+						index++;
+					}
+					if (!lower.isInfinite()) {
+						NumericExpression lowerExpression = universe
+								.number(lower);
+
+						orClause = universe.and(orClause, strictLower
+								? universe.lessThan(lowerExpression, x)
+								: universe.lessThanEquals(lowerExpression, x));
+					}
+					if (!upper.isInfinite()) {
+						NumericExpression upperExpression = universe
+								.number(upper);
+
+						orClause = universe.and(orClause, strictUpper
+								? universe.lessThan(x, upperExpression)
+								: universe.lessThanEquals(x, upperExpression));
+					}
+				}
+				result = universe.or(result, orClause);
+			}
 		return result;
 	}
 
@@ -1094,7 +1144,6 @@ public class IntervalUnionSet implements Range {
 		int index = 0;
 		int size = intervalArray.length;
 
-		result.append("{");
 		if (0 == size) {
 			result.append("(0, 0)");
 		}
@@ -1115,7 +1164,6 @@ public class IntervalUnionSet implements Range {
 				result.append(" U ");
 			}
 		}
-		result.append("}");
 		return result.toString();
 	}
 
