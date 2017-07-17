@@ -2486,4 +2486,68 @@ public class NumberFactoryTest {
 		assertEquals(expected, actual);
 	}
 
+	/**
+	 * (-infi, 1.0] / -1.0 = [-1.0, +infi)
+	 */
+	@Test
+	public void interval_dividedBy_num_test7() {
+		Interval interval = factory.newInterval(false, RAT_NEG_INF, true,
+				RAT_ONE, false);
+		RationalNumber divisor = factory.negate(RAT_ONE);
+		Interval expected = factory.newInterval(false, divisor, false,
+				RAT_POS_INF, true);
+		Interval actual = factory.divide(interval, divisor);
+
+		assertEquals(expected, actual);
+	}
+
+	/**
+	 * (-infi, 1] / -1 = [-1. +infi)
+	 */
+	@Test
+	public void interval_dividedBy_num_test8() {
+		Interval interval = factory.newInterval(true, INT_NEG_INF, true,
+				INT_ONE, false);
+		IntegerNumber divisor = factory.negate(INT_ONE);
+		Interval expected = factory.newInterval(true, divisor, false,
+				INT_POS_INF, true);
+		Interval actual = factory.divide(interval, divisor);
+
+		assertEquals(expected, actual);
+	}
+
+	/**
+	 * Negate a universal set.
+	 */
+	@Test
+	public void interval_negate_universal() {
+		Interval interval = factory.newInterval(true, INT_NEG_INF, true,
+				INT_POS_INF, true);
+		Interval expected = interval;
+		Interval actual = factory.negate(interval);
+
+		assertEquals(expected, actual);
+	}
+
+
+	/**
+	 * Negate an empty set.
+	 */
+	@Test
+	public void interval_negate_empty() {
+		Interval interval = factory.newInterval(true, INT_ZERO, true,
+				INT_ZERO, true);
+		Interval expected = interval;
+		Interval actual = factory.negate(interval);
+
+		assertEquals(expected, actual);
+	}
+	
+	/**
+	 * 
+	 */
+	@Test
+	public void interval_interval_division_test1() {
+		
+	}
 }

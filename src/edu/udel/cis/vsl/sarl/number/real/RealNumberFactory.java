@@ -607,7 +607,7 @@ public class RealNumberFactory implements NumberFactory {
 	 */
 	public RationalNumber negate(RationalNumber arg0) {
 		if (arg0.isInfinite())
-			return infiniteRational(arg0.signum() < 0);
+			return this.infiniteRational(arg0.signum() < 0);
 
 		RealRational x = (RealRational) arg0;
 
@@ -620,7 +620,7 @@ public class RealNumberFactory implements NumberFactory {
 	 */
 	public IntegerNumber negate(IntegerNumber arg0) {
 		if (arg0.isInfinite())
-			return infiniteInteger(arg0.signum() < 0);
+			return this.infiniteInteger(arg0.signum() < 0);
 
 		RealInteger x = (RealInteger) arg0;
 
@@ -2528,27 +2528,33 @@ public class RealNumberFactory implements NumberFactory {
 		if (num.isInfinite())
 			return isIntegral ? zeroIntegerInterval : zeroRationalInterval;
 		if (isIntegral) {
+			divisor = rational(num);
 			lo = interval.lower().isInfinite() ? infiniteRational(false)
 					: rational(interval.lower());
 			up = interval.upper().isInfinite() ? infiniteRational(true)
 					: rational(interval.upper());
-			divisor = rational(num);
-			lo = lo.isInfinite() ? lo : divide(lo, divisor);
-			up = up.isInfinite() ? up : divide(up, divisor);
-			if (sign < 0)
+			if (sign < 0) {
+				lo = lo.isInfinite() ? negate(lo) : divide(lo, divisor);
+				up = up.isInfinite() ? negate(up) : divide(up, divisor);
 				return newInterval(true, ceil(up), su, floor(lo), sl);
-			else
+			} else {
+				lo = lo.isInfinite() ? lo : divide(lo, divisor);
+				up = up.isInfinite() ? up : divide(up, divisor);
 				return newInterval(true, ceil(lo), sl, floor(up), su);
+			}
 		} else {
 			lo = (RationalNumber) interval.lower();
 			up = (RationalNumber) interval.upper();
 			divisor = (RationalNumber) num;
-			lo = lo.isInfinite() ? lo : divide(lo, divisor);
-			up = up.isInfinite() ? up : divide(up, divisor);
-			if (sign < 0)
+			if (sign < 0) {
+				lo = lo.isInfinite() ? negate(lo) : divide(lo, divisor);
+				up = up.isInfinite() ? negate(up) : divide(up, divisor);
 				return newInterval(false, up, su, lo, sl);
-			else
+			} else {
+				lo = lo.isInfinite() ? lo : divide(lo, divisor);
+				up = up.isInfinite() ? up : divide(up, divisor);
 				return newInterval(false, lo, sl, up, su);
+			}
 		}
 	}
 
