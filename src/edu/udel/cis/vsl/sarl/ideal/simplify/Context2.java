@@ -41,6 +41,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
+import edu.udel.cis.vsl.sarl.ideal.simplify.LinearSolver.LinearSolverInfo;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
@@ -1473,35 +1474,38 @@ public class Context2 implements ContextIF {
 	 *             if an inconsistency is detected when modifying the
 	 *             {@link #subMap}
 	 */
-	private boolean gauss() throws InconsistentContextException {
-		Map<Monic, Number> constantMap = getMonicConstantMap();
-		boolean change = false;
+	protected boolean gauss() throws InconsistentContextException {
+		Map<Monic, Number> oldConstantMap = getMonicConstantMap();
+		Map<Monic, Number> newConstantMap = new TreeMap<>(info.monicComparator);
+		LinearSolverInfo lsi = LinearSolver.reduceConstantMap(info.idealFactory,
+				oldConstantMap, newConstantMap);
 
-		if (!LinearSolver.reduceConstantMap(info.idealFactory, constantMap))
+		return gaussHelper(lsi, oldConstantMap, newConstantMap);
+	}
+
+	protected boolean gaussHelper(LinearSolverInfo lsi,
+			Map<Monic, Number> oldConstantMap,
+			Map<Monic, Number> newConstantMap)
+			throws InconsistentContextException {
+		if (!lsi.consistent)
 			throw new InconsistentContextException();
-		for (Entry<Monic, Number> entry : constantMap.entrySet()) {
+		if (!lsi.change)
+			return false;
+		for (Entry<Monic, Number> entry : oldConstantMap.entrySet()) {
 			Monic key = entry.getKey();
-			Number newNumber = entry.getValue();
-			SymbolicExpression oldValue = getSub(key); // subMap.get(key);
+			Number newNumber = newConstantMap.get(key);
 
-			if (oldValue instanceof Constant) {
-				assert ((Constant) oldValue).number().equals(newNumber);
-				// must be the case, else the LinearSolver would
-				// have returned inconsistent (false)
+			if (newNumber == null) {
+				subMap.remove(key);
 			} else {
-				SymbolicExpression newValue = info.universe.number(newNumber);
-
-				if (oldValue != newValue) {
-					change = true;
-					addSub(key, newValue);
-				}
+				newConstantMap.remove(key);
+				if (!newNumber.equals(entry.getValue()))
+					addSub(key, info.universe.number(newNumber));
 			}
 		}
-		if (debug) {
-			info.out.println("Result of updateConstantMap():");
-			print(info.out);
-		}
-		return change;
+		for (Entry<Monic, Number> entry : newConstantMap.entrySet())
+			addSub(entry.getKey(), info.universe.number(entry.getValue()));
+		return true;
 	}
 
 	/**
@@ -1519,9 +1523,29 @@ public class Context2 implements ContextIF {
 		if (expr.operator() != SymbolicOperator.OR) {
 			extractClause(expr);
 		} else {
+			// TODO: this simplifies but does not form the union of
+			// ranges....
+
+			// form contexts for all clauses:
+			// C1, C2, ...
+			// method to take disjunction (or) of two contexts
+			//
+
+			// put into disjunctive normal form and simplify
+
+			// (X>0 & Y>2) | (X<-4 & Y> 7)
+			// (X>0 | X<-4) &
 			expr = info.universe
 					.not((BooleanExpression) simplify(info.universe.not(expr)));
 			if (expr.operator() == SymbolicOperator.OR) {
+				// here, see if ranges can be joined.
+				// you know the clauses of this OR expression cannot be AND
+				// expressions
+				// because they are in CNF. You can join then if they involve
+				// a single constraint on an expression.
+				// Example: X1=2 OR X1<=0 OR X1>17
+				// these all involve a single range or sub on the same Monic or
+				// thing.
 				addSub(expr, info.trueExpr);
 			} else {
 				addFact(expr);

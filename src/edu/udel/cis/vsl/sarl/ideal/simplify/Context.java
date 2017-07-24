@@ -577,7 +577,7 @@ public class Context {
 		}
 
 		boolean satisfiable = LinearSolver.reduceConstantMap(info.idealFactory,
-				constantMap);
+				constantMap).consistent;
 
 		if (debug) {
 			info.out.println("Result of updateConstantMap() part 1:");

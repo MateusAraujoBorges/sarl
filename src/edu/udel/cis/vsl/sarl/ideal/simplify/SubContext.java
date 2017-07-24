@@ -1,11 +1,13 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
 import java.util.Map;
+import java.util.TreeMap;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
+import edu.udel.cis.vsl.sarl.ideal.simplify.LinearSolver.LinearSolverInfo;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
 
 public class SubContext extends Context2 {
@@ -53,6 +55,21 @@ public class SubContext extends Context2 {
 
 	public ContextIF getSuperContext() {
 		return superContext;
+	}
+
+	protected boolean gauss() throws InconsistentContextException {
+		Map<Monic, Number> superConstantMap = superContext
+				.getMonicConstantMap();
+		Map<Monic, Number> oldConstantMap = new TreeMap<>(info.monicComparator),
+				newConstantMap = new TreeMap<>(info.monicComparator);
+
+		addMonicConstantsToMap(oldConstantMap);
+
+		LinearSolverInfo lsi = LinearSolver.reduceRelativeConstantMap(
+				info.idealFactory, superConstantMap, oldConstantMap,
+				newConstantMap);
+
+		return gaussHelper(lsi, oldConstantMap, newConstantMap);
 	}
 
 }

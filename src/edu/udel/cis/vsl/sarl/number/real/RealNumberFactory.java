@@ -319,7 +319,6 @@ public class RealNumberFactory implements NumberFactory {
 				if (arg0.signum() == arg1.signum())
 					return arg0;
 				else
-					// TODO: use the SARLException to replace others.
 					throw new SARLException(
 							"The sum of the positive infinity and the negative infinity is indeterminate.");
 			} else {
@@ -1058,13 +1057,26 @@ public class RealNumberFactory implements NumberFactory {
 		out.flush();
 	}
 
-	@Override
 	/**
-	 * Performs a gaussian elimination on the given RationalNumber matrix
-	 * Maintains a boolean 'debug' for easy troubleshooting due to its complex
-	 * nature
+	 * Performs Gauss-Jordan elimination on the given RationalNumber matrix,
+	 * modifying the matrix to place it in its reduced row echelon form.
+	 * 
+	 * A local variable {@code debug} can be set to true for debugging
+	 * information.
+	 * 
+	 * @param matrix
+	 *            the rectangular matrix of rational numbers which will be
+	 *            reduced. There are no restrictions other than it must be
+	 *            rectangular (i.e., each row must have the same length), and
+	 *            each entry must be non-{@code null}. The matrix does not
+	 *            necessarily have to be square or be invertible. It may have 0
+	 *            rows, or 0 columns.
+	 * @return {@code true} is a non-trivial change was made to the matrix, else
+	 *         {@code false}. A non-trivial change is any change other than a
+	 *         permutation of the rows.
 	 */
-	public void gaussianElimination(RationalNumber[][] matrix) {
+	@Override
+	public boolean gaussianElimination(RationalNumber[][] matrix) {
 		int numRows = matrix.length;
 		int numCols;
 		int top = 0; // index of current top row
@@ -1075,28 +1087,25 @@ public class RealNumberFactory implements NumberFactory {
 		int j = 0; // loop variable over columns of matrix
 		boolean debug = false;
 		PrintWriter out = new PrintWriter(System.out);
+		boolean result = false;
 
 		if (numRows == 0)
-			return;
+			return result;
 		numCols = matrix[0].length;
-
 		for (top = col = 0; top < numRows && col < numCols; top++, col++) {
 			/*
-			 * At this point we know that the submatarix consisting of the first
+			 * At this point we know that the sub-matrix consisting of the first
 			 * top rows of A is in reduced row-echelon form. We will now
-			 * consider the submatrix B consisting of the remaining rows. We
+			 * consider the sub-matrix B consisting of the remaining rows. We
 			 * know, additionally, that the first col columns of B are all zero.
 			 */
-
 			if (debug)
 				out.println("Top: " + top + "\n");
-
 			/*
 			 * Step 1: Locate the leftmost column of B that does not consist
 			 * entirely of zeros, if one exists. The top nonzero entry of this
 			 * column is the pivot.
 			 */
-
 			pivot = zeroRational;
 			pivotSearch: for (; col < numCols; col++) {
 				for (pivotRow = top; pivotRow < numRows; pivotRow++) {
@@ -1105,84 +1114,118 @@ public class RealNumberFactory implements NumberFactory {
 						break pivotSearch;
 				}
 			}
-
-			if (col >= numCols) {
+			if (col >= numCols)
 				break;
-			}
-
 			/*
 			 * At this point we are guaranteed that pivot = A[pivotRow,col] is
 			 * nonzero. We also know that all the columns of B to the left of
 			 * col consist entirely of zeros.
 			 */
-
-			if (debug) {
+			if (debug)
 				out.println("Step 1 result: col=" + col + ", pivotRow="
 						+ pivotRow + ", pivot=" + pivot + "\n");
-			}
-
 			/*
 			 * Step 2: Interchange the top row with the pivot row, if necessary,
 			 * so that the entry at the top of the column found in Step 1 is
 			 * nonzero.
 			 */
-
 			if (pivotRow != top) {
 				RationalNumber[] tmpRow = matrix[top];
 
 				matrix[top] = matrix[pivotRow];
 				matrix[pivotRow] = tmpRow;
 			}
-
-			if (debug) {
+			if (debug)
 				printMatrix(out, "Step 2 result:\n", matrix);
-			}
-
 			/*
 			 * At this point we are guaranteed that A[top,col] = pivot is
 			 * nonzero. Also, we know that (i>=top and j<col) implies A[i,j] =
 			 * 0.
 			 */
-
 			/*
 			 * Step 3: Divide the top row by pivot in order to introduce a
 			 * leading 1.
 			 */
-
-			if (!pivot.isOne())
-				for (j = col; j < numCols; j++) {
+			if (!pivot.isOne()) {
+				result = true;
+				for (j = col; j < numCols; j++)
 					matrix[top][j] = divide(matrix[top][j], pivot);
-				}
-
-			if (debug) {
-				printMatrix(out, "Step 3 result:\n", matrix);
 			}
-
+			if (debug)
+				printMatrix(out, "Step 3 result:\n", matrix);
 			/*
 			 * At this point we are guaranteed that A[top,col] is 1.0, assuming
 			 * that floating point arithmetic guarantees that a/a equals 1.0 for
 			 * any nonzero double a.
 			 */
-
 			/*
 			 * Step 4: Add suitable multiples of the top row to all other rows
 			 * so that all entries above and below the leading 1 become zero.
 			 */
-
 			for (i = 0; i < numRows; i++) {
 				if (i != top) {
 					RationalNumber tmp = matrix[i][col];
-					for (j = col; j < numCols; j++) {
-						matrix[i][j] = subtract(matrix[i][j],
-								multiply(tmp, matrix[top][j]));
+
+					if (!tmp.isZero()) {
+						result = true;
+						for (j = col; j < numCols; j++) {
+							matrix[i][j] = subtract(matrix[i][j],
+									multiply(tmp, matrix[top][j]));
+						}
 					}
 				}
 			}
-
 			if (debug) {
 				printMatrix(out, "Step 4 result:\n", matrix);
 			}
 		}
+		return result;
+	}
+
+	@Override
+	public boolean relativeGaussianElimination(RationalNumber[][] mat1,
+			RationalNumber[][] mat2) {
+		int nrows1 = mat1.length;
+
+		if (nrows1 == 0) {
+			return gaussianElimination(mat2);
+		}
+
+		int nrows2 = mat2.length;
+
+		if (nrows2 == 0)
+			return false;
+
+		int ncols = mat1[0].length;
+		boolean change = false;
+
+		assert ncols == mat2[0].length;
+		gaussianElimination(mat1);
+		for (int top = 0, col = 0; top < nrows1 && col < ncols; top++, col++) {
+			RationalNumber pivot = zeroRational;
+
+			pivotSearch: for (; col < ncols; col++) {
+				pivot = mat1[top][col];
+				if (!pivot.isZero())
+					break pivotSearch;
+			}
+			if (col >= ncols)
+				break;
+			assert pivot.isOne();
+			for (int row2 = 0; row2 < nrows2; row2++) {
+				RationalNumber tmp = mat2[row2][col];
+
+				if (!tmp.isZero()) {
+					change = true;
+					for (int j = col; j < ncols; j++) {
+						mat2[row2][j] = subtract(mat2[row2][j],
+								multiply(tmp, mat1[top][j]));
+					}
+				}
+			}
+		}
+		change = gaussianElimination(mat2) || change;
+		return change;
 	}
 
 	@Override
