@@ -20,6 +20,8 @@ package edu.udel.cis.vsl.sarl.IF.number;
 
 import java.math.BigInteger;
 
+import edu.udel.cis.vsl.sarl.number.real.RealInfinity;
+
 /**
  * A number factory is used to produce concrete rational and integer numbers.
  * The rational and integer numbers live in two separate worlds. Different
@@ -314,8 +316,9 @@ public interface NumberFactory {
 	 * matrix to reduced row echelon form.
 	 * 
 	 * @param matrix
+	 * @return
 	 */
-	void gaussianElimination(RationalNumber[][] matrix);
+	boolean gaussianElimination(RationalNumber[][] matrix);
 
 	/**
 	 * Returns the rational number which is the quotient of the two given
@@ -826,4 +829,40 @@ public interface NumberFactory {
 	 * @return string representation in scientific notation
 	 */
 	String scientificString(RationalNumber num, int numSig);
+
+	/**
+	 * <p>
+	 * Performs a form of "relative Gauss-Jordan elimination". Given two
+	 * matrices with the same number of columns. The first matrix is transformed
+	 * to reduced row echelon form by the usual Gauss-Jordan elimination (method
+	 * {@link #gaussianElimination(RationalNumber[][])}). Then suitable
+	 * multiples of the rows in the first matrix are added to rows in the second
+	 * matrix so as to make all entries in columns in the second matrix
+	 * corresponding to pivot columns in the first matrix 0. Then the usual
+	 * Gauss-Jordan elimination is performed on the second matrix.
+	 * </p>
+	 * 
+	 * <p>
+	 * Motivation: the idea is that a context specifies some set of constraints
+	 * in mat1, and a sub-context specifies additional constraints in mat2. To
+	 * simplify the sub-context, you can use any of the information in the
+	 * original context.
+	 * 
+	 * Let A1=mat1 in reduced row echelon form. Let A2=mat2 and A2' result of
+	 * performing one elementary operation. Want:
+	 * 
+	 * A2x=b2 iff A2'x=b2' for all x s.t. A1x=b1.
+	 * 
+	 * Since A1x=b, the row of A1 times x must equal the corresponding entry in
+	 * b for all such x. Therefore adding a multiple of that row to a row in
+	 * A2...
+	 * 
+	 * </p>
+	 * 
+	 * 
+	 * @param mat1
+	 * @param mat2
+	 */
+	boolean relativeGaussianElimination(RationalNumber[][] mat1,
+			RationalNumber[][] mat2);
 }
