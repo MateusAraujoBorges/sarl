@@ -312,13 +312,58 @@ public interface NumberFactory {
 	int compare(Number arg0, Number arg1);
 
 	/**
-	 * Performs Gaussian Elimination on a matrix of rationals, transforming the
-	 * matrix to reduced row echelon form.
+	 * Performs Gauss-Jordan Elimination on a matrix of rational numbers,
+	 * transforming the matrix to reduced row echelon form.
 	 * 
 	 * @param matrix
-	 * @return
+	 * @return <code>true</code> iff a non-trivial modification was made to
+	 *         {@code matrix}. A non-trivial modification is any modification
+	 *         other than a permutation of the rows.
 	 */
 	boolean gaussianElimination(RationalNumber[][] matrix);
+
+	/**
+	 * <p>
+	 * Performs a form of "relative Gauss-Jordan elimination". Given two
+	 * matrices with the same number of columns. The first matrix is transformed
+	 * to reduced row echelon form by the usual Gauss-Jordan elimination (method
+	 * {@link #gaussianElimination(RationalNumber[][])}). Then suitable
+	 * multiples of the rows in the first matrix are added to rows in the second
+	 * matrix so as to make all entries in columns in the second matrix
+	 * corresponding to pivot columns in the first matrix 0. Then the usual
+	 * Gauss-Jordan elimination is performed on the second matrix.
+	 * </p>
+	 * 
+	 * <p>
+	 * Motivation: the idea is that a context specifies some set of constraints
+	 * in mat1, and a sub-context specifies additional constraints in mat2. To
+	 * simplify the sub-context, you can use any of the information in the
+	 * original context.
+	 * </p>
+	 * 
+	 * <p>
+	 * Let A1=mat1 in reduced row echelon form. Let A2=mat2 and A2' result of
+	 * performing one elementary row operation. Want:
+	 * 
+	 * <pre>
+	 * A2x=b2 iff A2'x=b2' for all x s.t. A1x=b1.
+	 * </pre>
+	 * 
+	 * This holds since A2' is obtained by adding the same number to both sides
+	 * of an equation.
+	 * </p>
+	 * 
+	 * @param mat1
+	 *            the first matrix, which is the "background" context
+	 * @param mat2
+	 *            the second matrix, which is the one being reduced under the
+	 *            context above
+	 * @return <code>true</code> iff a non-trivial modification was made to
+	 *         {@code matrix}. A non-trivial modification is any modification
+	 *         other than a permutation of the rows.
+	 */
+	boolean relativeGaussianElimination(RationalNumber[][] mat1,
+			RationalNumber[][] mat2);
 
 	/**
 	 * Returns the rational number which is the quotient of the two given
@@ -829,40 +874,4 @@ public interface NumberFactory {
 	 * @return string representation in scientific notation
 	 */
 	String scientificString(RationalNumber num, int numSig);
-
-	/**
-	 * <p>
-	 * Performs a form of "relative Gauss-Jordan elimination". Given two
-	 * matrices with the same number of columns. The first matrix is transformed
-	 * to reduced row echelon form by the usual Gauss-Jordan elimination (method
-	 * {@link #gaussianElimination(RationalNumber[][])}). Then suitable
-	 * multiples of the rows in the first matrix are added to rows in the second
-	 * matrix so as to make all entries in columns in the second matrix
-	 * corresponding to pivot columns in the first matrix 0. Then the usual
-	 * Gauss-Jordan elimination is performed on the second matrix.
-	 * </p>
-	 * 
-	 * <p>
-	 * Motivation: the idea is that a context specifies some set of constraints
-	 * in mat1, and a sub-context specifies additional constraints in mat2. To
-	 * simplify the sub-context, you can use any of the information in the
-	 * original context.
-	 * 
-	 * Let A1=mat1 in reduced row echelon form. Let A2=mat2 and A2' result of
-	 * performing one elementary operation. Want:
-	 * 
-	 * A2x=b2 iff A2'x=b2' for all x s.t. A1x=b1.
-	 * 
-	 * Since A1x=b, the row of A1 times x must equal the corresponding entry in
-	 * b for all such x. Therefore adding a multiple of that row to a row in
-	 * A2...
-	 * 
-	 * </p>
-	 * 
-	 * 
-	 * @param mat1
-	 * @param mat2
-	 */
-	boolean relativeGaussianElimination(RationalNumber[][] mat1,
-			RationalNumber[][] mat2);
 }

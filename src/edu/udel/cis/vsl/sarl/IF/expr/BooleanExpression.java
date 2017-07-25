@@ -27,34 +27,6 @@ import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
  */
 public interface BooleanExpression extends SymbolicExpression {
 
-	// /**
-	// * Returns the <code>i</code>-th argument of this expression in the case
-	// * where the <code>i</code>-th argument should be an instance of
-	// * {@link BooleanExpression}. A {@link SARLException} is thrown if that
-	// * argument is not an instance of {@link BooleanExpression}, or if
-	// * <code>i</code> is out of range.
-	// *
-	// * @param i
-	// * integer in range [0,numArgs-1]
-	// * @return the i-th argument of this expression
-	// */
-	// BooleanExpression booleanArg(int i);
-
-	// /**
-	// * Returns the <code>i</code>-th argument of this expression in the case
-	// * where the <code>i</code>-th argument should be an instance of
-	// * <code>{@link Iterable}&lt;? extends {@link
-	// BooleanExpression}&gt;</code>.
-	// * A {@link SARLException} is thrown if that argument is not an instance
-	// of
-	// * {@link Iterable}, or if <code>i</code> is out of range.
-	// *
-	// * @param i
-	// * integer in range [0,numArgs-1]
-	// * @return the <code>i</code>-th argument of this expression
-	// */
-	// Iterable<? extends BooleanExpression> booleanCollectionArg(int i);
-
 	/**
 	 * Returns a sequence of boolean expressions whose conjunction is equivalent
 	 * to <code>this</code>. The decomposition should be highly non-trivial in

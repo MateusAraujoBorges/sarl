@@ -71,28 +71,49 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * <p>
  * If an inconsistency exists ( for example, X+Y maps to 0, X maps to 0, Y maps
  * to 1) in the map, this will be discovered in the elimination. In this case,
- * the boolean value false is returned by method reduce. True is returned if
- * there are no problems.
+ * the object returned has a boolean field which indicates the inconsistency
+ * exists. Another field indicates whether any non-trivial change was made.
  * </p>
  * 
  * <p>
- * The interface for this class are the two static methods
- * {@link #reduceConstantMap(IdealFactory, Map)} and
- * {@link #reduceRelativeConstantMap(IdealFactory, Map, Map)}. The latter
- * performs a relative form of simplification (see its Javadoc). Everything else
- * is private.
+ * The interface for this class are the three static methods
+ * {@link #reduceConstantMap(IdealFactory, Map)},
+ * {@link #reduceConstantMap(IdealFactory, Map, Map) and
+ * {@link #reduceRelativeConstantMap(IdealFactory, Map, Map, Map)}. The latter
+ * performs a relative form of simplification. Everything else is private.
  * </p>
  */
 public class LinearSolver {
 
-	// Public static methods: the interface for this class...
+	// Public static members: the interface for this class...
 
+	/**
+	 * An object providing information on the result of a linear reduction.
+	 * 
+	 * @author siegel
+	 */
 	public static class LinearSolverInfo {
 
+		/**
+		 * Is it the case that the output map is not equal to the input map?
+		 */
 		public boolean change = false;
 
+		/**
+		 * Was the map not determined to be inconsistent? This field is only
+		 * used if {@link #change} is {@code true}. If there is no change,
+		 * consistency is not checked.
+		 */
 		public boolean consistent = true;
 
+		/**
+		 * Construct new instance from given two fields.
+		 * 
+		 * @param change
+		 *            output map differs from input map?
+		 * @param consistent
+		 *            no inconsistency discovered?
+		 */
 		public LinearSolverInfo(boolean change, boolean consistent) {
 			this.change = change;
 			this.consistent = consistent;
@@ -100,27 +121,32 @@ public class LinearSolver {
 	}
 
 	/**
-	 * Given a constant map, performs Gaussian Elimination to modify the map,
-	 * placing it is a reduced, simplified form. The map is viewed as a matrix
-	 * in which there is one row for each entry, the monic of that entry is
-	 * interpreted as a linear combination of monics, and a final column
+	 * Given a constant map, performs Gauss-Jordan Elimination to produce the
+	 * new equivalent map in a reduced, simplified form. The map is viewed as a
+	 * matrix in which there is one row for each entry, the monic of that entry
+	 * is interpreted as a linear combination of monics, and a final column
 	 * represents the constant value of that monic.
 	 * 
 	 * @param idealFactory
 	 *            the numeric factory used to deconstruct and construct
 	 *            polynomials, etc.
-	 * @param map
-	 *            a map mapping a monic to a number which is the known value of
-	 *            that monic
-	 * @return <code>true</code>, unless the map has been determined to be
-	 *         inconsistent
+	 * @param inMap
+	 *            the given map, mapping a monic to a number which is the known
+	 *            value of that monic. This map will not be modified.
+	 * @param outMap
+	 *            the resulting simplified map. This should be an empty map at
+	 *            entry; it will be populated by this method if there is any
+	 *            change to make to the original map. If there is no change, the
+	 *            {@code outMap} will not be modified.
+	 * @return a {@link LinearSolverInfo} object which provides information on
+	 *         the result of the simplification
 	 */
 	public static LinearSolverInfo reduceConstantMap(IdealFactory idealFactory,
 			Map<Monic, Number> inMap, Map<Monic, Number> outMap) {
 		LinearVariableSet keySet = new LinearVariableSet(idealFactory);
 		Pair<Integer, Integer> sizes = keySet.addKeys(inMap.keySet());
 
-		keySet.finalize();
+		keySet.finish();
 
 		LinearSolver solver = new LinearSolver(idealFactory, keySet, inMap,
 				sizes);
@@ -136,14 +162,27 @@ public class LinearSolver {
 			return new LinearSolverInfo(false, true);
 		}
 	}
-	
-	
+
+	/**
+	 * Performs simplification of a constant map in place. Same as
+	 * {@link #reduceConstantMap(IdealFactory, Map, Map)}, but there is only one
+	 * map, which is modified.
+	 * 
+	 * @param idealFactory
+	 *            the numeric factory used to deconstruct and construct
+	 *            polynomials, etc.
+	 * @param map
+	 *            the constant map, mapping a monic to a number which is the
+	 *            known value of that monic. This map may be modified.
+	 * @return a {@link LinearSolverInfo} object which provides information on
+	 *         the result of the simplification
+	 */
 	public static LinearSolverInfo reduceConstantMap(IdealFactory idealFactory,
 			Map<Monic, Number> map) {
 		LinearVariableSet keySet = new LinearVariableSet(idealFactory);
 		Pair<Integer, Integer> sizes = keySet.addKeys(map.keySet());
 
-		keySet.finalize();
+		keySet.finish();
 
 		LinearSolver solver = new LinearSolver(idealFactory, keySet, map,
 				sizes);
@@ -153,7 +192,7 @@ public class LinearSolver {
 		change = numberFactory.gaussianElimination(solver.realMatrix) || change;
 		if (change) {
 			map.clear();
-			
+
 			boolean consistent = solver.rebuildMaps(map);
 
 			return new LinearSolverInfo(true, consistent);
@@ -174,18 +213,27 @@ public class LinearSolver {
 	 *            the numeric factory used to deconstruct and construct
 	 *            polynomials, etc.
 	 * @param map1
+	 *            the background constant map; will not be modified.
 	 * @param map2
-	 * @return <code>false</code> if an inconsistency is discovered, else
-	 *         <code>true</code>
+	 *            the constant map that should be simplified against the
+	 *            background of {@code map1}; will not be modified.
+	 * @param out2
+	 *            the result of simplifying {@code map2}. Should be initially
+	 *            empty. Will only be modified if change is made (as indicated
+	 *            in the {@link LinearSolverInfo#change} returned by this
+	 *            method).
+	 * 
+	 * @return a {@link LinearSolverInfo} object which provides information on
+	 *         the result of the simplification
 	 */
 	public static LinearSolverInfo reduceRelativeConstantMap(
 			IdealFactory idealFactory, Map<Monic, Number> map1,
-			Map<Monic, Number> map2, Map<Monic,Number> out2) {
+			Map<Monic, Number> map2, Map<Monic, Number> out2) {
 		NumberFactory numberFactory = idealFactory.numberFactory();
 		LinearVariableSet keySet = new LinearVariableSet(idealFactory);
 		Pair<Integer, Integer> sizes1 = keySet.addKeys(map1.keySet());
 		Pair<Integer, Integer> sizes2 = keySet.addKeys(map2.keySet());
-		keySet.finalize();
+		keySet.finish();
 
 		LinearSolver solver1 = new LinearSolver(idealFactory, keySet, map1,
 				sizes1);
@@ -217,11 +265,6 @@ public class LinearSolver {
 	 * The factory used to manipulate {@link Monic}s, {@link Polynomial}s, etc.
 	 */
 	private IdealFactory idealFactory;
-
-	/**
-	 * The map that is being reduced.
-	 */
-	// private Map<Monic, Number> map;
 
 	/**
 	 * An organized view of a set of "variables", which are actually
@@ -261,8 +304,8 @@ public class LinearSolver {
 	/**
 	 * <p>
 	 * Constructs new instance with given fields. The maps is analyzed and used
-	 * to produce an integer matrix of coefficients and a real matrix of
-	 * coefficients.
+	 * to produce an integer matrix of coefficients {@link #intMatrix} and a
+	 * real matrix of coefficients {@link #realMatrix}.
 	 * </p>
 	 * 
 	 * <p>
@@ -286,7 +329,7 @@ public class LinearSolver {
 	 *            at least all the variables occurring in {@code map}, but it
 	 *            may contain more variables
 	 * @param map
-	 *            the map that is being reduced
+	 *            the map that is being reduced; will not be modified
 	 * @param numConstraints
 	 *            a pair in which the left component is the number of integer
 	 *            entries in {@code map} and the right component is the number
@@ -297,7 +340,6 @@ public class LinearSolver {
 		this.idealFactory = idealFactory;
 		this.numberFactory = idealFactory.numberFactory();
 		this.keySet = keySet;
-		// this.map = map;
 		this.numIntConstraints = numConstraints.left;
 		this.numRealConstraints = numConstraints.right;
 		buildMatrices(map);
@@ -311,6 +353,10 @@ public class LinearSolver {
 	 * column for each monic which occurs as a term in some key, of integer
 	 * type, plus one additional column to hold the value associated to the
 	 * constant value associated to the map entry. The real map is similar.
+	 * 
+	 * @param map
+	 *            the constant map that is to be reduced. It will be used to
+	 *            build the {@link #intMatrix} and {@link #realMatrix}.
 	 * 
 	 */
 	private void buildMatrices(Map<Monic, Number> map) {
@@ -359,7 +405,7 @@ public class LinearSolver {
 	}
 
 	/**
-	 * Experimental method of Ziqing: Build a matrix m for a linear system. see
+	 * Experimental method of Ziqing; builds a matrix m for a linear system. see
 	 * {@link #buildMatrices()}.
 	 * 
 	 * Modify m to m' so that the column c which represents the given
@@ -415,6 +461,10 @@ public class LinearSolver {
 	/**
 	 * Adds to {@link #map} entries corresponding to the rows of the
 	 * {@link #intMatrix}.
+	 * 
+	 * @param map
+	 *            the map to modify; entries are added to it corresponding to
+	 *            the rows in the {@link #intMatrix}
 	 * 
 	 * @return {@code false} if an inconsistency is discovered, else
 	 *         {@code true}
@@ -490,6 +540,9 @@ public class LinearSolver {
 	/**
 	 * Adds to {@link #map} entries corresponding to the rows of the
 	 * {@link #realMatrix}.
+	 * 
+	 * @param map
+	 *            the map to modify
 	 * 
 	 * @return {@code false} if an inconsistency is discovered, else
 	 *         {@code true}
@@ -735,7 +788,7 @@ public class LinearSolver {
 
 		numIntConstraints = numbers.left;
 		numRealConstraints = numbers.right;
-		keySet.finalize();
+		keySet.finish();
 		if (leadingMonic != null)
 			buildMatrices(leadingMonic, map);
 		else
@@ -751,14 +804,14 @@ public class LinearSolver {
 	}
 
 	/**
-	 * Clears the {@link #map} and rebuilds it from the {@link #intMatrix} and
-	 * {@link #realMatrix}.
+	 * Invokes {@link #rebuildIntMap(Map)} and {@link #buildRealMap(Map)} on the
+	 * given map. Does not clear the given map first. Typically, {@code output}
+	 * will be empty when this method is called.
 	 * 
-	 * @return {@code false} is an inconsistency is discovered, else
-	 *         {@code true}.s
+	 * @return {@code false} if an inconsistency is discovered, else
+	 *         {@code true}
 	 */
 	private boolean rebuildMaps(Map<Monic, Number> output) {
-		// map.clear();
 		return rebuildIntMap(output) && rebuildRealMap(output);
 	}
 }

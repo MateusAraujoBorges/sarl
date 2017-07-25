@@ -774,25 +774,6 @@ public class Context2 implements ContextIF {
 		return y;
 	}
 
-	// *********************************************************************
-	// *........................... Read methods ..........................*
-	// * These methods, only read, but do not modify, the state............*
-	// *********************************************************************
-
-	/**
-	 * Simplifies a symbolic expression using the current state of this
-	 * {@link Context2}.
-	 * 
-	 * @param expr
-	 *            the expression to simplify
-	 * @return the simplified expression
-	 */
-	@Override
-	public SymbolicExpression simplify(SymbolicExpression expr) {
-		return new IdealSimplifierWorker2(this).simplifyExpressionWork(expr);
-		// this should do transitive closure of substitution
-	}
-
 	/**
 	 * Given a normalized {@link Monic} and a {@link Range} range, computes the
 	 * intersection of {@code range} with the current known range of the monic
@@ -1030,30 +1011,6 @@ public class Context2 implements ContextIF {
 	}
 
 	/**
-	 * Computes an (over-)estimate of the possible values of a
-	 * {@link RationalExpression} based on the current assumptions of this
-	 * {@link Context2}. Points at which this rational expression are undefined
-	 * (because, e.g., the denominator is 0) are ignored.
-	 * 
-	 * @param rat
-	 *            a non-{@code null} {@link RationalExpression}
-	 * @return a {@link Range} of concrete values such that the result of
-	 *         evaluating {@code rat} at any point satisfying the assumptions of
-	 *         this context will lie in that range
-	 */
-	@Override
-	public Range computeRange(NumericExpression expression) {
-		if (expression instanceof Monomial)
-			return computeRange((Monomial) expression);
-
-		IdealFactory idf = info.idealFactory;
-		RationalExpression rat = (RationalExpression) expression;
-
-		return info.rangeFactory.divide(computeRange(rat.numerator(idf)),
-				computeRange(rat.denominator(idf)));
-	}
-
-	/**
 	 * Returns the boolean formula represented by this context.
 	 * 
 	 * @param full
@@ -1080,49 +1037,6 @@ public class Context2 implements ContextIF {
 		// for (ArrayFact fact : list)
 		// result = info.universe.and(result, arrayFactToExpression(fact));
 		return result;
-	}
-
-	/**
-	 * Selects from the {@link #subMap} those entries in which the key is a
-	 * {@link Monic} and the value is a {@link Constant} and add corresponding
-	 * entries to {@code map}. The only different between the entries is that in
-	 * {@code map} the value is the {@link Number} that has been extracted from
-	 * the {@link Constant}. This is the form needed to perform Gaussian
-	 * Elimination.
-	 * 
-	 * @param map
-	 *            a non-{@code null} map. The map is not necessarily empty.
-	 *            Existing entries will simply be overwritten.
-	 */
-	protected void addMonicConstantsToMap(Map<Monic, Number> map) {
-		for (Entry<SymbolicExpression, SymbolicExpression> entry : subMap
-				.entrySet()) {
-			SymbolicExpression key = entry.getKey();
-
-			if (key instanceof Monic) {
-				SymbolicExpression value = entry.getValue();
-
-				if (value instanceof Constant) {
-					map.put((Monic) key, ((Constant) value).number());
-				}
-			}
-		}
-	}
-
-	/**
-	 * Constructs a map with an entry for each {@link Monic} that has a known
-	 * concrete value. The map may be modified without affecting the state of
-	 * this context.
-	 * 
-	 * @return a map mapping each {@link Monic} to the {@link Number} value
-	 *         associated to that monic in this context
-	 */
-	@Override
-	public Map<Monic, Number> getMonicConstantMap() {
-		Map<Monic, Number> map = new TreeMap<>(info.monicComparator);
-
-		addMonicConstantsToMap(map);
-		return map;
 	}
 
 	// ************ Modification methods for subMap and rangeMap ************
@@ -1459,53 +1373,6 @@ public class Context2 implements ContextIF {
 		} else {
 			extractOr(assumption);
 		}
-	}
-
-	/**
-	 * Performs Gaussian Elimination on the numeric entries of the
-	 * {@link #subMap}.
-	 * 
-	 * Does not read or modify {@link #rangeMap}
-	 * 
-	 * @return <code>true</code> iff there is a change made to the
-	 *         {@link #subMap}
-	 * 
-	 * @throws InconsistentContextException
-	 *             if an inconsistency is detected when modifying the
-	 *             {@link #subMap}
-	 */
-	protected boolean gauss() throws InconsistentContextException {
-		Map<Monic, Number> oldConstantMap = getMonicConstantMap();
-		Map<Monic, Number> newConstantMap = new TreeMap<>(info.monicComparator);
-		LinearSolverInfo lsi = LinearSolver.reduceConstantMap(info.idealFactory,
-				oldConstantMap, newConstantMap);
-
-		return gaussHelper(lsi, oldConstantMap, newConstantMap);
-	}
-
-	protected boolean gaussHelper(LinearSolverInfo lsi,
-			Map<Monic, Number> oldConstantMap,
-			Map<Monic, Number> newConstantMap)
-			throws InconsistentContextException {
-		if (!lsi.consistent)
-			throw new InconsistentContextException();
-		if (!lsi.change)
-			return false;
-		for (Entry<Monic, Number> entry : oldConstantMap.entrySet()) {
-			Monic key = entry.getKey();
-			Number newNumber = newConstantMap.get(key);
-
-			if (newNumber == null) {
-				subMap.remove(key);
-			} else {
-				newConstantMap.remove(key);
-				if (!newNumber.equals(entry.getValue()))
-					addSub(key, info.universe.number(newNumber));
-			}
-		}
-		for (Entry<Monic, Number> entry : newConstantMap.entrySet())
-			addSub(entry.getKey(), info.universe.number(entry.getValue()));
-		return true;
 	}
 
 	/**
@@ -1910,46 +1777,134 @@ public class Context2 implements ContextIF {
 
 	// ************************ Protected methods ************************
 
+	/**
+	 * Initializes this context by consuming and analyzing the given assumption
+	 * and updating all data structures to represent the assumption in a
+	 * structured way. After initialization, this context is basically immutable
+	 * (an exception being the {@link #simplificationCache}).
+	 * 
+	 * @param assumption
+	 *            the boolean expression which is to be represented by this
+	 *            context
+	 */
 	protected void initialize(BooleanExpression assumption) {
 		this.originalAssumption = assumption;
 		simplificationCache = new HashMap<>();
+		// can also use a TreeMap, but HashMap seems faster...
+		// this.simplificationCache = new TreeMap<SymbolicObject,
+		// SymbolicObject>(info.universe.comparator());
 
 		if (debug) {
 			System.out.println("Creating context : " + assumption);
 		}
-
 		try {
 			addFact(assumption);
 			reduce();
 		} catch (InconsistentContextException e) {
 			makeInconsistent();
 		}
-		// can also use a TreeMap, but HashMap seems faster...
-		// this.simplificationCache = new TreeMap<SymbolicObject,
-		// SymbolicObject>(info.universe.comparator());
 		initialized = true;
+	}
+
+	/**
+	 * Selects from the {@link #subMap} those entries in which the key is a
+	 * {@link Monic} and the value is a {@link Constant} and add corresponding
+	 * entries to {@code map}. The only different between the entries is that in
+	 * {@code map} the value is the {@link Number} that has been extracted from
+	 * the {@link Constant}. This is the form needed to perform Gaussian
+	 * Elimination.
+	 * 
+	 * @param map
+	 *            a non-{@code null} map. The map is not necessarily empty.
+	 *            Existing entries will simply be overwritten.
+	 */
+	protected void addMonicConstantsToMap(Map<Monic, Number> map) {
+		for (Entry<SymbolicExpression, SymbolicExpression> entry : subMap
+				.entrySet()) {
+			SymbolicExpression key = entry.getKey();
+	
+			if (key instanceof Monic) {
+				SymbolicExpression value = entry.getValue();
+	
+				if (value instanceof Constant) {
+					map.put((Monic) key, ((Constant) value).number());
+				}
+			}
+		}
+	}
+
+	/**
+	 * Performs Gaussian Elimination on the numeric entries of the
+	 * {@link #subMap}.
+	 * 
+	 * Does not read or modify {@link #rangeMap}.
+	 * 
+	 * @return <code>true</code> iff there is a change made to the
+	 *         {@link #subMap}
+	 * 
+	 * @throws InconsistentContextException
+	 *             if an inconsistency is detected when modifying the
+	 *             {@link #subMap}
+	 */
+	protected boolean gauss() throws InconsistentContextException {
+		Map<Monic, Number> oldConstantMap = getMonicConstantMap();
+		Map<Monic, Number> newConstantMap = new TreeMap<>(info.monicComparator);
+		LinearSolverInfo lsi = LinearSolver.reduceConstantMap(info.idealFactory,
+				oldConstantMap, newConstantMap);
+
+		return gaussHelper(lsi, oldConstantMap, newConstantMap);
+	}
+
+	/**
+	 * Updates the {@link #subMap} using the results of a linear analysis of the
+	 * numeric equations in that map.
+	 * 
+	 * @param lsi
+	 *            the result of a linear analysis. If it indicates an
+	 *            inconsistency, the {@link InconsistentContextAssumption} is
+	 *            thrown. Otherwise, if it indicates no change, then nothing is
+	 *            done and this method returns {@code false}. Otherwise, the old
+	 *            entries in the {@link #subMap} are replaced by new entries and
+	 *            {@code true} is returned
+	 * @param oldConstantMap
+	 *            the original mapping of {@link Monic}s to concrete numbers,
+	 *            extracted from the {@link #subMap}
+	 * @param newConstantMap
+	 *            the new mapping of {@link Monic}s to concrete numbers,
+	 *            resulting from the solution to the linear problem (ignore if
+	 *            no change or inconsistency)
+	 * @return whether a change is made to {@link #subMap}
+	 * @throws InconsistentContextException
+	 *             if {@code lsi}'s {@code consistent} field is {@code false}
+	 */
+	protected boolean gaussHelper(LinearSolverInfo lsi,
+			Map<Monic, Number> oldConstantMap,
+			Map<Monic, Number> newConstantMap)
+			throws InconsistentContextException {
+		if (!lsi.consistent)
+			throw new InconsistentContextException();
+		if (!lsi.change)
+			return false;
+		for (Entry<Monic, Number> entry : oldConstantMap.entrySet()) {
+			Monic key = entry.getKey();
+			Number newNumber = newConstantMap.get(key);
+
+			if (newNumber == null) {
+				subMap.remove(key);
+			} else {
+				newConstantMap.remove(key);
+				if (!newNumber.equals(entry.getValue()))
+					addSub(key, info.universe.number(newNumber));
+			}
+		}
+		for (Entry<Monic, Number> entry : newConstantMap.entrySet())
+			addSub(entry.getKey(), info.universe.number(entry.getValue()));
+		return true;
 	}
 
 	// ************************** Public methods **************************
 
 	// public methods not specified in other interfaces...
-
-	@Override
-	public BooleanExpression getReducedAssumption() {
-		return getAssumption(false);
-	}
-
-	@Override
-	public BooleanExpression getFullAssumption() {
-		return getAssumption(true);
-	}
-
-	@Override
-	public boolean isInconsistent() {
-		SymbolicExpression result = subMap.get(info.falseExpr);
-
-		return result != null && result.isTrue();
-	}
 
 	/**
 	 * Gets the variables that have been "solved", i.e., have an expression in
@@ -2027,6 +1982,27 @@ public class Context2 implements ContextIF {
 		return info;
 	}
 
+	// ************************** Public methods **************************
+	
+	// public methods not specified in other interfaces...
+	
+	@Override
+	public BooleanExpression getReducedAssumption() {
+		return getAssumption(false);
+	}
+
+	@Override
+	public BooleanExpression getFullAssumption() {
+		return getAssumption(true);
+	}
+
+	@Override
+	public boolean isInconsistent() {
+		SymbolicExpression result = subMap.get(info.falseExpr);
+	
+		return result != null && result.isTrue();
+	}
+
 	@Override
 	public SymbolicExpression getSub(SymbolicExpression key) {
 		return subMap.get(key);
@@ -2068,6 +2044,65 @@ public class Context2 implements ContextIF {
 	@Override
 	public boolean isInitialized() {
 		return initialized;
+	}
+
+	/**
+	 * Computes an (over-)estimate of the possible values of a
+	 * {@link RationalExpression} based on the current assumptions of this
+	 * {@link Context2}. Points at which this rational expression are undefined
+	 * (because, e.g., the denominator is 0) are ignored.
+	 * 
+	 * @param rat
+	 *            a non-{@code null} {@link RationalExpression}
+	 * @return a {@link Range} of concrete values such that the result of
+	 *         evaluating {@code rat} at any point satisfying the assumptions of
+	 *         this context will lie in that range
+	 */
+	@Override
+	public Range computeRange(NumericExpression expression) {
+		if (expression instanceof Monomial)
+			return computeRange((Monomial) expression);
+	
+		IdealFactory idf = info.idealFactory;
+		RationalExpression rat = (RationalExpression) expression;
+	
+		return info.rangeFactory.divide(computeRange(rat.numerator(idf)),
+				computeRange(rat.denominator(idf)));
+	}
+
+	/**
+	 * Constructs a map with an entry for each {@link Monic} that has a known
+	 * concrete value. The map may be modified without affecting the state of
+	 * this context.
+	 * 
+	 * @return a map mapping each {@link Monic} to the {@link Number} value
+	 *         associated to that monic in this context
+	 */
+	@Override
+	public Map<Monic, Number> getMonicConstantMap() {
+		Map<Monic, Number> map = new TreeMap<>(info.monicComparator);
+	
+		addMonicConstantsToMap(map);
+		return map;
+	}
+
+	// *********************************************************************
+	// *........................... Read methods ..........................*
+	// * These methods, only read, but do not modify, the state............*
+	// *********************************************************************
+	
+	/**
+	 * Simplifies a symbolic expression using the current state of this
+	 * {@link Context2}.
+	 * 
+	 * @param expr
+	 *            the expression to simplify
+	 * @return the simplified expression
+	 */
+	@Override
+	public SymbolicExpression simplify(SymbolicExpression expr) {
+		return new IdealSimplifierWorker2(this).simplifyExpressionWork(expr);
+		// this should do transitive closure of substitution
 	}
 
 }

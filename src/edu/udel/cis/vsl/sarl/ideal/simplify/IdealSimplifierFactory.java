@@ -31,6 +31,10 @@ import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
  */
 public class IdealSimplifierFactory implements SimplifierFactory {
 
+	/**
+	 * Should we use the new {@link Context2}? Eventually the old simplifier
+	 * will go away, at which point this field should be removed.
+	 */
 	public final static boolean useNewSimplifier = false;
 
 	/**

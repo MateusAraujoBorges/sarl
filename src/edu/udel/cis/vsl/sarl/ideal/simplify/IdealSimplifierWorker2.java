@@ -274,10 +274,7 @@ public class IdealSimplifierWorker2 {
 		Monomial[] terms = new Monomial[size];
 		boolean simplified = false;
 
-		// TODO: this is slow for CG. Find out why...
-		// System.out.println("size = " + size + "...");
 		assert size >= 2;
-
 		for (int i = 0; i < size; i++) {
 			Monomial term = termMap[i];
 			Monomial simplifiedTerm = (Monomial) simplifyExpression(term);
@@ -286,17 +283,8 @@ public class IdealSimplifierWorker2 {
 			terms[i] = simplifiedTerm;
 		}
 
-		// TODO: delete me
-		// if (simplified)
-		// System.out.println(" simplified!");
-		// else
-		// System.out.println(" not simplified :-(");
-
 		Monomial result = simplified ? idf.addMonomials(terms) : poly;
 
-		// can't decide whether to expand or not.
-		// For now, only expanding for "=0"...
-		// previously, simplified again here.
 		return result;
 	}
 
@@ -761,6 +749,9 @@ public class IdealSimplifierWorker2 {
 	Interval intervalApproximation(NumericExpression expr) {
 		// TODO: update this once this method is implemented in RangeFactory
 		Range range = theContext.computeRange((RationalExpression) expr);
+
+		// range.rangeApproximation()
+
 		IntervalUnionSet ius = (IntervalUnionSet) range;
 		Interval[] intervals = ius.intervals();
 		int n = intervals.length;
