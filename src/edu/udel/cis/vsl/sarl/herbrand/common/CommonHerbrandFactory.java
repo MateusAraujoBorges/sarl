@@ -491,7 +491,7 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 	public NumericExpression cast(NumericExpression numericExpression,
 			SymbolicType newType) {
 		SymbolicType oldType = numericExpression.type();
-		
+
 		if (newType.equals(oldType))
 			return numericExpression;
 		if (newType.isHerbrand()
@@ -539,5 +539,24 @@ public class CommonHerbrandFactory implements NumericExpressionFactory {
 	@Override
 	public NumericExpression[] expand(NumericExpression expr) {
 		return new NumericExpression[] { expr };
+	}
+
+	@Override
+	public NumericExpression floor(NumericExpression expr) {
+		// TODO Auto-generated method stub
+		// create uninterpreted functions for floor, ceil, roundToZero?
+		return null;
+	}
+
+	@Override
+	public NumericExpression ceil(NumericExpression expr) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public NumericExpression roundToZero(NumericExpression expr) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

@@ -4201,4 +4201,19 @@ public class CommonPreUniverse implements PreUniverse {
 					"Probabilitic bound must be in [0,1), not " + epsilon);
 		this.probabilisticBound = epsilon;
 	}
+
+	@Override
+	public NumericExpression floor(NumericExpression expr) {
+		return numericFactory.floor(expr);
+	}
+
+	@Override
+	public NumericExpression ceil(NumericExpression expr) {
+		return numericFactory.ceil(expr);
+	}
+
+	@Override
+	public NumericExpression roundToZero(NumericExpression expr) {
+		return numericFactory.roundToZero(expr);
+	}
 }

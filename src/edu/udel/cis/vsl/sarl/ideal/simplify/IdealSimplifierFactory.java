@@ -25,21 +25,21 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 
 /**
- * A factory for producing new instances of {@link IdealSimplifier}.
+ * A factory for producing new instances of {@link OldIdealSimplifier}.
  * 
  * @author Stephen F. Siegel (siegel)
  */
 public class IdealSimplifierFactory implements SimplifierFactory {
 
 	/**
-	 * Should we use the new {@link Context2}? Eventually the old simplifier
+	 * Should we use the new {@link Context}? Eventually the old simplifier
 	 * will go away, at which point this field should be removed.
 	 */
 	public final static boolean useNewSimplifier = false;
 
 	/**
 	 * A structure which packages references to several other factories and
-	 * commonly-used objects that will be used by the {@link IdealSimplifier}s
+	 * commonly-used objects that will be used by the {@link OldIdealSimplifier}s
 	 * produced by this factory.
 	 */
 	private SimplifierInfo info;
@@ -72,9 +72,9 @@ public class IdealSimplifierFactory implements SimplifierFactory {
 	@Override
 	public Simplifier newSimplifier(BooleanExpression assumption) {
 		if (useNewSimplifier)
-			return new IdealSimplifier2(info, assumption);
-		else
 			return new IdealSimplifier(info, assumption);
+		else
+			return new OldIdealSimplifier(info, assumption);
 	}
 
 }

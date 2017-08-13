@@ -2373,4 +2373,10 @@ public interface CoreUniverse {
 	 *         <code>expr</code>
 	 */
 	NumericExpression[] expand(NumericExpression expr);
+
+	NumericExpression floor(NumericExpression expr);
+
+	NumericExpression ceil(NumericExpression expr);
+
+	NumericExpression roundToZero(NumericExpression expr);
 }

@@ -30,8 +30,8 @@ import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
+import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
-import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifier;
 
 /**
  * <p>
@@ -40,7 +40,13 @@ import edu.udel.cis.vsl.sarl.simplify.common.CommonSimplifier;
  * </p>
  *
  */
-public class IdealSimplifier extends CommonSimplifier {
+public class IdealSimplifier implements Simplifier {
+
+	/**
+	 * Keeps count of the number of simplifications performed, for performance
+	 * debugging.
+	 */
+	static int simplifyCount = 0;
 
 	// Instance fields...
 
@@ -49,12 +55,6 @@ public class IdealSimplifier extends CommonSimplifier {
 	 * conflict with those of free variables.
 	 */
 	UnaryOperator<SymbolicExpression> boundCleaner;
-
-	/**
-	 * Object that gathers together references to various objects needed for
-	 * simplification.
-	 */
-	SimplifierInfo info;
 
 	/**
 	 * Abstract representation of the {@link #fullContext}.
@@ -76,17 +76,14 @@ public class IdealSimplifier extends CommonSimplifier {
 	 *            based
 	 */
 	public IdealSimplifier(SimplifierInfo info, BooleanExpression assumption) {
-		super(info.universe);
-		this.info = info;
-		this.boundCleaner = universe.newMinimalBoundCleaner();
+		this.boundCleaner = info.universe.newMinimalBoundCleaner();
 		// rename bound variables so every variable has a unique name...
 		assumption = (BooleanExpression) boundCleaner.apply(assumption);
-		this.theContext = new ContextBuilder(info, assumption).getContext();
+		this.theContext = new Context(info, assumption);
 	}
 
-	@Override
 	protected IdealSimplifierWorker newWorker() {
-		return new IdealSimplifierWorker(info, theContext);
+		return new IdealSimplifierWorker(theContext);
 	}
 
 	@Override
@@ -117,7 +114,7 @@ public class IdealSimplifier extends CommonSimplifier {
 		// all bound variables in the assumption and x are unique, but
 		// two different x's can have same bound variables (thus
 		// improving canonicalization)...
-		x = universe.cloneBoundCleaner(boundCleaner).apply(x);
+		x = theContext.info.universe.cloneBoundCleaner(boundCleaner).apply(x);
 		return newWorker().simplifyExpression(x);
 	}
 
@@ -160,5 +157,10 @@ public class IdealSimplifier extends CommonSimplifier {
 	 */
 	BooleanExpression findDifferentiableClaim(SymbolicExpression function) {
 		return theContext.findDifferentiableClaim(function);
+	}
+
+	@Override
+	public PreUniverse universe() {
+		return theContext.info.universe;
 	}
 }

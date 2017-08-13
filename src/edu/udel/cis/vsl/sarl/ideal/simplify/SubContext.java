@@ -18,12 +18,19 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Range;
  * 
  * @author siegel
  */
-public class SubContext extends Context2 {
+public class SubContext extends Context {
 
 	/**
 	 * The super-context.
 	 */
-	private ContextIF superContext;
+	private Context superContext;
+
+	/**
+	 * Cache of the corresponding collapsed context. The collapsed context is
+	 * equivalent to this sub-context but is not an instance of
+	 * {@link SubContext}. It may be more useful for simplifying expressions.
+	 */
+	private Context collapse = null;
 
 	/**
 	 * Creates new sub-context with given super-context.
@@ -31,7 +38,7 @@ public class SubContext extends Context2 {
 	 * @param superContext
 	 *            the (non-{@code null}) context containing this one
 	 */
-	public SubContext(ContextIF superContext) {
+	protected SubContext(Context superContext) {
 		super(superContext.getInfo());
 		this.superContext = superContext;
 	}
@@ -44,7 +51,7 @@ public class SubContext extends Context2 {
 	 * @param assumption
 	 *            the boolean expression to be represented by this sub-context
 	 */
-	public SubContext(ContextIF superContext, BooleanExpression assumption) {
+	protected SubContext(Context superContext, BooleanExpression assumption) {
 		this(superContext);
 		this.originalAssumption = assumption;
 		initialize(assumption);
@@ -61,7 +68,7 @@ public class SubContext extends Context2 {
 	 *         known constant values
 	 */
 	@Override
-	public Map<Monic, Number> getMonicConstantMap() {
+	protected Map<Monic, Number> getMonicConstantMap() {
 		Map<Monic, Number> map = superContext.getMonicConstantMap();
 
 		addMonicConstantsToMap(map); // overwrites any previous entries
@@ -79,7 +86,7 @@ public class SubContext extends Context2 {
 	 * @return the range associated to {@code monic}, or {@code null}
 	 */
 	@Override
-	public Range getRange(Monic monic) {
+	protected Range getRange(Monic monic) {
 		Range result = super.getRange(monic);
 
 		if (result != null)
@@ -100,7 +107,7 @@ public class SubContext extends Context2 {
 	 *         {@code null}
 	 */
 	@Override
-	public SymbolicExpression getSub(SymbolicExpression key) {
+	protected SymbolicExpression getSub(SymbolicExpression key) {
 		SymbolicExpression result = super.getSub(key);
 
 		if (result != null)
@@ -115,7 +122,7 @@ public class SubContext extends Context2 {
 	 * 
 	 * @return the super-context of this context
 	 */
-	public ContextIF getSuperContext() {
+	public Context getSuperContext() {
 		return superContext;
 	}
 
@@ -144,6 +151,32 @@ public class SubContext extends Context2 {
 				newConstantMap);
 
 		return gaussHelper(lsi, oldConstantMap, newConstantMap);
+	}
+
+	@Override
+	protected Context collapse() {
+		if (collapse == null) {
+			Context superCollapsed = superContext.collapse();
+			Map<SymbolicExpression, SymbolicExpression> map1 = new TreeMap<>(
+					info.universe.comparator());
+
+			map1.putAll(superCollapsed.subMap);
+			map1.putAll(subMap);
+
+			Map<Monic, Range> map2 = new TreeMap<>(
+					info.idealFactory.monicComparator());
+
+			map2.putAll(superCollapsed.rangeMap);
+			map2.putAll(rangeMap);
+
+			collapse = new Context(info, map1, map2);
+		}
+		return collapse;
+	}
+
+	protected void clear() {
+		collapse = null;
+		super.clear();
 	}
 
 }

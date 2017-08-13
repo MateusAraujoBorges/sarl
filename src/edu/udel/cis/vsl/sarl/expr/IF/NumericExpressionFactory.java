@@ -307,4 +307,10 @@ public interface NumericExpressionFactory {
 
 	NumericExpression[] expand(NumericExpression expr);
 
+	NumericExpression floor(NumericExpression expr);
+
+	NumericExpression ceil(NumericExpression expr);
+
+	NumericExpression roundToZero(NumericExpression expr);
+
 }

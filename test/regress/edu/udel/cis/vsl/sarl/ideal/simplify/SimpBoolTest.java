@@ -25,7 +25,7 @@ import org.junit.Test;
  * Testing on IdealSimplifier on the basis of boolean and BooleanExpressions for
  * assumptions.
  * 
- * @see IdealSimplifier
+ * @see OldIdealSimplifier
  * 
  * @author danfried
  *

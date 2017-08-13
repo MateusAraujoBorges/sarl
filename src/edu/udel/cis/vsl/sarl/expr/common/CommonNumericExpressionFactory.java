@@ -744,6 +744,30 @@ public class CommonNumericExpressionFactory
 	public NumericExpression[] expand(NumericExpression expr) {
 		return idealFactory.expand(expr);
 	}
+
+	@Override
+	public NumericExpression floor(NumericExpression expr) {
+		if (expr.type().isIdeal())
+			return idealFactory.floor(expr);
+		else
+			return herbrandFactory.floor(expr);
+	}
+
+	@Override
+	public NumericExpression ceil(NumericExpression expr) {
+		if (expr.type().isIdeal())
+			return idealFactory.ceil(expr);
+		else
+			return herbrandFactory.ceil(expr);
+	}
+
+	@Override
+	public NumericExpression roundToZero(NumericExpression expr) {
+		if (expr.type().isIdeal())
+			return idealFactory.roundToZero(expr);
+		else
+			return herbrandFactory.roundToZero(expr);
+	}
 }
 
 /**

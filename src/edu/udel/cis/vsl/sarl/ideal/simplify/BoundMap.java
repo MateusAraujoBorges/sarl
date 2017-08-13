@@ -15,7 +15,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
  * occurring within a given simplification context. It has state: as more
  * information is learned about those expressions, methods are called in this
  * class which refines the bounds. There is one instance of {@link BoundMap}
- * associated to each {@link IdealSimplifier}.
+ * associated to each {@link OldIdealSimplifier}.
  * 
  * @author siegel
  */

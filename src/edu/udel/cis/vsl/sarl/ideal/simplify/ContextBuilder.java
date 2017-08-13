@@ -39,7 +39,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 
 /**
- * A context builder is used to create a new {@link Context} from a
+ * A context builder is used to create a new {@link OldContext} from a
  * {@link BooleanExpression} called the "assumption".
  * 
  * @author siegel
@@ -48,12 +48,12 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 public class ContextBuilder {
 
 	/**
-	 * The instance of {@link Context} which is being built by this builder.
+	 * The instance of {@link OldContext} which is being built by this builder.
 	 */
-	private Context theContext;
+	private OldContext theContext;
 
 	/**
-	 * The assumption which is being converted to a {@link Context}. It may be
+	 * The assumption which is being converted to a {@link OldContext}. It may be
 	 * changed in the process of building the context, principally by replacing
 	 * solved variables with their constant values to form what is called the
 	 * "reduced assumption".
@@ -65,7 +65,7 @@ public class ContextBuilder {
 	 * from the context's boundMap, booleanMap, constantMap, and
 	 * otherConstantMap. I.e., assumption = rawAssumption + boundMap +
 	 * booleanMap + constantMap + otherConstantMap. Currently it is used only to
-	 * implement the method {@link Context#assumptionAsInterval()}. Should
+	 * implement the method {@link OldContext#assumptionAsInterval()}. Should
 	 * probably get rid of that method and this field.
 	 */
 	BooleanExpression rawAssumption;
@@ -121,9 +121,9 @@ public class ContextBuilder {
 	}
 
 	/**
-	 * Constructs a new {@link Context} with given parameters. The
+	 * Constructs a new {@link OldContext} with given parameters. The
 	 * <code>assumption</code> is analyzed and the context fields updated
-	 * accordingly. The resulting {@link Context} can then be obtained by method
+	 * accordingly. The resulting {@link OldContext} can then be obtained by method
 	 * {@link #getClass()}.
 	 * 
 	 * @param info
@@ -132,10 +132,10 @@ public class ContextBuilder {
 	 * @param assumption
 	 *            the boolean expression which is being analyze and converted
 	 *            into an abstract representation which is an instance of
-	 *            {@link Context}
+	 *            {@link OldContext}
 	 */
 	public ContextBuilder(SimplifierInfo info, BooleanExpression assumption) {
-		theContext = new Context(info);
+		theContext = new OldContext(info);
 		this.assumption = assumption;
 		this.info = info;
 		this.universe = info.universe;
@@ -150,11 +150,11 @@ public class ContextBuilder {
 	 * Creates a new simplifier worker for carrying out a simplification task
 	 * under the assumption of {@link #theContext}.
 	 * 
-	 * @return new instance of {@link IdealSimplifierWorker} with the context
+	 * @return new instance of {@link OldIdealSimplifierWorker} with the context
 	 *         {@link #theContext}
 	 */
-	private IdealSimplifierWorker newWorker() {
-		return new IdealSimplifierWorker(info, theContext);
+	private OldIdealSimplifierWorker newWorker() {
+		return new OldIdealSimplifierWorker(info, theContext);
 	}
 
 	/**
@@ -163,7 +163,7 @@ public class ContextBuilder {
 	 * this class. This is run once, when this object is instantiated.
 	 */
 	private void initialize() {
-		IdealSimplifierWorker worker = newWorker();
+		OldIdealSimplifierWorker worker = newWorker();
 
 		while (true) {
 			// because simplifications can improve...
@@ -339,14 +339,14 @@ public class ContextBuilder {
 	// p&&q : assume p, simplify q.
 	
 
-	private boolean extractBoundsOr(BooleanExpression or, Context context) {
+	private boolean extractBoundsOr(BooleanExpression or, OldContext context) {
 		if (or.operator() != SymbolicOperator.OR)
 			return extractBoundsFromClause(or, context);
 
 		// p & (q0 | ... | qn) = (p & q0) | ... | (p & qn)
 		// copies of original maps, corresponding to p. these never
 		// change...
-		Context originalAI = context.clone();
+		OldContext originalAI = context.clone();
 		Iterator<? extends SymbolicObject> clauses = or.getArguments()
 				.iterator();
 		boolean satisfiable = extractBoundsBasic(
@@ -356,7 +356,7 @@ public class ContextBuilder {
 		// result <- result | ((p & q1) | ... | (p & qn)) :
 		while (clauses.hasNext()) {
 			BooleanExpression clause = (BooleanExpression) clauses.next();
-			Context newAI = originalAI.clone();
+			OldContext newAI = originalAI.clone();
 			// compute p & q_i:
 			boolean newSatisfiable = extractBoundsBasic(clause, newAI);
 
@@ -416,7 +416,7 @@ public class ContextBuilder {
 	 * @return <code>true</code> unless an inconsistency was discovered
 	 */
 	private boolean extractBoundsFromClause(BooleanExpression clause,
-			Context context) {
+			OldContext context) {
 		SymbolicOperator op = clause.operator();
 
 		// if this is of the form EQ x,y where y is a constant and
@@ -722,7 +722,7 @@ public class ContextBuilder {
 	 * Primitive).
 	 */
 	private boolean extractBoundsBasic(BooleanExpression basic,
-			Context context) {
+			OldContext context) {
 		SymbolicOperator operator = basic.operator();
 
 		if (operator == SymbolicOperator.CONCRETE)
@@ -780,7 +780,7 @@ public class ContextBuilder {
 		return true;
 	}
 
-	private boolean extractEQ0Bounds(Primitive primitive, Context context) {
+	private boolean extractEQ0Bounds(Primitive primitive, OldContext context) {
 		if (primitive instanceof Polynomial)
 			return extractEQ0BoundsPoly((Polynomial) primitive, context);
 
@@ -819,7 +819,7 @@ public class ContextBuilder {
 	 *         is inconsistent with the information in the bound map and boolean
 	 *         map; else <code>true</code>
 	 */
-	private boolean extractEQ0BoundsPoly(Polynomial poly, Context context) {
+	private boolean extractEQ0BoundsPoly(Polynomial poly, OldContext context) {
 		NumberFactory nf = info.numberFactory;
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Monic pseudo = affine.pseudo();
@@ -844,7 +844,7 @@ public class ContextBuilder {
 		return true;
 	}
 
-	private boolean extractNEQ0Bounds(Primitive primitive, Context context) {
+	private boolean extractNEQ0Bounds(Primitive primitive, OldContext context) {
 		if (primitive instanceof Polynomial)
 			return extractNEQ0BoundsPoly((Polynomial) primitive, context);
 
@@ -892,7 +892,7 @@ public class ContextBuilder {
 	 *         is inconsistent with the information in the bound map and boolean
 	 *         map; else <code>true</code>
 	 */
-	private boolean extractNEQ0BoundsPoly(Polynomial poly, Context context) {
+	private boolean extractNEQ0BoundsPoly(Polynomial poly, OldContext context) {
 		// poly=aX+b. if X=-b/a, contradiction.
 		NumberFactory nf = info.numberFactory;
 		SymbolicType type = poly.type();
@@ -944,7 +944,7 @@ public class ContextBuilder {
 	}
 
 	private boolean extractIneqBounds(Monic monic, boolean gt, boolean strict,
-			Context context) {
+			OldContext context) {
 		if (monic instanceof Polynomial)
 			return extractIneqBoundsPoly((Polynomial) monic, gt, strict,
 					context);
@@ -959,7 +959,7 @@ public class ContextBuilder {
 	}
 
 	private boolean extractIneqBoundsPoly(Polynomial poly, boolean gt,
-			boolean strict, Context context) {
+			boolean strict, OldContext context) {
 		AffineExpression affine = info.affineFactory.affine(poly);
 		Monic pseudo = affine.pseudo();
 		Number coefficient = affine.coefficient();
@@ -1020,12 +1020,12 @@ public class ContextBuilder {
 	// public methods ...
 
 	/**
-	 * Gets the {@link Context} that was built by this builder. The context is
+	 * Gets the {@link OldContext} that was built by this builder. The context is
 	 * built at construction time, then this method is used to get it.
 	 * 
 	 * @return the context that was built
 	 */
-	public Context getContext() {
+	public OldContext getContext() {
 		return theContext;
 	}
 

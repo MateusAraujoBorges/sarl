@@ -19,6 +19,7 @@
 package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,6 +31,8 @@ import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
@@ -42,6 +45,7 @@ import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
+import edu.udel.cis.vsl.sarl.expr.common.CommonSymbolicConstant;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
@@ -221,6 +225,12 @@ public class CommonIdealFactory implements IdealFactory {
 	 * The {@link IntegerNumber} 2, which is used for 'n % 2' operation.
 	 */
 	private IntegerNumber intNumTwo;
+
+	// floor : Real -> Integer
+	// ceil(x) = -floor(-x)
+	// roundToZero(x) = x>=0 ? floor(x) : ceil(x)
+
+	private SymbolicConstant floorFunction;
 
 	/**
 	 * The monic factory, a key set factory in which the values are
@@ -1646,9 +1656,9 @@ public class CommonIdealFactory implements IdealFactory {
 		case COND:
 			return expression(operator, realType, numericExpression.argument(0),
 					castToReal(
-							(NumericPrimitive) numericExpression.argument(1)),
+							(NumericExpression) numericExpression.argument(1)),
 					castToReal(
-							(NumericPrimitive) numericExpression.argument(2)));
+							(NumericExpression) numericExpression.argument(2)));
 		case MULTIPLY: {
 			Monomial monomial = (Monomial) numericExpression;
 			Constant constant = monomial.monomialConstant(this);
@@ -1748,6 +1758,110 @@ public class CommonIdealFactory implements IdealFactory {
 				monomial.monic(this));
 	}
 
+	/**
+	 * Given expression of real type, attempts to determine whether it must be a
+	 * real integer, and, if so, returns the integer expression.
+	 * 
+	 * @param expr
+	 *            an expression of real type
+	 * @return an integer expression that is equal to the real expression under
+	 *         the natural injection from integers to reals, or {@code null} is
+	 *         such an integer expression could not be found
+	 */
+	private Monomial getInteger(RationalExpression expr) {
+		switch (expr.operator()) {
+		case CONCRETE: {
+			RationalNumber number = (RationalNumber) ((NumberObject) expr
+					.argument(0)).getNumber();
+
+			if (numberFactory.isIntegral(number))
+				return constant(numberFactory.integerValue(number));
+			return null;
+		}
+		case ADD: {
+			int numArgs = expr.numArguments();
+			Monomial[] intTerms = new Monomial[numArgs];
+
+			for (int i = 0; i < numArgs; i++) {
+				Monomial intTerm = getInteger(
+						(RationalExpression) expr.argument(i));
+
+				if (intTerm == null)
+					return null;
+				intTerms[i] = intTerm;
+			}
+			return addMonomials(intTerms);
+		}
+		case MULTIPLY: {
+			Monomial result = oneInt;
+
+			for (SymbolicObject arg : expr.getArguments()) {
+				Monomial factor = getInteger((RationalExpression) arg);
+
+				if (factor == null)
+					return null;
+				result = multiplyMonomials(result, factor);
+			}
+			return result;
+		}
+		case SUBTRACT: {
+			Monomial m0 = getInteger((RationalExpression) expr.argument(0));
+
+			if (m0 == null)
+				return null;
+
+			Monomial m1 = getInteger((RationalExpression) expr.argument(1));
+
+			if (m1 == null)
+				return null;
+			return (Monomial) subtract(m0, m1);
+		}
+		case COND: {
+			Monomial m1 = getInteger((RationalExpression) expr.argument(1));
+
+			if (m1 == null)
+				return null;
+
+			Monomial m2 = getInteger((RationalExpression) expr.argument(2));
+
+			if (m2 == null)
+				return null;
+			return expression(expr.operator(), integerType, expr.argument(0),
+					m1, m2);
+		}
+		case NEGATIVE: {
+			Monomial m = getInteger((RationalExpression) expr.argument(0));
+
+			if (m == null)
+				return null;
+			return (Monomial) minus(m);
+		}
+		case POWER: {
+			Monomial m0 = getInteger((RationalExpression) expr.argument(0));
+
+			if (m0 == null)
+				return null;
+			if (expr.argument(1) instanceof IntObject) {
+				return expression(expr.operator(), integerType, m0,
+						expr.argument(1));
+			}
+			// could try to check that exponent is an integer and is
+			// nonnegative, but for now will just give up...
+			return null;
+		}
+		case CAST: {
+			SymbolicExpression arg = (SymbolicExpression) expr.argument(0);
+
+			if (arg.type().isInteger()) {
+				return (Monomial) arg;
+			}
+			return null;
+		}
+		default:
+			return null;
+		}
+	}
+
 	// ********** Methods specified in NumericExpressionFactory ***********
 
 	@Override
@@ -1771,6 +1885,11 @@ public class CommonIdealFactory implements IdealFactory {
 		this.monicFactory = new MonicFactory(primitiveComparator);
 		this.polynomialFactory = new PolynomialFactory(monicComparator);
 		this.intNumTwo = numberFactory.integer(2);
+		this.floorFunction = objectFactory.canonic(
+				new CommonSymbolicConstant(objectFactory.stringObject("floor"),
+						typeFactory.functionType(
+								typeFactory.sequence(Arrays.asList(realType)),
+								integerType)));
 	}
 
 	@Override
@@ -1988,13 +2107,8 @@ public class CommonIdealFactory implements IdealFactory {
 		if (oldType.isIdeal() && newType.equals(realType))
 			return castToReal(numericExpression);
 		if (oldType.isReal() && newType.equals(integerType)) {
-			RationalNumber number = (RationalNumber) extractNumber(
-					numericExpression);
-
-			if (number != null)
-				return number.signum() >= 0
-						? constant(numberFactory.floor(number))
-						: constant(numberFactory.ceil(number));
+			// return roundToZero --- that is the C way to cast from real to int
+			return roundToZero(numericExpression);
 		} else if (newType.isIdeal()
 				&& numericExpression.operator() == SymbolicOperator.CAST
 				&& oldType.isHerbrand()) {
@@ -2440,5 +2554,58 @@ public class CommonIdealFactory implements IdealFactory {
 		} else {
 			return new NumericExpression[] { expr };
 		}
+	}
+
+	/**
+	 * Given an expression s of real type, returns expression of integer type
+	 * which is the floor of x, i.e., the greatest integer less than or equal to
+	 * x.
+	 * 
+	 * @param expr
+	 *            the expression of real type
+	 * @return the floor of that expression
+	 */
+	@Override
+	public NumericExpression floor(NumericExpression expr) {
+		// if expr is a cast of x from int to real, return x
+		NumericExpression result = getInteger((RationalExpression) expr);
+
+		if (result != null)
+			return result;
+
+		RationalNumber number = (RationalNumber) extractNumber(expr);
+
+		if (number != null)
+			result = constant(numberFactory.floor(number));
+		else {
+			// can probably do more things (like factor out constants),
+			// but for now just apply the uninterpreted function "floor"...
+			result = expression(SymbolicOperator.APPLY, integerType,
+					floorFunction, objectFactory.singletonSequence(expr));
+		}
+		return result;
+	}
+
+	@Override
+	public NumericExpression ceil(NumericExpression expr) {
+		return minus(floor(minus((RationalExpression) expr)));
+	}
+
+	@Override
+	public NumericExpression roundToZero(NumericExpression expr) {
+		BooleanExpression notNeg = isNonnegative((RationalExpression) expr);
+
+		if (notNeg.isTrue()) {
+			return floor(expr);
+		} else if (notNeg.isFalse()) {
+			return ceil(expr);
+		} else {
+			NumericExpression result = getInteger((RationalExpression) expr);
+
+			if (result != null)
+				return result;
+		}
+		return expression(SymbolicOperator.COND, integerType, notNeg,
+				floor(expr), ceil(expr));
 	}
 }
