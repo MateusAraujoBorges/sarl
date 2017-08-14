@@ -123,4 +123,14 @@ public class FloatToIntTest {
 		out.println("(int)x = " + universe.cast(integerType, x));
 		out.flush();
 	}
+
+	@Test
+	public void realToReal() {
+		NumericExpression x = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("x"), realType);
+		NumericExpression y = (NumericExpression) universe.cast(realType,
+				universe.roundToZero(x));
+
+		out.println("(real)roundToZero(x) = " + y);
+	}
 }

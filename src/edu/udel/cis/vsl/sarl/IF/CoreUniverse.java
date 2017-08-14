@@ -2374,9 +2374,36 @@ public interface CoreUniverse {
 	 */
 	NumericExpression[] expand(NumericExpression expr);
 
+	/**
+	 * Given an expression x of real type, returns an expression of integer type
+	 * representing the greatest integer less than or equal to x.
+	 * 
+	 * @param expr
+	 *            an expression of real type
+	 * @return the floor of {@code expr}, the greatest integer less than or
+	 *         equal to {@code expr}
+	 */
 	NumericExpression floor(NumericExpression expr);
 
+	/**
+	 * Given an expression x of real type, returns an expression of integer type
+	 * representing the least integer greater than or equal to x.
+	 * 
+	 * @param expr
+	 *            an expression of real type
+	 * @return the ceil of {@code expr}, the least integer greater than or equal
+	 *         to {@code expr}
+	 */
 	NumericExpression ceil(NumericExpression expr);
 
+	/**
+	 * Given an expression x of real type, returns an expression of integer type
+	 * representing the resulting of rounding x towards 0. This is equivalent to
+	 * x >= 0 ? floor(x) : ceil(x).
+	 * 
+	 * @param expr
+	 *            an expression of real type
+	 * @return the result of rounding {@code expr} towards 0
+	 */
 	NumericExpression roundToZero(NumericExpression expr);
 }
