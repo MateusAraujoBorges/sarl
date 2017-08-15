@@ -1649,7 +1649,38 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public BooleanExpression forall(SymbolicConstant boundVariable,
 			BooleanExpression predicate) {
-		return booleanFactory.forall(boundVariable, predicate);
+		if (predicate == trueExpr)
+			return trueExpr;
+		if (predicate == falseExpr)
+			return falseExpr;
+
+		BooleanExpression result;
+
+		if (predicate.operator() == SymbolicOperator.AND) {
+			result = trueExpr;
+			for (SymbolicObject clause : predicate.getArguments())
+				result = and(result,
+						forall(boundVariable, (BooleanExpression) clause));
+		} else {
+			result = booleanFactory.forall(boundVariable, predicate);
+
+			ForallStructure structure = getForallStructure(result);
+
+			if (structure != null) {
+				IntegerNumber lo = (IntegerNumber) extractNumber(
+						structure.lowerBound);
+
+				if (lo != null) {
+					IntegerNumber hi = (IntegerNumber) extractNumber(
+							structure.upperBound);
+
+					if (hi != null)
+						result = forallIntConcrete(structure.boundVariable, lo,
+								numberFactory.increment(hi), structure.body);
+				}
+			}
+		}
+		return result;
 	}
 
 	@Override

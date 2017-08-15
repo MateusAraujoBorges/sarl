@@ -434,6 +434,9 @@ public class CnfFactory implements BooleanExpressionFactory {
 	@Override
 	public BooleanExpression forall(SymbolicConstant boundVariable,
 			BooleanExpression predicate) {
+		// TODO: checking these special cases is now redundant,
+		// since it is done in the PreUniverse. Remove them.
+		// Update exits in the same way.
 		if (predicate == trueExpr)
 			return trueExpr;
 		if (predicate == falseExpr)

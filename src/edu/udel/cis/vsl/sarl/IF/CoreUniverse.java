@@ -2348,6 +2348,7 @@ public interface CoreUniverse {
 	 * </pre>
 	 * 
 	 * @param forallExpr
+	 *            an expression with operator {@link SymbolicOperator#FORALL}
 	 * @return a structure specifying the components above if the forall
 	 *         expression has the special form, else <code>null</code>
 	 */
