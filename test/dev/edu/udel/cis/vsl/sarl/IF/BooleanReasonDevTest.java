@@ -1,6 +1,7 @@
 package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -500,5 +501,26 @@ public class BooleanReasonDevTest {
 				.and(Arrays.asList(forall1, forall3));
 		Reasoner reasoner = universe.reasoner(context);
 		reasoner.valid(query);
+	}
+
+	@Test
+	public void modmodCrash() {
+		NumericSymbolicConstant A = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X_A"),
+						universe.integerType());
+		NumericSymbolicConstant B = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X_B"),
+						universe.integerType());
+		NumericSymbolicConstant i = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("i"),
+						universe.integerType());
+		BooleanExpression claim = universe.forall(i, universe.or(
+				universe.equals(universe.modulo(universe.modulo(A, i), i),
+						universe.zeroInt()),
+				universe.equals(universe.modulo(universe.modulo(B, i), i),
+						universe.zeroInt())));
+		Reasoner reasoner = universe.reasoner(universe.trueExpression());
+
+		assertTrue(reasoner.isValid(claim));
 	}
 }
