@@ -340,21 +340,34 @@ public class IdealSimplifierWorker {
 		return (RationalExpression) simplifyExpression(result2);
 	}
 
-	private boolean seenBefore(BooleanExpression expression) {
-		Context c = theContext;
+	// currently not using this method, consider deleting it...
 
-		while (true) {
-			// TODO: does it matter if c is initialized?
-			// reason: suppose you assume p and wish to simplify p.
-			// Is this method even necessary anymore?
-			if (!c.isInitialized() && c.getOriginalAssumption() == expression)
-				return true;
-			if (c instanceof SubContext)
-				c = ((SubContext) c).getSuperContext();
-			else
-				return false;
-		}
-	}
+	// /**
+	// * Is the given expression the "originalAssumption" of {@link #theContext}
+	// * or one of the super*-contexts of {@link #theContext}? This is here to
+	// * help avoid infinite recursions in the simplification process.
+	// *
+	// * @param expression
+	// * a boolean expression being simplified and for which you would
+	// * like to know whether it is already
+	// * "on the simplification stack"
+	// * @return true iff seen before, else false
+	// */
+	// private boolean seenBefore(BooleanExpression expression) {
+	// Context c = theContext;
+	//
+	// while (true) {
+	// // does it matter if c is initialized?
+	// // reason: suppose you assume p and wish to simplify p.
+	// // Is this method even necessary anymore?
+	// if (!c.isInitialized() && c.getOriginalAssumption() == expression)
+	// return true;
+	// if (c instanceof SubContext)
+	// c = ((SubContext) c).getSuperContext();
+	// else
+	// return false;
+	// }
+	// }
 
 	private BooleanExpression simplifyQuantifiedBooleanExpression(
 			BooleanExpression expr) {
@@ -371,75 +384,17 @@ public class IdealSimplifierWorker {
 	}
 
 	/**
-	 * Simplifies a boolean expressions.
+	 * Simplifies a boolean expression.
 	 * 
-	 * TODO: notes on simplifying:
-	 * 
-	 * When you simplify something, you first want to collapse THIS context.
-	 * (You don't have to collapse the new sub-context that you are going to
-	 * create).
-	 * 
-	 * For a boolean expression, collapse this context, create a sub-context for
-	 * the boolean expression, then get its full assumption.
-	 * 
-	 * For any other expression, collapse this context, call a worker to do it.
-	 * 
-	 * 
-	 * Let's talk about simplifying an OR expression a||b in context C0. A
-	 * sub-context C1 is created with the OR expression as the assumption. In
-	 * the process of initializing C1, C1 calls addSub on
-	 * not(simplify(not(a||b))) = not(simplify(!a&&!b)). While C1 is still
-	 * empty, the simplification of AND creates a new sub-context C2 with
-	 * assumption !a&&!b. The expressions !a and !b are extracted, updating the
-	 * subMap and rangeMap of C2. During simplification of the subMap and
-	 * rangeMap of C2, a sub-context C3 will be created to simplify one or the
-	 * other.
-	 * 
-	 * <pre>
-	 * C0: original context.
-	 * C1: context for assumption a||b, state: empty
-	 * C2: context for assumption !a&&!b, state: !a
-	 * C3: context for assumption !b
-	 * </pre>
-	 * 
-	 * There are really two different uses for sub-contexts. One is to simplify
-	 * the assumption (boolean expression). The other is to simplify an
-	 * expression.
-	 * 
-	 * For the second type, better to create a new root context.
-	 * 
-	 * Example:
-	 * 
-	 * C0: X+Y=0 C1: Y=0 X>=0
-	 * 
-	 * To goals:
-	 * 
-	 * 1. Form sub-context for p in order to simplify p. 2. Form sub-context for
-	 * p in order to simplify something else (q).
-	 * 
-	 * collapse : Context -> (root)Context.
-	 * 
-	 * If c is root, return c. If c is a SubContext, collapse parent and combine
-	 * subMaps, rangeMaps.
-	 * 
-	 * Maybe simplify can only happen wrt a root context.
-	 * 
-	 * To simplifyWork e: collapse this context, then simplifyWork e as before.
-	 * 
-	 * In Context c, method c.collapse(), returns a root Context. if c is root,
-	 * returns c. if c is a sub-context, if subMap and rangeMap of c are empty,
-	 * return parent.collapse(). otherwise, duplicate parent.collapse(), and add
-	 * c facts to it Please void double duplication.
-	 * 
-	 * If you make recursive call, don't duplicate. Only the one that does not
-	 * make recursive call duplicates.
-	 * 
-	 * Can the collapse be cached? Sure, but if anything in local context
-	 * changes, it is voided.
-	 * 
+	 * Implementation notes: for relational expression, a {@link SubContext} is
+	 * formed and then the full assumption is taken from that sub-context.
+	 * Similarly for boolean operators (and, or, not). For other expressions,
+	 * generic simplification is used.
 	 * 
 	 * @param expression
-	 * @return
+	 *            a non-<code>null</code> boolean expression
+	 * @return a simplified version of the expression, under the assumption of
+	 *         {@link #theContext}.
 	 */
 	private BooleanExpression simplifyBoolean(BooleanExpression expression) {
 		if (expression.isTrue() || expression.isFalse())
@@ -452,8 +407,10 @@ public class IdealSimplifierWorker {
 		case NEQ:
 		case NOT:
 		case OR:
-			if (seenBefore(expression))
-				break;
+			// Checking seenBefore does not make any different in
+			// performance or results...
+			// if (seenBefore(expression))
+			// break;
 			return new SubContext((Context) theContext, expression)
 					.getFullAssumption();
 		case EXISTS:
@@ -834,7 +791,8 @@ public class IdealSimplifierWorker {
 		// TODO: update this once this method is implemented in RangeFactory
 		Range range = theContext.computeRange((RationalExpression) expr);
 
-		// range.rangeApproximation()
+		// range.rangeApproximation() is the method, but it should
+		// be renamed and it should return an Interval.
 
 		IntervalUnionSet ius = (IntervalUnionSet) range;
 		Interval[] intervals = ius.intervals();

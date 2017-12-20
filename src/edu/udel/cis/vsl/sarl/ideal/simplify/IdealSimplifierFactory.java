@@ -35,7 +35,7 @@ public class IdealSimplifierFactory implements SimplifierFactory {
 	 * Should we use the new {@link Context}? Eventually the old simplifier
 	 * will go away, at which point this field should be removed.
 	 */
-	public final static boolean useNewSimplifier = false;
+	public final static boolean useNewSimplifier = true;
 
 	/**
 	 * A structure which packages references to several other factories and
