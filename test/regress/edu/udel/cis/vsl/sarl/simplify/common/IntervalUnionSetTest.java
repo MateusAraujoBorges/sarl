@@ -3917,6 +3917,26 @@ public class IntervalUnionSetTest {
 	}
 
 	@Test
+	public void symbolicRepresentation_Infi() {
+		Interval infi_to_one = numberFactory.newInterval(true, INT_NEG_INF,
+				true, INT_ONE, false);
+		Interval three_to_five = numberFactory.newInterval(true, INT_THREE,
+				false, INT_FIVE, false);
+		Interval seven_to_infi = numberFactory.newInterval(true, INT_SEVEN,
+				false, INT_POS_INF, true);
+		IntervalUnionSet set = new IntervalUnionSet(infi_to_one, three_to_five,
+				seven_to_infi);
+		SymbolicExpression expected = universe.and(
+				universe.neq(universe.integer(2), INT_X),
+				universe.neq(universe.integer(6), INT_X));
+		SymbolicExpression actual = set.symbolicRepresentation(INT_X, universe);
+
+		p(DEBUG, expected.toString());
+		p(DEBUG, actual.toString());
+		assertEquals(expected, actual);
+	}
+
+	@Test
 	public void divide_IntervalUnionSet_01() {
 		Interval interval = numberFactory.newInterval(true, INT_ZERO, false,
 				INT_TEN, false);
@@ -3965,7 +3985,8 @@ public class IntervalUnionSetTest {
 		IntervalUnionSet set = new IntervalUnionSet(interval1, interval2,
 				interval3);
 		IntervalUnionSet expected = new IntervalUnionSet(expectedInterval);
-		IntervalUnionSet actual = (IntervalUnionSet) set.rangeApproximation();
+		IntervalUnionSet actual = new IntervalUnionSet(
+				set.intervalOverApproximation());
 
 		p(DEBUG, expected.toString());
 		p(DEBUG, actual.toString());

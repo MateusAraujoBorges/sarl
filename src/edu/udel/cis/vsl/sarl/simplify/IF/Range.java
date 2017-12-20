@@ -157,12 +157,12 @@ public interface Range {
 	RangeSign sign();
 
 	/**
-	 * Get the over-approximated {@link Range} of <code>this</code> range.
+	 * Get the over-approximated {@link Interval} of <code>this</code> range.
 	 * (E.g., for an integral range consisting of [-1, 0), [3, 6) and [6, 10);
 	 * the actual range should be [-1, -1] U [3, 9]; and its over-approximation
 	 * range should be [-1, 9].)
 	 * 
 	 * @return the over-approximation range of <code>this</code>
 	 */
-	Range rangeApproximation();
+	Interval intervalOverApproximation();
 }

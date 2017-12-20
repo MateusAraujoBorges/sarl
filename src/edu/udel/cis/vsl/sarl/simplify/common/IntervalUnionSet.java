@@ -1342,17 +1342,17 @@ public class IntervalUnionSet implements Range {
 	}
 
 	@Override
-	public Range rangeApproximation() {
+	public Interval intervalOverApproximation() {
 		int startIndex = 0;
 		int endIndex = intervalArray.length - 1;
 
 		if (endIndex < 1)
-			return this;
-		return new IntervalUnionSet(numberFactory.newInterval(isInt,
+			return this.asInterval();
+		return numberFactory.newInterval(isInt,
 				intervalArray[startIndex].lower(),
 				intervalArray[startIndex].strictLower(),
 				intervalArray[endIndex].upper(),
-				intervalArray[endIndex].strictUpper()));
+				intervalArray[endIndex].strictUpper());
 	}
 
 	@Override
