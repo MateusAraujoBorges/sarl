@@ -143,6 +143,10 @@ public class SimplifierInfo {
 	 */
 	Comparator<Monic> monicComparator;
 
+	Range zeroIntRange;
+
+	Range zeroRealRange;
+
 	SimplifierInfo(PreUniverse universe, IdealFactory idealFactory) {
 		this.idealFactory = idealFactory;
 		this.universe = universe;
@@ -211,6 +215,9 @@ public class SimplifierInfo {
 				rangeFactory.interval(false,
 						numberFactory.infiniteNumber(false, false), true,
 						numberFactory.zeroRational(), true) };
+		zeroIntRange = signRanges[0][2];
+		zeroRealRange = signRanges[1][2];
+		// rangeFactory.
 	}
 
 	/**
@@ -255,8 +262,13 @@ public class SimplifierInfo {
 	 * Converts a numeric relational expression to a constraint on a
 	 * {@link Monic}. Returns <code>null</code> if this is not possible.
 	 * 
+	 * Precondition: <code>relationalExpr</code> is any non-<code>null</code>
+	 * {@link BooleanExpression}
+	 * 
 	 * @param relationalExpr
-	 * @return
+	 * @return a pair consisting of a monic and a range such that the relational
+	 *         expression is equivalent to the constraint that the monic lies in
+	 *         that range, or <code>null</code>
 	 */
 	Pair<Monic, Range> comparisonToRange(BooleanExpression relationalExpr) {
 		SymbolicOperator op = relationalExpr.operator();

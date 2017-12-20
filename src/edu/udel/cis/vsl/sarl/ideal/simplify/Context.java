@@ -1267,19 +1267,18 @@ public class Context {
 		// curr is the current node.
 		while (curr != null) {
 			Monic oldKey = curr.getData();
+			Range oldRange = rangeMap.remove(oldKey);
 			NumericExpression simpKey = (NumericExpression) simplify(oldKey);
 
 			if (simpKey == oldKey) { // no change
+				rangeMap.put(oldKey, oldRange); // put it back
 				if (lastChanged == curr)
 					break; // complete cycle with no change: done!
 				curr = keyList.getNextCyclic(curr);
 				continue;
 			}
 			// a change has occurred: simpKey!=oldKey
-			// remove oldKey, update rangeMap and/or subMap
-
-			Range oldRange = rangeMap.remove(oldKey);
-
+			// oldKey is already removed, now update rangeMap and/or subMap
 			clear();
 			if (oldRange != null) {
 				change = true;
@@ -1361,6 +1360,59 @@ public class Context {
 	}
 
 	/**
+	 * <p>
+	 * Attempts to combine the clauses of an or-expression into a range
+	 * restriction on a single {@link Monic} and add that restriction to the
+	 * state of this {@link Context}.
+	 * </p>
+	 * 
+	 * Precondition: the operator of the <code>orExpr</code> is
+	 * {@link SymbolicOperator#OR}.
+	 * 
+	 * Example:
+	 * 
+	 * <pre>
+	 * x<5 && x>3 ---> x in (3,5)
+	 * </pre>
+	 * 
+	 * @param orExpr
+	 * @return <code>true</code> if a the or expression was reduced to a single
+	 *         range restriction and the information was added to this context;
+	 *         otherwise returns <code>false</code> and the state of this
+	 *         context was not changed
+	 * @throws InconsistentContextException
+	 */
+	private boolean extractNumericOr(BooleanExpression orExpr)
+			throws InconsistentContextException {
+		int numArgs = orExpr.numArguments();
+
+		if (numArgs < 2)
+			return false;
+
+		Monic theMonic = null;
+		Range theRange = null;
+
+		for (SymbolicObject arg : orExpr.getArguments()) {
+			// look for 0=p, 0!=p, 0<m, 0<=m, m<0, m<=0
+			BooleanExpression theArg = (BooleanExpression) arg;
+			Pair<Monic, Range> pair = info.comparisonToRange(theArg);
+
+			if (pair == null)
+				return false;
+			if (theMonic == null) {
+				theMonic = pair.left;
+				theRange = pair.right;
+			} else {
+				if (theMonic != pair.left)
+					return false;
+				theRange = info.rangeFactory.union(theRange, pair.right);
+			}
+		}
+		restrictRange(theMonic, theRange);
+		return true;
+	}
+
+	/**
 	 * Processes an expression in which the operator is not
 	 * {@link SymbolicOperator#AND}. In the CNF form, this expression is a
 	 * clause of the outer "and" expression.
@@ -1374,35 +1426,21 @@ public class Context {
 			throws InconsistentContextException {
 		if (expr.operator() != SymbolicOperator.OR) {
 			extractClause(expr);
-		} else {
-			// TODO: this simplifies but does not form the union of
-			// ranges....
-
-			// form contexts for all clauses:
-			// C1, C2, ...
-			// method to take disjunction (or) of two contexts
-			//
-
-			// put into disjunctive normal form and simplify
-
-			// (X>0 & Y>2) | (X<-4 & Y> 7)
-			// (X>0 | X<-4) &
-			expr = info.universe
-					.not((BooleanExpression) simplify(info.universe.not(expr)));
-			if (expr.operator() == SymbolicOperator.OR) {
-				// here, see if ranges can be joined.
-				// you know the clauses of this OR expression cannot be AND
-				// expressions
-				// because they are in CNF. You can join then if they involve
-				// a single constraint on an expression.
-				// Example: X1=2 OR X1<=0 OR X1>17
-				// these all involve a single range or sub on the same Monic or
-				// thing.
-				addSub(expr, info.trueExpr);
-			} else {
-				addFact(expr);
-			}
+			return;
 		}
+		// this is supposed to be a simple way to simplify an or expression,
+		// reusing the code for simplifying and AND expression.
+		// But is this really a good idea? don't we want the size of the
+		// expression being simplified to strictly decrease?
+		expr = info.universe
+				.not((BooleanExpression) simplify(info.universe.not(expr)));
+		if (expr.operator() != SymbolicOperator.OR) {
+			addFact(expr);
+			return;
+		}
+		if (extractNumericOr(expr))
+			return;
+		addSub(expr, info.trueExpr);
 	}
 
 	/**
@@ -1524,6 +1562,10 @@ public class Context {
 		NumberFactory nf = info.numberFactory;
 		Number zero = isInteger ? nf.zeroInteger() : nf.zeroRational();
 		Pair<Monic, Number> pair = info.normalize(primitive, zero);
+
+		if (pair == null)
+			throw new InconsistentContextException();
+
 		Monic monic = pair.left;
 		Number value = pair.right; // monic=value <==> primitive=0
 		Range range = computeRange(monic);
@@ -2029,8 +2071,15 @@ public class Context {
 	 * @return the simplified expression
 	 */
 	protected SymbolicExpression simplify(SymbolicExpression expr) {
-		return new IdealSimplifierWorker(this.collapse())
-				.simplifyExpressionWork(expr);
+		if (isEmpty()) {
+			// this case is to provide a base case in an otherwise
+			// infinite recursion
+			return new IdealSimplifierWorker(this.collapse())
+					.simplifyExpressionGeneric(expr);
+		} else {
+			return new IdealSimplifierWorker(this.collapse())
+					.simplifyExpressionWork(expr);
+		}
 	}
 
 	// Public methods...
@@ -2041,6 +2090,18 @@ public class Context {
 		out.println("rangeMap:");
 		printMap(out, rangeMap);
 		out.flush();
+	}
+
+	/**
+	 * Is this context empty? This means that both the {@link #subMap} and
+	 * {@link #rangeMap} are empty. Note that emptiness of this context does not
+	 * necessarily imply the super-context (if any) is empty.
+	 * 
+	 * @return <code>true</code> iff this context is empty, else
+	 *         <code>false</code>
+	 */
+	public boolean isEmpty() {
+		return subMap.isEmpty() && rangeMap.isEmpty();
 	}
 
 	public boolean isInconsistent() {

@@ -344,6 +344,9 @@ public class IdealSimplifierWorker {
 		Context c = theContext;
 
 		while (true) {
+			// TODO: does it matter if c is initialized?
+			// reason: suppose you assume p and wish to simplify p.
+			// Is this method even necessary anymore?
 			if (!c.isInitialized() && c.getOriginalAssumption() == expression)
 				return true;
 			if (c instanceof SubContext)
@@ -376,8 +379,8 @@ public class IdealSimplifierWorker {
 	 * (You don't have to collapse the new sub-context that you are going to
 	 * create).
 	 * 
-	 * For a boolean expression, collapse this context, create a sub-context
-	 * for the boolean expression, then get its full assumption.
+	 * For a boolean expression, collapse this context, create a sub-context for
+	 * the boolean expression, then get its full assumption.
 	 * 
 	 * For any other expression, collapse this context, call a worker to do it.
 	 * 
@@ -470,8 +473,6 @@ public class IdealSimplifierWorker {
 		}
 		return (BooleanExpression) simplifyExpressionGeneric(expression);
 	}
-
-	// Package-private methods...
 
 	private SymbolicExpression simplifyLambda(SymbolicExpression expr) {
 		// lambda x . e;
@@ -748,7 +749,7 @@ public class IdealSimplifierWorker {
 	 *            any non-<code>null</code> symbolic expression
 	 * @return a simplified version of that expression
 	 */
-	private SymbolicExpression simplifyExpressionGeneric(
+	SymbolicExpression simplifyExpressionGeneric(
 			SymbolicExpression expression) {
 		if (expression.isNull())
 			return expression;
@@ -768,9 +769,11 @@ public class IdealSimplifierWorker {
 			default:
 			}
 		} else if (operator == SymbolicOperator.FORALL
-				|| operator == SymbolicOperator.EXISTS
-				|| operator == SymbolicOperator.LAMBDA) {
-			throw new SARLInternalException("unreachable");
+				|| operator == SymbolicOperator.EXISTS) {
+			return simplifyQuantifiedBooleanExpression(
+					(BooleanExpression) expression);
+		} else if (operator == SymbolicOperator.LAMBDA) {
+			return simplifyLambda(expression);
 		}
 
 		SymbolicType type = expression.type();
@@ -807,6 +810,18 @@ public class IdealSimplifierWorker {
 
 	// Package-private methods...
 
+	/**
+	 * Retrieves a cached simplification result. Simplification results are
+	 * cached using method
+	 * {@link #cacheSimplification(SymbolicObject, SymbolicObject)}, which in
+	 * turns uses {@link #theContext}'s simplification cache to cache results.
+	 * Note that every time {@link #theContext} changes, its cache is cleared.
+	 * 
+	 * @param object
+	 *            the object to be simplified
+	 * @return the result of a previous simplification applied to {@code object}
+	 *         , or <code>null</code> if no such result is cached
+	 */
 	SymbolicObject getCachedSimplification(SymbolicObject object) {
 		return theContext.getSimplification(object);
 	}
@@ -866,6 +881,9 @@ public class IdealSimplifierWorker {
 	}
 
 	SymbolicExpression simplifyExpression(SymbolicExpression expression) {
+		// It is OK to cache simplification results even if the context
+		// is changing because the context clears its cache every time
+		// a change is made...
 		SymbolicExpression result = (SymbolicExpression) getCachedSimplification(
 				expression);
 

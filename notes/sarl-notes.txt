@@ -1,3 +1,41 @@
+Cycle when there is a lambda formula as a key in the RangeMap.
+
+in the process of forming a subcontext in which the parent context contains
+a rangeMap with a lambda formula key:
+
+the reduction of the range map goes through and simplifies each key.
+But it does not remove the key when it is being simplified.
+In the process of simplifying it collapses the sub-context.
+This entails forming a new Context with the same range map as the original parent.
+THis entails simplifying the key, which creates a new subcontext with the range map... 
+
+
+
+Cycle in call stack:
+divideTest1:
+
+SubContext.init
+Context.initialize, addFact, extractOr, addSub, simplify
+IdealSimplifierWorker.simplifyExpressionWork, simplifyBoolean
+SubContext.init
+
+
+
+simplifyBoolean checks seenBefore, but seenBefore ignores
+  a context if it's not initialized.  None of these contexts are.
+  Why?
+
+Context.simplify flattens "this" context, the result in this case
+is just "true".  There is no deep hierarchy of context and no way
+to recognize the cycle.
+
+Why do we need to create a subcontext? How do we stop from doing
+it twice?
+ 
+
+
+
+
 
 
 extract(expression, context) : modifies context based on information
