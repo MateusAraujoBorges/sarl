@@ -51,16 +51,18 @@ public class IntegerArithmeticDevTest {
 	}
 
 	/**
-	 * This is an integer test (need to be moved) <x,y> = 2^x * (2y + 1) -1 x
-	 * and y are integers x > 0 && y > 0
+	 * Assume: x and y are ints, x >= 0, y >= 0, and 2^x * (2^y + 1) - 1 = 5.
+	 * 
+	 * Prove: x=1 and y=1.
+	 * 
+	 *
 	 */
 	@Test
 	public void pairFucTest() {
 		// universe.setShowProverQueries(true);
-		// NumericExpression int_zero = universe.integer(0);
+		NumericExpression int_zero = universe.integer(0);
 		NumericExpression int_one = universe.integer(1);
 		NumericExpression int_two = universe.integer(2);
-
 		NumericExpression int_five = universe.integer(5);
 
 		// NumericExpression int_ten = universe.integer(10);
@@ -74,22 +76,16 @@ public class IntegerArithmeticDevTest {
 				.add(universe.multiply(int_two, y), int_one);
 		NumericExpression xyPair = universe
 				.subtract(universe.multiply(twoPowerX, twoYPlusOne), int_one);
-
-		Reasoner r = universe.reasoner(universe.equals(xyPair, int_five));
+		BooleanExpression assume = universe.and(
+				universe.and(universe.lessThanEquals(int_zero, x),
+						universe.lessThanEquals(int_zero, y)),
+				universe.equals(xyPair, int_five));
+		Reasoner r = universe.reasoner(assume);
 		BooleanExpression e1 = universe.and(universe.equals(x, int_one),
 				universe.equals(y, int_one));
 		ValidityResult result1 = r.valid(e1);
+
 		assertEquals(ResultType.YES, result1.getResultType());
-		//
-		// BooleanExpression pre =
-		// universe.and(universe.lessThanEquals(int_zero, x),
-		// universe.lessThanEquals(int_zero, y));
-		// Reasoner r = universe.reasoner(universe.and(universe.equals(xyPair,
-		// int_ten), pre));
-		// BooleanExpression e2 = universe.and(universe.equals(x, int_zero),
-		// universe.equals(y, int_five));
-		// ValidityResult result2 = r.valid(e2);
-		// assertEquals(ResultType.YES, result2.getResultType());
 	}
 
 	// TODO:

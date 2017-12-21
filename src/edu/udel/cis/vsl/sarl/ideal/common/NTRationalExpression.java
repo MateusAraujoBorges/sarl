@@ -80,7 +80,7 @@ public class NTRationalExpression extends HomogeneousExpression<Monomial>
 	}
 
 	/**
-	 * Returns the denominator of this ratioal expression.
+	 * Returns the denominator of this rational expression.
 	 * 
 	 * @return the denominator
 	 */

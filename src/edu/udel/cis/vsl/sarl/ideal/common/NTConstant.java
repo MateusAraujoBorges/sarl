@@ -20,6 +20,7 @@ package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.util.Set;
 
+import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
@@ -140,12 +141,35 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 	public RationalExpression powerRational(IdealFactory factory,
 			RationalExpression exponent) {
 		NumberFactory numFactory = factory.numberFactory();
-		RationalNumber exp = (RationalNumber) factory.extractNumber(exponent);
-		RationalNumber base = (RationalNumber) number();
-		IntegerNumber exp_num = numFactory.integer(exp.numerator());
-		IntegerNumber exp_den = numFactory.integer(exp.denominator());
-		IntegerNumber base_num = numFactory.integer(base.numerator());
-		IntegerNumber base_den = numFactory.integer(base.denominator());
+		Number exp = factory.extractNumber(exponent);
+
+		if (exp == null) {
+			return factory.expression(SymbolicOperator.POWER, type(), this,
+					exponent);
+		}
+
+		Number base = number();
+		IntegerNumber exp_num, exp_den, base_num, base_den;
+
+		// exp could be null : no method to do this.
+		// why do we need this method?
+
+		if (exp instanceof IntegerNumber) {
+			exp_num = (IntegerNumber) exp;
+			exp_den = numFactory.oneInteger();
+		} else {
+			exp_num = numFactory.integer(((RationalNumber) exp).numerator());
+			exp_den = numFactory.integer(((RationalNumber) exp).denominator());
+		}
+		if (base instanceof IntegerNumber) {
+			base_num = (IntegerNumber) base;
+			base_den = numFactory.oneInteger();
+		} else {
+			base_num = numFactory.integer(((RationalNumber) base).numerator());
+			base_den = numFactory
+					.integer(((RationalNumber) base).denominator());
+		}
+
 		IntegerNumber result_num = null;
 		IntegerNumber result_den = null;
 		IntegerNumber tmp_num = null;
@@ -162,7 +186,6 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 				base_den = base_num;
 				base_num = tmp;
 			}
-
 		}
 		assert exp_num.signum() >= 0;
 		result_num = numFactory.power(base_num, exp_num);
@@ -172,6 +195,12 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 		if (tmp_num == null || tmp_den == null) {
 			return factory.expression(SymbolicOperator.POWER, type(), this,
 					exponent);
+		} else if (type.isInteger()) {
+			if (!numFactory.mod(tmp_num, tmp_den).isZero())
+				throw new SARLException(
+						"Result of power is not integer:\nbase = " + this
+								+ "\nexponent=" + exponent);
+			return factory.constant(numFactory.divide(tmp_num, tmp_den));
 		} else {
 			return factory.constant(numFactory.fraction(tmp_num, tmp_den));
 		}

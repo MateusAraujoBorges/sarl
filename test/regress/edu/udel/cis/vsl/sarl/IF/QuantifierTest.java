@@ -17,7 +17,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
-public class QuantifierDevTest {
+public class QuantifierTest {
 
 	private SymbolicUniverse universe;
 
