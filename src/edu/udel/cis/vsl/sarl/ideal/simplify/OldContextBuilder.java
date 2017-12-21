@@ -45,7 +45,7 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
  * @author siegel
  *
  */
-public class ContextBuilder {
+public class OldContextBuilder {
 
 	/**
 	 * The instance of {@link OldContext} which is being built by this builder.
@@ -134,7 +134,7 @@ public class ContextBuilder {
 	 *            into an abstract representation which is an instance of
 	 *            {@link OldContext}
 	 */
-	public ContextBuilder(SimplifierInfo info, BooleanExpression assumption) {
+	public OldContextBuilder(SimplifierInfo info, BooleanExpression assumption) {
 		theContext = new OldContext(info);
 		this.assumption = assumption;
 		this.info = info;

@@ -45,7 +45,6 @@ import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
-import edu.udel.cis.vsl.sarl.simplify.IF.Range.RangeSign;
 import edu.udel.cis.vsl.sarl.simplify.IF.RangeFactory;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplify;
 import edu.udel.cis.vsl.sarl.util.Pair;
@@ -59,47 +58,7 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  */
 public class SimplifierInfo {
 
-	// private class ArrayFactComparator implements Comparator<ArrayFact> {
-	//
-	// private Comparator<SymbolicObject> ec;
-	//
-	// ArrayFactComparator(Comparator<SymbolicObject> ec) {
-	// this.ec = ec;
-	// }
-	//
-	// @Override
-	// public int compare(ArrayFact o1, ArrayFact o2) {
-	// int result = ec.compare(o1.array, o2.array);
-	//
-	// if (result != 0)
-	// return result;
-	//
-	// int n = o1.boundVars.length;
-	//
-	// result = n - o2.boundVars.length;
-	// if (result != 0)
-	// return result;
-	// for (int i = 0; i < n; i++) {
-	// result = ec.compare(o1.boundVars[i], o2.boundVars[i]);
-	// if (result != 0)
-	// return result;
-	// }
-	// result = ec.compare(o1.constraint, o2.constraint);
-	// if (result != 0)
-	// return result;
-	// n = o1.indexExprs.length;
-	// result = n - o2.indexExprs.length;
-	// if (result != 0)
-	// return result;
-	// for (int i = 0; i < n; i++) {
-	// result = ec.compare(o1.indexExprs[i], o2.indexExprs[i]);
-	// if (result != 0)
-	// return result;
-	// }
-	// result = ec.compare(o1.value, o2.value);
-	// return result;
-	// }
-	// }
+	PrintStream out;
 
 	/**
 	 * Treat every polynomial as a linear combination of monomials, so Gaussian
@@ -123,29 +82,19 @@ public class SimplifierInfo {
 
 	AffineFactory affineFactory;
 
-	PrintStream out;
-
 	BooleanExpression trueExpr;
 
 	BooleanExpression falseExpr;
-
-	Range[][] signRanges;
 
 	/**
 	 * An ordering on symbolic constants. [Could put this in info.]
 	 */
 	Comparator<SymbolicConstant> variableComparator;
 
-	// Comparator<ArrayFact> arrayFactComparator;
-
 	/**
 	 * An ordering on {@link Monic}s.
 	 */
 	Comparator<Monic> monicComparator;
-
-	Range zeroIntRange;
-
-	Range zeroRealRange;
 
 	SimplifierInfo(PreUniverse universe, IdealFactory idealFactory) {
 		this.idealFactory = idealFactory;
@@ -172,52 +121,6 @@ public class SimplifierInfo {
 			}
 		};
 		this.monicComparator = idealFactory.monicComparator();
-		// this.arrayFactComparator = new ArrayFactComparator(
-		// universe.comparator());
-
-		// case ALL: // (-infty,infty)
-		// case EMPTY: // empty
-		// case EQ0: // [0,0]
-		// case GE0: // [0,infty)
-		// case GT0: // (0,infty)
-		// case LE0: // (-infty, 0]
-		// case LT0: // (-infty, 0)
-		this.signRanges = new Range[2][];
-		signRanges[0] = new Range[] {
-				rangeFactory.interval(true,
-						numberFactory.infiniteNumber(true, false), true,
-						numberFactory.infiniteNumber(true, true), true),
-				rangeFactory.emptySet(true),
-				rangeFactory.singletonSet(numberFactory.zeroInteger()),
-				rangeFactory.interval(true, numberFactory.zeroInteger(), false,
-						numberFactory.infiniteNumber(true, true), true),
-				rangeFactory.interval(true, numberFactory.zeroInteger(), true,
-						numberFactory.infiniteNumber(true, true), true),
-				rangeFactory.interval(true,
-						numberFactory.infiniteNumber(true, false), true,
-						numberFactory.zeroInteger(), false),
-				rangeFactory.interval(true,
-						numberFactory.infiniteNumber(true, false), true,
-						numberFactory.integer(-1), false) };
-		signRanges[1] = new Range[] {
-				rangeFactory.interval(false,
-						numberFactory.infiniteNumber(false, false), true,
-						numberFactory.infiniteNumber(false, true), true),
-				rangeFactory.emptySet(false),
-				rangeFactory.singletonSet(numberFactory.zeroRational()),
-				rangeFactory.interval(false, numberFactory.zeroRational(),
-						false, numberFactory.infiniteNumber(false, true), true),
-				rangeFactory.interval(false, numberFactory.zeroRational(), true,
-						numberFactory.infiniteNumber(false, true), true),
-				rangeFactory.interval(false,
-						numberFactory.infiniteNumber(false, false), true,
-						numberFactory.zeroRational(), false),
-				rangeFactory.interval(false,
-						numberFactory.infiniteNumber(false, false), true,
-						numberFactory.zeroRational(), true) };
-		zeroIntRange = signRanges[0][2];
-		zeroRealRange = signRanges[1][2];
-		// rangeFactory.
 	}
 
 	/**
@@ -431,73 +334,6 @@ public class SimplifierInfo {
 		}
 	}
 
-	// /**
-	// * Computes the bound type of the given {@link Interval}.
-	// *
-	// * @param interval
-	// * a non-<code>null</code> {@link Interval}
-	// * @return the unique category (instance of {@link BoundType}) into which
-	// * <code>interval</code> falls
-	// */
-	// static BoundType boundType(Interval interval) {
-	// if (interval.isEmpty())
-	// return BoundType.EMPTY;
-	//
-	// Number l = interval.lower(), r = interval.upper();
-	// int lsign = l == null ? -1 : l.signum();
-	// int rsign = r == null ? 1 : r.signum();
-	//
-	// if (lsign > 0)
-	// return GT0;
-	// if (rsign < 0)
-	// return LT0;
-	//
-	// if (lsign < 0) {
-	// if (rsign == 0) {
-	// return interval.strictUpper() ? LT0 : LE0;
-	// } else { // rsign > 0
-	// return BoundType.ALL;
-	// }
-	// } else { // lsign == 0
-	// if (rsign == 0) {
-	// return EQ0;
-	// } else { // rsign > 0
-	// return interval.strictLower() ? GT0 : GE0;
-	// }
-	// }
-	// }
-	//
-	// Interval intervalOfBoundType(BoundType type, boolean isInteger) {
-	// NumberFactory nf = numberFactory;
-	//
-	// switch (type) {
-	// case ALL:
-	// return isInteger ? nf.universalIntegerInterval()
-	// : nf.universalRealInterval();
-	// case EMPTY:
-	// return isInteger ? nf.emptyIntegerInterval()
-	// : nf.emptyRealInterval();
-	// case EQ0:
-	// return nf.singletonInterval(
-	// isInteger ? nf.zeroInteger() : nf.zeroRational());
-	// case GE0:
-	// return nf.newInterval(isInteger,
-	// isInteger ? nf.zeroInteger() : nf.zeroRational(), false,
-	// null, true);
-	// case GT0:
-	// return nf.newInterval(isInteger,
-	// isInteger ? nf.zeroInteger() : nf.zeroRational(), true,
-	// null, true);
-	// case LE0:
-	// return nf.newInterval(isInteger, null, true,
-	// isInteger ? nf.zeroInteger() : nf.zeroRational(), false);
-	// case LT0:
-	// return nf.newInterval(isInteger, null, true,
-	// isInteger ? nf.zeroInteger() : nf.zeroRational(), true);
-	// }
-	// throw new SARLInternalException("unreachable");
-	// }
-
 	/**
 	 * Determines whether <code>constraint</code> has the form a*X +b ? 0, where
 	 * ? is one of less-than, less-than-or-equal-to, not-equal-to; X is
@@ -553,107 +389,6 @@ public class SimplifierInfo {
 		return degreeOneTermFound;
 	}
 
-	// GeneralForallStructure getGeneralForallStructure(
-	// BooleanExpression forallExpr) {
-	// if (forallExpr.operator() != SymbolicOperator.FORALL)
-	// return null;
-	//
-	// SymbolicConstant boundVar = (SymbolicConstant) forallExpr.argument(0);
-	// GeneralForallStructure result = new GeneralForallStructure();
-	// BooleanExpression forallBody = (BooleanExpression) forallExpr
-	// .argument(1);
-	// BooleanExpression constraint, body;
-	//
-	// result.boundVar = boundVar;
-	// if (!(boundVar instanceof NumericSymbolicConstant)) {
-	// constraint = trueExpr;
-	// body = forallBody;
-	// } else {
-	// NumericSymbolicConstant var = (NumericSymbolicConstant) boundVar;
-	//
-	// constraint = trueExpr;
-	// body = falseExpr;
-	// if (forallBody.operator() == SymbolicOperator.OR) {
-	// for (SymbolicObject arg : forallBody.getArguments()) {
-	// BooleanExpression clause = (BooleanExpression) arg;
-	// BooleanExpression negClause = universe.not(clause);
-	//
-	// if (isLinearInequality(var, negClause))
-	// constraint = universe.and(constraint, negClause);
-	// else
-	// body = universe.or(body, clause);
-	// }
-	// } else {
-	// BooleanExpression negClause = universe.not(forallBody);
-	//
-	// if (isLinearInequality(var, negClause)) {
-	// constraint = negClause;
-	// body = falseExpr;
-	// } else {
-	// constraint = trueExpr;
-	// body = forallBody;
-	// }
-	// }
-	// }
-	// result.constraint = constraint;
-	// result.body = body;
-	// return result;
-	// }
-	//
-	// DeepForallStructure getDeepForallStructure(BooleanExpression forallExpr)
-	// {
-	// GeneralForallStructure struct0 = getGeneralForallStructure(forallExpr);
-	//
-	// if (struct0 == null)
-	// return null;
-	//
-	// LinkedList<NumericSymbolicConstant> boundVars = new LinkedList<>();
-	// BooleanExpression constraint = trueExpr;
-	// BooleanExpression body = null;
-	//
-	// while (struct0 != null) {
-	// SymbolicConstant x = struct0.boundVar;
-	//
-	// if (!(x instanceof NumericSymbolicConstant))
-	// return null;
-	// boundVars.add((NumericSymbolicConstant) x);
-	// constraint = universe.and(constraint, struct0.constraint);
-	// body = struct0.body;
-	// struct0 = getGeneralForallStructure(body);
-	// }
-	//
-	// DeepForallStructure result = new DeepForallStructure();
-	//
-	// result.boundVars = boundVars
-	// .toArray(new NumericSymbolicConstant[boundVars.size()]);
-	// result.constraint = constraint;
-	// result.body = body;
-	// return result;
-	// }
-
-	public Range rangeOf(RangeSign sign, boolean integral) {
-		int i = integral ? 0 : 1;
-
-		switch (sign) {
-		case ALL: // (-infty,infty)
-			return signRanges[i][0];
-		case EMPTY: // empty
-			return signRanges[i][1];
-		case EQ0: // [0,0]
-			return signRanges[i][2];
-		case GE0: // [0,infty)
-			return signRanges[i][3];
-		case GT0: // (0,infty)
-			return signRanges[i][4];
-		case LE0: // (-infty, 0]
-			return signRanges[i][5];
-		case LT0: // (-infty, 0)
-			return signRanges[i][6];
-		default:
-			throw new SARLException("unreachable");
-		}
-	}
-
 	/**
 	 * Transforms a claim that a non-constant monomial lies in a range to an
 	 * equivalent (normalized) form in which the monomial is a {@link Monic},
@@ -706,6 +441,7 @@ public class SimplifierInfo {
 	 * determined that the equality is unsatisfiable (e.g., 2x=3, where x is an
 	 * integer), then this method returns {@code null}.
 	 * </p>
+	 * 
 	 * <p>
 	 * Effect is similar to that of {@link #standardizeMonomialPair(Pair)},
 	 * except this method is optimized for the case where the value is a

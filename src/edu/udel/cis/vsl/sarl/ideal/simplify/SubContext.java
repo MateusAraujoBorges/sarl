@@ -26,13 +26,6 @@ public class SubContext extends Context {
 	private Context superContext;
 
 	/**
-	 * Cache of the corresponding collapsed context. The collapsed context is
-	 * equivalent to this sub-context but is not an instance of
-	 * {@link SubContext}. It may be more useful for simplifying expressions.
-	 */
-	private Context collapse = null;
-
-	/**
 	 * Creates new sub-context with given super-context.
 	 * 
 	 * @param superContext
@@ -53,7 +46,6 @@ public class SubContext extends Context {
 	 */
 	protected SubContext(Context superContext, BooleanExpression assumption) {
 		this(superContext);
-		this.originalAssumption = assumption;
 		initialize(assumption);
 	}
 
@@ -153,30 +145,29 @@ public class SubContext extends Context {
 		return gaussHelper(lsi, oldConstantMap, newConstantMap);
 	}
 
+	/**
+	 * Collapses this {@link SubContext} and all its super-contexts into a
+	 * single {@link Context}. The collapsed context is equivalent to this
+	 * sub-context but is not an instance of {@link SubContext}.
+	 */
 	@Override
 	protected Context collapse() {
-		if (collapse == null) {
-			Context superCollapsed = superContext.collapse();
-			Map<SymbolicExpression, SymbolicExpression> map1 = new TreeMap<>(
-					info.universe.comparator());
+		Context superCollapsed = superContext.collapse();
+		Map<SymbolicExpression, SymbolicExpression> map1 = new TreeMap<>(
+				info.universe.comparator());
 
-			map1.putAll(superCollapsed.subMap);
-			map1.putAll(subMap);
+		map1.putAll(superCollapsed.subMap);
+		map1.putAll(subMap);
 
-			Map<Monic, Range> map2 = new TreeMap<>(
-					info.idealFactory.monicComparator());
+		Map<Monic, Range> map2 = new TreeMap<>(
+				info.idealFactory.monicComparator());
 
-			map2.putAll(superCollapsed.rangeMap);
-			map2.putAll(rangeMap);
+		map2.putAll(superCollapsed.rangeMap);
+		map2.putAll(rangeMap);
 
-			collapse = new Context(info, map1, map2);
-		}
+		Context collapse = new Context(info, map1, map2);
+
 		return collapse;
-	}
-
-	protected void clear() {
-		collapse = null;
-		super.clear();
 	}
 
 }

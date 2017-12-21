@@ -81,7 +81,7 @@ public class OldIdealSimplifier extends CommonSimplifier {
 		this.boundCleaner = universe.newMinimalBoundCleaner();
 		// rename bound variables so every variable has a unique name...
 		assumption = (BooleanExpression) boundCleaner.apply(assumption);
-		this.theContext = new ContextBuilder(info, assumption).getContext();
+		this.theContext = new OldContextBuilder(info, assumption).getContext();
 	}
 
 	@Override

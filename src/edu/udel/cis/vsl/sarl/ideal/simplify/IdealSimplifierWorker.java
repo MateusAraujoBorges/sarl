@@ -340,35 +340,6 @@ public class IdealSimplifierWorker {
 		return (RationalExpression) simplifyExpression(result2);
 	}
 
-	// currently not using this method, consider deleting it...
-
-	// /**
-	// * Is the given expression the "originalAssumption" of {@link #theContext}
-	// * or one of the super*-contexts of {@link #theContext}? This is here to
-	// * help avoid infinite recursions in the simplification process.
-	// *
-	// * @param expression
-	// * a boolean expression being simplified and for which you would
-	// * like to know whether it is already
-	// * "on the simplification stack"
-	// * @return true iff seen before, else false
-	// */
-	// private boolean seenBefore(BooleanExpression expression) {
-	// Context c = theContext;
-	//
-	// while (true) {
-	// // does it matter if c is initialized?
-	// // reason: suppose you assume p and wish to simplify p.
-	// // Is this method even necessary anymore?
-	// if (!c.isInitialized() && c.getOriginalAssumption() == expression)
-	// return true;
-	// if (c instanceof SubContext)
-	// c = ((SubContext) c).getSuperContext();
-	// else
-	// return false;
-	// }
-	// }
-
 	private BooleanExpression simplifyQuantifiedBooleanExpression(
 			BooleanExpression expr) {
 		SymbolicConstant boundVar = (SymbolicConstant) expr.argument(0);
@@ -413,9 +384,9 @@ public class IdealSimplifierWorker {
 			// break;
 			return new SubContext((Context) theContext, expression)
 					.getFullAssumption();
-		case EXISTS:
-		case FORALL:
-			return simplifyQuantifiedBooleanExpression(expression);
+		// case EXISTS:
+		// case FORALL:
+		// return simplifyQuantifiedBooleanExpression(expression);
 		// case APPLY:
 		// case ARRAY_READ:
 		// case CAST:
@@ -668,19 +639,6 @@ public class IdealSimplifierWorker {
 		return result;
 	}
 
-	// private SymbolicSequence<?> simplifySequence(SymbolicSequence<?>
-	// sequence) {
-	// SymbolicSequence<?> result = (SymbolicSequence<?>)
-	// getCachedSimplification(
-	// sequence);
-	//
-	// if (result == null) {
-	// result = simplifySequenceWork(sequence);
-	// cacheSimplification(sequence, result);
-	// }
-	// return result;
-	// }
-
 	/**
 	 * <p>
 	 * This method simplifies an expression in a generic way that should work
@@ -833,8 +791,8 @@ public class IdealSimplifierWorker {
 		if (type.isBoolean()) {
 			return simplifyBoolean((BooleanExpression) expression);
 		}
-		if (expression.operator() == SymbolicOperator.LAMBDA)
-			return simplifyLambda(expression);
+		// if (expression.operator() == SymbolicOperator.LAMBDA)
+		// return simplifyLambda(expression);
 		return simplifyExpressionGeneric(expression);
 	}
 

@@ -55,10 +55,6 @@ import edu.udel.cis.vsl.sarl.util.SingletonMap;
  * A structured representation of a boolean formula (assumption), suitable for
  * simplifying symbolic expressions.
  * 
- * Interface: create from a boolean expression
- * 
- * Worker will need to use.
- * 
  * @author Stephen F. Siegel (siegel)
  *
  */
@@ -98,8 +94,9 @@ public class Context {
 	 */
 	private Map<SymbolicObject, SymbolicObject> simplificationCache = null;
 
-	/** The original, unaltered, assumption used to initialize this context. */
-	protected BooleanExpression originalAssumption;
+	// /** The original, unaltered, assumption used to initialize this context.
+	// */
+	// protected BooleanExpression originalAssumption;
 
 	/**
 	 * <p>
@@ -1815,7 +1812,7 @@ public class Context {
 	 *            context
 	 */
 	protected void initialize(BooleanExpression assumption) {
-		this.originalAssumption = assumption;
+		// this.originalAssumption = assumption;
 		simplificationCache = new HashMap<>();
 		// can also use a TreeMap, but HashMap seems faster...
 		// this.simplificationCache = new TreeMap<SymbolicObject,
@@ -2012,10 +2009,6 @@ public class Context {
 		return simplificationCache.get(key);
 	}
 
-	protected BooleanExpression getOriginalAssumption() {
-		return originalAssumption;
-	}
-
 	protected boolean isInitialized() {
 		return initialized;
 	}
@@ -2058,6 +2051,18 @@ public class Context {
 		return map;
 	}
 
+	/**
+	 * Returns the collapsed context. That is the context obtained by
+	 * "collapsing" this context and all of its super-contexts into a single
+	 * context.
+	 * 
+	 * In this case, since this has no super-context, this method just returns
+	 * <code>this</code>.
+	 * 
+	 * This method may be overridden in subclasses.
+	 * 
+	 * @return <code>this</code>
+	 */
 	protected Context collapse() {
 		return this;
 	}
@@ -2084,6 +2089,12 @@ public class Context {
 
 	// Public methods...
 
+	/**
+	 * Prints this {#link Context} is a human-readable multi-line format.
+	 * 
+	 * @param out
+	 *            the stream to whcih to print
+	 */
 	public void print(PrintStream out) {
 		out.println("subMap:");
 		printMap(out, subMap);
@@ -2104,16 +2115,43 @@ public class Context {
 		return subMap.isEmpty() && rangeMap.isEmpty();
 	}
 
+	/**
+	 * Is this {@link Context} inconsistent, i.e., is the assumption it
+	 * represents equivalent to "false"?
+	 * 
+	 * @return <code>true</code> if this context is known to be inconsistent. A
+	 *         return value of <code>true</code> implies the context is
+	 *         inconsistent; a return value of <code>false</code> means the
+	 *         context may or may not be inconsistent.
+	 */
 	public boolean isInconsistent() {
 		SymbolicExpression result = subMap.get(info.falseExpr);
 
 		return result != null && result.isTrue();
 	}
 
+	/**
+	 * Returns the reduced assumption represented by this {@link Context}. That
+	 * means it does not include the equations of the form x=e, where x is a
+	 * solved symbolic constant. The related method {@link #getFullAssumption()}
+	 * returns the conjunction of this reduced assumption with those equations.
+	 * 
+	 * @return the reduced assumption
+	 */
 	public BooleanExpression getReducedAssumption() {
 		return getAssumption(false);
 	}
 
+	/**
+	 * Returns the full assumption represented by this {@link Context}. This
+	 * means the assumption will include the clauses which are equations of the
+	 * form "x=e" where x is a solved {@link SymbolicConstant}.
+	 * 
+	 * If this is a sub-context, this assumption does not include the assumption
+	 * of its super-context.
+	 * 
+	 * @return the full assumption
+	 */
 	public BooleanExpression getFullAssumption() {
 		return getAssumption(true);
 	}
@@ -2123,6 +2161,11 @@ public class Context {
 	@Override
 	public Context clone() {
 		return new Context(info, cloneTreeMap(subMap), cloneTreeMap(rangeMap));
+	}
+
+	@Override
+	public String toString() {
+		return "Context[" + subMap + ", " + rangeMap + "]";
 	}
 
 }
