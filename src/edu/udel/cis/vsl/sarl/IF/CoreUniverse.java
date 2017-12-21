@@ -174,7 +174,7 @@ public interface CoreUniverse {
 	 * 
 	 * @param epsilon
 	 *            the new upper bound on probability of error that should be
-	 *            used from this point forward
+	 *            used from this point forward, a rational number in [0,1)
 	 */
 	void setProbabilisticBound(RationalNumber epsilon);
 
@@ -640,7 +640,7 @@ public interface CoreUniverse {
 	 * numbers.
 	 * 
 	 * @param value
-	 *            a SARL Number
+	 *            a finite concrete SARL Number
 	 * @return the {@link NumberObject} wrapping <code>value</code>
 	 */
 	NumberObject numberObject(Number value);
@@ -879,7 +879,7 @@ public interface CoreUniverse {
 	 * {@link RationalNumber}.
 	 * 
 	 * @param number
-	 *            any non-<code>null</code> SARL {@link Number}
+	 *            any non-<code>null</code> finite SARL {@link Number}
 	 * @return the concrete symbolic expression wrapping that number
 	 * @see #number(NumberObject)
 	 */
@@ -1151,7 +1151,7 @@ public interface CoreUniverse {
 	 * @param base
 	 *            the base expression in the power expression
 	 * @param exponent
-	 *            a non-negative concrete integer exponent
+	 *            a finite non-negative concrete integer exponent
 	 */
 	NumericExpression power(NumericExpression base, IntegerNumber exponent);
 

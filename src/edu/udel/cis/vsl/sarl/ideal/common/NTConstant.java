@@ -151,9 +151,6 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 		Number base = number();
 		IntegerNumber exp_num, exp_den, base_num, base_den;
 
-		// exp could be null : no method to do this.
-		// why do we need this method?
-
 		if (exp instanceof IntegerNumber) {
 			exp_num = (IntegerNumber) exp;
 			exp_den = numFactory.oneInteger();

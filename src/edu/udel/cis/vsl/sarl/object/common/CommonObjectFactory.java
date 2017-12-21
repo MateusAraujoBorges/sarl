@@ -219,6 +219,9 @@ public class CommonObjectFactory implements ObjectFactory {
 	public NumberObject numberObject(Number value) {
 		if (value == null)
 			throw new SARLException("null value");
+		if (value.isInfinite())
+			throw new SARLException(
+					"Attempt to create an infinite number object");
 		return canonic(new CommonNumberObject(value));
 	}
 

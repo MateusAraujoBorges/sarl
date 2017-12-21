@@ -217,7 +217,6 @@ public class OrderOfAccuracyTest {
 
 	@Test
 	public void derivativeProve() {
-		
 		universe.setShowQueries(true);
 		universe.setShowProverQueries(true);
 		// $abstract $differentiable(3, [-1.0,1.0]) $real rho($real x);

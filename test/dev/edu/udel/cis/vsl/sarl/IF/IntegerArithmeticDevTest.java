@@ -13,7 +13,6 @@ import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
-import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
@@ -110,27 +109,4 @@ public class IntegerArithmeticDevTest {
 		assertEquals(ResultType.YES, result.getResultType());
 	}
 
-	@Test
-	public void infiOperations() {
-		NumericExpression positiveIntegeralInfi = universe
-				.number(universe.numberFactory().infiniteNumber(true, true));
-		NumericSymbolicConstant constant = (NumericSymbolicConstant) universe
-				.symbolicConstant(universe.stringObject("i"),
-						universe.integerType());
-
-		positiveIntegeralInfi = universe.add(positiveIntegeralInfi, constant);
-	}
-
-	@Test
-	public void infiCompare() {
-		NumericExpression positiveIntegeralInfi = universe
-				.number(universe.numberFactory().infiniteNumber(true, true));
-		NumericSymbolicConstant constant = (NumericSymbolicConstant) universe
-				.symbolicConstant(universe.stringObject("i"),
-						universe.integerType());
-		BooleanExpression falsePred = universe.lessThan(constant,
-				positiveIntegeralInfi);
-
-		assertEquals(falsePred, false);
-	}
 }

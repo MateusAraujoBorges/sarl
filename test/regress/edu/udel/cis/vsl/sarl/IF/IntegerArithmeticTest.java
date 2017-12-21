@@ -370,22 +370,8 @@ public class IntegerArithmeticTest {
 		out.println("e3: " + e3);
 	}
 
-	/**
-	 * n1 = (c^2 + c)/d d = c+1
-	 * 
-	 * n1 == c valid?
-	 */
-	// @Ignore
-	// @Test
-	// public void arrayReasonSimplifyTest2() {
-	// NumericExpression n1 =
-	// universe.divide(universe.add(universe.multiply(int_c, int_c), int_c),
-	// int_d);// n1 = (c^2 + c)/d
-	// NumericExpression n2 = universe.add(int_c, one);// n2 = c+1
-	// Reasoner r = universe.reasoner(universe.equals(int_d, n2)); // d == n2
-	// out.println(r.simplify(n1));
-	//
-	// BooleanExpression eq = universe.equals(n1, int_c); //n1 == c?
-	// assertTrue(r.isValid(eq));
-	// }
+	@Test(expected = SARLException.class)
+	public void infinityTest() {
+		universe.number(universe.numberFactory().infiniteNumber(true, true));
+	}
 }
