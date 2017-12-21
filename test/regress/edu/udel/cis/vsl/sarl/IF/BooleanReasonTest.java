@@ -1,8 +1,10 @@
 package edu.udel.cis.vsl.sarl.IF;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.Before;
@@ -11,6 +13,10 @@ import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
@@ -22,7 +28,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
  */
 public class BooleanReasonTest {
 	public final static PrintStream out = System.out;
-	public final static boolean debug = false;
+	public final static boolean debug = true;
 	private SymbolicUniverse universe;
 	private BooleanExpression A, B, C;
 	private StringObject a_obj, b_obj, c_obj;
@@ -116,6 +122,38 @@ public class BooleanReasonTest {
 	}
 
 	/**
+	 * A ^ (A v B) equiv A
+	 */
+	@Test
+	public void absorptionTest1() {
+		BooleanExpression e1 = universe.and(A, universe.or(A, B));
+		BooleanExpression e2 = A;
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
+	}
+
+	/**
+	 * A v (A ^ B) equiv A
+	 */
+	@Test
+	public void absorptionTest2() {
+		BooleanExpression e1 = universe.or(A, universe.and(A, B));
+		BooleanExpression e2 = A;
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
+	}
+
+	/**
 	 * A ^ (not A) equiv false
 	 */
 	@Test
@@ -141,6 +179,23 @@ public class BooleanReasonTest {
 			out.println("e is " + e);
 		}
 		assertEquals(trueExpr, reasoner.simplify(e));
+	}
+
+	/**
+	 * A ^ (B v C) equiv (A ^ B) v (A ^ C)
+	 */
+	@Test
+	public void distributivityTest1() {
+		BooleanExpression e1 = universe.and(A, universe.or(B, C));
+		BooleanExpression e2 = universe.or(universe.and(A, B),
+				universe.and(A, C));
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
 	}
 
 	/**
@@ -302,5 +357,170 @@ public class BooleanReasonTest {
 			out.println("e2 is " + e2);
 		}
 		assertEquals(reasoner.simplify(e1), reasoner.simplify(e2));
+	}
+
+	/**
+	 * (A -> B) -> A equiv A
+	 * 
+	 * <pre>
+	 * proof:
+	 * (A -> B) -> A equiv !(!A v B) v A
+	 * 				 equiv (A ^ !B) v A
+	 * 				 equiv A v (A ^ !B)
+	 * 				 equiv A
+	 * </pre>
+	 */
+	@Test
+	public void extraEquiv() {
+		BooleanExpression e1 = universe.implies(universe.implies(A, B), A);
+		BooleanExpression e2 = A;
+		Reasoner reasoner = universe.reasoner(trueExpr);
+
+		if (debug) {
+			out.println("e1 is " + e1);
+			out.println("e2 is " + e2);
+		}
+		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
+	}
+
+	/**
+	 * (forall int i; 1&le;i&le;UP ==> array[i-1] == 0) && i == 0;
+	 */
+	@Test
+	public void quantifiedExpressionInterfere() {
+		BooleanExpression context;
+		NumericSymbolicConstant idx = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("i"),
+						universe.integerType());
+		NumericSymbolicConstant upper = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("UP"),
+						universe.integerType());
+		SymbolicExpression array = universe.array(universe.integerType(),
+				Arrays.asList(universe.zeroInt(), universe.zeroInt(),
+						universe.zeroInt()));
+
+		context = universe
+				.forallInt(idx, universe.integer(1), upper,
+						universe.equals(
+								universe.arrayRead(array,
+										universe.subtract(idx,
+												universe.oneInt())),
+								universe.zeroInt()));
+		context = universe.and(context,
+				universe.equals(universe.integer(0), idx));
+
+		Reasoner reasoner = universe.reasoner(context);
+
+		reasoner.getFullContext();
+	}
+
+	/**
+	 * Context: <code>
+	 * forall i0 : int . ((Y5[i0] == Y11[i0]) || (2*_uf_$mpi_sizeof(Y3)*Y2 - 1*i0 <= 0) || (i0 + 1 <= 0)) &&
+	 * forall i0 : int . ((Y11[i0] == Y5[i0]) || (2*_uf_$mpi_sizeof(Y9)*Y8 - 1*i0 <= 0) || (i0 + 1 <= 0))
+	 * </code>
+	 * 
+	 * Query: <code>
+	 * 0 == _uf_$mpi_sizeof(Y1)*Y0 - 1*_uf_$mpi_sizeof(Y3)*Y2 && 
+	 * forall i0 : int. ((Y4[i0] == Y5[i0]) || (_uf_$mpi_sizeof(Y1)*Y0 - 1*i0 <= 0) || (i0 + 1<= 0))
+	 * </code>
+	 */
+	@Test
+	public void infiniteSimplificationBug() {
+		// Types: Abstract function f(int) : int
+		SymbolicType intType = universe.integerType();
+		SymbolicType functionType = universe
+				.functionType(Arrays.asList(intType), universe.integerType());
+		// Function:
+		SymbolicConstant function = universe.symbolicConstant(
+				universe.stringObject("_uf_$mpi_sizeof"), functionType);
+		// Constants:
+		NumericSymbolicConstant Y0 = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("Y0"),
+						universe.integerType());
+		NumericSymbolicConstant Y1 = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("Y1"),
+						universe.integerType());
+		NumericExpression fY1 = (NumericExpression) universe.apply(function,
+				Arrays.asList(Y1));
+		NumericSymbolicConstant Y2 = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("Y2"),
+						universe.integerType());
+		NumericSymbolicConstant Y3 = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("Y3"),
+						universe.integerType());
+		NumericExpression fY3 = (NumericExpression) universe.apply(function,
+				Arrays.asList(Y3));
+		NumericSymbolicConstant Y8 = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("Y8"),
+						universe.integerType());
+		NumericSymbolicConstant Y9 = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("Y9"),
+						universe.integerType());
+		NumericExpression fY9 = (NumericExpression) universe.apply(function,
+				Arrays.asList(Y9));
+		NumericSymbolicConstant i0 = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("i0"),
+						universe.integerType());
+
+		SymbolicType arrayType0 = universe.arrayType(universe.characterType(),
+				universe.multiply(Arrays.asList(fY3, Y2, universe.integer(2))));
+		SymbolicType arrayType1 = universe.arrayType(universe.characterType(),
+				universe.multiply(Arrays.asList(fY9, Y8, universe.integer(2))));
+		SymbolicType arrayType3 = universe.arrayType(universe.characterType(),
+				universe.multiply(Arrays.asList(fY3, Y2)));
+		// Array
+		SymbolicConstant Y5 = universe
+				.symbolicConstant(universe.stringObject("Y5"), arrayType0);
+		SymbolicConstant Y11 = universe
+				.symbolicConstant(universe.stringObject("Y11"), arrayType1);
+		SymbolicConstant Y4 = universe
+				.symbolicConstant(universe.stringObject("Y4"), arrayType3);
+		// forall i0. 0<= i0 < Y2*f(Y3)*2 ==> Y5[i0] == Y11[i0]
+		// forall i0. 0<= i0 < Y8*f(Y9)*2 ==> Y5[i0] == Y11[i0]
+		BooleanExpression propsition1 = universe.equals(
+				universe.arrayRead(Y5, i0), universe.arrayRead(Y11, i0));
+		BooleanExpression propsition3 = universe.equals(
+				universe.arrayRead(Y11, i0), universe.arrayRead(Y5, i0));
+		BooleanExpression forall1 = universe.forallInt(i0, universe.zeroInt(),
+				universe.multiply(Arrays.asList(Y2, fY3, universe.integer(2))),
+				propsition1);
+		BooleanExpression forall3 = universe.forallInt(i0, universe.zeroInt(),
+				universe.multiply(Arrays.asList(fY9, Y8, universe.integer(2))),
+				propsition3);
+
+		BooleanExpression query = universe.forallInt(i0, universe.zeroInt(),
+				universe.multiply(fY1, Y0),
+				universe.equals(universe.arrayRead(Y4, i0),
+						universe.arrayRead(Y5, i0)));
+
+		query = universe.and(query, universe.equals(universe.multiply(Y0, fY1),
+				universe.multiply(fY3, Y2)));
+
+		BooleanExpression context = universe
+				.and(Arrays.asList(forall1, forall3));
+		Reasoner reasoner = universe.reasoner(context);
+		reasoner.valid(query);
+	}
+
+	@Test
+	public void modmodCrash() {
+		NumericSymbolicConstant A = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X_A"),
+						universe.integerType());
+		NumericSymbolicConstant B = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X_B"),
+						universe.integerType());
+		NumericSymbolicConstant i = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("i"),
+						universe.integerType());
+		BooleanExpression claim = universe.forall(i, universe.or(
+				universe.equals(universe.modulo(universe.modulo(A, i), i),
+						universe.zeroInt()),
+				universe.equals(universe.modulo(universe.modulo(B, i), i),
+						universe.zeroInt())));
+		Reasoner reasoner = universe.reasoner(universe.trueExpression());
+
+		assertFalse(reasoner.isValid(claim));
 	}
 }

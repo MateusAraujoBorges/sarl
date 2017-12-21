@@ -14,7 +14,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
-import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
@@ -37,7 +36,6 @@ import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
-import edu.udel.cis.vsl.sarl.simplify.common.IntervalUnionSet;
 
 /**
  * An ideal simplifier worker is created by an {@link OldIdealSimplifier} to
@@ -639,6 +637,39 @@ public class IdealSimplifierWorker {
 		return result;
 	}
 
+	// Package-private methods...
+
+	/**
+	 * Retrieves a cached simplification result. Simplification results are
+	 * cached using method
+	 * {@link #cacheSimplification(SymbolicObject, SymbolicObject)}, which in
+	 * turns uses {@link #theContext}'s simplification cache to cache results.
+	 * Note that every time {@link #theContext} changes, its cache is cleared.
+	 * 
+	 * @param object
+	 *            the object to be simplified
+	 * @return the result of a previous simplification applied to {@code object}
+	 *         , or <code>null</code> if no such result is cached
+	 */
+	private SymbolicObject getCachedSimplification(SymbolicObject object) {
+		return theContext.getSimplification(object);
+	}
+
+	/**
+	 * Caches the given simplification result within {@link #theContext}.
+	 * 
+	 * @param object
+	 *            any non-<code>null</code> {@link SymbolicObject}
+	 * @param result
+	 *            the result returned of simplifying that object
+	 */
+	private void cacheSimplification(SymbolicObject object,
+			SymbolicObject result) {
+		theContext.cacheSimplification(object, result);
+	}
+
+	// Package-private methods...
+
 	/**
 	 * <p>
 	 * This method simplifies an expression in a generic way that should work
@@ -723,63 +754,39 @@ public class IdealSimplifierWorker {
 		return universe().make(operator, simplifiedType, simplifiedArgs);
 	}
 
-	// Package-private methods...
-
 	/**
-	 * Retrieves a cached simplification result. Simplification results are
-	 * cached using method
-	 * {@link #cacheSimplification(SymbolicObject, SymbolicObject)}, which in
-	 * turns uses {@link #theContext}'s simplification cache to cache results.
-	 * Note that every time {@link #theContext} changes, its cache is cleared.
+	 * Computes an interval over-approximation to the possible values that can
+	 * be taken by the given numeric expression under the assumption of the
+	 * context.
 	 * 
-	 * @param object
-	 *            the object to be simplified
-	 * @return the result of a previous simplification applied to {@code object}
-	 *         , or <code>null</code> if no such result is cached
+	 * @param expr
+	 *            a numeric expression (or integer or real type)
+	 * @return an {@link Interval} of the same type as <code>expr</code> with
+	 *         the property that the set of concrete values that can result from
+	 *         evaluating <code>expr</code> at any point satisfying the
+	 *         assumption of {@link #theContext} is contained within that
+	 *         interval
 	 */
-	SymbolicObject getCachedSimplification(SymbolicObject object) {
-		return theContext.getSimplification(object);
-	}
-
-	void cacheSimplification(SymbolicObject object, SymbolicObject result) {
-		theContext.cacheSimplification(object, result);
-	}
-
 	Interval intervalApproximation(NumericExpression expr) {
-		// TODO: update this once this method is implemented in RangeFactory
 		Range range = theContext.computeRange((RationalExpression) expr);
-
-		// range.rangeApproximation() is the method, but it should
-		// be renamed and it should return an Interval.
-
-		IntervalUnionSet ius = (IntervalUnionSet) range;
-		Interval[] intervals = ius.intervals();
-		int n = intervals.length;
-		boolean isIntegral = expr.type().isInteger();
-		NumberFactory nf = theContext.getInfo().numberFactory;
-
-		if (n == 0)
-			return isIntegral ? nf.emptyIntegerInterval()
-					: nf.emptyRealInterval();
-		if (n == 1)
-			return intervals[0];
-
-		Number lo = intervals[0].lower();
-		boolean strictLo = intervals[0].strictLower();
-		Number hi = intervals[n - 1].upper();
-		boolean strictHi = intervals[n - 1].strictUpper();
-		Interval result = nf.newInterval(isIntegral, lo, strictLo, hi,
-				strictHi);
+		Interval result = range.intervalOverApproximation();
 
 		return result;
 	}
 
+	/**
+	 * Simplifies a symbolic expression without caching the result.
+	 * 
+	 * @param expression
+	 *            any non-<code>null</code> {@link SymbolicExpression}
+	 * @return an expression guaranteed to be equivalent to the given one under
+	 *         the assumption of {@link #theContext}
+	 */
 	SymbolicExpression simplifyExpressionWork(SymbolicExpression expression) {
 		SymbolicType type = expression.type();
 
 		if (type == null)
 			return expression;
-
 		// Note: the following excludes Herbrand expressions, as it should:
 		if (expression instanceof RationalExpression)
 			return simplifyRationalExpression((RationalExpression) expression);
@@ -788,14 +795,22 @@ public class IdealSimplifierWorker {
 
 		if (result != null)
 			return result;
-		if (type.isBoolean()) {
+		if (type.isBoolean())
 			return simplifyBoolean((BooleanExpression) expression);
-		}
 		// if (expression.operator() == SymbolicOperator.LAMBDA)
 		// return simplifyLambda(expression);
 		return simplifyExpressionGeneric(expression);
 	}
 
+	/**
+	 * Simplifies a symbolic expression, caching the result in the underlying
+	 * {@link Context}.
+	 * 
+	 * @param expression
+	 *            any non-<code>null</code> {@link SymbolicExpression}
+	 * @return an expression guaranteed to be equivalent to the given one under
+	 *         the assumption of {@link #theContext}
+	 */
 	SymbolicExpression simplifyExpression(SymbolicExpression expression) {
 		// It is OK to cache simplification results even if the context
 		// is changing because the context clears its cache every time
@@ -809,5 +824,4 @@ public class IdealSimplifierWorker {
 		}
 		return result;
 	}
-
 }

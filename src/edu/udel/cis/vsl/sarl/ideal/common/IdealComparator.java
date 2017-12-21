@@ -18,6 +18,21 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.common;
 
+// TODO: there is a bug here resulting in infinite recursion.
+// If you are comparing two Monics m1 and m2, and m2 (say) is not
+// yet in the monicOrderSet, but m2 does occur as a subexpression of
+// some Monic m3 in the monicOrderedSet. When comparing m2 to m3,
+// the work involves comparing the arguments of m3 to something,
+// and one of those arguments could be m2. In the process of comparing
+// m2 to something, m2 must be inserted, etc., forever.
+
+// Solution: Do not add a Monic into the monicOrderSet unless every
+// monic subexpression has been added.
+
+// {x%y}. insert(x) -> compare(arg(x), arg(x%y)=x) -> insert x
+// at this point you should realize that you are trying to insert a
+// subexpression of something, so do comparison first?
+
 import java.util.Comparator;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -312,9 +327,31 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	}
 
 	public int compareMonics(Monic m1, Monic m2) {
-		m1 = insertMonic(m1);
-		m2 = insertMonic(m2);
-		return m1.getOrder().numericalCompareTo(m2.getOrder());
+		RationalNumber o1 = m1.getOrder(), o2 = m2.getOrder();
+
+		if (o1 != null && o2 != null)
+			return o1.numericalCompareTo(o2);
+
+		int result = compareMonicsWork(m1, m2);
+
+		if (o1 == null)
+			insertMonic(m1);
+		if (o2 == null)
+			insertMonic(m2);
+		return result;
+
+		// the following might be faster but has an infinite
+		// recursion in some cases: if (say) m2 is not in the
+		// monicOrderSet, but m2 is a subexpression of some
+		// monic m3 that is in the monicOrderSet,
+		// you get insert(m2) -> compare(arg0(m2),arg0(m3)=m2)
+		// -> insert(m2).
+		// Another solution would be to recursively insertMonic
+		// on all subexpressions of m before inserting m
+
+		// m1 = insertMonic(m1);
+		// m2 = insertMonic(m2);
+		// return m1.getOrder().numericalCompareTo(m2.getOrder());
 	}
 
 	/**
