@@ -16,7 +16,11 @@ import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import edu.udel.cis.vsl.sarl.SARL;
+import edu.udel.cis.vsl.sarl.IF.CoreUniverse.ForallStructure;
+import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 
 /**
@@ -137,6 +141,46 @@ public class IdealSimplifierTest {
 		Simplifier simpEq2 = idealSimplifierFactory.newSimplifier(boolArg2);
 		BooleanExpression boolSimpEq2 = simpEq2.getReducedContext();
 		assertEquals(boolArg2, boolSimpEq2);
+	}
+
+	@Test
+	public void getForallStructure() {
+		SymbolicUniverse universe = SARL.newIdealUniverse();
+
+		NumericSymbolicConstant i = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("i"),
+						universe.integerType());
+		NumericSymbolicConstant j = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("j"),
+						universe.integerType());
+		BooleanExpression body = universe.equals(i, j);
+		NumericSymbolicConstant low = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("low"),
+						universe.integerType());
+		NumericSymbolicConstant high = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("high"),
+						universe.integerType());
+
+		BooleanExpression forall0 = universe.forallInt(j, low, high, body);
+
+		forall0 = universe.forallInt(i, low, high, forall0);
+
+		ForallStructure structure0 = universe.getForallStructure(forall0);
+
+		assert structure0 != null;
+		// another way of constructing forall-predicate causes the failure of
+		// find the pattern ...
+		body = universe.implies(universe.and(universe.lessThanEquals(low, j),
+				universe.lessThan(j, high)), body);
+		body = universe.implies(universe.and(universe.lessThanEquals(low, i),
+				universe.lessThan(i, high)), body);
+		BooleanExpression forall1 = universe.forall(j, body);
+
+		forall1 = universe.forall(i, forall1);
+
+		ForallStructure structure1 = universe.getForallStructure(forall1);
+
+		assert structure1 != null;
 	}
 
 	/*
