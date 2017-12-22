@@ -1051,7 +1051,7 @@ public class Context {
 	// * These are basic modification methods for the state.................*
 	// **********************************************************************
 
-	protected void clear() {
+	private void clear() {
 		simplificationCache.clear();
 	}
 
@@ -1185,9 +1185,9 @@ public class Context {
 	}
 
 	/**
-	 * Updates the state of this {@link OldContext} by restricting the range of
-	 * a normal {@link Monic}. This may result in changes to the
-	 * {@link #rangeMap} , {@link #subMap}, or both.
+	 * Updates the state of this {@link Context} by restricting the range of a
+	 * normal {@link Monic}. This may result in changes to the {@link #rangeMap}
+	 * , {@link #subMap}, or both.
 	 * 
 	 * @param key
 	 *            a normal {@link Monic}
@@ -1347,9 +1347,7 @@ public class Context {
 			throws InconsistentContextException {
 		if (assumption.operator() == SymbolicOperator.AND) {
 			for (SymbolicObject arg : assumption.getArguments()) {
-				BooleanExpression clause = (BooleanExpression) arg;
-
-				extractOr(clause);
+				extractOr((BooleanExpression) arg);
 			}
 		} else {
 			extractOr(assumption);
@@ -2093,7 +2091,7 @@ public class Context {
 	 * Prints this {#link Context} is a human-readable multi-line format.
 	 * 
 	 * @param out
-	 *            the stream to whcih to print
+	 *            the stream to which to print
 	 */
 	public void print(PrintStream out) {
 		out.println("subMap:");

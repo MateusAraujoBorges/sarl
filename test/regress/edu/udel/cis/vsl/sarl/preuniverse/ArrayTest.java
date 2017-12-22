@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -297,6 +298,7 @@ public class ArrayTest {
 	 * 
 	 */
 	// written by Mohammad Alsulmi
+	@Ignore // no longer throwing exceptions for out of bounds
 	@Test(expected = SARLException.class)
 	public void testRemoveElementAtException2() {
 		SymbolicExpression array, expected, resultedArray;
@@ -583,6 +585,7 @@ public class ArrayTest {
 	 * @author malsulmi
 	 * 
 	 */
+	@Ignore // no longer throwing exception for out of bounds
 	@Test(expected = SARLException.class)
 	public void testArrayReadException4() {
 		// testing the fail when pass a negative index to arrayRead()

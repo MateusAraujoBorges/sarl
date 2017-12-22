@@ -16,6 +16,7 @@ import java.util.Set;
 
 import edu.udel.cis.vsl.sarl.IF.CanonicalRenamer;
 import edu.udel.cis.vsl.sarl.IF.Predicate;
+import edu.udel.cis.vsl.sarl.IF.SARLBoundException;
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
@@ -89,7 +90,7 @@ public class CommonPreUniverse implements PreUniverse {
 	 */
 	public final static int QUANTIFIER_EXPAND_BOUND = 1000;
 
-	// TODO: To make the length as a argument to the bit-wise
+	// TODO: Make this parameter something that can be easily configured
 	private int INTEGER_BIT_BOUND = 32;
 
 	/**
@@ -262,21 +263,88 @@ public class CommonPreUniverse implements PreUniverse {
 	// Helper methods...
 
 	/**
-	 * Returns a new instance of SARLException with the given message. (A
-	 * SARLExcpetion is a RuntimeException, so it is not required to declare
-	 * when it is thrown.) It is provided here for convenience since it is used
-	 * a lot and it is short to say "throw err(...)" then
-	 * "throw new SARLExcpeption(...)".
+	 * <p>
+	 * Returns a new instance of {@link SARLException} with the given message.
+	 * (A {@link SARLException} is a {@link RuntimeException}, so it is not
+	 * required to declare when it is thrown.) It is provided here for
+	 * convenience since it is used a lot and it is short to say
+	 * <code>throw err(...)</code> than
+	 * <code>throw new SARLException(...)</code>.
+	 * </p>
 	 * 
+	 * <p>
 	 * This type of exception is usually thrown when the user does something
 	 * wrong, like provide bad parameter values to a method.
+	 * </p>
 	 * 
 	 * @param message
 	 *            an error message
-	 * @return a new instance of SARLException with that message.
+	 * @return a new instance of {@link SARLException} with that message.
 	 */
 	protected SARLException err(String message) {
 		return new SARLException(message);
+	}
+
+	/**
+	 * Returns a new instance of {@link SARLBoundException}. This exception is
+	 * thrown when an index is out of bounds.
+	 * 
+	 * NOTE: currently this is not being used. Instead, a special OUT_OF_BOUNDS
+	 * expression is returned for such references.
+	 * 
+	 * @param expr
+	 *            the symbolic expression into which the index points
+	 *            (typically, an array)
+	 * @param index
+	 *            the offending index
+	 * @param lowerBound
+	 *            the lowest value that an index should take
+	 * @param upperBound
+	 *            the greatest value that an index should take
+	 * @param location
+	 *            the kind of operation that resulted in the exception, e.g.,
+	 *            "an array write operation" or "an array read operation"
+	 * @return a new instance of {@link SARLBoundException} formed from the
+	 *         given parameters
+	 */
+	protected SARLBoundException boundErr(SymbolicExpression expr,
+			NumericExpression index, NumericExpression lowerBound,
+			NumericExpression upperBound, String location) {
+		return new SARLBoundException(expr, index, lowerBound, upperBound,
+				location);
+	}
+
+	/**
+	 * Returns an expression representing an out-of-bounds reference into an
+	 * array.
+	 * 
+	 * @param array
+	 *            the array
+	 * @param index
+	 *            the index which is out of bounds for that array
+	 * @param lowerBound
+	 *            the lowest value that an index should take; currently not used
+	 * @param upperBound
+	 *            the greatest value that an index should take; currently not
+	 *            used
+	 * @param location
+	 *            the kind of operation that resulted in the exception, e.g.,
+	 *            "an array write operation" or "an array read operation";
+	 *            currently not used
+	 * @return expression of the form "OUT_OF_BOUNDS(array,index)" where
+	 *         OUT_OF_BOUNDS is an uninterpreted function with return type the
+	 *         element type of the array
+	 */
+	protected SymbolicExpression outOfBoundExpr(SymbolicExpression array,
+			NumericExpression index, NumericExpression lowerBound,
+			NumericExpression upperBound, String location) {
+		SymbolicArrayType arrayType = (SymbolicArrayType) array.type();
+		SymbolicFunctionType ft = functionType(
+				Arrays.asList(arrayType, integerType), arrayType.elementType());
+		SymbolicConstant f = symbolicConstant(stringObject("OUT_OF_BOUND"), ft);
+		SymbolicExpression result = apply(f, Arrays.asList(array, index));
+
+		return result;
 	}
 
 	/**
@@ -1887,9 +1955,8 @@ public class CommonPreUniverse implements PreUniverse {
 			int length = elements.length;
 
 			if (index < 0 || index >= length)
-				throw err("Index in removeElementAt out of range:\narray: "
-						+ concreteArray + "\nlength: " + length + "\nindex: "
-						+ index);
+				return outOfBoundExpr(concreteArray, integer(index), zeroInt(),
+						integer(length), "a remove element operation");
 			elements = exprSeqFactory.remove(elements, index);
 			return array(elementType, elements);
 		}
@@ -1962,17 +2029,16 @@ public class CommonPreUniverse implements PreUniverse {
 
 		if (indexNumber != null) {
 			if (indexNumber.signum() < 0)
-				throw err("Argument index to arrayRead is negative."
-						+ "\nindex: " + indexNumber);
+				return outOfBoundExpr(array, index, zeroInt(), null,
+						"an array read operation");
 			if (arrayType.isComplete()) {
 				IntegerNumber lengthNumber = (IntegerNumber) extractNumber(
 						((SymbolicCompleteArrayType) arrayType).extent());
 
 				if (lengthNumber != null && numberFactory.compare(indexNumber,
 						lengthNumber) >= 0)
-					throw err("Array index out of bounds in method arrayRead."
-							+ "\narray: " + array + "\nextent: " + lengthNumber
-							+ "\nindex: " + indexNumber);
+					return outOfBoundExpr(array, index, zeroInt(),
+							number(lengthNumber), "an array read operation");
 			}
 			if (op == SymbolicOperator.ARRAY)
 				return (SymbolicExpression) array
@@ -2022,16 +2088,15 @@ public class CommonPreUniverse implements PreUniverse {
 			SymbolicOperator op = array.operator();
 
 			if (indexNumber.signum() < 0)
-				throw err("Argument index to arrayWrite is negative."
-						+ "\nindex: " + indexNumber);
+				return outOfBoundExpr(array, index, zeroInt(), null,
+						"an array write operation");
 			if (arrayType.isComplete()) {
 				lengthNumber = (IntegerNumber) extractNumber(
 						((SymbolicCompleteArrayType) arrayType).extent());
 				if (lengthNumber != null && numberFactory.compare(indexNumber,
 						lengthNumber) >= 0)
-					throw err("Array index out of bounds in method arrayWrite."
-							+ "\narray: " + array + "\nextent: " + lengthNumber
-							+ "\nindex: " + indexNumber);
+					return outOfBoundExpr(array, index, zeroInt(),
+							number(lengthNumber), "an array write operation");
 			}
 			if (op == SymbolicOperator.ARRAY) {
 				HomogeneousExpression<?> hArray = (HomogeneousExpression<?>) array;
@@ -2108,7 +2173,7 @@ public class CommonPreUniverse implements PreUniverse {
 								+ "\nvalue: " + value + "\ntype: "
 								+ value.type() + "\nExpected: "
 								+ arrayType.elementType());
-			// If array has ARRAY_WRITE operator and the written index is extact
+			// If array has ARRAY_WRITE operator and the written index is the
 			// same as the one going to be written, it's safe to over-write it:
 			if (array.operator() == SymbolicOperator.ARRAY_WRITE) {
 				NumericExpression prevIdx = (NumericExpression) array

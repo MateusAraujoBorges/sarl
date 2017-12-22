@@ -8,6 +8,7 @@ import java.util.Arrays;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -91,37 +92,37 @@ public class ReferenceTest {
 	private SymbolicExpression a1 = universe.array(realType,
 			Arrays.asList(new SymbolicExpression[] { oneR, twoR, threeR }));
 
-	private SymbolicExpression a2 = universe.symbolicConstant(
-			universe.stringObject("a2"), arrayType);
+	private SymbolicExpression a2 = universe
+			.symbolicConstant(universe.stringObject("a2"), arrayType);
 
 	private SymbolicExpression t1 = universe.tuple(tupleType,
 			Arrays.asList(new SymbolicExpression[] { cChar, threeR }));
 
-	private SymbolicExpression t2 = universe.symbolicConstant(
-			universe.stringObject("t2"), tupleType);
+	private SymbolicExpression t2 = universe
+			.symbolicConstant(universe.stringObject("t2"), tupleType);
 
 	private ReferenceExpression nullReference = universe.nullReference();
 
 	private ReferenceExpression identityReference = universe
 			.identityReference();
 
-	private ArrayElementReference ar0 = universe.arrayElementReference(
-			identityReference, zero);
+	private ArrayElementReference ar0 = universe
+			.arrayElementReference(identityReference, zero);
 
-	private ArrayElementReference ar1 = universe.arrayElementReference(
-			identityReference, one);
+	private ArrayElementReference ar1 = universe
+			.arrayElementReference(identityReference, one);
 
-	private ArrayElementReference ar2 = universe.arrayElementReference(
-			identityReference, two);
+	private ArrayElementReference ar2 = universe
+			.arrayElementReference(identityReference, two);
 
-	private ArrayElementReference ari = universe.arrayElementReference(
-			identityReference, iVar);
+	private ArrayElementReference ari = universe
+			.arrayElementReference(identityReference, iVar);
 
-	private TupleComponentReference tr0 = universe.tupleComponentReference(
-			identityReference, zeroObj);
+	private TupleComponentReference tr0 = universe
+			.tupleComponentReference(identityReference, zeroObj);
 
-	private TupleComponentReference tr1 = universe.tupleComponentReference(
-			identityReference, oneObj);
+	private TupleComponentReference tr1 = universe
+			.tupleComponentReference(identityReference, oneObj);
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -163,13 +164,13 @@ public class ReferenceTest {
 		assertEquals(expected, universe.assign(a1, ar0, threeR));
 		assertEquals(twoR, universe.dereference(a1, ar1));
 		assertEquals(
-				universe.array(
-						realType,
-						Arrays.asList(new SymbolicExpression[] { oneR, threeR,
-								threeR })), universe.assign(a1, ar1, threeR));
+				universe.array(realType, Arrays.asList(
+						new SymbolicExpression[] { oneR, threeR, threeR })),
+				universe.assign(a1, ar1, threeR));
 		assertEquals(universe.arrayRead(a2, zero),
 				universe.dereference(a2, ar0));
-		assertEquals(universe.arrayRead(a2, two), universe.dereference(a2, ar2));
+		assertEquals(universe.arrayRead(a2, two),
+				universe.dereference(a2, ar2));
 		assertEquals(universe.arrayRead(a1, iVar),
 				universe.dereference(a1, ari));
 		assertEquals(universe.arrayRead(a2, iVar),
@@ -179,9 +180,10 @@ public class ReferenceTest {
 	}
 
 	@Test(expected = SARLException.class)
+	@Ignore // no longer throwing exceptions for out of bound accesses
 	public void arrayOutOfBounds() {
-		ArrayElementReference ar3 = universe.arrayElementReference(
-				identityReference, universe.integer(3));
+		ArrayElementReference ar3 = universe
+				.arrayElementReference(identityReference, universe.integer(3));
 
 		universe.dereference(a1, ar3);
 	}
@@ -219,8 +221,10 @@ public class ReferenceTest {
 		// t1=<'c',3.0>
 		assertEquals(cChar, universe.dereference(t1, tr0));
 		assertEquals(threeR, universe.dereference(t1, tr1));
-		assertEquals(universe.tuple(tupleType,
-				Arrays.asList(new SymbolicExpression[] { dChar, threeR })),
+		assertEquals(
+				universe.tuple(tupleType,
+						Arrays.asList(
+								new SymbolicExpression[] { dChar, threeR })),
 				universe.assign(t1, tr0, dChar));
 
 	}
@@ -230,10 +234,10 @@ public class ReferenceTest {
 		SymbolicUnionType unionType = universe.unionType(
 				universe.stringObject("union"),
 				Arrays.asList(new SymbolicType[] { integerType, charType }));
-		UnionMemberReference ur0 = universe.unionMemberReference(
-				identityReference, zeroObj);
-		UnionMemberReference ur1 = universe.unionMemberReference(
-				identityReference, oneObj);
+		UnionMemberReference ur0 = universe
+				.unionMemberReference(identityReference, zeroObj);
+		UnionMemberReference ur1 = universe
+				.unionMemberReference(identityReference, oneObj);
 		SymbolicExpression u1 = universe.unionInject(unionType, zeroObj, one);
 		SymbolicExpression u2 = universe.unionInject(unionType, oneObj, cChar);
 
@@ -260,9 +264,9 @@ public class ReferenceTest {
 		ReferenceExpression arrayEle1 = universe.arrayElementReference(self,
 				universe.integer(1));
 		Reasoner reasoner = universe.reasoner(universe.trueExpression());
-		SymbolicFunctionType functionType = universe
-				.functionType(Arrays.asList(universe.referenceType()),
-						universe.booleanType());
+		SymbolicFunctionType functionType = universe.functionType(
+				Arrays.asList(universe.referenceType()),
+				universe.booleanType());
 		SymbolicConstant function = universe.symbolicConstant(
 				universe.stringObject("function"), functionType);
 		BooleanExpression claim = (BooleanExpression) universe.apply(function,
