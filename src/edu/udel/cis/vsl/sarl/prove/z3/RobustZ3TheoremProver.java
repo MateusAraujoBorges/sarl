@@ -152,8 +152,8 @@ public class RobustZ3TheoremProver implements TheoremProver {
 				if (info.getShowErrors() || info.getShowInconclusives()) {
 					try {
 						if (z3Err.ready()) {
-							PrintStream exp = new PrintStream(new File(
-									universe.getErrFile()));
+							PrintStream exp = new PrintStream(
+									new File(universe.getErrFile()));
 
 							printProverUnexpectedException(z3Err, exp);
 							exp.close();
@@ -199,55 +199,61 @@ public class RobustZ3TheoremProver implements TheoremProver {
 						+ " output: " + e.getMessage());
 			result = Prove.RESULT_MAYBE;
 		}
-		if (result == null) {
-			PrintStream stdin = new PrintStream(process.getOutputStream());
-			BufferedReader stdout = new BufferedReader(new InputStreamReader(
-					process.getInputStream()));
-			BufferedReader stderr = new BufferedReader(new InputStreamReader(
-					process.getErrorStream()));
-			FastList<String> assumptionDecls = assumptionTranslator
-					.getDeclarations();
-			FastList<String> assumptionText = assumptionTranslator
-					.getTranslation();
+		try {
+			if (result == null) {
+				PrintStream stdin = new PrintStream(process.getOutputStream());
+				BufferedReader stdout = new BufferedReader(
+						new InputStreamReader(process.getInputStream()));
+				BufferedReader stderr = new BufferedReader(
+						new InputStreamReader(process.getErrorStream()));
+				FastList<String> assumptionDecls = assumptionTranslator
+						.getDeclarations();
+				FastList<String> assumptionText = assumptionTranslator
+						.getTranslation();
 
-			assumptionDecls.print(stdin);
-			stdin.print("(assert ");
-			assumptionText.print(stdin);
-			stdin.println(")");
-			predicate = (BooleanExpression) universe
-					.cleanBoundVariables(predicate);
+				assumptionDecls.print(stdin);
+				stdin.print("(assert ");
+				assumptionText.print(stdin);
+				stdin.println(")");
+				predicate = (BooleanExpression) universe
+						.cleanBoundVariables(predicate);
 
-			Z3Translator translator = new Z3Translator(assumptionTranslator,
-					predicate);
-			FastList<String> predicateDecls = translator.getDeclarations();
-			FastList<String> predicateText = translator.getTranslation();
+				Z3Translator translator = new Z3Translator(assumptionTranslator,
+						predicate);
+				FastList<String> predicateDecls = translator.getDeclarations();
+				FastList<String> predicateText = translator.getTranslation();
 
-			predicateDecls.print(stdin);
-			stdin.print("(assert (not ");
-			predicateText.print(stdin);
-			stdin.println("))");
-			stdin.println("(check-sat)");
-			stdin.flush();
-			stdin.close();
-			if (show) {
-				out.print("\n" + info.getFirstAlias() + " predicate   " + id
-						+ ":\n");
-				predicateDecls.print(out);
-				predicateText.print(out);
-				out.println();
-				out.println();
-				out.flush();
+				predicateDecls.print(stdin);
+				stdin.print("(assert (not ");
+				predicateText.print(stdin);
+				stdin.println("))");
+				stdin.println("(check-sat)");
+				stdin.flush();
+				stdin.close();
+				if (show) {
+					out.print("\n" + info.getFirstAlias() + " predicate   " + id
+							+ ":\n");
+					predicateDecls.print(out);
+					predicateText.print(out);
+					out.println();
+					out.println();
+					out.flush();
+				}
+				if (info.getTimeout() > 0 && !ProcessControl
+						.waitForProcess(process, info.getTimeout())) {
+					if (info.getShowErrors() || info.getShowInconclusives())
+						err.println(info.getFirstAlias() + " query       " + id
+								+ ": time out");
+					result = Prove.RESULT_MAYBE;
+				} else {
+					result = readZ3Output(stdout, stderr);
+				}
 			}
-			if (info.getTimeout() > 0
-					&& !ProcessControl.waitForProcess(process,
-							info.getTimeout())) {
-				if (info.getShowErrors() || info.getShowInconclusives())
-					err.println(info.getFirstAlias() + " query       " + id
-							+ ": time out");
-				result = Prove.RESULT_MAYBE;
-			} else {
-				result = readZ3Output(stdout, stderr);
-			}
+		} catch (Exception e) {
+			if (process != null)
+				process.destroyForcibly();
+			process = null;
+			throw e;
 		}
 		if (process != null)
 			process.destroy();

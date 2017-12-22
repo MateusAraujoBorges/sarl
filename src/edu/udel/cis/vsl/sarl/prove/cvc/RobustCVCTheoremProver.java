@@ -150,8 +150,8 @@ public class RobustCVCTheoremProver implements TheoremProver {
 				if (info.getShowErrors() || info.getShowInconclusives()) {
 					try {
 						if (cvcErr.ready()) {
-							PrintStream exp = new PrintStream(new File(
-									universe.getErrFile()));
+							PrintStream exp = new PrintStream(
+									new File(universe.getErrFile()));
 
 							printProverUnexpectedException(cvcErr, exp);
 							exp.close();
@@ -188,7 +188,7 @@ public class RobustCVCTheoremProver implements TheoremProver {
 			boolean show, PrintStream out) throws TheoremProverException {
 		Process process = null;
 		ValidityResult result = null;
-		
+
 		try {
 			process = processBuilder.start();
 		} catch (IOException e) {
@@ -197,62 +197,63 @@ public class RobustCVCTheoremProver implements TheoremProver {
 						+ " output: " + e.getMessage());
 			result = Prove.RESULT_MAYBE;
 		}
-		if (result == null) {
-			PrintStream stdin = new PrintStream(process.getOutputStream());
-			BufferedReader stdout = new BufferedReader(new InputStreamReader(
-					process.getInputStream()));
-			BufferedReader stderr = new BufferedReader(new InputStreamReader(
-					process.getErrorStream()));
-			FastList<String> assumptionDecls = assumptionTranslator
-					.getDeclarations();
-			FastList<String> assumptionText = assumptionTranslator
-					.getTranslation();
+		try {
+			if (result == null) {
+				PrintStream stdin = new PrintStream(process.getOutputStream());
+				BufferedReader stdout = new BufferedReader(
+						new InputStreamReader(process.getInputStream()));
+				BufferedReader stderr = new BufferedReader(
+						new InputStreamReader(process.getErrorStream()));
+				FastList<String> assumptionDecls = assumptionTranslator
+						.getDeclarations();
+				FastList<String> assumptionText = assumptionTranslator
+						.getTranslation();
 
-			// System.out.println("assumptionText:"+assumptionText);
+				assumptionDecls.print(stdin);
+				stdin.print("ASSERT ");
+				assumptionText.print(stdin);
+				stdin.println(";");
+				predicate = (BooleanExpression) universe
+						.cleanBoundVariables(predicate);
 
-			assumptionDecls.print(stdin);
-			stdin.print("ASSERT ");
-			assumptionText.print(stdin);
-			stdin.println(";");
-			predicate = (BooleanExpression) universe
-					.cleanBoundVariables(predicate);
+				CVCTranslator translator = new CVCTranslator(
+						assumptionTranslator, predicate);
+				FastList<String> predicateDecls = translator.getDeclarations();
+				FastList<String> predicateText = translator.getTranslation();
 
-			CVCTranslator translator = new CVCTranslator(assumptionTranslator,
-					predicate);
-			FastList<String> predicateDecls = translator.getDeclarations();
-			FastList<String> predicateText = translator.getTranslation();
-
-			// System.out.println("predicateDecls:"+predicateDecls);
-			// System.out.println("predicateText:"+predicateText);
-
-			predicateDecls.print(stdin);
-			stdin.print("QUERY ");
-			predicateText.print(stdin);
-			stdin.println(";\n");
-			stdin.flush();
-			stdin.close();
-			if (show) {
-				out.print("\n" + info.getFirstAlias() + " predicate   " + id
-						+ ":\n");
-				predicateDecls.print(out);
-				predicateText.print(out);
-				out.println();
-				out.println();
-				out.flush();
+				predicateDecls.print(stdin);
+				stdin.print("QUERY ");
+				predicateText.print(stdin);
+				stdin.println(";\n");
+				stdin.flush();
+				stdin.close();
+				if (show) {
+					out.print("\n" + info.getFirstAlias() + " predicate   " + id
+							+ ":\n");
+					predicateDecls.print(out);
+					predicateText.print(out);
+					out.println();
+					out.println();
+					out.flush();
+				}
+				if (info.getTimeout() > 0 && !ProcessControl
+						.waitForProcess(process, info.getTimeout())) {
+					if (info.getShowErrors() || info.getShowInconclusives())
+						err.println(info.getFirstAlias() + " query       " + id
+								+ ": time out");
+					result = Prove.RESULT_MAYBE;
+				} else {
+					result = readCVCOutput(stdout, stderr);
+				}
 			}
-			if (info.getTimeout() > 0
-					&& !ProcessControl.waitForProcess(process,
-							info.getTimeout())) {
-				if (info.getShowErrors() || info.getShowInconclusives())
-					err.println(info.getFirstAlias() + " query       " + id
-							+ ": time out");
-				result = Prove.RESULT_MAYBE;
-			} else {
-				result = readCVCOutput(stdout, stderr);
-			}
+		} catch (Exception e) {
+			if (process != null)
+				process.destroyForcibly();
+			process = null;
+			throw e;
 		}
 		if (process != null)
-			process.destroy();
+			process.destroyForcibly();
 		return result;
 	}
 
