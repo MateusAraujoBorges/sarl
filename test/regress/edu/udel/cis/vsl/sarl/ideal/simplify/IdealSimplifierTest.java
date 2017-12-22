@@ -11,6 +11,7 @@ import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.trueExpr;
 import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.x;
 import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xeq5;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -167,20 +168,21 @@ public class IdealSimplifierTest {
 
 		ForallStructure structure0 = universe.getForallStructure(forall0);
 
-		assert structure0 != null;
+		assertNotNull(structure0);
 		// another way of constructing forall-predicate causes the failure of
 		// find the pattern ...
 		body = universe.implies(universe.and(universe.lessThanEquals(low, j),
 				universe.lessThan(j, high)), body);
 		body = universe.implies(universe.and(universe.lessThanEquals(low, i),
 				universe.lessThan(i, high)), body);
+
 		BooleanExpression forall1 = universe.forall(j, body);
 
 		forall1 = universe.forall(i, forall1);
 
 		ForallStructure structure1 = universe.getForallStructure(forall1);
 
-		assert structure1 != null;
+		assertNotNull(structure1);
 	}
 
 	/*

@@ -19,6 +19,7 @@
 package edu.udel.cis.vsl.sarl.expr.cnf;
 
 import java.util.Comparator;
+import java.util.LinkedList;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanSymbolicConstant;
@@ -350,6 +351,14 @@ public class CnfFactory implements BooleanExpressionFactory {
 		return result;
 	}
 
+	private BooleanExpression and(Iterable<? extends BooleanExpression> args) {
+		BooleanExpression result = trueExpr;
+
+		for (BooleanExpression arg : args)
+			result = and(result, arg);
+		return result;
+	}
+
 	private BooleanExpression getNegation(BooleanExpression expr) {
 		if (expr instanceof BooleanPrimitive)
 			return ((BooleanPrimitive) expr).getNegation();
@@ -436,17 +445,40 @@ public class CnfFactory implements BooleanExpressionFactory {
 			BooleanExpression predicate) {
 		// TODO: checking these special cases is now redundant,
 		// since it is done in the PreUniverse. Remove them.
-		// Update exits in the same way.
+		// Update exists in the same way.
 		if (predicate == trueExpr)
 			return trueExpr;
 		if (predicate == falseExpr)
 			return falseExpr;
-		if (predicate.operator() == SymbolicOperator.AND) {
+
+		SymbolicOperator op = predicate.operator();
+
+		if (op == SymbolicOperator.AND) {
 			BooleanExpression result = trueExpr;
 
 			for (BooleanExpression clause : args(predicate))
 				result = and(result, forall(boundVariable, clause));
 			return result;
+		}
+		if (op == SymbolicOperator.OR) {
+			// forall x . (p || q) is equiv. to p || forall x. q
+			// if p does not involve x ...
+			LinkedList<BooleanExpression> varClauses = new LinkedList<>(),
+					constClauses = new LinkedList<>();
+
+			for (BooleanExpression clause : args(predicate)) {
+				if (clause.getFreeVars().contains(boundVariable))
+					varClauses.add(clause);
+				else
+					constClauses.add(clause);
+			}
+			if (!constClauses.isEmpty()) {
+				constClauses.add(forall(boundVariable, or(varClauses)));
+
+				BooleanExpression result = or(constClauses);
+
+				return result;
+			}
 		}
 		return booleanExpression(SymbolicOperator.FORALL, boundVariable,
 				predicate);
@@ -459,12 +491,35 @@ public class CnfFactory implements BooleanExpressionFactory {
 			return trueExpr;
 		if (predicate == falseExpr)
 			return falseExpr;
-		if (predicate.operator() == SymbolicOperator.OR) {
+
+		SymbolicOperator op = predicate.operator();
+
+		if (op == SymbolicOperator.OR) {
 			BooleanExpression result = falseExpr;
 
 			for (BooleanExpression clause : args(predicate))
 				result = or(result, exists(boundVariable, clause));
 			return result;
+		}
+		if (op == SymbolicOperator.AND) {
+			// exists x . (p && q) is equiv. to p && exists x. q
+			// if p does not involve x ...
+			LinkedList<BooleanExpression> varClauses = new LinkedList<>(),
+					constClauses = new LinkedList<>();
+
+			for (BooleanExpression clause : args(predicate)) {
+				if (clause.getFreeVars().contains(boundVariable))
+					varClauses.add(clause);
+				else
+					constClauses.add(clause);
+			}
+			if (!constClauses.isEmpty()) {
+				constClauses.add(exists(boundVariable, and(varClauses)));
+
+				BooleanExpression result = and(constClauses);
+
+				return result;
+			}
 		}
 		return booleanExpression(SymbolicOperator.EXISTS, boundVariable,
 				predicate);
