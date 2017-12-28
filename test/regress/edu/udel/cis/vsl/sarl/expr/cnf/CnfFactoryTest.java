@@ -24,13 +24,9 @@ import static org.junit.Assert.assertNotEquals;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.udel.cis.vsl.sarl.SARL;
-import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanSymbolicConstant;
-import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
@@ -375,47 +371,5 @@ public class CnfFactoryTest {
 		assertNotEquals(hellomsgfalse, hellotest.name());
 		assertEquals("Hello", hellotest.toString());
 		assertNotEquals("hello", hellotest.toString());
-	}
-
-	@Test
-	public void unsatisfiableTest() {
-		SymbolicUniverse universe = SARL.newStandardUniverse();
-		NumericExpression two = universe.integer(2);
-		SymbolicConstant X = universe.symbolicConstant(
-				universe.stringObject("X"), universe.integerType());
-		BooleanExpression clause1 = universe.lessThanEquals(
-				universe.divide((NumericExpression) X, two), universe.oneInt());
-		BooleanExpression clause2 = universe.lessThanEquals(universe.integer(3),
-				(NumericExpression) X);
-
-		BooleanExpression result = universe
-				.reasoner(universe.and(clause1, clause2)).getReducedContext();
-		System.out.println(result);
-
-		// want X=3.
-		// need to reason as follows:
-		// a div b <= c ==>
-		// assume a>=0, b>0
-		// a = q*b + r
-		// q>=0, 0<=r<b
-		// q=(a-r)/b=a/b-r/b
-		// (a/b)-1<q<=a/b
-
-		// X/2>=3/2
-		// X div 2 > (X/2)-1 >= 3/2-1 >= .5 -> X div 2 >= 1
-		// -> X div 2 = 1
-		// X/2<X div 2 + 1 = 2 -> X<4 -> X=3
-
-		// Here is how to do it:
-
-		// To get a bound on a%b, where b>0 is constant:
-		// first, get a bound on a. if a>=0: a%b is in [0,b-1].
-		// if a<=0 a%b in [1-b,0]. In any case: a%b in [1-b,b-1].
-
-		// if a bound I1 is created on a div b:
-		// 1. get bound I2 on a%b as above (if not already present)
-		// 2. use fact that a=(a div b)*b+a%b to get bound on a:
-		// b*I1+I2
-
 	}
 }

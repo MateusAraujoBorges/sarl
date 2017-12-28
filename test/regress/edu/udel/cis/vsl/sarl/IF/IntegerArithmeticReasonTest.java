@@ -31,6 +31,7 @@ import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.StringObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
@@ -230,5 +231,24 @@ public class IntegerArithmeticReasonTest {
 			out.println("e2 is " + e2);
 		}
 		assertEquals(reasoner.simplify(e2), reasoner.simplify(e1));
+	}
+
+	/**
+	 * Assume x is an int, x>=3, and x div 2 <= 1. Prove x=3.
+	 */
+	@Test
+	public void intDivBound() {
+		NumericExpression two = universe.integer(2);
+		SymbolicConstant X = universe.symbolicConstant(
+				universe.stringObject("X"), universe.integerType());
+		BooleanExpression clause1 = universe.lessThanEquals(
+				universe.divide((NumericExpression) X, two), universe.oneInt());
+		BooleanExpression clause2 = universe.lessThanEquals(threeInt,
+				(NumericExpression) X);
+		Reasoner r = universe.reasoner(universe.and(clause1, clause2));
+		SymbolicExpression x_val = r.constantSubstitutionMap().get(X);
+
+		assertEquals(threeInt, x_val);
+		assertEquals(trueExpr, r.getReducedContext());
 	}
 }
