@@ -18,35 +18,107 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.util;
 
-public class Pair<S, T> {
+import java.util.Map.Entry;
 
+/**
+ * An ordered pair.
+ * 
+ * @author siegel
+ *
+ * @param <S>
+ *            the type of the left component
+ * @param <T>
+ *            the type of the right component
+ */
+public class Pair<S, T> implements Entry<S, T> {
+
+	/**
+	 * The left component.
+	 */
 	public S left;
 
+	/**
+	 * The right component.
+	 */
 	public T right;
 
+	/**
+	 * Constructs a new ordered pair from given components.
+	 * 
+	 * @param left
+	 *            the left component
+	 * @param right
+	 *            the right component
+	 */
 	public Pair(S left, T right) {
-		assert left != null;
-		assert right != null;
 		this.left = left;
 		this.right = right;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * This hash code is the sum of the hash codes of the two components.
+	 */
 	public int hashCode() {
-		return left.hashCode() + right.hashCode();
+		return (left == null ? 0 : left.hashCode())
+				+ (right == null ? 0 : right.hashCode());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * Two ordered pairs are equal iff the left components are equal and the
+	 * right components are equal.
+	 */
 	public boolean equals(Object object) {
 		if (object instanceof Pair<?, ?>) {
-			return left.equals(((Pair<?, ?>) object).left)
-					&& right.equals(((Pair<?, ?>) object).right);
-		} else {
-			return false;
+			Pair<?, ?> that = (Pair<?, ?>) object;
+
+			if (left == null) {
+				if (that.left != null)
+					return false;
+			} else if (that.left == null || !left.equals(that.left)) {
+				return false;
+			}
+			if (right == null) {
+				if (that.right != null)
+					return false;
+			} else if (that.right == null || !right.equals(that.right)) {
+				return false;
+			}
+			return true;
 		}
+		return false;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @return string representation of this ordered pair using angular
+	 *         brackets.
+	 */
 	@Override
 	public String toString() {
 		return "<" + left + "," + right + ">";
+	}
+
+	@Override
+	public S getKey() {
+		return left;
+	}
+
+	@Override
+	public T getValue() {
+		return right;
+	}
+
+	@Override
+	public T setValue(T value) {
+		T old = right;
+
+		right = value;
+		return old;
 	}
 
 }

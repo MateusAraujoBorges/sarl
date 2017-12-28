@@ -9,6 +9,7 @@ import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.simplify.LinearSolver.LinearSolverInfo;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
+import edu.udel.cis.vsl.sarl.util.WorkMap;
 
 /**
  * A sub-context represents a boolean expression that holds within the context
@@ -159,7 +160,7 @@ public class SubContext extends Context {
 		map1.putAll(superCollapsed.subMap);
 		map1.putAll(subMap);
 
-		Map<Monic, Range> map2 = new TreeMap<>(
+		WorkMap<Monic, Range> map2 = new WorkMap<>(
 				info.idealFactory.monicComparator());
 
 		map2.putAll(superCollapsed.rangeMap);

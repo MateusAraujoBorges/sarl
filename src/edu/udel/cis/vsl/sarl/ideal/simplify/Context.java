@@ -45,11 +45,11 @@ import edu.udel.cis.vsl.sarl.ideal.simplify.LinearSolver.LinearSolverInfo;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
+import edu.udel.cis.vsl.sarl.simplify.IF.Range.RangeSign;
 import edu.udel.cis.vsl.sarl.simplify.IF.RangeFactory;
-import edu.udel.cis.vsl.sarl.util.FastList;
-import edu.udel.cis.vsl.sarl.util.FastNode;
 import edu.udel.cis.vsl.sarl.util.Pair;
 import edu.udel.cis.vsl.sarl.util.SingletonMap;
+import edu.udel.cis.vsl.sarl.util.WorkMap;
 
 /**
  * A structured representation of a boolean formula (assumption), suitable for
@@ -152,7 +152,7 @@ public class Context {
 	 * This map is used to form the assumption (full and reduced).
 	 * </p>
 	 */
-	protected Map<Monic, Range> rangeMap;
+	protected WorkMap<Monic, Range> rangeMap;
 
 	/**
 	 * An object that gathers together references to various tools that are
@@ -182,12 +182,13 @@ public class Context {
 	protected Context(SimplifierInfo info) {
 		this.info = info;
 		this.subMap = new TreeMap<>(info.universe.comparator());
-		this.rangeMap = new TreeMap<>(info.idealFactory.monicComparator());
+		// this.rangeMap = new TreeMap<>(info.idealFactory.monicComparator());
+		this.rangeMap = new WorkMap<>(info.idealFactory.monicComparator());
 	}
 
 	protected Context(SimplifierInfo info,
 			Map<SymbolicExpression, SymbolicExpression> subMap,
-			Map<Monic, Range> rangeMap) {
+			WorkMap<Monic, Range> rangeMap) {
 		this.info = info;
 		this.subMap = subMap;
 		this.rangeMap = rangeMap;
@@ -1235,86 +1236,270 @@ public class Context {
 		}
 	}
 
+	// TODO: replace ranges on (a div b), where div is integer division,
+	// and b>0 is an integer constant (like, "3"), with ranges on a
+
+	// Protocol:
+
+	// to compute a range on a%b, try the usual approaches
+	// to yield some range M (possibly (-infty,infty)).
+	// Then get a range R on a. If R>=0, return M&[0,b-1]
+	// where &=intersection. If R<0, M&[1-b,0]. Otherwise,
+	// M&[1-b,b-1].
+
+	// When simplifying an entry in rangeMap e=(a div b, Q):
+	// compute a range D on a, and a range R on a%b. If D>=0,
+	// then replace e with (a, b*Q+R). Else, if R<=0, replace e with
+	// (a, b*Q+[1-b,0]). Otherwise, do nothing (you know
+	// b*Q+[1-b,b-1] is safe, but it is not equivalent necessarily
+	// to the original constraint (a div b, Q)).
+
+	// When simplifying an entry in the sub map e=(a div b, q):
+	// compute a range R of a. If R>=0, remove e and add to
+	// rangeMap (a, b*q+[0,b-1]). Else if R<=0, (a, b*q+[1-b,0]).
+	// Else do nothing.
+
+	// to get a range on a : if Q>0, then a>0. If Q>=0 there is the
+	// possibility that a<0.
+
+	// and in the other direction: to computeRange(a div b), get a range
+	// on R on a, compute R div b (is there such a method in range and is
+	// it tight?)
+
+	/**
+	 * Computes simplification of pair in which left component is an int
+	 * division expression and right component is an integer range. If no
+	 * change, the result returned will be == the given pair.
+	 * 
+	 * @param pair
+	 * @return
+	 */
+	@SuppressWarnings("unused")
+	private Entry<Monic, Range> simplifyIntDivide(Entry<Monic, Range> pair)
+			throws InconsistentContextException {
+		Monic monic = pair.getKey();
+		NumericExpression a = (NumericExpression) monic.argument(0),
+				b = (NumericExpression) monic.argument(1);
+		Range b_range = computeRange(b);
+		IntegerNumber b_number = (IntegerNumber) b_range.getSingletonValue();
+
+		if (b_number == null)
+			return pair;
+		if (b_number.signum() < 0)
+			return pair; // TODO: think about what this means
+
+		// if a>=0 or a%b>0 you know a>=0
+
+		Range a_range = computeRange(a);
+		RangeSign a_sign = a_range.sign();
+		RangeFactory rf = info.rangeFactory;
+		NumberFactory nf = info.numberFactory;
+
+		switch (a_sign) {
+		case ALL:
+			return pair;
+		case EMPTY:
+			throw new InconsistentContextException();
+		case EQ0:  // if a=0 then a/b=0, so remove constraint on a/b
+			return new Pair<>(monic, null);
+		case GE0:
+		case GT0: { // (a,b*Q+R)
+			Range Q = pair.getValue();
+			Range R = rf.interval(true, nf.zeroInteger(), false, nf.decrement(b_number), false);
+			Range newRange = rf.add(rf.multiply(Q, b_number), R);
+			
+			//return new Pair<Monic, Range>(a, newRange);
+		}
+		case LE0:
+			break;
+		case LT0:
+			break;
+		default:
+			break;
+
+		}
+
+		return null;
+	}
+
+	// Pair<Monic, Range> normalize(Monomial monomial, Range range) {
+	// Pair<Monic, Range> normalization = info.normalize((Monomial) monomial,
+	// range);
+	// Monic monic = normalization.left;
+	// SymbolicOperator op = monic.operator();
+	//
+	// if (op == SymbolicOperator.INT_DIVIDE) {
+	// // return simplifyIntDivide(normalization);
+	// }
+	// return normalization;
+	// }
+
+	// /**
+	// * Simplifies the {@link #rangeMap}. Removes one entry from the map,
+	// * simplifies it, places it back. Repeats cyclically until stabilization.
+	// If
+	// * an entry ever resolves to a single value, it is removed completely and
+	// * added to the {@link #subMap}.
+	// *
+	// * @return <code>true</code> iff any change was made to the
+	// * {@link #rangeMap}
+	// */
+	// @SuppressWarnings("unused")
+	// private boolean simplifyRangeMapOLD() throws InconsistentContextException
+	// {
+	// FastList<Monic> keyList = new FastList<>();
+	// boolean change = false;
+	//
+	// for (Monic key : rangeMap.keySet())
+	// keyList.add(key);
+	//
+	// FastNode<Monic> curr = keyList.getFirst(),
+	// lastChanged = keyList.getLast();
+	//
+	// // idea: keep iterating cyclically over the keys of the
+	// // rangeMap until it stabilizes. The keys are changing
+	// // as you iterate.
+	// // invariant: keyList is a list containing all the keys in the rangeMap
+	// // (and possibly additional expressions not keys in the rangeMap)
+	// // lastChanged is the last node to have changed in some way.
+	// // curr is the current node.
+	//
+	// while (curr != null) {
+	// clear();
+	// // TODO: can we just turn off caching altogether?
+	//
+	// Monic oldKey = curr.getData();
+	// Range oldRange = rangeMap.remove(oldKey);
+	// NumericExpression simpKey = (NumericExpression) simplify(oldKey);
+	//
+	// if (simpKey == oldKey) { // no change
+	// rangeMap.put(oldKey, oldRange); // put it back
+	// if (lastChanged == curr)
+	// break; // complete cycle with no change: done!
+	// curr = keyList.getNextCyclic(curr);
+	// continue;
+	// }
+	// // a change has occurred: simpKey!=oldKey
+	// // oldKey is already removed, now update rangeMap and/or subMap
+	// if (oldRange != null) {
+	// change = true;
+	//
+	// // if simpKey is Constant, it is either in the range or not
+	// if (simpKey instanceof Constant) {
+	// if (!oldRange.containsNumber(((Constant) simpKey).number()))
+	// throw new InconsistentContextException();
+	// } else {
+	// // We assume simpKey is not a RationalExpression...
+	// Pair<Monic, Range> normalization = info
+	// .normalize((Monomial) simpKey, oldRange);
+	// Monic newKey = normalization.left;
+	// int oldSize = rangeMap.size();
+	//
+	// restrictRange(newKey, normalization.right);
+	//
+	// int newSize = rangeMap.size();
+	//
+	// // TODO : is this correct? What if many changes were made
+	// // by the call to restrictRange above?
+	//
+	// if (newSize == oldSize + 1) {
+	// // oldKey has been removed. newKey was not in the map
+	// // and now it is. So replace oldKey with newKey in the
+	// // list.
+	// curr.setData(newKey);
+	// lastChanged = curr;
+	// curr = keyList.getNextCyclic(curr);
+	// continue;
+	// }
+	// }
+	// }
+	//
+	// // remove current node...
+	// FastNode<Monic> next = keyList.getNextCyclic(curr);
+	//
+	// keyList.remove(curr);
+	// if (keyList.isEmpty())
+	// break;
+	// curr = next;
+	// lastChanged = keyList.getPrevCyclic(curr);
+	// }
+	// return change;
+	// }
+
+	/**
+	 * Simplifies an entry removed from the {@link #rangeMap}. If no
+	 * simplification occurs, this method returns the same entry it was given.
+	 * Otherwise it will return a non-{@code null} {@link Entry}. The first
+	 * component will be a non-{@code null} {@link Monic}. The second component
+	 * may or may not be {@code null}. If {@code null}, this indicates that the
+	 * entry should not be added to the {@link #rangeMap} because it is already
+	 * implied by the existing constraints. Otherwise, if the original pair is
+	 * (m,r) and the returned pair is (m',r'), it will satisfy
+	 * 
+	 * context => ( (m in r) <=> (m' in r') ).
+	 * 
+	 * @param entry
+	 *            the entry to be simplified, which is non-{@code null} and both
+	 *            components of which are non-{@code null}
+	 * @return the simplified entry
+	 * @throws InconsistentContextException
+	 */
+	private Entry<Monic, Range> simplifyRangeEntry(Entry<Monic, Range> entry)
+			throws InconsistentContextException {
+		Monic oldKey = entry.getKey();
+		NumericExpression simpKey = (NumericExpression) simplify(oldKey);
+
+		if (oldKey == simpKey)
+			return entry;
+
+		Range oldRange = entry.getValue();
+
+		if (simpKey instanceof Constant) {
+			if (!oldRange.containsNumber(((Constant) simpKey).number()))
+				throw new InconsistentContextException();
+			return new Pair<>(oldKey, null);
+		}
+
+		Pair<Monic, Range> normalization = info.normalize((Monomial) simpKey,
+				oldRange);
+		// TODO: simplify int divisions
+
+		return normalization;
+	}
+
 	/**
 	 * Simplifies the {@link #rangeMap}. Removes one entry from the map,
-	 * simplifies it, places it back. Repeats cyclically until stabilization. If
-	 * an entry ever resolves to a single value, it is removed completely and
-	 * added to the {@link #subMap}.
+	 * simplifies it, places it back. Repeats until stabilization. If an entry
+	 * ever resolves to a single value, it is removed completely and added to
+	 * the {@link #subMap}.
 	 * 
-	 * @return <code>true</code> iff any change was made to the
-	 *         {@link #rangeMap}
+	 * @return <code>true</code> iff any change was made
 	 */
-
 	private boolean simplifyRangeMap() throws InconsistentContextException {
-		FastList<Monic> keyList = new FastList<>();
 		boolean change = false;
 
-		for (Monic key : rangeMap.keySet())
-			keyList.add(key);
-
-		FastNode<Monic> curr = keyList.getFirst(),
-				lastChanged = keyList.getLast();
-
-		// idea: keep iterating cyclically over the keys of the
-		// rangeMap until it stabilizes. The keys are changing
-		// as you iterate.
-		// invariant: keyList is a list containing all the keys in the rangeMap
-		// (and possibly additional expressions not keys in the rangeMap)
-		// lastChanged is the last node to have changed in some way.
-		// curr is the current node.
-		while (curr != null) {
-			Monic oldKey = curr.getData();
-			Range oldRange = rangeMap.remove(oldKey);
-			NumericExpression simpKey = (NumericExpression) simplify(oldKey);
-
-			if (simpKey == oldKey) { // no change
-				rangeMap.put(oldKey, oldRange); // put it back
-				if (lastChanged == curr)
-					break; // complete cycle with no change: done!
-				curr = keyList.getNextCyclic(curr);
-				continue;
-			}
-			// a change has occurred: simpKey!=oldKey
-			// oldKey is already removed, now update rangeMap and/or subMap
+		rangeMap.makeAllDirty(); // put everything on the work list
+		for (Entry<Monic, Range> oldEntry = rangeMap
+				.hold(); oldEntry != null; oldEntry = rangeMap.hold()) {
 			clear();
-			if (oldRange != null) {
+
+			// the following will not modify anything:
+			Entry<Monic, Range> newEntry = simplifyRangeEntry(oldEntry);
+
+			if (newEntry == oldEntry) { // no change
+				rangeMap.release(); // put back the entry on hold
+			} else { // a change
+				Monic newKey = newEntry.getKey();
+				Range newRange = newEntry.getValue();
+
 				change = true;
-
-				// if simpKey is Constant, it is either in the range or not
-				if (simpKey instanceof Constant) {
-					if (!oldRange.containsNumber(((Constant) simpKey).number()))
-						throw new InconsistentContextException();
+				if (newRange == null) {
+					// just remove this entry: nothing more to do
 				} else {
-					// We assume simpKey is not a RationalExpression...
-					Pair<Monic, Range> normalization = info
-							.normalize((Monomial) simpKey, oldRange);
-					Monic newKey = normalization.left;
-					int oldSize = rangeMap.size();
-
-					restrictRange(newKey, normalization.right);
-
-					int newSize = rangeMap.size();
-
-					if (newSize == oldSize + 1) {
-						// oldKey has been removed. newKey was not in the map
-						// and now it is. So replace oldKey with newKey in the
-						// list.
-						curr.setData(newKey);
-						lastChanged = curr;
-						curr = keyList.getNextCyclic(curr);
-						continue;
-					}
+					// restrict the range: this may change rangeMap, subMap
+					restrictRange(newKey, newRange);
 				}
 			}
-
-			// remove current node...
-			FastNode<Monic> next = keyList.getNextCyclic(curr);
-
-			keyList.remove(curr);
-			if (keyList.isEmpty())
-				break;
-			curr = next;
-			lastChanged = keyList.getPrevCyclic(curr);
 		}
 		return change;
 	}
@@ -2158,7 +2343,9 @@ public class Context {
 
 	@Override
 	public Context clone() {
-		return new Context(info, cloneTreeMap(subMap), cloneTreeMap(rangeMap));
+		// return new Context(info, cloneTreeMap(subMap),
+		// cloneTreeMap(rangeMap));
+		return new Context(info, cloneTreeMap(subMap), rangeMap.clone());
 	}
 
 	@Override

@@ -404,6 +404,7 @@ public class SimplifierInfo {
 	 * @return a pair consisting of a {@link Monic} and a {@link Range}
 	 */
 	public Pair<Monic, Range> normalize(Monomial monomial, Range range) {
+		assert !(monomial instanceof Constant);
 		while (true) {
 			if (!(monomial instanceof Monic)) {
 				Constant c = monomial.monomialConstant(idealFactory);
