@@ -45,7 +45,6 @@ import edu.udel.cis.vsl.sarl.ideal.simplify.LinearSolver.LinearSolverInfo;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
-import edu.udel.cis.vsl.sarl.simplify.IF.Range.RangeSign;
 import edu.udel.cis.vsl.sarl.simplify.IF.RangeFactory;
 import edu.udel.cis.vsl.sarl.util.Pair;
 import edu.udel.cis.vsl.sarl.util.SingletonMap;
@@ -82,6 +81,9 @@ public class Context {
 
 	// Instance Fields ...
 
+	// TODO: think about replacing all/some of these memory-inefficient maps
+	// with sorted arrays, at least after this Context has been initialized.
+
 	/**
 	 * Is this context in the process of being modified. This is a little bit of
 	 * a kluge. Think of a way to get rid of it.
@@ -93,10 +95,6 @@ public class Context {
 	 * any entry (x,y), the following formula must be valid: context -> x=y.
 	 */
 	private Map<SymbolicObject, SymbolicObject> simplificationCache = null;
-
-	// /** The original, unaltered, assumption used to initialize this context.
-	// */
-	// protected BooleanExpression originalAssumption;
 
 	/**
 	 * <p>
@@ -173,7 +171,8 @@ public class Context {
 	// Constructors ...
 
 	/**
-	 * Constructs new {@link Context} with all empty maps.
+	 * Constructs new {@link Context} with all empty maps. This represents the
+	 * assumption "true". No initialization is done.
 	 * 
 	 * @param info
 	 *            info structure with references to commonly-used factories and
@@ -182,10 +181,21 @@ public class Context {
 	protected Context(SimplifierInfo info) {
 		this.info = info;
 		this.subMap = new TreeMap<>(info.universe.comparator());
-		// this.rangeMap = new TreeMap<>(info.idealFactory.monicComparator());
 		this.rangeMap = new WorkMap<>(info.idealFactory.monicComparator());
 	}
 
+	/**
+	 * Constructs new {@link Context} with given fields. Initialization is
+	 * carried out.
+	 * 
+	 * @param info
+	 *            info structure with references to commonly-used factories and
+	 *            other objects
+	 * @param subMap
+	 *            substitution map; see {@link #subMap}
+	 * @param rangeMap
+	 *            range map; see {@link #rangeMap}
+	 */
 	protected Context(SimplifierInfo info,
 			Map<SymbolicExpression, SymbolicExpression> subMap,
 			WorkMap<Monic, Range> rangeMap) {
@@ -253,6 +263,8 @@ public class Context {
 	 *            a pair of non-<code>null</code> {@link Monomial}s of the same
 	 *            type
 	 * @throws InconsistentContextException
+	 *             if an inconsistency is detected in the course of simplifying
+	 *             the equality
 	 */
 	private void monicizeMonomialPair(Pair<Monomial, Monomial> pair)
 			throws InconsistentContextException {
@@ -585,6 +597,19 @@ public class Context {
 		return result;
 	}
 
+	/**
+	 * Given a set of {@link Monomial} terms, and an integer index variable i,
+	 * this finds all of the array-read expressions e for which the index
+	 * argument is i, and for which e occurs only linearly (or not at all) in
+	 * all terms. These are the array-read expressions that can be solved for.
+	 * 
+	 * @param terms
+	 *            the set of terms, as an array
+	 * @param indexVar
+	 *            the index variable
+	 * @return the set of array read expressions, as an iterable object. Each
+	 *         array read expression occurs exactly once
+	 */
 	private Iterable<Primitive> findArrayReads(Monomial[] terms,
 			NumericSymbolicConstant indexVar) {
 		Set<Primitive> nonlinearFactors = new HashSet<>();
@@ -610,8 +635,20 @@ public class Context {
 		return linearFactors;
 	}
 
+	/**
+	 * A simple structure representing the solution to an array equation.
+	 * 
+	 * @author siegel
+	 */
 	private class ArrayEquationSolution {
+		/** The array being solved for. Has array type. */
 		SymbolicExpression array;
+
+		/**
+		 * The value of a[i], where i is the index variable (not specified in
+		 * this structure). The type is the element type of the array type of
+		 * {@code array}.
+		 */
 		SymbolicExpression rhs;
 	}
 
@@ -622,8 +659,12 @@ public class Context {
 	 * as a structure with the <code>array</code> field e and the
 	 * <code>rhs</code> field f.
 	 * 
-	 * @param equation
-	 *            the boolean expression which is an equality
+	 * @param arg0
+	 *            a, one side of the equation
+	 * @param arg1
+	 *            b, the other side of the equation
+	 * @param index
+	 *            i, the index variable
 	 * @return a structure as specified above if the equation can be solved, or
 	 *         <code>null</code> if <code>equation</code> is not an equality or
 	 *         could not be put into that form
@@ -936,14 +977,16 @@ public class Context {
 
 		SymbolicExpression value = getSub(primitive);
 
-		if (value instanceof Constant) {
+		if (value instanceof Constant)
 			return info.rangeFactory.singletonSet(((Constant) value).number());
-		} else {
-			Range oldRange = getRange(primitive);
 
-			if (oldRange != null)
-				return oldRange;
-		}
+		Range oldRange = getRange(primitive);
+
+		if (oldRange != null)
+			return oldRange;
+		if (primitive.operator() == SymbolicOperator.MODULO)
+			return computeDefaultModRange((Monomial) primitive.argument(0),
+					(Monomial) primitive.argument(1));
 		return info.rangeFactory.universalSet(primitive.type().isInteger());
 	}
 
@@ -1052,6 +1095,9 @@ public class Context {
 	// * These are basic modification methods for the state.................*
 	// **********************************************************************
 
+	/**
+	 * Clears the simplification cache.
+	 */
 	private void clear() {
 		simplificationCache.clear();
 	}
@@ -1133,6 +1179,10 @@ public class Context {
 	 * constants that are not equal.
 	 * </p>
 	 * 
+	 * TODO: think about replacing this with the same technique used for the
+	 * rangeMap. It can be done only during reduce time at the end of
+	 * initialization.
+	 * 
 	 * @param x
 	 *            the expression to be replaced
 	 * @param y
@@ -1186,6 +1236,101 @@ public class Context {
 	}
 
 	/**
+	 * Compute the minimum of two numbers. Infinities are allowed.
+	 * 
+	 * TODO: add this to NumberFactory.
+	 * 
+	 * @param a
+	 *            any non-{@code null} SARL {@link Number}
+	 * @param b
+	 *            any non-{@code null} SARL {@link Number}
+	 * @return the minimum of the {@code a} and {@code b}
+	 */
+	private Number min(Number a, Number b) {
+		// Does this work for infinities?
+		return info.numberFactory.compare(a, b) >= 0 ? b : a;
+	}
+
+	/**
+	 * Compute the maximum of two numbers. Infinities are allowed.
+	 * 
+	 * TODO: add this to NumberFactory.
+	 * 
+	 * @param a
+	 *            any non-{@code null} SARL {@link Number}
+	 * @param b
+	 *            any non-{@code null} SARL {@link Number}
+	 * @return the maximum of the {@code a} and {@code b}
+	 */
+	private Number max(Number a, Number b) {
+		// Does this work for infinities?
+		return info.numberFactory.compare(a, b) >= 0 ? a : b;
+	}
+
+	/**
+	 * Computes a default range for a%b. Recall a = (a div b)*b + a%b. The sign
+	 * of a%b is the sign of a. (a div b) is rounded towards 0.
+	 * 
+	 * Case 1: a>=0 and b>0. Then a%b is in [0,min(a,b-1)].
+	 * 
+	 * Case 2: a>=0 and b<0. Then a%b is in [0,min(a,-b-1)].
+	 * 
+	 * Case 3: a<=0 and b>0. Then a%b is in [max(a,1-b),0].
+	 * 
+	 * Case 4: a<=0 and b<0. Then a%b is in [max(a,1+b),0].
+	 * 
+	 * If ab>=0, a%b is in [0,b-1]. If ab<=0, a%b is in [1-b,0]. In any case,
+	 * a%b is in [1-b,b-1].
+	 * 
+	 * The behavior is undefined if b could be 0.
+	 * 
+	 * @param a
+	 *            the dividend, an integer expression
+	 * @param b
+	 *            the divisor, an integer expression
+	 * @return a conservative concrete range on a%b under the assumptions of
+	 *         this {@link Context}
+	 */
+	private Range computeDefaultModRange(Monomial a, Monomial b) {
+		RangeFactory rf = info.rangeFactory;
+		NumberFactory nf = info.numberFactory;
+		Interval b_interval = computeRange(b).intervalOverApproximation();
+		Interval a_interval = computeRange(a).intervalOverApproximation();
+		Range result = null;
+
+		if (a_interval.isEmpty() || b_interval.isEmpty())
+			return rf.emptySet(true);
+		if (a_interval.lower().signum() >= 0) {
+			Number right;
+
+			if (b_interval.lower().signum() >= 0) // [0,min(a,b-1)]
+				right = nf.decrement(b_interval.upper());
+			else if (b_interval.upper().signum() <= 0) // [0,min(a,-b-1)]
+				right = nf.negate(nf.increment(b_interval.lower()));
+			else
+				right = max(nf.decrement(b_interval.upper()),
+						nf.negate(nf.increment(b_interval.lower())));
+			right = min(a_interval.upper(), right);
+			result = rf.interval(true, nf.zeroInteger(), false, right,
+					right.isInfinite());
+		} else if (a_interval.upper().signum() <= 0) {
+			Number left;
+
+			if (b_interval.lower().signum() >= 0) // [max(a,1-b),0]
+				left = nf.increment(nf.negate(b_interval.upper()));
+			else if (b_interval.upper().signum() <= 0) // [max(a,1+b),0]
+				left = nf.increment(b_interval.lower());
+			else
+				left = min(nf.increment(nf.negate(b_interval.upper())),
+						nf.increment(b_interval.lower()));
+			left = max(a_interval.lower(), left);
+			result = rf.interval(true, left, left.isInfinite(),
+					nf.zeroInteger(), false);
+		}
+		return result == null ? rf.universalSet(true) : result;
+	}
+
+	/**
 	 * Updates the state of this {@link Context} by restricting the range of a
 	 * normal {@link Monic}. This may result in changes to the {@link #rangeMap}
 	 * , {@link #subMap}, or both.
@@ -1193,7 +1338,7 @@ public class Context {
 	 * @param key
 	 *            a normal {@link Monic}
 	 * @param range
-	 *            a {@link Range} for {@code key}, with the same tyep
+	 *            a {@link Range} for {@code key}, with the same type
 	 * @throws InconsistentContextException
 	 *             if the restriction results in the {@code key} having an empty
 	 *             range
@@ -1213,6 +1358,12 @@ public class Context {
 				} else {
 					throw new InconsistentContextException();
 				}
+			}
+			if (key.operator() == SymbolicOperator.MODULO) {
+				Range modRange = computeDefaultModRange(
+						(Monomial) key.argument(0), (Monomial) key.argument(1));
+
+				range = info.rangeFactory.intersect(range, modRange);
 			}
 		} else {
 			range = info.rangeFactory.intersect(original, range);
@@ -1236,43 +1387,42 @@ public class Context {
 		}
 	}
 
-	// TODO: replace ranges on (a div b), where div is integer division,
-	// and b>0 is an integer constant (like, "3"), with ranges on a
-
-	// Protocol:
-
-	// to compute a range on a%b, try the usual approaches
-	// to yield some range M (possibly (-infty,infty)).
-	// Then get a range R on a. If R>=0, return M&[0,b-1]
-	// where &=intersection. If R<0, M&[1-b,0]. Otherwise,
-	// M&[1-b,b-1].
-
-	// When simplifying an entry in rangeMap e=(a div b, Q):
-	// compute a range D on a, and a range R on a%b. If D>=0,
-	// then replace e with (a, b*Q+R). Else, if R<=0, replace e with
-	// (a, b*Q+[1-b,0]). Otherwise, do nothing (you know
-	// b*Q+[1-b,b-1] is safe, but it is not equivalent necessarily
-	// to the original constraint (a div b, Q)).
-
-	// When simplifying an entry in the sub map e=(a div b, q):
-	// compute a range R of a. If R>=0, remove e and add to
-	// rangeMap (a, b*q+[0,b-1]). Else if R<=0, (a, b*q+[1-b,0]).
-	// Else do nothing.
-
-	// to get a range on a : if Q>0, then a>0. If Q>=0 there is the
-	// possibility that a<0.
-
-	// and in the other direction: to computeRange(a div b), get a range
-	// on R on a, compute R div b (is there such a method in range and is
-	// it tight?)
-
 	/**
-	 * Computes simplification of pair in which left component is an int
-	 * division expression and right component is an integer range. If no
-	 * change, the result returned will be == the given pair.
+	 * Computes the simplification of a certain kind of {@link Entry} (which is
+	 * just an ordered pair). The left component of the entry is an int division
+	 * expression and the right component is an integer range. The pair encodes
+	 * the claim that the evaluation of the left expression lands in the range,
+	 * for any point satisfying the assumption. If no change, the result
+	 * returned will be == the given pair.
+	 * 
+	 * 
+	 * 
+	 * <pre>
+	 * Suppose b>0.
+	 * Write Q = Q- U Q0 U Q+, where 
+	 * Q-={x in Q | x<0}, Q0={x in Q | x=0}, and Q+={x in Q | x>0}.
+	 * 
+	 * a div b in Q- <==> a in b*Q- + [1-b,0]
+	 * a div b in Q0 <==> a in b*Q0 + [1-b,b-1]
+	 * a div b in Q+ <==> a in b*Q+ + [0,b-1]
+	 * 
+	 * Therefore a div b in Q <==> a in union of above. 
+	 *	
+	 * Example:
+	 * 
+	 * a div 3 in {2} <==> a in {3*2}+[0,2] = {6,7,8}
+	 * a div 3 in {0} <==> a in {3*0}+[-2,2] = {-2,-1,0,1,2}
+	 * a div 3 in {-2} <==> a in {3*-2}+[-2,0] = {-8,-7,-6}.
+	 * 
+	 * If b<0:
+	 * a div b in Q- <==> a in b*Q- + [0,-b-1]
+	 * a div b in Q0 <==> a in b*Q0 + [1+b,-b-1]
+	 * a div b in Q+ <==> a in b*Q+ + [1+b,0]
+	 * </pre>
 	 * 
 	 * @param pair
-	 * @return
+	 *            an entry as described above
+	 * @return the simplified entry
 	 */
 	private Entry<Monic, Range> simplifyIntDivide(Entry<Monic, Range> pair)
 			throws InconsistentContextException {
@@ -1284,43 +1434,41 @@ public class Context {
 
 		if (b_number == null)
 			return pair;
-		if (b_number.signum() < 0)
-			return pair; // TODO: think about what this means
 
-		Range a_range = computeRange(a);
-		RangeSign a_sign = a_range.sign();
-		RangeFactory rf = info.rangeFactory;
 		NumberFactory nf = info.numberFactory;
+		RangeFactory rf = info.rangeFactory;
+		IntegerNumber zero = nf.zeroInteger(), one = nf.oneInteger();
+		Range empty = rf.emptySet(true);
+		Range q = pair.getValue();
+		Range q_n = rf.intersect(rf.interval(true, nf.negativeInfinityInteger(),
+				true, nf.integer(-1), false), q);
+		boolean q_0 = q.containsNumber(zero);
+		Range q_p = rf.intersect(rf.interval(true, one, false,
+				nf.positiveInfinityInteger(), true), q);
+		Range b_n, b_0, b_p;
 
-		switch (a_sign) {
-		case EMPTY:
-			throw new InconsistentContextException();
-		case EQ0: // if a=0 then a/b=0, so remove constraint on a/b
-			return new Pair<>(monic, null);
-		case GE0:
-		case GT0: { // (a,b*Q+R)
-			Range Q = pair.getValue();
-			Range R = rf.interval(true, nf.zeroInteger(), false,
-					nf.decrement(b_number), false);
-			Range newRange = rf.add(rf.multiply(Q, b_number), R);
-			Pair<Monic, Range> norm = info.normalize((Monomial) a, newRange);
+		if (b_number.signum() > 0) {
+			IntegerNumber lo = nf.subtract(one, b_number), hi = nf.negate(lo);
 
-			return norm;
-		}
-		case LE0:
-		case LT0: {
-			Range Q = pair.getValue();
-			Range R = rf.interval(true, nf.subtract(nf.oneInteger(), b_number),
-					false, nf.zeroInteger(), false);
-			Range newRange = rf.add(rf.multiply(Q, b_number), R);
-			Pair<Monic, Range> norm = info.normalize((Monomial) a, newRange);
+			b_n = rf.interval(true, lo, false, zero, false);
+			b_0 = q_0 ? rf.interval(true, lo, false, hi, false) : empty;
+			b_p = rf.interval(true, zero, false, hi, false);
+		} else {
+			IntegerNumber lo = nf.increment(b_number), hi = nf.negate(lo);
 
-			return norm;
+			b_n = rf.interval(true, zero, false, hi, false);
+			b_0 = q_0 ? rf.interval(true, lo, false, hi, false) : empty;
+			b_p = rf.interval(true, lo, false, zero, false);
 		}
-		case ALL:
-		default:
-			return pair;
-		}
+
+		Range set_n = q_n.isEmpty() ? empty
+				: rf.add(rf.multiply(q_n, b_number), b_n);
+		Range set_p = q_p.isEmpty() ? empty
+				: rf.add(rf.multiply(q_p, b_number), b_p);
+		Range union = rf.union(rf.union(set_n, b_0), set_p);
+		Pair<Monic, Range> norm = info.normalize((Monomial) a, union);
+
+		return norm;
 	}
 
 	/**
@@ -1394,6 +1542,12 @@ public class Context {
 		return change;
 	}
 
+	/**
+	 * Puts this {@link Context} into the "inconsistent" state. This occurs when
+	 * the assumption is determined to be inconsistent, i.e., equivalent to
+	 * <i>false</i>. All maps are cleared except for the single entry
+	 * <code>false -> true</code> in the {@link #subMap}.
+	 */
 	private void makeInconsistent() {
 		rangeMap.clear();
 		subMap.clear();
@@ -1726,6 +1880,20 @@ public class Context {
 		}
 	}
 
+	/**
+	 * Processes the claim that two expressions are not equal, updating the
+	 * {@link #subMap} and/or {@link #rangeMap} to reflect this claim.
+	 * 
+	 * @param arg0
+	 *            one side of the inequality, any non-{@code null} symbolic
+	 *            expression
+	 * @param arg1
+	 *            the other side of the inequality, a symbolic expression of the
+	 *            same type as {@code arg0}
+	 * @throws InconsistentContextException
+	 *             if an inconsistency in this context is detected in the
+	 *             process of processing this claim
+	 */
 	private void extractNEQ(SymbolicExpression arg0, SymbolicExpression arg1)
 			throws InconsistentContextException {
 		SymbolicType type = arg0.type();
@@ -1745,25 +1913,26 @@ public class Context {
 	}
 
 	/**
+	 * <p>
 	 * Extracts information from an inequality of one of the forms: x&gt;0,
 	 * x&ge;0, x&lt;0, x&le;0, where x is a {@link Monic} in which the maximum
 	 * degree of any {@link Primitive} is 1. Updates the state of this context
 	 * accordingly.
+	 * </p>
 	 * 
 	 * Strategy:
 	 * 
-	 * 
-	 * Need method Range getBound(Monomial) which does everything possible to
-	 * get the most precise bound on the monomial from the existing context:
-	 * First, simplify the Monomial. This should yield a Monomial.
-	 * 
-	 * - if polynomial, reduce to pseudo. If this is non-trivial, get best bound
-	 * on pseudo, convert to bound on original polynomial, return. - else: look
-	 * in rangeMap, store the result - if non-trivial product, get best bounds
-	 * on factors and multiply - if non-trivial sum, get best bounds on factors
-	 * and add - if non-trivial primitive power, get bound on base, raise to
-	 * power - if POWER operation : if exponent is constant, ditto, else:? -
-	 * intersect result with whatever you got from rangeMap
+	 * <ul>
+	 * <li>if polynomial, reduce to pseudo. If this is non-trivial, get best
+	 * bound on pseudo, convert to bound on original polynomial, return.</li>
+	 * <li>else: look in rangeMap, store the result</li>
+	 * <li>if non-trivial product, get best bounds on factors and multiply</li>
+	 * <li>if non-trivial sum, get best bounds on terms and add</li>
+	 * <li>if non-trivial primitive power, get bound on base, raise to power
+	 * </li>
+	 * <li>if POWER operation : if exponent is constant, ditto, else: ?</li>
+	 * <li>intersect result with whatever you got from rangeMap</li>
+	 * </ul>
 	 * 
 	 * Then: intersect with bound specified by these arguments. Restrict bound
 	 * on the monic accordingly.
@@ -1775,6 +1944,9 @@ public class Context {
 	 *            x&le;0)
 	 * @param strict
 	 *            is the form one of x&gt;0 or x&lt;0 (strict inequality)
+	 * @throws InconsistentContextException
+	 *             if, in the course of processing this inequality, an
+	 *             inconsistency in this {@link Context} is detected
 	 */
 	private void extractIneqMonic(Monic monic, boolean gt, boolean strict)
 			throws InconsistentContextException {
@@ -1824,6 +1996,15 @@ public class Context {
 		}
 	}
 
+	/**
+	 * Processes an exists expression, updating this {@link Context}
+	 * appropriately. For now, a trivial implementation.
+	 * 
+	 * @param existsExpr
+	 *            the exists expression
+	 * @throws InconsistentContextException
+	 *             if an inconsistency is detected
+	 */
 	private void extractExists(SymbolicExpression existsExpr)
 			throws InconsistentContextException {
 		addSub(existsExpr, info.trueExpr);
@@ -1831,6 +2012,10 @@ public class Context {
 
 	/**
 	 * Reduces the context to an equivalent but simplified form.
+	 * 
+	 * @throws InconsistentContextException
+	 *             if an inconsistency in this {@link Context} is detected in
+	 *             the process of simplifying it
 	 */
 	private void reduce() throws InconsistentContextException {
 		simplifyRangeMap();
@@ -2020,6 +2205,15 @@ public class Context {
 		return solvedVariables;
 	}
 
+	/**
+	 * If this assumption is exactly equivalent to the claim that the given
+	 * symbolic constant lies in some interval, returns that interval.
+	 * Otherwise, returns {@code null}.
+	 * 
+	 * @param symbolicConstant
+	 *            the symbolic constant
+	 * @return the interval or {@code null}
+	 */
 	protected Interval assumptionAsInterval(SymbolicConstant symbolicConstant) {
 		// if (!arrayFacts.isEmpty())
 		// return null;
@@ -2053,10 +2247,26 @@ public class Context {
 		return null;
 	}
 
+	/**
+	 * Returns the simplifier utility used by this context. That object provides
+	 * references to many different commonly used fields, and basic utility
+	 * methods.
+	 * 
+	 * @return the simplifier utility
+	 */
 	protected SimplifierInfo getInfo() {
 		return info;
 	}
 
+	/**
+	 * Looks up an entry in the substitution map of this context.
+	 * 
+	 * @param key
+	 *            the key to look up
+	 * @return the value associated to that key in the substitution map. This is
+	 *         the value that will always be substituted for {@code key} when a
+	 *         symbolic expression is simplified by this {@link Context}.
+	 */
 	protected SymbolicExpression getSub(SymbolicExpression key) {
 		return subMap.get(key);
 	}
@@ -2075,6 +2285,7 @@ public class Context {
 
 	protected void cacheSimplification(SymbolicObject key,
 			SymbolicObject value) {
+		// TODO: don't do this if in init mode?
 		simplificationCache.put(key, value);
 	}
 
@@ -2125,14 +2336,20 @@ public class Context {
 	}
 
 	/**
+	 * <p>
 	 * Returns the collapsed context. That is the context obtained by
 	 * "collapsing" this context and all of its super-contexts into a single
 	 * context.
+	 * </p>
 	 * 
+	 * <p>
 	 * In this case, since this has no super-context, this method just returns
 	 * <code>this</code>.
+	 * </p>
 	 * 
+	 * <p>
 	 * This method may be overridden in subclasses.
+	 * </p>
 	 * 
 	 * @return <code>this</code>
 	 */
@@ -2233,8 +2450,6 @@ public class Context {
 
 	@Override
 	public Context clone() {
-		// return new Context(info, cloneTreeMap(subMap),
-		// cloneTreeMap(rangeMap));
 		return new Context(info, cloneTreeMap(subMap), rangeMap.clone());
 	}
 

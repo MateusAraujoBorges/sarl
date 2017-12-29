@@ -176,10 +176,10 @@ public class IntegerArithmeticReasonTest {
 	}
 
 	/**
-	 * Integer modulus. true : 0 <= u/3 <=1 -> u <= 5
+	 * Integer division. true : 0 <= u/3 <=1 -> u <= 5
 	 */
 	@Test
-	public void simplifyIntDivTest() {
+	public void intDivTest() {
 		BooleanExpression assumption = universe.and(
 				universe.lessThanEquals(universe.zeroInt(),
 						universe.divide(u, threeInt)),
@@ -190,6 +190,23 @@ public class IntegerArithmeticReasonTest {
 		ValidityResult result1 = reasoner.valid(e1);
 
 		assertEquals(ResultType.YES, result1.getResultType());
+	}
+
+	/**
+	 * Integer division simplification. u/3<=1 -> u<=5.
+	 */
+	@Test
+	public void simplifyIntDivTest() {
+		BooleanExpression e1 = universe.lessThanEquals(
+				universe.divide(u, threeInt), universe.oneInt());
+
+		reasoner = universe.reasoner(trueExpr);
+
+		BooleanExpression e2 = reasoner.simplify(e1);
+		BooleanExpression e3 = universe.lessThanEquals(u, fiveInt);
+
+		out.println("e2=" + e2);
+		assertEquals(e3, e2);
 	}
 
 	/**
