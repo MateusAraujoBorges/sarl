@@ -12,6 +12,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
 import edu.udel.cis.vsl.sarl.util.Pair;
 
 /**
+ * <p>
  * A structured representation of a set of {@link Monic}s. The {@link Monic}s
  * are divided into two types: integer and real. In each case, the {@link Monic}
  * s are ordered in an array, the order coming from the
@@ -19,13 +20,16 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * unique among the monics of its type in this set. The numbers start from 0.
  * There are methods to go back and forth between the ID numbers and the
  * {@link Monic}s, and other methods.
+ * </p>
  * 
- * This representation is build in a series of stages. First, it is instantiated
+ * <p>
+ * This representation is built in a series of stages. First, it is instantiated
  * and the set of monics is empty. Then, the client invokes method
  * {@link #addKeys(Set)} some number of times to add {@link Monic}s to this set.
  * There may be repeated entries; entries after the first will simply be
  * ignored. When the client is finished, it must call {@link #finish()}. Then it
  * can use the other methods to get ID numbers, etc.
+ * </p>
  * 
  * @author siegel
  */
@@ -125,6 +129,7 @@ public class LinearVariableSet {
 		i = 0;
 		for (Monic monic : realMonicSet)
 			realMonics[i++] = monic;
+		// TODO: allow other comparators...
 		Arrays.sort(intMonics, idealFactory.monicComparator());
 		Arrays.sort(realMonics, idealFactory.monicComparator());
 		for (i = 0; i < numIntMonics; i++)

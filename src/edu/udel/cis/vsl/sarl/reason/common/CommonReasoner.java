@@ -26,6 +26,7 @@ import edu.udel.cis.vsl.sarl.IF.ModelResult;
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
+import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
@@ -255,21 +256,20 @@ public class CommonReasoner implements Reasoner {
 		// assumption. Perform Taylor expansions where appropriate.
 		// TODO: rename the indexConstraint and the limitVars if they conflict
 		// with any free variables.
-		// PreUniverse universe = universe();
-		// BooleanExpression oldContext = simplifier.getFullContext();
-		// BooleanExpression newContext = universe.and(oldContext,
-		// indexConstraint);
-		// Reasoner newReasoner = reasonerFactory.getReasoner(newContext);
-		// UnaryOperator<SymbolicExpression> taylorSubstituter = new
-		// TaylorSubstituter(
-		// universe, universe.objectFactory(), universe.typeFactory(),
-		// newReasoner, limitVars, orders);
-		// NumericExpression newLhs = (NumericExpression) taylorSubstituter
-		// .apply(lhs);
-		//
-		// return newReasoner
-		// .isValid(universe.equals(newLhs, universe.zeroReal()));
-		throw new UnsupportedOperationException();
+		PreUniverse universe = universe();
+		BooleanExpression oldContext = simplifier.getFullContext();
+		BooleanExpression newContext = universe.and(oldContext,
+				indexConstraint);
+		Reasoner newReasoner = reasonerFactory.getReasoner(newContext);
+		UnaryOperator<SymbolicExpression> taylorSubstituter = new TaylorSubstituter(
+				universe, universe.objectFactory(), universe.typeFactory(),
+				newReasoner, limitVars, orders);
+		NumericExpression newLhs = (NumericExpression) taylorSubstituter
+				.apply(lhs);
+
+		return newReasoner
+				.isValid(universe.equals(newLhs, universe.zeroReal()));
+		// throw new UnsupportedOperationException();
 	}
 
 	private synchronized TheoremProver getProver() {

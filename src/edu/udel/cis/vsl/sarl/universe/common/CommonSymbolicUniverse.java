@@ -28,8 +28,8 @@ import edu.udel.cis.vsl.sarl.preuniverse.common.CommonPreUniverse;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
 
 /**
- * A standard implementation of SymbolicUniverse, relying heavily on a given
- * NumericExpressionFactory for dealing with numeric issues and a
+ * A standard implementation of {@link SymbolicUniverse}, relying heavily on a
+ * given {@link NumericExpressionFactory} for dealing with numeric issues and a
  * BooleanExpressionFactory for dealing with boolean expressions.
  * 
  * @author siegel
@@ -40,7 +40,7 @@ public class CommonSymbolicUniverse extends CommonPreUniverse
 	/**
 	 * The factory for producing new Reasoner instances.
 	 */
-	private ReasonerFactory reasonerFactory;
+	private ReasonerFactory reasonerFactory;	
 
 	// Constructor...
 
