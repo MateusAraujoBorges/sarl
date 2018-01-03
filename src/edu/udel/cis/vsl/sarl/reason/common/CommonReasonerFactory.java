@@ -25,6 +25,7 @@ import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
+import edu.udel.cis.vsl.sarl.prove.why3.RobustWhy3ProvePlatformFactory;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
@@ -51,6 +52,13 @@ public class CommonReasonerFactory implements ReasonerFactory {
 	private TheoremProverFactory proverFactory;
 
 	/**
+	 * Factory used to produce new why3 provers, which will be used by the
+	 * reasoners to check validity. why3 is a prove platform and is suppose to
+	 * be more expensive than other provers
+	 */
+	private TheoremProverFactory why3Factory = null;
+
+	/**
 	 * The simplifier factory associated to this reasoner factory. It will be
 	 * used by the {@link Reasoner}s produced by this factory to instantiate new
 	 * {@link Simplifier}s as the need arises.
@@ -71,9 +79,11 @@ public class CommonReasonerFactory implements ReasonerFactory {
 	 *            need arises
 	 */
 	public CommonReasonerFactory(SimplifierFactory simplifierFactory,
-			TheoremProverFactory proverFactory) {
+			TheoremProverFactory proverFactory,
+			RobustWhy3ProvePlatformFactory why3Factory) {
 		this.proverFactory = proverFactory;
 		this.simplifierFactory = simplifierFactory;
+		this.why3Factory = why3Factory;
 	}
 
 	@Override
@@ -93,5 +103,10 @@ public class CommonReasonerFactory implements ReasonerFactory {
 	@Override
 	public TheoremProverFactory getTheoremProverFactory() {
 		return proverFactory;
+	}
+
+	@Override
+	public TheoremProverFactory getWhy3ProvePlatformFactory() {
+		return why3Factory == null ? proverFactory : why3Factory;
 	}
 }

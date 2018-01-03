@@ -59,6 +59,7 @@ public class ConfigFactory {
 		executableMap.put("cvc3", ProverKind.CVC3); // working
 		executableMap.put("cvc4", ProverKind.CVC4); // working
 		executableMap.put("z3", ProverKind.Z3); // working
+		executableMap.put("why3", ProverKind.Why3); // working
 	}
 
 	/**
@@ -109,6 +110,8 @@ public class ConfigFactory {
 			return ProverKind.Z3;
 		case "Z3_API":
 			return ProverKind.Z3_API;
+		case "Why3":
+			return ProverKind.Why3;
 		default:
 			return null;
 		}
@@ -131,6 +134,7 @@ public class ConfigFactory {
 		case CVC3:
 			return "-version";
 		case CVC4:
+		case Why3:
 			return "--version";
 		case Z3:
 			return "-version";
@@ -260,8 +264,8 @@ public class ConfigFactory {
 		try {
 			process = pb.start();
 
-			BufferedReader stdout = new BufferedReader(new InputStreamReader(
-					process.getInputStream()));
+			BufferedReader stdout = new BufferedReader(
+					new InputStreamReader(process.getInputStream()));
 
 			line = stdout.readLine().trim();
 			process.destroy();
@@ -290,6 +294,18 @@ public class ConfigFactory {
 		info.setShowQueries(false);
 		info.setShowInconclusives(false);
 		info.setShowErrors(true);
+		if (kind == ProverKind.Why3) {
+			for (String why3prover : executableMap.keySet()) {
+				if (why3prover.equals("why3"))
+					continue;
+				if (why3prover.equals("cvc4"))
+					why3prover += "-15";
+				info.addOption(why3prover);
+			}
+			info.setTimeout(5.0);
+			// set environment for helping why3 finding prover executables:
+			info.setEnv(System.getenv("PATH"));
+		}
 		return info;
 	}
 
@@ -351,6 +367,7 @@ public class ConfigFactory {
 		StreamTokenizer st = new StreamTokenizer(reader);
 		LinkedList<ProverInfo> proverInfos = new LinkedList<>();
 		Set<String> allAliases = new HashSet<>();
+		ProverInfo why3info = null;
 
 		st.commentChar('#');
 		st.quoteChar('"');
@@ -408,7 +425,8 @@ public class ConfigFactory {
 				case "path": {
 					token = st.nextToken();
 					if (token != '"' && token != '\'')
-						throw parseErr(configFile, st, "expected quoted string");
+						throw parseErr(configFile, st,
+								"expected quoted string");
 					if (info.getPath() != null)
 						throw parseErr(configFile, st, "more than one path");
 					info.setPath(new File(st.sval));
@@ -439,7 +457,8 @@ public class ConfigFactory {
 				case "version": {
 					token = st.nextToken();
 					if (token != '"' && token != '\'')
-						throw parseErr(configFile, st, "expected quoted string");
+						throw parseErr(configFile, st,
+								"expected quoted string");
 					if (info.getVersion() != null)
 						throw parseErr(configFile, st, "more than one version");
 					info.setVersion(st.sval);
@@ -482,7 +501,8 @@ public class ConfigFactory {
 						value = false;
 						break;
 					default:
-						throw parseErr(configFile, st, "expected true or false");
+						throw parseErr(configFile, st,
+								"expected true or false");
 					}
 					switch (keyword) {
 					case "showQueries":
@@ -513,15 +533,33 @@ public class ConfigFactory {
 						throw parseErr(configFile, st, "expected ';'");
 					break;
 				}
+				case "environment": {
+					token = st.nextToken();
+					if (token != '"' && token != '\'')
+						throw parseErr(configFile, st,
+								"expected quoted string");
+					info.setEnv(st.sval);
+					token = st.nextToken();
+					if (token != ';')
+						throw parseErr(configFile, st, "expected ';'");
+					break;
+				}
 				default:
-					throw parseErr(configFile, st, "unknown keyword: "
-							+ keyword);
+					throw parseErr(configFile, st,
+							"unknown keyword: " + keyword);
 				} // end of switch
 			} // end of for
-			proverInfos.add(info);
+			if (info.getKind() != ProverKind.Why3)
+				proverInfos.add(info);
+			else
+				why3info = info;
 		} // end of for
 		reader.close();
-		return new CommonSARLConfig(proverInfos);
+
+		CommonSARLConfig config = new CommonSARLConfig(proverInfos);
+
+		config.setWhy3ProvePlatform(why3info);
+		return config;
 	}
 
 	/**
@@ -595,14 +633,13 @@ public class ConfigFactory {
 							+ info.getFirstAlias() + " at " + info.getPath());
 				if (!reread.getVersion().equals(info.getVersion()))
 					throw new SARLException("expected version "
-							+ info.getVersion() + " for "
-							+ info.getFirstAlias() + " but found "
-							+ reread.getVersion());
+							+ info.getVersion() + " for " + info.getFirstAlias()
+							+ " but found " + reread.getVersion());
 			} else {
 				for (Entry<String, ProverKind> entry : dylibMap.entrySet()) {
 					if (entry.getValue() == info.getKind()) {
-						File path = new File(System.mapLibraryName(entry
-								.getKey()));
+						File path = new File(
+								System.mapLibraryName(entry.getKey()));
 
 						if (path.equals(info.getPath())) {
 							try {
@@ -680,13 +717,18 @@ public class ConfigFactory {
 		out.println("Creating SARL configuration file in " + configFile);
 		out.flush();
 		stream.println("/* This is a SARL configuration file.");
-		stream.println(" * It contains one entry for each theorem prover SARL may use.");
-		stream.println(" * To resolve a query, by default, SARL will use the first prover here.");
-		stream.println(" * If that result in inconclusive, it will try the second prover.");
-		stream.println(" * And so on, until a conclusive result has been reached, or all provers");
+		stream.println(
+				" * It contains one entry for each theorem prover SARL may use.");
+		stream.println(
+				" * To resolve a query, by default, SARL will use the first prover here.");
+		stream.println(
+				" * If that result in inconclusive, it will try the second prover.");
+		stream.println(
+				" * And so on, until a conclusive result has been reached, or all provers");
 		stream.println(" * have been exhausted.");
 		stream.println(" * ");
-		stream.println(" * SARL looks for a configuration file by looking in the following");
+		stream.println(
+				" * SARL looks for a configuration file by looking in the following");
 		stream.println(" * places in order:");
 		stream.println(" * 1. .sarl in current working directory");
 		stream.println(" * 2. .sarl in user's home directory");
@@ -715,8 +757,8 @@ public class ConfigFactory {
 
 					if (kind != null) {
 						String alias = kind.toString().toLowerCase();
-						ProverInfo prover = processExecutableProver(kind,
-								alias, file);
+						ProverInfo prover = processExecutableProver(kind, alias,
+								file);
 
 						if (prover != null) {
 							String msg = kind + " version "
@@ -773,16 +815,21 @@ public class ConfigFactory {
 		}
 		stream.close();
 		if (provers.isEmpty()) {
-			err.println("No appropriate theorem provers were found in your PATH.");
-			err.println("SARL's theorem proving capability will be very limited.");
-			err.println("Consider installing at least one of CVC3, CVC4, or Z3.");
+			err.println(
+					"No appropriate theorem provers were found in your PATH.");
+			err.println(
+					"SARL's theorem proving capability will be very limited.");
+			err.println(
+					"Consider installing at least one of CVC3, CVC4, or Z3.");
 			err.flush();
 		}
 		out.println("SARL configuration file created successfully in "
 				+ configFile.getAbsolutePath());
-		out.println("By default, SARL will use all provers listed in the configuration file,");
+		out.println(
+				"By default, SARL will use all provers listed in the configuration file,");
 		out.println("in order, until a conclusive result is obtained.");
-		out.println("Edit the file as necessary to remove or change the order of provers.");
+		out.println(
+				"Edit the file as necessary to remove or change the order of provers.");
 		out.flush();
 	}
 }

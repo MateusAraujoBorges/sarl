@@ -143,4 +143,8 @@ public class SimpleReasoner implements Reasoner {
 		return false;
 	}
 
+	@Override
+	public ValidityResult validWhy3(BooleanExpression predicate) {
+		return valid(predicate);
+	}
 }

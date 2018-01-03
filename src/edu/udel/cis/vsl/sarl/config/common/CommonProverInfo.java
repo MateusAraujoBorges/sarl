@@ -41,6 +41,8 @@ public class CommonProverInfo implements ProverInfo {
 
 	private boolean showErrors = true;
 
+	private String environment = null;
+
 	// Constructors...
 
 	public CommonProverInfo() {
@@ -200,6 +202,8 @@ public class CommonProverInfo implements ProverInfo {
 		out.println("  showQueries = " + showQueries + ";");
 		out.println("  showInconclusives = " + showInconclusives + ";");
 		out.println("  showErrors = " + showErrors + ";");
+		if (environment != null)
+			out.println("  environment = \"" + environment + "\";");
 		out.println("}");
 		out.flush();
 	}
@@ -232,8 +236,8 @@ public class CommonProverInfo implements ProverInfo {
 		result = Boolean.compare(showErrors, that.getShowErrors());
 		if (result != 0)
 			return result;
-		result = Boolean
-				.compare(showInconclusives, that.getShowInconclusives());
+		result = Boolean.compare(showInconclusives,
+				that.getShowInconclusives());
 		if (result != 0)
 			return result;
 		result = Boolean.compare(showQueries, that.getShowQueries());
@@ -261,6 +265,7 @@ public class CommonProverInfo implements ProverInfo {
 		case CVC3:
 		case CVC4:
 		case Z3:
+		case Why3:
 			return true;
 		case CVC3_API:
 		case CVC4_API:
@@ -269,5 +274,15 @@ public class CommonProverInfo implements ProverInfo {
 		default:
 			throw new SARLInternalException("unreachable");
 		}
+	}
+
+	@Override
+	public String getEnv() {
+		return environment;
+	}
+
+	@Override
+	public void setEnv(String environment) {
+		this.environment = environment;
 	}
 }

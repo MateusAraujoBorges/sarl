@@ -73,6 +73,13 @@ public class ContextMinimizingReasoner implements Reasoner {
 	private TheoremProver prover = null;
 
 	/**
+	 * The why3 prove platform. Only initialized when and if it is needed,
+	 * because it may be expensive and may be never necessary if all of the
+	 * queries are delegated to reduced contexts.
+	 */
+	private TheoremProver why3ProvePlatform;
+
+	/**
 	 * The simplifier. Only initialized when and if it is needed, because it may
 	 * be expensive and may be never necessary if all of the simplification
 	 * tasks are delegated to reduced contexts.
@@ -131,7 +138,12 @@ public class ContextMinimizingReasoner implements Reasoner {
 		this.simplifier = factory.getSimplifierFactory().newSimplifier(context);
 	}
 
-	private synchronized TheoremProver getProver() {
+	private synchronized TheoremProver getProver(boolean useWhy3Instead) {
+		if (useWhy3Instead)
+			return why3ProvePlatform == null
+					? (why3ProvePlatform = factory.getWhy3ProvePlatformFactory()
+							.newProver(getReducedContext()))
+					: why3ProvePlatform;
 		return prover == null ? (prover = factory.getTheoremProverFactory()
 				.newProver(getReducedContext())) : prover;
 	}
@@ -200,10 +212,13 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            if <code>true</code>, try to find a model (concrete
 	 *            counterexample) if the result is not valid, i.e., return an
 	 *            instance of {@link ModelResult}.
+	 * @param useWhy3Instead
+	 *            Use Why3 instead of theorem provers like cvc4, z3, which is
+	 *            more powerful but expensive.
 	 * @return a non-<code>null</code> validity result
 	 */
-	private ValidityResult valid1(BooleanExpression predicate,
-			boolean getModel) {
+	private ValidityResult valid1(BooleanExpression predicate, boolean getModel,
+			boolean useWhy3Instead) {
 		if (predicate.isTrue())
 			return Prove.RESULT_YES;
 		if (predicate.isFalse())
@@ -239,9 +254,10 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 		if (reducedReasoner != this) {
 			result = reducedReasoner.validCacheNoReduce(transformedPredicate,
-					getModel);
+					getModel, useWhy3Instead);
 		} else {
-			result = this.validNoCacheNoReduce(transformedPredicate, getModel);
+			result = this.validNoCacheNoReduce(transformedPredicate, getModel,
+					useWhy3Instead);
 		}
 		updateCache(predicate, result);
 		return result;
@@ -267,15 +283,18 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            if <code>true</code>, try to find a model (concrete
 	 *            counterexample) if the result is not valid, i.e., return an
 	 *            instance of {@link ModelResult}.
+	 * @param useWhy3Instead
+	 *            Use Why3 instead of theorem provers like cvc4, z3, which is
+	 *            more powerful but expensive.
 	 * @return a non-<code>null</code> validity result
 	 */
 	private ValidityResult validCacheNoReduce(BooleanExpression predicate,
-			boolean getModel) {
+			boolean getModel, boolean useWhy3Instead) {
 		ValidityResult result = validCheckCache(predicate, getModel);
 
 		if (result != null)
 			return result;
-		result = validNoCacheNoReduce(predicate, getModel);
+		result = validNoCacheNoReduce(predicate, getModel, useWhy3Instead);
 		updateCache(predicate, result);
 		return result;
 	}
@@ -302,10 +321,13 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            if <code>true</code>, try to find a model (concrete
 	 *            counterexample) if the result is not valid, i.e., return an
 	 *            instance of {@link ModelResult}.
+	 * @param useWhy3Instead
+	 *            Use Why3 instead of theorem provers like cvc4, z3, which is
+	 *            more powerful but expensive.
 	 * @return a non-<code>null</code> validity result
 	 */
 	private ValidityResult validNoCacheNoReduce(BooleanExpression predicate,
-			boolean getModel) {
+			boolean getModel, boolean useWhy3Instead) {
 		if (debug) {
 			dbgcnt1++;
 			debugOut.println("dbgcnt1 = " + dbgcnt1);
@@ -334,11 +356,11 @@ public class ContextMinimizingReasoner implements Reasoner {
 				debugOut.println("Simplified predicate : " + newPredicate);
 				debugOut.flush();
 			}
-			result = newReasoner.valid1(newPredicate, getModel);
+			result = newReasoner.valid1(newPredicate, getModel, useWhy3Instead);
 		} else if (getModel) {
-			result = getProver().validOrModel(newPredicate);
+			result = getProver(useWhy3Instead).validOrModel(newPredicate);
 		} else {
-			result = getProver().valid(newPredicate);
+			result = getProver(useWhy3Instead).valid(newPredicate);
 		}
 		return result;
 	}
@@ -493,7 +515,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 			out.flush();
 		}
 
-		ValidityResult result = valid1(predicate, false);
+		ValidityResult result = valid1(predicate, false, false);
 
 		if (showQuery)
 
@@ -522,7 +544,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 			out.flush();
 		}
 
-		ValidityResult result = valid1(predicate, true);
+		ValidityResult result = valid1(predicate, true, false);
 
 		if (showQuery) {
 			PrintStream out = universe.getOutputStream();
@@ -573,5 +595,34 @@ public class ContextMinimizingReasoner implements Reasoner {
 		newLhs = taylorSubstituter.reduceModLimits(newLhs);
 		return newReasoner
 				.isValid(universe.equals(newLhs, universe.zeroReal()));
+	}
+
+	@Override
+	public ValidityResult validWhy3(BooleanExpression predicate) {
+		PreUniverse universe = factory.getUniverse();
+		boolean showQuery = universe.getShowQueries();
+
+		if (showQuery) {
+			PrintStream out = universe.getOutputStream();
+			int id = universe.numValidCalls();
+
+			out.println("Query " + id + " context        : " + context);
+			out.println("Query " + id + " assertion      : " + predicate);
+			out.flush();
+		}
+
+		ValidityResult result = valid1(predicate, false, true);
+
+		if (showQuery)
+
+		{
+			PrintStream out = universe.getOutputStream();
+			int id = universe.numValidCalls();
+
+			out.println("Query " + id + " result         : " + result);
+			out.flush();
+		}
+		universe.incrementValidCount();
+		return result;
 	}
 }

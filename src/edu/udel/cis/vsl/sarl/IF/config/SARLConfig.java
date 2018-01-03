@@ -53,4 +53,21 @@ public interface SARLConfig {
 	 */
 	ProverInfo getProverWithKind(ProverKind kind);
 
+	/**
+	 * Finds the why3 prove platform supported by this configuration
+	 * 
+	 * @return The {@link ProverInfo} for why3 or null if there is no why3 prove
+	 *         platform.
+	 */
+	ProverInfo getWhy3ProvePlatform();
+
+	/**
+	 * Set the why3 prove platform supported by this configuration
+	 * 
+	 * @param why3Info
+	 *            An object contains all the informations of the why3 prove
+	 *            platform.
+	 */
+	void setWhy3ProvePlatform(ProverInfo why3Info);
+
 }

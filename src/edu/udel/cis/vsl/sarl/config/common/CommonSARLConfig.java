@@ -24,6 +24,8 @@ public class CommonSARLConfig implements SARLConfig {
 
 	private Map<String, ProverInfo> aliasMap = new LinkedHashMap<>();
 
+	private ProverInfo why3Info = null;
+
 	public CommonSARLConfig(Collection<ProverInfo> provers) {
 		int size = provers.size();
 		int count = 0;
@@ -71,4 +73,13 @@ public class CommonSARLConfig implements SARLConfig {
 		return null;
 	}
 
+	@Override
+	public ProverInfo getWhy3ProvePlatform() {
+		return why3Info;
+	}
+
+	@Override
+	public void setWhy3ProvePlatform(ProverInfo why3Info) {
+		this.why3Info = why3Info;
+	}
 }

@@ -64,4 +64,14 @@ public interface ReasonerFactory {
 	 */
 	TheoremProverFactory getTheoremProverFactory();
 
+	/**
+	 * Returns why3 prove platform factory used by this reasoner factory. Every
+	 * reasoner factory may have one (if why3 is installed).
+	 * 
+	 * @return the why3 prove platform factory used by this reasoner factory. If
+	 *         why3 is not installed, the behavior is same as
+	 *         {@link #getTheoremProverFactory()}
+	 */
+	TheoremProverFactory getWhy3ProvePlatformFactory();
+
 }

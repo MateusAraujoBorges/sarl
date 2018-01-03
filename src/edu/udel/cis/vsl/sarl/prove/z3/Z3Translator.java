@@ -1275,8 +1275,11 @@ public class Z3Translator {
 			result = translateConcreteArray(expression);
 			break;
 		case ARRAY_LAMBDA:
-			throw new TheoremProverException(
-					"Z3 does not handle array lambdas");
+			// throw new TheoremProverException(
+			// "Z3 does not handle array lambdas");
+			result = new FastList<>(
+					newZ3AuxVar(translateType(expression.type())));
+			break;
 		case ARRAY_READ:
 			result = translateArrayRead(expression);
 			break;

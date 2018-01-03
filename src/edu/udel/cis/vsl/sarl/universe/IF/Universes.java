@@ -34,6 +34,7 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
+import edu.udel.cis.vsl.sarl.prove.why3.RobustWhy3ProvePlatformFactory;
 import edu.udel.cis.vsl.sarl.reason.IF.Reason;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
@@ -59,8 +60,11 @@ public class Universes {
 		TheoremProverFactory proverFactory = prover == null
 				? Prove.newMultiProverFactory(universe, config)
 				: Prove.newProverFactory(universe, prover);
+		RobustWhy3ProvePlatformFactory why3Factory = Prove
+				.newWhy3ProvePlatformFactory(universe,
+						config.getWhy3ProvePlatform());
 		ReasonerFactory reasonerFactory = Reason.newReasonerFactory(universe,
-				simplifierFactory, proverFactory);
+				simplifierFactory, proverFactory, why3Factory);
 
 		universe.setReasonerFactory(reasonerFactory);
 		return universe;
@@ -79,8 +83,11 @@ public class Universes {
 		TheoremProverFactory proverFactory = prover == null
 				? Prove.newMultiProverFactory(universe, config)
 				: Prove.newProverFactory(universe, prover);
+		RobustWhy3ProvePlatformFactory why3Factory = Prove
+				.newWhy3ProvePlatformFactory(universe,
+						config.getWhy3ProvePlatform());
 		ReasonerFactory reasonerFactory = Reason.newReasonerFactory(universe,
-				simplifierFactory, proverFactory);
+				simplifierFactory, proverFactory, why3Factory);
 
 		universe.setReasonerFactory(reasonerFactory);
 		return universe;
@@ -107,8 +114,11 @@ public class Universes {
 		TheoremProverFactory proverFactory = prover == null
 				? Prove.newMultiProverFactory(universe, config)
 				: Prove.newProverFactory(universe, prover);
+		RobustWhy3ProvePlatformFactory why3Factory = Prove
+				.newWhy3ProvePlatformFactory(universe,
+						config.getWhy3ProvePlatform());
 		ReasonerFactory reasonerFactory = Reason.newReasonerFactory(universe,
-				simplifierFactory, proverFactory);
+				simplifierFactory, proverFactory, why3Factory);
 
 		universe.setReasonerFactory(reasonerFactory);
 		return universe;

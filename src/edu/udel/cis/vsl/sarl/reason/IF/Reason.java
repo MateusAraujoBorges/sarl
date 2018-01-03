@@ -20,6 +20,7 @@ package edu.udel.cis.vsl.sarl.reason.IF;
 
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
+import edu.udel.cis.vsl.sarl.prove.why3.RobustWhy3ProvePlatformFactory;
 import edu.udel.cis.vsl.sarl.reason.common.ContextMinimizingReasonerFactory;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 
@@ -31,11 +32,26 @@ import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
  */
 public class Reason {
 
+	/**
+	 * Create a reasoner factory
+	 * 
+	 * @param universe
+	 *            A reference to a {@link PreUniverse}
+	 * @param simplifierFactory
+	 *            A reference to a {@link SimplifierFactory}
+	 * @param proverFactory
+	 *            A reference to a {@link TheoremProverFactory}
+	 * @param why3Factory
+	 *            A reference to a {@link RobustWhy3ProvePlatformFactory},
+	 *            optional, can be null.
+	 * @return
+	 */
 	public static ReasonerFactory newReasonerFactory(PreUniverse universe,
 			SimplifierFactory simplifierFactory,
-			TheoremProverFactory proverFactory) {
+			TheoremProverFactory proverFactory,
+			RobustWhy3ProvePlatformFactory why3Factory) {
 		ReasonerFactory result = new ContextMinimizingReasonerFactory(universe,
-				proverFactory, simplifierFactory);
+				proverFactory, simplifierFactory, why3Factory);
 
 		return result;
 	}

@@ -208,6 +208,13 @@ public interface Reasoner {
 	ValidityResult valid(BooleanExpression predicate);
 
 	/**
+	 * Same as {@link #valid} but calls only Why3 instead. Which is suppose to
+	 * be more expensive than {@link #valid}. If no Why3 is installed, the
+	 * behavior is same as {@link #valid}
+	 */
+	ValidityResult validWhy3(BooleanExpression predicate);
+
+	/**
 	 * <p>
 	 * Attempts to determine whether p(x)=>q(x) is valid, and, if not, also
 	 * returns a model (counter-example). The specification is exactly the same

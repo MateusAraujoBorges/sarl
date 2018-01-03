@@ -26,6 +26,7 @@ import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
+import edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind;
 import edu.udel.cis.vsl.sarl.IF.config.SARLConfig;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
@@ -34,6 +35,8 @@ import edu.udel.cis.vsl.sarl.prove.common.CommonModelResult;
 import edu.udel.cis.vsl.sarl.prove.common.CommonValidityResult;
 import edu.udel.cis.vsl.sarl.prove.common.MultiProverFactory;
 import edu.udel.cis.vsl.sarl.prove.cvc.RobustCVCTheoremProverFactory;
+import edu.udel.cis.vsl.sarl.prove.why3.RobustWhy3ProvePlatform;
+import edu.udel.cis.vsl.sarl.prove.why3.RobustWhy3ProvePlatformFactory;
 import edu.udel.cis.vsl.sarl.prove.z3.RobustZ3TheoremProverFactory;
 
 /**
@@ -124,12 +127,33 @@ public class Prove {
 		case CVC4_API:
 		case Z3_API:
 			// return new Z3TheoremProverFactory(universe, prover);
-			throw new SARLException("Unsupported theorem prover: "
-					+ prover.getKind());
+			throw new SARLException(
+					"Unsupported theorem prover: " + prover.getKind());
 		default:
-			throw new SARLInternalException("Unknown kind of theorem prover: "
-					+ prover.getKind());
+			throw new SARLInternalException(
+					"Unknown kind of theorem prover: " + prover.getKind());
 		}
+	}
+
+	/**
+	 * Creates a Why3 prove platform factory which instantiates
+	 * {@link RobustWhy3ProvePlatform}
+	 * 
+	 * @param universe
+	 *            the symbolic universe used to produce and manipulate symbolic
+	 *            expressions
+	 * @param why3Info
+	 *            a {@link ProverInfo} object providing information for the why3
+	 *            prove platform.
+	 * @return the new why3 prove platform factory, or null if the given
+	 *         why3Info is null or does not have a why3 kind.
+	 */
+	public static RobustWhy3ProvePlatformFactory newWhy3ProvePlatformFactory(
+			PreUniverse universe, ProverInfo prover) {
+		if (prover != null && prover.getKind() == ProverKind.Why3)
+			return new RobustWhy3ProvePlatformFactory(universe, prover);
+		else
+			return null;
 	}
 
 	/**
