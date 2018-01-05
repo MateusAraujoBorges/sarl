@@ -54,7 +54,7 @@ package edu.udel.cis.vsl.sarl.IF.number;
  * <code>false</code>; if the upper bound is finite then
  * <code>strictUpper</code> must be <code>false</code>.</li>
  * 
- * <li>if the bound is infinite, then the corresponding strict must be
+ * <li>if the bound is {@link RealInfinity}, then the corresponding strict must be
  * <code>true</code>.</li>
  * </ul>
  */
@@ -72,7 +72,7 @@ public interface Interval {
 	 * The lower bound of this interval. If unbounded (i.e., negative infinity)
 	 * on the left, this method returns null.
 	 * 
-	 * @return the lower bound or null
+	 * @return the lower bound or {@link RealInfinity}
 	 */
 	Number lower();
 
@@ -80,7 +80,7 @@ public interface Interval {
 	 * The upper bound of this interval. If unbounded (i.e., positive infinity)
 	 * on the right, this method returns null.
 	 * 
-	 * @return the upper bound or null
+	 * @return the upper bound or {@link RealInfinity}
 	 */
 	Number upper();
 

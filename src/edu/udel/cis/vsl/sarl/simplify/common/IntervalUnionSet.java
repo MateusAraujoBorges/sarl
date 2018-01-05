@@ -110,7 +110,6 @@ public class IntervalUnionSet implements Range {
 	public IntervalUnionSet(boolean isIntegral) {
 		isInt = isIntegral;
 		intervalArray = new Interval[0];
-		updateRangeSign();
 	}
 
 	/**
@@ -129,7 +128,6 @@ public class IntervalUnionSet implements Range {
 		isInt = number instanceof IntegerNumber;
 		intervalArray = new Interval[1];
 		intervalArray[0] = interval;
-		updateRangeSign();
 	}
 
 	/**
@@ -158,7 +156,6 @@ public class IntervalUnionSet implements Range {
 		isInt = isIntegral;
 		intervalArray = new Interval[1];
 		intervalArray[0] = interval;
-		updateRangeSign();
 	}
 
 	/**
@@ -178,7 +175,6 @@ public class IntervalUnionSet implements Range {
 			intervalArray = new Interval[1];
 			intervalArray[0] = interval;
 		}
-		updateRangeSign();
 	}
 
 	/**
@@ -191,7 +187,7 @@ public class IntervalUnionSet implements Range {
 	 */
 	public IntervalUnionSet(Interval... intervals) {
 		assert intervals != null;
-		assert intervals.length > 0;
+		assert intervals.length >= 0;
 
 		int inputIndex = 0, size = 0;
 		int inputSize = intervals.length;
@@ -227,7 +223,6 @@ public class IntervalUnionSet implements Range {
 		size = list.size();
 		intervalArray = new Interval[size];
 		list.toArray(intervalArray);
-		updateRangeSign();
 	}
 
 	/**
@@ -245,7 +240,6 @@ public class IntervalUnionSet implements Range {
 		isInt = other.isInt;
 		intervalArray = new Interval[size];
 		System.arraycopy(other.intervalArray, 0, intervalArray, 0, size);
-		updateRangeSign();
 	}
 
 	/**
@@ -1338,6 +1332,8 @@ public class IntervalUnionSet implements Range {
 
 	@Override
 	public RangeSign sign() {
+		if (rSign == null)
+			updateRangeSign();
 		return rSign;
 	}
 

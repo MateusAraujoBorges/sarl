@@ -305,14 +305,11 @@ public class IntervalUnionSetTest {
 		}
 	}
 
-	@Test(expected = AssertionError.class)
+	@Test
 	public void constructIntervalUnionSet_IntervalList_EmptyList() {
-		if (ASSERTION_ENABLED) {
-			Interval[] emptyList = new Interval[0];
-			actual = new IntervalUnionSet(emptyList);
-		} else {
-			throw new AssertionError();
-		}
+		Interval[] emptyList = new Interval[0];
+		actual = new IntervalUnionSet(emptyList);
+		assertTrue(actual.isEmpty());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -1462,6 +1459,95 @@ public class IntervalUnionSetTest {
 		p(DEBUG, "    set2: " + set2.toString());
 		p(DEBUG, "expected: " + expected.toString());
 		p(DEBUG, "  actual: " + actual.toString());
+	}
+
+	@Test
+	public void union_IntervalUnionSet_Infinity_Int1() {
+		Interval first1 = numberFactory.newInterval(true, INT_NEG_INF, true,
+				INT_ZERO, false);
+		Interval first2 = numberFactory.newInterval(true, INT_NEG_INF, true,
+				INT_ONE, false);
+		Interval[] list1 = { first1 };
+		Interval[] list2 = { first2 };
+
+		IntervalUnionSet set1 = new IntervalUnionSet(list1);
+		IntervalUnionSet set2 = new IntervalUnionSet(list2);
+		expected = set2;
+		actual = rangeFactory.union(set1, set2);
+
+		assertEquals(expected.toString(), actual.toString());
+
+	}
+
+	@Test
+	public void union_IntervalUnionSet_Infinity_Int2() {
+		Interval first1 = numberFactory.newInterval(true, INT_NEG_INF, true,
+				INT_N_TEN, false);
+		Interval first2 = numberFactory.newInterval(true, INT_NEG_INF, true,
+				INT_N_SIX, false);
+		Interval second1 = numberFactory.newInterval(true, INT_N_EIGHT, false,
+				INT_SEVEN, false);
+		Interval second2 = numberFactory.newInterval(true, INT_N_FOUR, false,
+				INT_N_THREE, false);
+		Interval third1 = numberFactory.newInterval(true, INT_N_FIVE, false,
+				INT_ONE, false);
+		Interval third2 = numberFactory.newInterval(true, INT_N_ONE, false,
+				INT_FIVE, false);
+		Interval fourth1 = numberFactory.newInterval(true, INT_THREE, false,
+				INT_FOUR, false);
+		Interval fourth2 = numberFactory.newInterval(true, INT_SEVEN, false,
+				INT_EIGHT, false);
+		Interval fifth1 = numberFactory.newInterval(true, INT_SIX, false,
+				INT_POS_INF, true);
+		Interval fifth2 = numberFactory.newInterval(true, INT_TEN, false,
+				INT_POS_INF, true);
+		Interval result = numberFactory.newInterval(true, INT_NEG_INF, true,
+				INT_POS_INF, true);
+		Interval[] list1 = { first1, second1, third1, fourth1, fifth1 };
+		Interval[] list2 = { first2, second2, third2, fourth2, fifth2 };
+
+		IntervalUnionSet set1 = new IntervalUnionSet(list1);
+		IntervalUnionSet set2 = new IntervalUnionSet(list2);
+		expected = new IntervalUnionSet(result);
+		actual = rangeFactory.union(set1, set2);
+
+		assertEquals(expected.toString(), actual.toString());
+
+	}
+
+	@Test
+	public void union_IntervalUnionSet_Infinity_Rat1() {
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
+				RAT_N_ONE, true);
+		Interval first2 = numberFactory.newInterval(false, RAT_NEG_INF, true,
+				RAT_ONE, true);
+		Interval[] list1 = { first1 };
+		Interval[] list2 = { first2 };
+
+		IntervalUnionSet set1 = new IntervalUnionSet(list1);
+		IntervalUnionSet set2 = new IntervalUnionSet(list2);
+		expected = new IntervalUnionSet(numberFactory.newInterval(false,
+				RAT_NEG_INF, true, RAT_ONE, true));
+		actual = rangeFactory.union(set1, set2);
+
+		assertEquals(expected.toString(), actual.toString());
+	}
+
+	@Test
+	public void union_IntervalUnionSet_Infinity_Rat2() {
+		Interval first1 = numberFactory.newInterval(false, RAT_NEG_INF, true,
+				RAT_N_ONE, true);
+		Interval first2 = numberFactory.newInterval(false, RAT_NEG_INF, true,
+				RAT_N_ONE, false);
+		Interval[] list1 = { first1 };
+		Interval[] list2 = { first2 };
+
+		IntervalUnionSet set1 = new IntervalUnionSet(list1);
+		IntervalUnionSet set2 = new IntervalUnionSet(list2);
+		expected = set2;
+		actual = rangeFactory.union(set1, set2);
+
+		assertEquals(expected.toString(), actual.toString());
 	}
 
 	@Test(expected = AssertionError.class)
@@ -4092,4 +4178,5 @@ public class IntervalUnionSetTest {
 								Arrays.asList(gtOne, leFive, xNotEqualFour))),
 				result);
 	}
+
 }

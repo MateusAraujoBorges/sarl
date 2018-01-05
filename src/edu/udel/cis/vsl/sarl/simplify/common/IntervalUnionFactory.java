@@ -166,8 +166,32 @@ public class IntervalUnionFactory implements RangeFactory {
 			list.add(interval);
 		} else if (lower.isInfinite()) {
 			start = -1;
+
+			Interval firstInterval = list.get(left);
+
+			if (firstInterval != null && firstInterval.lower().isInfinite()) {
+				if (firstInterval.contains(upper)) {
+					return;
+				} else {
+					list.remove(left);
+					size--;
+					right--;
+				}
+			}
 		} else if (upper.isInfinite()) {
 			end = size;
+
+			Interval lastInterval = list.get(right);
+
+			if (lastInterval != null && lastInterval.upper().isInfinite()) {
+				if (lastInterval.contains(lower)) {
+					return;
+				} else {
+					list.remove(right);
+					size--;
+					right--;
+				}
+			}
 		}
 		while (left < right && start == -2) {
 			// TODO: Check once for -2
