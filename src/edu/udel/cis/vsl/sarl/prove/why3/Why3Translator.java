@@ -1025,11 +1025,12 @@ public class Why3Translator {
 	private String translatePower(SymbolicExpression expr) {
 		SymbolicExpression base = (SymbolicExpression) expr.argument(0);
 		Why3Type baseType = translateType(base.type());
+		boolean isReal = false;
 
 		if (baseType == Why3Primitives.int_t)
 			state.addLibrary(Why3Primitives.Why3Lib.POWER_INT);
 		else if (baseType == Why3Primitives.real_t)
-			state.addLibrary(Why3Primitives.Why3Lib.POWER_REAL);
+			isReal = true;
 		else
 			throw new SARLException(
 					"Cannot translate a power expression whose base has neither INT nor REAL type.");
@@ -1050,10 +1051,17 @@ public class Why3Translator {
 
 				for (int i = 0; i < concVal; i++)
 					bases[i] = baseText;
-				return wrap(interpolateOperator(bases, Why3Primitives.times));
+				if (isReal)
+					return Why3Primitives.real_times.call(bases);
+				else
+					return wrap(
+							interpolateOperator(bases, Why3Primitives.times));
 			}
 		}
-		return Why3Primitives.power.call(baseText, expText);
+		if (isReal)
+			return Why3Primitives.real_power.call(baseText, expText);
+		else
+			return Why3Primitives.int_power.call(baseText, expText);
 	}
 
 	/**

@@ -36,11 +36,6 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 	private PreUniverse universe;
 
 	/**
-	 * Transform away arrat-lambdas in quantified expressions:
-	 */
-	private ContextualArrayLambdaTransfomer arrayLambdaTransformer;
-
-	/**
 	 * Information object for underlying prover, which must have
 	 * {@link ProverKind} {@link ProverKind#Why3}.
 	 */
@@ -105,7 +100,6 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 				Runtime.getRuntime().availableProcessors() - 2);
 		this.why3RunnerPool = new ExecutorCompletionService<ValidityResult>(
 				executor);
-		arrayLambdaTransformer = new ContextualArrayLambdaTransfomer(universe);
 	}
 
 	@Override
@@ -120,7 +114,6 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 		boolean show = universe.getShowProverQueries() || info.getShowQueries();
 
 		predicate = (BooleanExpression) universe.cleanBoundVariables(predicate);
-		predicate = arrayLambdaTransformer.transform(predicate);
 		universe.incrementProverValidCount();
 		if (show) {
 			out.println();

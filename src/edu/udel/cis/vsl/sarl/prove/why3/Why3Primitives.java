@@ -214,8 +214,11 @@ public class Why3Primitives {
 
 	public static Why3BuiltinFunction not = new Why3BuiltinFunction("not", 1);
 
-	public static Why3BuiltinFunction power = new Why3BuiltinFunction("power",
-			2);
+	public static Why3BuiltinFunction int_power = new Why3BuiltinFunction(
+			"power", 2);
+
+	public static Why3BuiltinFunction real_power = new Why3BuiltinFunction(
+			"SR.sarl_power", 2);
 
 	public static Why3BuiltinFunction real_plus = new Why3BuiltinFunction(
 			"SR.add", 2);
@@ -437,7 +440,10 @@ public class Why3Primitives {
 			+ "function neg (a : real) : real = (-a)\n"
 			+ "function (:-) (a b : real) : real = a / b\n"
 			+ "predicate lt (a b : real) = a < b\n"
-			+ "predicate lte (a b : real) = a <= b\n" + "end\n";
+			+ "predicate lte (a b : real) = a <= b\n"
+			+ "clone import int.Exponentiation as POWREAL with type t = real\n"
+			+ "function sarl_power (a : real) (b : int) : real = (POWREAL.power a b)\n"
+			+ "end\n";
 
 	static private String IMPORT_REAL_NAME_SPACE = "use import SARL_REAL as SR\n";
 
