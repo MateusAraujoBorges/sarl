@@ -58,4 +58,30 @@ public class SimplifyExpressionTest {
 				.simplify(predicate);
 		System.out.println(predicate);
 	}
+
+	// context : X_N - 1*Y3 <= 0 && 0 <= X_N - 1*Y3 && 0 <= X_N - 1 && 0 <= Y3
+	// simplified : 0 <= Y3 - 1
+	// query: 0 <= X_N
+	// expected result: YES
+	@Test
+	public void backwradsSubstitutionTest() {
+		universe.setUseBackwardSubstitution(true);
+
+		SymbolicUniverse u = universe;
+		NumericSymbolicConstant X_N = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X_N"),
+						universe.integerType());
+		NumericSymbolicConstant Y3 = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("Y3"), intType);
+		BooleanExpression context = u.and(Arrays.asList(
+				u.lessThanEquals(X_N, Y3), u.lessThanEquals(Y3, X_N),
+				u.lessThanEquals(u.oneInt(), X_N),
+				u.lessThanEquals(u.zeroInt(), Y3)));
+
+		Reasoner reasoner = u.reasoner(context);
+
+		System.out.println(context);
+		System.out.println(reasoner.getReducedContext());
+		assertTrue(reasoner.isValid(u.lessThanEquals(u.zeroInt(), X_N)));
+	}
 }
