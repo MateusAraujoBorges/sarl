@@ -40,7 +40,7 @@ public class CommonSymbolicUniverse extends CommonPreUniverse
 	/**
 	 * The factory for producing new Reasoner instances.
 	 */
-	private ReasonerFactory reasonerFactory;	
+	private ReasonerFactory reasonerFactory;
 
 	// Constructor...
 
@@ -59,7 +59,8 @@ public class CommonSymbolicUniverse extends CommonPreUniverse
 
 	@Override
 	public Reasoner reasoner(BooleanExpression context) {
-		return reasonerFactory.getReasoner(context);
+		return reasonerFactory.getReasoner(context,
+				getUseBackwardSubstitution());
 	}
 
 	public void setReasonerFactory(ReasonerFactory reasonerFactory) {
@@ -75,5 +76,4 @@ public class CommonSymbolicUniverse extends CommonPreUniverse
 			return result;
 		return reasoner(assumption).extractNumber(expression);
 	}
-
 }

@@ -38,6 +38,8 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
  */
 public class IdealSimplifierBBTest {
 
+	private final static boolean useBackwardSubstitution = true;
+
 	/**
 	 * Calls the setUp() method in CommonObjects to make use of consolidated
 	 * SARL object declarations and initializations for testing of "Simplify"
@@ -72,7 +74,8 @@ public class IdealSimplifierBBTest {
 	@Test
 	public void xGreater0Test() {
 		assumption = preUniv.lessThan(rat0, xNE); // 0<x
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 		out.println("full: " + idealSimplifier.getFullContext() + " reduced: "
 				+ idealSimplifier.getReducedContext());
 		assertEquals("0 < x", idealSimplifier.getReducedContext().toString());
@@ -91,7 +94,8 @@ public class IdealSimplifierBBTest {
 	public void twoStagePolyTest() {
 		// first assumption: x == -1.0
 		assumption = preUniv.equals(ratNeg1, x);
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 		out.println(idealSimplifier.apply(bigMixedXYTermPoly));
 		SymbolicExpression noX = idealSimplifier.apply(bigMixedXYTermPoly); // intermediary
 																			// symbolic
@@ -99,7 +103,8 @@ public class IdealSimplifierBBTest {
 
 		// second assumption: y == 1.0
 		assumption = preUniv.equals(rat1, yNE);
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 		out.println(idealSimplifier.apply(noX));
 		// 0^3 should = 0...
 		assertEquals(rat0.type(), idealSimplifier.apply(noX).type());
@@ -115,7 +120,8 @@ public class IdealSimplifierBBTest {
 	@Test
 	public void simplifySolvableTest() {
 		assumption = preUniv.equals(rat0, yNE);
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 		// out.println("here: " + idealSimplifier.getFullContext());
 		// out.println(idealSimplifier.getReducedContext());
 		assertNotEquals(idealSimplifier.getFullContext(),
@@ -130,7 +136,8 @@ public class IdealSimplifierBBTest {
 	@Test
 	public void singlePowerTermSimplifyTest() {
 		assumption = preUniv.equals(rat0, x4th);
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 		out.println("here: " + idealSimplifier.getFullContext());
 		out.println(idealSimplifier.getReducedContext());
 		assertEquals(rat0, idealSimplifier.apply(threeX4th));

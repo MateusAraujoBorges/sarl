@@ -33,6 +33,8 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 
 public class IdealSimplifierTest {
 
+	private final static boolean useBackwardSubstitution = true;
+
 	private static BooleanExpression boolArg1, boolArg2;
 
 	/**
@@ -65,7 +67,8 @@ public class IdealSimplifierTest {
 	@Test(expected = NullPointerException.class)
 	public void getFullContextTextTestnull() {
 
-		idealSimplifier = idealSimplifierFactory.newSimplifier(null);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(null,
+				useBackwardSubstitution);
 		BooleanExpression boolNull = idealSimplifier.getFullContext();
 		assertEquals(null, boolNull);
 
@@ -76,7 +79,8 @@ public class IdealSimplifierTest {
 	 */
 	public void getFullContextTextTestTrivial() {
 
-		idealSimplifier = idealSimplifierFactory.newSimplifier(xeq5);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(xeq5,
+				useBackwardSubstitution);
 		BooleanExpression boolXEq5 = idealSimplifier.getFullContext();
 		assertEquals(xeq5, boolXEq5);
 
@@ -87,7 +91,8 @@ public class IdealSimplifierTest {
 	 */
 	public void getFullContextTestTrivial1() {
 		boolArg1 = preUniv.lessThanEquals(rat25, preUniv.multiply(x, x));
-		Simplifier simpEq1 = idealSimplifierFactory.newSimplifier(boolArg1);
+		Simplifier simpEq1 = idealSimplifierFactory.newSimplifier(boolArg1,
+				useBackwardSubstitution);
 		BooleanExpression boolSimpEq1 = simpEq1.getFullContext();
 		assertEquals(
 				preUniv.lessThanEquals(rat0,
@@ -100,7 +105,8 @@ public class IdealSimplifierTest {
 	 */
 	public void getFullContextTestTrivial2() {
 		boolArg2 = preUniv.lessThanEquals(rat2, preUniv.multiply(x, x));
-		Simplifier simpEq2 = idealSimplifierFactory.newSimplifier(boolArg2);
+		Simplifier simpEq2 = idealSimplifierFactory.newSimplifier(boolArg2,
+				useBackwardSubstitution);
 		BooleanExpression boolSimpEq2 = simpEq2.getFullContext();
 		assertEquals(boolArg2, boolSimpEq2);
 	}
@@ -133,12 +139,14 @@ public class IdealSimplifierTest {
 	@Test
 	public void getReducedContextTest() {
 		CommonObjects.setUp();
-		idealSimplifier = idealSimplifierFactory.newSimplifier(trueExpr);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(trueExpr,
+				useBackwardSubstitution);
 		BooleanExpression boolTrue = idealSimplifier.getReducedContext();
 		assertEquals(trueExpr, boolTrue);
 
 		boolArg2 = preUniv.lessThanEquals(rat2, preUniv.multiply(x, x));
-		Simplifier simpEq2 = idealSimplifierFactory.newSimplifier(boolArg2);
+		Simplifier simpEq2 = idealSimplifierFactory.newSimplifier(boolArg2,
+				useBackwardSubstitution);
 		BooleanExpression boolSimpEq2 = simpEq2.getReducedContext();
 		assertEquals(boolArg2, boolSimpEq2);
 	}

@@ -86,8 +86,8 @@ public class OldContext {
 	private Map<Monic, Interval> boundMap;
 
 	/**
-	 * A cache of all simplifications computed under this {@link OldContext}. For
-	 * any entry (x,y), the following formula must be valid: context -> x=y.
+	 * A cache of all simplifications computed under this {@link OldContext}.
+	 * For any entry (x,y), the following formula must be valid: context -> x=y.
 	 */
 	private Map<SymbolicObject, SymbolicObject> simplificationCache;
 
@@ -182,11 +182,11 @@ public class OldContext {
 	 *            info structure with references to commonly-used factories and
 	 *            other objects
 	 * @param parent
-	 *            the {@link OldContext} that should be the parent of this context;
-	 *            this context is essentially a sub-context of its parent, i.e.,
-	 *            everything that holds in the parent also holds in this
-	 *            context. The parent will never be modified by methods in this
-	 *            {@link OldContext}.
+	 *            the {@link OldContext} that should be the parent of this
+	 *            context; this context is essentially a sub-context of its
+	 *            parent, i.e., everything that holds in the parent also holds
+	 *            in this context. The parent will never be modified by methods
+	 *            in this {@link OldContext}.
 	 */
 	public OldContext(SimplifierInfo info) {
 		this(info, new TreeMap<>(info.booleanFactory.getBooleanComparator()),
@@ -576,8 +576,11 @@ public class OldContext {
 			}
 		}
 
-		boolean satisfiable = LinearSolver.reduceConstantMap(info.idealFactory,
-				constantMap).consistent;
+		// TODO: changed this interface...
+
+		boolean satisfiable = true;
+		// LinearSolver.reduceConstantMap(info.idealFactory,
+		// constantMap).consistent;
 
 		if (debug) {
 			info.out.println("Result of updateConstantMap() part 1:");

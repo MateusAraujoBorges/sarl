@@ -75,7 +75,8 @@ public class OldIdealSimplifier extends CommonSimplifier {
 	 *            the assumption ("context") on which this simplifier will be
 	 *            based
 	 */
-	public OldIdealSimplifier(SimplifierInfo info, BooleanExpression assumption) {
+	public OldIdealSimplifier(SimplifierInfo info,
+			BooleanExpression assumption) {
 		super(info.universe);
 		this.info = info;
 		this.boundCleaner = universe.newMinimalBoundCleaner();
@@ -160,5 +161,10 @@ public class OldIdealSimplifier extends CommonSimplifier {
 	 */
 	BooleanExpression findDifferentiableClaim(SymbolicExpression function) {
 		return theContext.findDifferentiableClaim(function);
+	}
+
+	@Override
+	public boolean useBackwardSubstitution() {
+		return false;
 	}
 }

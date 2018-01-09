@@ -52,9 +52,14 @@ public interface ReasonerFactory {
 	 * @param context
 	 *            a non-<code>null</code> boolean expression to be used as the
 	 *            context for the {@link Reasoner}
+	 * @param useBackwardSubstitution
+	 *            shall the reasoner use backwards substitution to solve for
+	 *            certain numeric expressions in terms of others when
+	 *            simplifying?
 	 * @return a {@link Reasoner} based on the given <code>context</code>
 	 */
-	Reasoner getReasoner(BooleanExpression context);
+	Reasoner getReasoner(BooleanExpression context,
+			boolean useBackwardSubstitution);
 
 	/**
 	 * Returns the theorem prover factory used by this reasoner factory. Every

@@ -87,11 +87,13 @@ public class CommonReasonerFactory implements ReasonerFactory {
 	}
 
 	@Override
-	public Reasoner getReasoner(BooleanExpression context) {
+	public Reasoner getReasoner(BooleanExpression context,
+			boolean useBackwardSubstitution) {
 		Reasoner result = reasonerCache.get(context);
 
 		if (result == null) {
-			Simplifier simplifier = simplifierFactory.newSimplifier(context);
+			Simplifier simplifier = simplifierFactory.newSimplifier(context,
+					useBackwardSubstitution);
 			Reasoner newReasoner = new CommonReasoner(this, simplifier);
 
 			result = reasonerCache.putIfAbsent(context, newReasoner);

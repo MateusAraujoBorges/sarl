@@ -37,7 +37,8 @@ public class IdentitySimplifierFactory implements SimplifierFactory {
 	}
 
 	@Override
-	public Simplifier newSimplifier(BooleanExpression assumption) {
+	public Simplifier newSimplifier(BooleanExpression assumption,
+			boolean useBackwardSubstitution) {
 		return new IdentitySimplifier(universe, assumption);
 	}
 

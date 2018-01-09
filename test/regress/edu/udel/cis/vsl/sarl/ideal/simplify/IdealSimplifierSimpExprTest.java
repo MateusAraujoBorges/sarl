@@ -19,6 +19,7 @@ import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xx;
 import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xy;
 import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.y;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -38,6 +39,8 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
  */
 
 public class IdealSimplifierSimpExprTest {
+
+	private final static boolean useBackwardSubstitution = true;
 
 	private Simplifier idealSimp;
 
@@ -83,7 +86,8 @@ public class IdealSimplifierSimpExprTest {
 
 		assumption = preUniv.equals(rat0, x);
 
-		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimp = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 
 		assertEquals(rat0, idealSimp.apply(symExpr));
 	}
@@ -99,7 +103,8 @@ public class IdealSimplifierSimpExprTest {
 
 		assumption = preUniv.equals(rat0, x);
 
-		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimp = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 
 		assertEquals(rat0, idealSimp.apply(symExpr));
 	}
@@ -118,7 +123,8 @@ public class IdealSimplifierSimpExprTest {
 		assumption = preUniv.equals(preUniv.multiply(rat5, x),
 				preUniv.multiply(y, y));
 
-		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimp = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 
 		assertEquals(idealSimp.apply(onePxPxSqdP3x4th),
 				idealSimp.apply(symExpr));
@@ -177,7 +183,8 @@ public class IdealSimplifierSimpExprTest {
 
 		assumption = preUniv.equals(x, rat5);
 
-		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimp = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 
 		numExpect = preUniv.add(preUniv.rational(12500),
 				preUniv.multiply(preUniv.rational(3125), preUniv.power(y, 3)));
@@ -190,31 +197,35 @@ public class IdealSimplifierSimpExprTest {
 
 	/**
 	 * Test on IdealSimplifier that tests the method simplifyExpression() when
-	 * only dividing polynomials
+	 * only dividing polynomials.
+	 * 
+	 * Let e = (6x+2x*y^2)/(2x) = 3+y^2 Assume 5x=y^2. Simplify e: 3+5x. =
+	 * 5*(x+3/5). OK
 	 * 
 	 */
 	@Test
 	public void simplifyExpressionDivide() {
 		NumericExpression num = preUniv.add(preUniv.multiply(rat6, x), preUniv
 				.multiply(preUniv.multiply(rat2, x), preUniv.power(y, 2)));
-
 		NumericExpression denom = preUniv.multiply(rat2, x);
 
 		numExpr = preUniv.divide(num, denom);
-
 		symExpr = numExpr;
-
 		assumption = preUniv.equals(preUniv.multiply(rat5, x),
 				preUniv.multiply(y, y));
-
-		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
-
+		idealSimp = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 		numExpect = preUniv.add(preUniv.power(y, 2), rat3);
-
 		expected = numExpect;
 
-		assertEquals(expected, idealSimp.apply(symExpr));
+		NumericExpression expect2 = preUniv.add(rat3,
+				preUniv.multiply(rat5, x));
+		SymbolicExpression actual = idealSimp.apply(symExpr);
 
+		// out.println("expect2 = " + expect2);
+		// out.println("actual = " + actual);
+		assertTrue(actual == expected || actual == expect2);
+		// assertEquals(expected, idealSimp.apply(symExpr));
 	}
 
 	/**
@@ -245,12 +256,12 @@ public class IdealSimplifierSimpExprTest {
 		assumption = preUniv.equals(preUniv.multiply(rat5, x),
 				preUniv.multiply(y, y));
 
-		idealSimp = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimp = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 
 		// x(4xy+2)+3 = 4x^2y+2x+3
-		numExpect = preUniv.add(
-				preUniv.multiply(x, preUniv.add(
-						preUniv.multiply(preUniv.multiply(rat4, x), y), rat2)),
+		numExpect = preUniv.add(preUniv.multiply(x, preUniv
+				.add(preUniv.multiply(preUniv.multiply(rat4, x), y), rat2)),
 				rat3);
 
 		expected = idealSimp.apply(numExpect);

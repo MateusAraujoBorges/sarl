@@ -75,11 +75,13 @@ public class IdealSimplifier implements Simplifier {
 	 *            the assumption ("context") on which this simplifier will be
 	 *            based
 	 */
-	public IdealSimplifier(SimplifierInfo info, BooleanExpression assumption) {
+	public IdealSimplifier(SimplifierInfo info, BooleanExpression assumption,
+			boolean useBackwardSubstitution) {
 		this.boundCleaner = info.universe.newMinimalBoundCleaner();
 		// rename bound variables so every variable has a unique name...
 		assumption = (BooleanExpression) boundCleaner.apply(assumption);
-		this.theContext = new Context(info, assumption);
+		this.theContext = new Context(info, assumption,
+				useBackwardSubstitution);
 	}
 
 	protected IdealSimplifierWorker newWorker() {
@@ -162,5 +164,10 @@ public class IdealSimplifier implements Simplifier {
 	@Override
 	public PreUniverse universe() {
 		return theContext.info.universe;
+	}
+
+	@Override
+	public boolean useBackwardSubstitution() {
+		return theContext.backwardsSub;
 	}
 }

@@ -1,13 +1,12 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
-import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
-import edu.udel.cis.vsl.sarl.ideal.simplify.LinearSolver.LinearSolverInfo;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
 import edu.udel.cis.vsl.sarl.util.WorkMap;
 
@@ -33,7 +32,7 @@ public class SubContext extends Context {
 	 *            the (non-{@code null}) context containing this one
 	 */
 	protected SubContext(Context superContext) {
-		super(superContext.getInfo());
+		super(superContext.getInfo(), superContext.backwardsSub);
 		this.superContext = superContext;
 	}
 
@@ -50,21 +49,37 @@ public class SubContext extends Context {
 		initialize(assumption);
 	}
 
-	/**
-	 * Returns the global monic constant map, obtained by starting with the
-	 * super-context's global monic constant map, and then adding entries from
-	 * this sub-context. If there is an entry in this sub-context with the same
-	 * key as that in the super-context, the one in this sub-context overrides
-	 * the one in the super-context.
-	 * 
-	 * @return the global monic constant map mapping {@link Monic}s to their
-	 *         known constant values
-	 */
-	@Override
-	protected Map<Monic, Number> getMonicConstantMap() {
-		Map<Monic, Number> map = superContext.getMonicConstantMap();
+	// /**
+	// * Returns the global monic constant map, obtained by starting with the
+	// * super-context's global monic constant map, and then adding entries from
+	// * this sub-context. If there is an entry in this sub-context with the
+	// same
+	// * key as that in the super-context, the one in this sub-context overrides
+	// * the one in the super-context.
+	// *
+	// * @return the global monic constant map mapping {@link Monic}s to their
+	// * known constant values
+	// */
+	// @Override
+	// protected Map<Monic, Number> getMonicConstantMap() {
+	// Map<Monic, Number> map = superContext.getMonicConstantMap();
+	//
+	// addMonicConstantsToMap(map); // overwrites any previous entries
+	// return map;
+	// }
 
-		addMonicConstantsToMap(map); // overwrites any previous entries
+	@Override
+	protected void addSubsToMap(
+			Map<SymbolicExpression, SymbolicExpression> map) {
+		superContext.addSubsToMap(map);
+		map.putAll(subMap);
+	}
+
+	@Override
+	protected Map<SymbolicExpression, SymbolicExpression> getFullSubMap() {
+		Map<SymbolicExpression, SymbolicExpression> map = new HashMap<>();
+
+		addSubsToMap(map);
 		return map;
 	}
 
@@ -131,19 +146,27 @@ public class SubContext extends Context {
 	 * 
 	 * @return whether a change took place
 	 */
-	protected boolean gauss() throws InconsistentContextException {
-		Map<Monic, Number> superConstantMap = superContext
-				.getMonicConstantMap();
-		Map<Monic, Number> oldConstantMap = new TreeMap<>(info.monicComparator),
-				newConstantMap = new TreeMap<>(info.monicComparator);
+	@Override
+	protected LinearSolver getLinearSolver() {
+		if (subMap.isEmpty())
+			return null;
 
-		addMonicConstantsToMap(oldConstantMap);
+		Map<SymbolicExpression, SymbolicExpression> superSubMap = superContext
+				.getFullSubMap();
+		LinearSolver ls = LinearSolver.reduceRelative(info, superSubMap, subMap,
+				info.monicComparator, backwardsSub);
 
-		LinearSolverInfo lsi = LinearSolver.reduceRelativeConstantMap(
-				info.idealFactory, superConstantMap, oldConstantMap,
-				newConstantMap);
-
-		return gaussHelper(lsi, oldConstantMap, newConstantMap);
+		return ls;
+		// Map<Monic, Number> superConstantMap = superContext
+		// .getMonicConstantMap();
+		// Map<Monic, Number> oldConstantMap = new
+		// TreeMap<>(info.monicComparator),
+		// newConstantMap = new TreeMap<>(info.monicComparator);
+		// addMonicConstantsToMap(oldConstantMap);
+		// LinearSolverInfo lsi = OldLinearSolver.reduceRelativeConstantMap(
+		// info.idealFactory, superConstantMap, oldConstantMap,
+		// newConstantMap);
+		// return gaussHelper(lsi, oldConstantMap, newConstantMap);
 	}
 
 	/**
@@ -166,7 +189,7 @@ public class SubContext extends Context {
 		map2.putAll(superCollapsed.rangeMap);
 		map2.putAll(rangeMap);
 
-		Context collapse = new Context(info, map1, map2);
+		Context collapse = new Context(info, map1, map2, this.backwardsSub);
 
 		return collapse;
 	}

@@ -35,6 +35,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal.common.NTMonic;
 import edu.udel.cis.vsl.sarl.ideal.common.NTRationalExpression;
+import edu.udel.cis.vsl.sarl.ideal.common.NumericPrimitive;
 import edu.udel.cis.vsl.sarl.ideal.common.One;
 import edu.udel.cis.vsl.sarl.util.KeySetFactory;
 
@@ -524,6 +525,38 @@ public interface IdealFactory extends NumericExpressionFactory {
 	 */
 	BooleanExpression isNonZero(Monomial monomial);
 
+	/**
+	 * <p>
+	 * Divides two {@link Monomial}s of integer type. This will always return a
+	 * {@link Monomial}, never a non-monomial {@link RationalExpression}. In the
+	 * worst case (if the denominator does not evenly divide the numerator), the
+	 * result will be a primitive expression ({@link NumericPrimitive}) in which
+	 * the operator is {@link SymbolicOperator#INT_DIVIDE}.
+	 * </p>
+	 * 
+	 * <p>
+	 * Note on integer division: assume all terms positive. (ad)/(bd) = a/b
+	 * </p>
+	 * 
+	 * @param numerator
+	 *            polynomial of integer type
+	 * @param denominator
+	 *            polynomial of integer type
+	 * @return result of division as {@link Monomial}, which might be a new
+	 *         primitive expression
+	 */
+	Monomial divideIntegerMonomials(Monomial numerator, Monomial denominator);
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * Since expressions of integer type are always instances of
+	 * {@link Monomial}, this method signature is refined to return
+	 * {@link Monomial}.
+	 */
+	@Override
+	Monomial modulo(NumericExpression arg0, NumericExpression arg1);
+
 	// Term maps...
 
 	/**
@@ -718,5 +751,4 @@ public interface IdealFactory extends NumericExpressionFactory {
 
 	@Override
 	RationalExpression divide(NumericExpression arg0, NumericExpression arg1);
-
 }

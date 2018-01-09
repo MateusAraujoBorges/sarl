@@ -80,14 +80,15 @@ public class ContextMinimizingReasonerFactory implements ReasonerFactory {
 	}
 
 	@Override
-	public ContextMinimizingReasoner getReasoner(BooleanExpression context) {
+	public ContextMinimizingReasoner getReasoner(BooleanExpression context,
+			boolean useBackwardSubstitution) {
 		assert context.isCanonic();
 
 		ContextMinimizingReasoner result = reasonerMap.get(context);
 
 		if (result == null) {
 			ContextMinimizingReasoner newContextMinimizingReasoner = new ContextMinimizingReasoner(
-					this, context);
+					this, context, useBackwardSubstitution);
 
 			result = reasonerMap.putIfAbsent(context,
 					newContextMinimizingReasoner);

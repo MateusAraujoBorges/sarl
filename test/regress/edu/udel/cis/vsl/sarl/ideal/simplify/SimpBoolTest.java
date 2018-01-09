@@ -32,6 +32,8 @@ import org.junit.Test;
  */
 public class SimpBoolTest {
 
+	private final static boolean useBackwardSubstitution = true;
+
 	/**
 	 * Calls the setUp() method in CommonObjects to make use of consolidated
 	 * SARL object declarations and initializations for testing of "Simplify"
@@ -66,7 +68,8 @@ public class SimpBoolTest {
 	@Test
 	public void boolExprTest() {
 		assumption = xeq5;
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 		assertEquals(rat5.type(), idealSimplifier.apply(x).type());
 		assertEquals(rat5, idealSimplifier.apply(x));
 	}
@@ -89,11 +92,13 @@ public class SimpBoolTest {
 
 		assumption = preUniv.not(xeq5);
 
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 
 		claim1 = xeq5;
 
-		idealSimp2 = idealSimplifierFactory.newSimplifier(claim1);
+		idealSimp2 = idealSimplifierFactory.newSimplifier(claim1,
+				useBackwardSubstitution);
 
 		// check that type-matching is in place
 		assertEquals(idealSimplifier.apply(x).type(),
@@ -119,7 +124,8 @@ public class SimpBoolTest {
 
 		// out.println(pThanQ);
 		assumption = preUniv.equals(xeq5, preUniv.falseExpression());
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 		// out.println(idealSimplifier.apply(x));
 		assertNull(idealSimplifier.assumptionAsInterval(x));
 		// assumption = preUniv.and(preUniv.equals(p, preUniv.trueExpression()),

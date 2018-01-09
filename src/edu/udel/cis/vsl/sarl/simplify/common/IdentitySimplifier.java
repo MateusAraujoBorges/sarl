@@ -83,4 +83,9 @@ public class IdentitySimplifier implements Simplifier {
 		return universe.numberFactory().newInterval(expr.type().isInteger(),
 				null, true, null, true);
 	}
+
+	@Override
+	public boolean useBackwardSubstitution() {
+		return false;
+	}
 }

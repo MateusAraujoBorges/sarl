@@ -1,11 +1,16 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
@@ -15,7 +20,8 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * <p>
  * A structured representation of a set of {@link Monic}s. The {@link Monic}s
  * are divided into two types: integer and real. In each case, the {@link Monic}
- * s are ordered in an array, the order coming from the
+ * s are ordered in an array, the order coming from a specified
+ * {@link Comparator} of {@link Monic}s, or from the
  * {@link IdealFactory#monicComparator()}. Each monic is assigned an ID number,
  * unique among the monics of its type in this set. The numbers start from 0.
  * There are methods to go back and forth between the ID numbers and the
@@ -39,6 +45,14 @@ public class LinearVariableSet {
 	 * The factory used to get the total order on the {@link Monic}s.
 	 */
 	private IdealFactory idealFactory;
+
+	/**
+	 * The comparator that will be used to order the keys in the maps. This
+	 * basically specified the variable ordering for Gaussian elimination. The
+	 * variables that are lower in the order (come first), will be expressed as
+	 * linear combinations of variables that are higher in the order.
+	 */
+	Comparator<Monic> monicComparator;
 
 	/**
 	 * The set of integer "variables" in the system of linear equations.
@@ -73,8 +87,15 @@ public class LinearVariableSet {
 	 */
 	private Map<Monic, Integer> realIdMap;
 
+	public LinearVariableSet(IdealFactory idealFactory,
+			Comparator<Monic> monicComparator) {
+		this.monicComparator = monicComparator;
+		this.idealFactory = idealFactory;
+	}
+
 	public LinearVariableSet(IdealFactory idealFactory) {
 		this.idealFactory = idealFactory;
+		this.monicComparator = idealFactory.monicComparator();
 	}
 
 	/**
@@ -82,6 +103,12 @@ public class LinearVariableSet {
 	 * structures. The following are initialized: {@link #intMonicSet},
 	 * {@link #realMonicSet}, {@link #intMonics}, {@link #realMonics},
 	 * {@link #intIdMap}, {@link #realIdMap}.
+	 * 
+	 * This method should be used when only the keys of the map have monics,
+	 * e.g., in the case where the values of the map are constants.
+	 * 
+	 * @return a pair consisting of the number of integer constraints and the
+	 *         number of real constraints
 	 */
 	public Pair<Integer, Integer> addKeys(Set<Monic> monicSet) {
 		int numIntConstraints = 0, numRealConstraints = 0;
@@ -93,16 +120,68 @@ public class LinearVariableSet {
 				numIntConstraints++;
 				monics = intMonicSet;
 
-			} else {
+			} else if (key.type().isReal()) {
 				numRealConstraints++;
 				monics = realMonicSet;
-			}
+			} else
+				continue;
 			for (Monomial term : key.termMap(idealFactory)) {
 				Monic monic = term.monic(idealFactory);
 
 				// polynomials should not have constant term:
 				assert !monic.isOne();
 				monics.add(monic);
+			}
+		}
+		return new Pair<>(numIntConstraints, numRealConstraints);
+	}
+
+	/**
+	 * Extracts all {@link Monic}s from the {@link Entry}s of a {@link Map}. A
+	 * "usable" entry consists of a {@link Monic} key and a {@link Monomial}
+	 * value. Entries of other types are ignored.
+	 * 
+	 * Preconditions: a {@link Monic} key should not have a constant term
+	 * 
+	 * @param entrySet
+	 *            a collection of entries from a substitution map
+	 * @return a pair in which the first component is the number of usable
+	 *         {@link Entry}s of integer type, and the second component is the
+	 *         number of usable {@link Entry}s of real type.
+	 */
+	public Pair<Integer, Integer> addEntries(
+			Collection<Entry<SymbolicExpression, SymbolicExpression>> entrySet) {
+		int numIntConstraints = 0, numRealConstraints = 0;
+
+		for (Entry<SymbolicExpression, SymbolicExpression> entry : entrySet) {
+			SymbolicExpression key = entry.getKey(), value = entry.getValue();
+
+			if (!(key instanceof Monic) || !(value instanceof Monomial))
+				continue;
+
+			SymbolicType type = key.type();
+			Set<Monic> monics;
+
+			if (type.isInteger()) {
+				numIntConstraints++;
+				monics = intMonicSet;
+			} else if (type.isReal()) {
+				numRealConstraints++;
+				monics = realMonicSet;
+			} else
+				continue;
+			for (Monomial term : ((Monic) key).termMap(idealFactory)) {
+				Monic monic = term.monic(idealFactory);
+
+				// a key should not have a constant term:
+				assert !monic.isOne();
+				monics.add(monic);
+			}
+			for (Monomial term : ((Monomial) value).termMap(idealFactory)) {
+				Monic monic = term.monic(idealFactory);
+
+				if (!monic.isOne())
+					monics.add(monic);
 			}
 		}
 		return new Pair<>(numIntConstraints, numRealConstraints);
@@ -129,9 +208,8 @@ public class LinearVariableSet {
 		i = 0;
 		for (Monic monic : realMonicSet)
 			realMonics[i++] = monic;
-		// TODO: allow other comparators...
-		Arrays.sort(intMonics, idealFactory.monicComparator());
-		Arrays.sort(realMonics, idealFactory.monicComparator());
+		Arrays.sort(intMonics, monicComparator);
+		Arrays.sort(realMonics, monicComparator);
 		for (i = 0; i < numIntMonics; i++)
 			intIdMap.put(intMonics[i], i);
 		for (i = 0; i < numRealMonics; i++)
@@ -202,5 +280,4 @@ public class LinearVariableSet {
 	public Monic[] getRealMonics() {
 		return realMonics;
 	}
-
 }

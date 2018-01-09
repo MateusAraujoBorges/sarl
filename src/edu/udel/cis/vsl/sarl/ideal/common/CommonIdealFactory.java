@@ -914,53 +914,6 @@ public class CommonIdealFactory implements IdealFactory {
 
 	/**
 	 * <p>
-	 * Divides two {@link Monomial}s of integer type. This will always return a
-	 * {@link Monomial}, never a non-monomial {@link RationalExpression}. In the
-	 * worst case (if the denominator does not evenly divide the numerator), the
-	 * result will be a primitive expression ({@link NumericPrimitive}) in which
-	 * the operator is {@link SymbolicOperator#INT_DIVIDE}.
-	 * </p>
-	 * 
-	 * <p>
-	 * Note on integer division: assume all terms positive. (ad)/(bd) = a/b
-	 * </p>
-	 * 
-	 * @param numerator
-	 *            polynomial of integer type
-	 * @param denominator
-	 *            polynomial of integer type
-	 * @return result of division as {@link Monomial}, which might be a new
-	 *         primitive expression
-	 */
-	private Monomial divideIntegerMonomials(Monomial numerator,
-			Monomial denominator) {
-		assert numerator.type().isInteger();
-		assert denominator.type().isInteger();
-		if (numerator.isZero())
-			return numerator;
-		if (denominator.isOne())
-			return numerator;
-		if (numerator instanceof Constant && denominator instanceof Constant)
-			return intDivideConstants((Constant) numerator,
-					(Constant) denominator);
-		else {
-			Monomial[] triple = intFactor(numerator, denominator);
-
-			numerator = triple[1];
-			denominator = triple[2];
-			if (denominator.isOne())
-				return numerator;
-			if (numerator instanceof Constant
-					&& denominator instanceof Constant)
-				return intDivideConstants((Constant) numerator,
-						(Constant) denominator);
-			return expression(SymbolicOperator.INT_DIVIDE, integerType,
-					numerator, denominator);
-		}
-	}
-
-	/**
-	 * <p>
 	 * Computes the integer modulus of two {@link Monomial}s of integer type.
 	 * </p>
 	 * 
@@ -1997,6 +1950,34 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	@Override
+	public Monomial divideIntegerMonomials(Monomial numerator,
+			Monomial denominator) {
+		assert numerator.type().isInteger();
+		assert denominator.type().isInteger();
+		if (numerator.isZero())
+			return numerator;
+		if (denominator.isOne())
+			return numerator;
+		if (numerator instanceof Constant && denominator instanceof Constant)
+			return intDivideConstants((Constant) numerator,
+					(Constant) denominator);
+		else {
+			Monomial[] triple = intFactor(numerator, denominator);
+
+			numerator = triple[1];
+			denominator = triple[2];
+			if (denominator.isOne())
+				return numerator;
+			if (numerator instanceof Constant
+					&& denominator instanceof Constant)
+				return intDivideConstants((Constant) numerator,
+						(Constant) denominator);
+			return expression(SymbolicOperator.INT_DIVIDE, integerType,
+					numerator, denominator);
+		}
+	}
+
+	@Override
 	public RationalExpression divide(NumericExpression arg0,
 			NumericExpression arg1) {
 		if (arg0 instanceof Constant && arg1 instanceof Constant)
@@ -2010,8 +1991,7 @@ public class CommonIdealFactory implements IdealFactory {
 	}
 
 	@Override
-	public NumericExpression modulo(NumericExpression arg0,
-			NumericExpression arg1) {
+	public Monomial modulo(NumericExpression arg0, NumericExpression arg1) {
 		return intModulusMonomials((Monomial) arg0, (Monomial) arg1);
 	}
 

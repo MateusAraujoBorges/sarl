@@ -175,7 +175,7 @@ public class CommonObjects {
 				.symbolicConstant(preUniv.stringObject("yInt"), integerType);
 		xeq5 = preUniv.equals(x, rat5);
 		yeq6 = preUniv.equals(y, rat6);
-		simp1ifier_xeq5 = idealSimplifierFactory.newSimplifier(xeq5);
+		simp1ifier_xeq5 = idealSimplifierFactory.newSimplifier(xeq5, true);
 		// not sure if xsqd is necessary
 		// xsqd = preUniv.multiply(x, x);
 		xpy = preUniv.add(x, y);

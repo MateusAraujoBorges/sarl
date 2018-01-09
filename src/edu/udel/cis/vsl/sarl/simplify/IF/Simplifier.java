@@ -158,4 +158,6 @@ public interface Simplifier extends UnaryOperator<SymbolicExpression> {
 	 *         assume under the context of this simplifier
 	 */
 	Interval intervalApproximation(NumericExpression expr);
+
+	boolean useBackwardSubstitution();
 }

@@ -267,7 +267,7 @@ public class CommonReasoner implements Reasoner {
 		BooleanExpression oldContext = simplifier.getFullContext();
 		BooleanExpression newContext = universe.and(oldContext,
 				indexConstraint);
-		Reasoner newReasoner = reasonerFactory.getReasoner(newContext);
+		Reasoner newReasoner = reasonerFactory.getReasoner(newContext, true);
 		UnaryOperator<SymbolicExpression> taylorSubstituter = new TaylorSubstituter(
 				universe, universe.objectFactory(), universe.typeFactory(),
 				newReasoner, limitVars, orders);

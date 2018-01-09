@@ -94,6 +94,12 @@ public class CommonPreUniverse implements PreUniverse {
 	private int INTEGER_BIT_BOUND = 32;
 
 	/**
+	 * Shall this universe use backwards substitution to solve for certain
+	 * numeric expressions in terms of others when simplifying?
+	 */
+	private boolean useBackwardSubstitution = false;
+
+	/**
 	 * The upper bound on the probability of error when deciding whether a
 	 * polynomial is 0. Must be a rational number in [0,1). If 0, probabilistic
 	 * techniques are not used. In general, this should be a very small positive
@@ -4311,5 +4317,15 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public NumericExpression roundToZero(NumericExpression expr) {
 		return numericFactory.roundToZero(expr);
+	}
+
+	@Override
+	public boolean getUseBackwardSubstitution() {
+		return useBackwardSubstitution;
+	}
+
+	@Override
+	public void setUseBackwardSubstitution(boolean value) {
+		this.useBackwardSubstitution = value;
 	}
 }

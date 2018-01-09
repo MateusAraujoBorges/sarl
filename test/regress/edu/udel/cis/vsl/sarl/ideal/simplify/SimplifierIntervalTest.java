@@ -36,6 +36,8 @@ import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
  */
 public class SimplifierIntervalTest {
 
+	private final static boolean useBackwardSubstitution = true;
+
 	/**
 	 * Calls the setUp() method in CommonObjects to make use of consolidated
 	 * SARL object declarations and initializations for testing of "Simplify"
@@ -49,7 +51,8 @@ public class SimplifierIntervalTest {
 		CommonObjects.setUp();
 		assumption = preUniv.lessThan(xInt, int0);
 		// preUniv.equals(preUniv.multiply(rat5,x), preUniv.multiply(y, y));
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 	}
 
 	/**
@@ -105,7 +108,8 @@ public class SimplifierIntervalTest {
 				preUniv.lessThan(xInt, preUniv.integer(3)));
 		assumption = preUniv.and(assumption,
 				preUniv.lessThan(yInt, preUniv.integer(9)));
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 		Interval interval = idealSimplifier.intervalApproximation(xInt);
 
 		NumberFactory nf = preUniv.numberFactory();
@@ -127,7 +131,8 @@ public class SimplifierIntervalTest {
 		assumption = preUniv.lessThanEquals(int0, xInt);
 		assumption = preUniv.and(assumption,
 				preUniv.lessThan(xInt, preUniv.integer(3)));
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 
 		assertNotNull(idealSimplifier.assumptionAsInterval(xInt));
 	}

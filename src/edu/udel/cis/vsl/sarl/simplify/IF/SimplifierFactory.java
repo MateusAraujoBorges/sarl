@@ -39,5 +39,6 @@ public interface SimplifierFactory {
 	 *            a non-<code>null</code> boolean symbolic expression
 	 * @return a new simplifier with the specified assumption
 	 */
-	Simplifier newSimplifier(BooleanExpression assumption);
+	Simplifier newSimplifier(BooleanExpression assumption,
+			boolean useBackwardSubstituion);
 }

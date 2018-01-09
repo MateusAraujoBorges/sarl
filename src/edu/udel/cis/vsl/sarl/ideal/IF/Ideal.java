@@ -91,5 +91,4 @@ public class Ideal {
 			IdealFactory idealFactory, PreUniverse universe) {
 		return new IdealSimplifierFactory(idealFactory, universe);
 	}
-
 }

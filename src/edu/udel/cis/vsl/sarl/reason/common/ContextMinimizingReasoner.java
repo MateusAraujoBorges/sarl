@@ -129,13 +129,14 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            prover queries with this reasoner
 	 */
 	public ContextMinimizingReasoner(ContextMinimizingReasonerFactory factory,
-			BooleanExpression context) {
+			BooleanExpression context, boolean useBackwardSubstitution) {
 		assert context.isCanonic();
 		this.factory = factory;
 		this.context = context;
 		this.partition = Simplify.newContextPartition(factory.getUniverse(),
 				context);
-		this.simplifier = factory.getSimplifierFactory().newSimplifier(context);
+		this.simplifier = factory.getSimplifierFactory().newSimplifier(context,
+				useBackwardSubstitution);
 	}
 
 	private synchronized TheoremProver getProver(boolean useWhy3Instead) {
@@ -172,7 +173,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 		if (renamedContext == context) {
 			reasoner = this;
 		} else {
-			reasoner = factory.getReasoner(renamedContext);
+			reasoner = factory.getReasoner(renamedContext,
+					simplifier.useBackwardSubstitution());
 		}
 		return new Pair<ContextMinimizingReasoner, SymbolicExpression>(reasoner,
 				renamedExpression);
@@ -195,7 +197,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 		if (reducedContext == context) {
 			reducedReasoner = this;
 		} else {
-			reducedReasoner = factory.getReasoner(reducedContext);
+			reducedReasoner = factory.getReasoner(reducedContext,
+					simplifier.useBackwardSubstitution());
 		}
 		return reducedReasoner;
 	}
@@ -343,7 +346,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 		if (newContext == context) {
 			newReasoner = this;
 		} else {
-			newReasoner = factory.getReasoner(newContext);
+			newReasoner = factory.getReasoner(newContext,
+					simplifier.useBackwardSubstitution());
 		}
 
 		if (newPredicate != predicate || newContext != context) {
@@ -585,7 +589,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 		BooleanExpression oldContext = simplifier.getFullContext();
 		BooleanExpression newContext = universe.and(oldContext,
 				indexConstraint);
-		Reasoner newReasoner = factory.getReasoner(newContext);
+		Reasoner newReasoner = factory.getReasoner(newContext, true);
 		TaylorSubstituter taylorSubstituter = new TaylorSubstituter(universe,
 				universe.objectFactory(), universe.typeFactory(), newReasoner,
 				limitVars, orders);

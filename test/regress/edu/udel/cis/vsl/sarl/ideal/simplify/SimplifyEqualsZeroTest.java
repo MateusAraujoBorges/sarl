@@ -35,6 +35,8 @@ import org.junit.Test;
  */
 public class SimplifyEqualsZeroTest {
 
+	private final static boolean useBackwardSubstitution = true;
+
 	/**
 	 * Calls the setUp() method in CommonObjects to make use of consolidated
 	 * SARL object declarations and initializations for testing of "Simplify"
@@ -47,7 +49,8 @@ public class SimplifyEqualsZeroTest {
 		CommonObjects.setUp();
 		// assumption = preUniv.lessThan(int0, xInt);
 		assumption = preUniv.equals(xInt, int0);
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 	}
 
 	/**
@@ -90,7 +93,8 @@ public class SimplifyEqualsZeroTest {
 	@Test
 	public void assumptionOnPolyTest() {
 		assumption = preUniv.equals(x, rat0);
-		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption);
+		idealSimplifier = idealSimplifierFactory.newSimplifier(assumption,
+				useBackwardSubstitution);
 
 		// out.println(idealSimplifier.apply(bigMixedXYTermPoly));
 		assertEquals(idealSimplifier.apply(bigMixedXYTermPoly).toString(),

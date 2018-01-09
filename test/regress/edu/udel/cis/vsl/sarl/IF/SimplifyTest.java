@@ -110,4 +110,5 @@ public class SimplifyTest {
 		Reasoner r = universe.reasoner(universe.bool(true));
 		r.isValid(e);
 	}
+
 }
