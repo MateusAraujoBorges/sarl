@@ -32,12 +32,6 @@ import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 public class IdealSimplifierFactory implements SimplifierFactory {
 
 	/**
-	 * Should we use the new {@link Context}? Eventually the old simplifier will
-	 * go away, at which point this field should be removed.
-	 */
-	public final static boolean useNewSimplifier = true;
-
-	/**
 	 * A structure which packages references to several other factories and
 	 * commonly-used objects that will be used by the {@link OldIdealSimplifier}
 	 * s produced by this factory.
@@ -72,11 +66,7 @@ public class IdealSimplifierFactory implements SimplifierFactory {
 	@Override
 	public Simplifier newSimplifier(BooleanExpression assumption,
 			boolean useBackwardSubstitution) {
-		if (useNewSimplifier)
-			return new IdealSimplifier(info, assumption,
-					useBackwardSubstitution);
-		else
-			return new OldIdealSimplifier(info, assumption);
+		return new IdealSimplifier(info, assumption, useBackwardSubstitution);
 	}
 
 }
