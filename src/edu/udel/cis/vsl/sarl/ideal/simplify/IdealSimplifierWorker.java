@@ -376,10 +376,8 @@ public class IdealSimplifierWorker {
 		case NEQ:
 		case NOT:
 		case OR:
-			// Checking seenBefore does not make any different in
-			// performance or results...
-			// if (seenBefore(expression))
-			// break;
+			// TODO: no, I just want to skip if theContext is being
+			// formed around expression
 			return new SubContext((Context) theContext, expression)
 					.getFullAssumption();
 		// case EXISTS:
@@ -584,7 +582,7 @@ public class IdealSimplifierWorker {
 		case CHAR:
 			return object;
 		case EXPRESSION:
-			return simplifyExpressionWork((SymbolicExpression) object);
+			return simplifyExpressionWork((SymbolicExpression) object, false);
 		case SEQUENCE:
 			return simplifySequenceWork((SymbolicSequence<?>) object);
 		case TYPE:
@@ -652,7 +650,10 @@ public class IdealSimplifierWorker {
 	 *         , or <code>null</code> if no such result is cached
 	 */
 	private SymbolicObject getCachedSimplification(SymbolicObject object) {
+		// if (theContext.isInconsistent())
 		return theContext.getSimplification(object);
+		// else
+		// return null;
 	}
 
 	/**
@@ -665,6 +666,7 @@ public class IdealSimplifierWorker {
 	 */
 	private void cacheSimplification(SymbolicObject object,
 			SymbolicObject result) {
+		// if (theContext.isInitialized())
 		theContext.cacheSimplification(object, result);
 	}
 
@@ -782,7 +784,8 @@ public class IdealSimplifierWorker {
 	 * @return an expression guaranteed to be equivalent to the given one under
 	 *         the assumption of {@link #theContext}
 	 */
-	SymbolicExpression simplifyExpressionWork(SymbolicExpression expression) {
+	SymbolicExpression simplifyExpressionWork(SymbolicExpression expression,
+			boolean noMoreSubcontexts) {
 		SymbolicType type = expression.type();
 
 		if (type == null)
@@ -795,10 +798,8 @@ public class IdealSimplifierWorker {
 
 		if (result != null)
 			return result;
-		if (type.isBoolean())
+		if (type.isBoolean() && !noMoreSubcontexts)
 			return simplifyBoolean((BooleanExpression) expression);
-		// if (expression.operator() == SymbolicOperator.LAMBDA)
-		// return simplifyLambda(expression);
 		return simplifyExpressionGeneric(expression);
 	}
 
@@ -819,7 +820,7 @@ public class IdealSimplifierWorker {
 				expression);
 
 		if (result == null) {
-			result = simplifyExpressionWork(expression);
+			result = simplifyExpressionWork(expression, false);
 			cacheSimplification(expression, result);
 		}
 		return result;

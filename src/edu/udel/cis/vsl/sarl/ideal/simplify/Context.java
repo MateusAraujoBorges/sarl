@@ -63,12 +63,6 @@ public class Context {
 	public final static boolean debug = false;
 
 	/**
-	 * Should backwards substitution be used to solve for variables in terms of
-	 * other variables?
-	 */
-	public final boolean backwardsSub;
-
-	/**
 	 * A random number generator with seed very likely to be distinct from all
 	 * other seeds. TODO: this must be made thread-safe.
 	 */
@@ -90,10 +84,17 @@ public class Context {
 	// with sorted arrays, at least after this Context has been initialized.
 
 	/**
-	 * Is this context in the process of being modified. This is a little bit of
-	 * a kluge. Think of a way to get rid of it.
+	 * Should backwards substitution be used to solve for variables in terms of
+	 * other variables?
 	 */
-	private boolean initialized = false;
+	public final boolean backwardsSub;
+
+	// /**
+	// * Is this context in the process of being modified. This is a little bit
+	// of
+	// * a kluge. Think of a way to get rid of it.
+	// */
+	// private boolean initialized = false;
 
 	/**
 	 * A cache of all simplifications computed under this {@link Context}. For
@@ -1255,7 +1256,6 @@ public class Context {
 	 * @return the minimum of the {@code a} and {@code b}
 	 */
 	private Number min(Number a, Number b) {
-		// Does this work for infinities?
 		return info.numberFactory.compare(a, b) >= 0 ? b : a;
 	}
 
@@ -1271,7 +1271,6 @@ public class Context {
 	 * @return the maximum of the {@code a} and {@code b}
 	 */
 	private Number max(Number a, Number b) {
-		// Does this work for infinities?
 		return info.numberFactory.compare(a, b) >= 0 ? a : b;
 	}
 
@@ -2083,47 +2082,17 @@ public class Context {
 		// can also use a TreeMap, but HashMap seems faster...
 		// this.simplificationCache = new TreeMap<SymbolicObject,
 		// SymbolicObject>(info.universe.comparator());
-
-		if (debug) {
+		if (debug)
 			System.out.println("Creating context : " + assumption);
-		}
 		try {
 			addFact(assumption);
 			reduce();
 		} catch (InconsistentContextException e) {
 			makeInconsistent();
 		}
-		initialized = true;
+		// initialized = true;
+		// simplificationCache = new HashMap<>();
 	}
-
-	// /**
-	// * Selects from the {@link #subMap} those entries in which the key is a
-	// * {@link Monic} and the value is a {@link Constant} and add corresponding
-	// * entries to {@code map}. The only different between the entries is that
-	// in
-	// * {@code map} the value is the {@link Number} that has been extracted
-	// from
-	// * the {@link Constant}. This is the form needed to perform Gaussian
-	// * Elimination.
-	// *
-	// * @param map
-	// * a non-{@code null} map. The map is not necessarily empty.
-	// * Existing entries will simply be overwritten.
-	// */
-	// protected void addMonicConstantsToMap(Map<Monic, Number> map) {
-	// for (Entry<SymbolicExpression, SymbolicExpression> entry : subMap
-	// .entrySet()) {
-	// SymbolicExpression key = entry.getKey();
-	//
-	// if (key instanceof Monic) {
-	// SymbolicExpression value = entry.getValue();
-	//
-	// if (value instanceof Constant) {
-	// map.put((Monic) key, ((Constant) value).number());
-	// }
-	// }
-	// }
-	// }
 
 	/**
 	 * Adds all entries in the {@link #subMap} to the specified map.
@@ -2179,54 +2148,6 @@ public class Context {
 			addSub(entry.getKey(), entry.getValue());
 		return true;
 	}
-
-	// /**
-	// * Updates the {@link #subMap} using the results of a linear analysis of
-	// the
-	// * numeric equations in that map.
-	// *
-	// * @param lsi
-	// * the result of a linear analysis. If it indicates an
-	// * inconsistency, the {@link InconsistentContextAssumption} is
-	// * thrown. Otherwise, if it indicates no change, then nothing is
-	// * done and this method returns {@code false}. Otherwise, the old
-	// * entries in the {@link #subMap} are replaced by new entries and
-	// * {@code true} is returned
-	// * @param oldConstantMap
-	// * the original mapping of {@link Monic}s to concrete numbers,
-	// * extracted from the {@link #subMap}
-	// * @param newConstantMap
-	// * the new mapping of {@link Monic}s to concrete numbers,
-	// * resulting from the solution to the linear problem (ignore if
-	// * no change or inconsistency)
-	// * @return whether a change is made to {@link #subMap}
-	// * @throws InconsistentContextException
-	// * if {@code lsi}'s {@code consistent} field is {@code false}
-	// */
-	// protected boolean gaussHelper(LinearSolverInfo lsi,
-	// Map<Monic, Number> oldConstantMap,
-	// Map<Monic, Number> newConstantMap)
-	// throws InconsistentContextException {
-	// if (!lsi.consistent)
-	// throw new InconsistentContextException();
-	// if (!lsi.change)
-	// return false;
-	// for (Entry<Monic, Number> entry : oldConstantMap.entrySet()) {
-	// Monic key = entry.getKey();
-	// Number newNumber = newConstantMap.get(key);
-	//
-	// if (newNumber == null) {
-	// subMap.remove(key);
-	// } else {
-	// newConstantMap.remove(key);
-	// if (!newNumber.equals(entry.getValue()))
-	// addSub(key, info.universe.number(newNumber));
-	// }
-	// }
-	// for (Entry<Monic, Number> entry : newConstantMap.entrySet())
-	// addSub(entry.getKey(), info.universe.number(entry.getValue()));
-	// return true;
-	// }
 
 	/**
 	 * Gets the variables that have been "solved", i.e., have an expression in
@@ -2338,7 +2259,8 @@ public class Context {
 	}
 
 	protected boolean isInitialized() {
-		return initialized;
+		// return initialized;
+		return simplificationCache != null;
 	}
 
 	/**
@@ -2364,24 +2286,9 @@ public class Context {
 				computeRange(rat.denominator(idf)));
 	}
 
-	// /**
-	// * Constructs a map with an entry for each {@link Monic} that has a known
-	// * concrete value. The map may be modified without affecting the state of
-	// * this context.
-	// *
-	// * @return a map mapping each {@link Monic} to the {@link Number} value
-	// * associated to that monic in this context
-	// */
-	// protected Map<Monic, Number> getMonicConstantMap() {
-	// Map<Monic, Number> map = new TreeMap<>(info.monicComparator);
-	//
-	// addMonicConstantsToMap(map);
-	// return map;
-	// }
-
 	/**
 	 * Returns a map consisting of all entries in the substitution map of this
-	 * {@link Context} and all of its ancestors. An entry from a chile overrides
+	 * {@link Context} and all of its ancestors. An entry from a child overrides
 	 * an entry with the same key from the parent.
 	 * 
 	 * @return a map consisting of all subMap entries from this context and its
@@ -2422,15 +2329,8 @@ public class Context {
 	 * @return the simplified expression
 	 */
 	protected SymbolicExpression simplify(SymbolicExpression expr) {
-		if (isEmpty()) {
-			// this case is to provide a base case in an otherwise
-			// infinite recursion
-			return new IdealSimplifierWorker(this.collapse())
-					.simplifyExpressionGeneric(expr);
-		} else {
-			return new IdealSimplifierWorker(this.collapse())
-					.simplifyExpressionWork(expr);
-		}
+		return new IdealSimplifierWorker(this).simplifyExpressionWork(expr,
+				false);
 	}
 
 	// Public methods...

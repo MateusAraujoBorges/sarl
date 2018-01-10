@@ -39,6 +39,7 @@ public class OrderOfAccuracyTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
+		universe.setUseBackwardSubstitution(true);
 	}
 
 	@Test
@@ -316,14 +317,14 @@ public class OrderOfAccuracyTest {
 						.subtract(X_num_elements, universe.integer(2))));
 		NumericSymbolicConstant limitVars[] = { dx };
 		int[] orders = { 2 };
-		
+
 		System.out.println("Context    : " + context);
 		System.out.println("Constraint : " + constraint);
 		System.out.println("Lhs        : " + lhs);
 		System.out.println("limitVars  : " + limitVars[0]);
 		System.out.println("orders     : " + orders[0]);
 		System.out.flush();
-		
+
 		boolean valid = reasoner.checkBigOClaim(constraint, lhs, limitVars,
 				orders);
 

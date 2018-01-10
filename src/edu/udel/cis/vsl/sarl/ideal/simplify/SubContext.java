@@ -26,17 +26,6 @@ public class SubContext extends Context {
 	private Context superContext;
 
 	/**
-	 * Creates new sub-context with given super-context.
-	 * 
-	 * @param superContext
-	 *            the (non-{@code null}) context containing this one
-	 */
-	protected SubContext(Context superContext) {
-		super(superContext.getInfo(), superContext.backwardsSub);
-		this.superContext = superContext;
-	}
-
-	/**
 	 * Creates new sub-context and initializes it using the given assumption.
 	 * 
 	 * @param superContext
@@ -45,28 +34,10 @@ public class SubContext extends Context {
 	 *            the boolean expression to be represented by this sub-context
 	 */
 	protected SubContext(Context superContext, BooleanExpression assumption) {
-		this(superContext);
+		super(superContext.getInfo(), superContext.backwardsSub);
+		this.superContext = superContext;
 		initialize(assumption);
 	}
-
-	// /**
-	// * Returns the global monic constant map, obtained by starting with the
-	// * super-context's global monic constant map, and then adding entries from
-	// * this sub-context. If there is an entry in this sub-context with the
-	// same
-	// * key as that in the super-context, the one in this sub-context overrides
-	// * the one in the super-context.
-	// *
-	// * @return the global monic constant map mapping {@link Monic}s to their
-	// * known constant values
-	// */
-	// @Override
-	// protected Map<Monic, Number> getMonicConstantMap() {
-	// Map<Monic, Number> map = superContext.getMonicConstantMap();
-	//
-	// addMonicConstantsToMap(map); // overwrites any previous entries
-	// return map;
-	// }
 
 	@Override
 	protected void addSubsToMap(
@@ -157,16 +128,6 @@ public class SubContext extends Context {
 				info.monicComparator, backwardsSub);
 
 		return ls;
-		// Map<Monic, Number> superConstantMap = superContext
-		// .getMonicConstantMap();
-		// Map<Monic, Number> oldConstantMap = new
-		// TreeMap<>(info.monicComparator),
-		// newConstantMap = new TreeMap<>(info.monicComparator);
-		// addMonicConstantsToMap(oldConstantMap);
-		// LinearSolverInfo lsi = OldLinearSolver.reduceRelativeConstantMap(
-		// info.idealFactory, superConstantMap, oldConstantMap,
-		// newConstantMap);
-		// return gaussHelper(lsi, oldConstantMap, newConstantMap);
 	}
 
 	/**
@@ -194,4 +155,16 @@ public class SubContext extends Context {
 		return collapse;
 	}
 
+	@Override
+	protected SymbolicExpression simplify(SymbolicExpression expr) {
+		if (isEmpty()) {
+			// this case is to provide a base case in an otherwise
+			// infinite recursion
+			return new IdealSimplifierWorker(superContext)
+					.simplifyExpressionWork(expr, true);
+		} else {
+			return new IdealSimplifierWorker(this.collapse())
+					.simplifyExpressionWork(expr, false);
+		}
+	}
 }
