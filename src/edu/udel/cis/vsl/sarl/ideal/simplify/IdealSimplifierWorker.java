@@ -697,7 +697,7 @@ public class IdealSimplifierWorker {
 	 *            any non-<code>null</code> symbolic expression
 	 * @return a simplified version of that expression
 	 */
-	SymbolicExpression simplifyExpressionGeneric(
+	private SymbolicExpression simplifyExpressionGeneric(
 			SymbolicExpression expression) {
 		if (expression.isNull())
 			return expression;

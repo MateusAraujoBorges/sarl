@@ -2106,6 +2106,13 @@ public class Context {
 		map.putAll(subMap);
 	}
 
+	/**
+	 * Returns an instance of {@link LinearSolver} that can be used to simplify
+	 * the {@link #subMap} of this {@link Context}.
+	 * 
+	 * @return a linear solver for simplifying the {@link #subMap}, or
+	 *         {@code null} if no simplifications are possible
+	 */
 	protected LinearSolver getLinearSolver() {
 		if (subMap.isEmpty())
 			return null;

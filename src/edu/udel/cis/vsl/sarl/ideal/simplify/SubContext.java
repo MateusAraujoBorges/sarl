@@ -96,16 +96,6 @@ public class SubContext extends Context {
 	}
 
 	/**
-	 * Returns the super-context of this sub-context, which will not be
-	 * {@code null}
-	 * 
-	 * @return the super-context of this context
-	 */
-	public Context getSuperContext() {
-		return superContext;
-	}
-
-	/**
 	 * {@inheritDoc}
 	 * 
 	 * <p>
@@ -115,7 +105,9 @@ public class SubContext extends Context {
 	 * elimination is performed.
 	 * </p>
 	 * 
-	 * @return whether a change took place
+	 * @return a linear solver based on relative Gaussian elimination that can
+	 *         be used to simplify the substitution map of this sub-context
+	 *         assuming all substitutions in the super context
 	 */
 	@Override
 	protected LinearSolver getLinearSolver() {
@@ -134,6 +126,11 @@ public class SubContext extends Context {
 	 * Collapses this {@link SubContext} and all its super-contexts into a
 	 * single {@link Context}. The collapsed context is equivalent to this
 	 * sub-context but is not an instance of {@link SubContext}.
+	 * 
+	 * @return a new {@link Context} that is not a {@link SubContext} and
+	 *         contains all the mappings specified by this {@link SubContext}
+	 *         and its ancestors, with the sub-context mappings take precedence
+	 *         (overwriting) those of the parent
 	 */
 	@Override
 	protected Context collapse() {
@@ -166,5 +163,15 @@ public class SubContext extends Context {
 			return new IdealSimplifierWorker(this.collapse())
 					.simplifyExpressionWork(expr, false);
 		}
+	}
+
+	/**
+	 * Returns the super-context of this sub-context, which will not be
+	 * {@code null}
+	 * 
+	 * @return the super-context of this context
+	 */
+	public Context getSuperContext() {
+		return superContext;
 	}
 }
