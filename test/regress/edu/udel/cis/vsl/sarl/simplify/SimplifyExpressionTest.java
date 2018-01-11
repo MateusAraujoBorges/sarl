@@ -84,4 +84,54 @@ public class SimplifyExpressionTest {
 		System.out.println(reasoner.getReducedContext());
 		assertTrue(reasoner.isValid(u.lessThanEquals(u.zeroInt(), X_N)));
 	}
+
+	@Test
+	public void backwardsSubstitutionWithForall() {
+		NumericSymbolicConstant i = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("i"), intType);
+		SymbolicConstant Y6, Y7, Y11;
+		NumericSymbolicConstant N, X;
+
+		N = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("N"), intType);
+		X = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X"), intType);
+		Y6 = universe.symbolicConstant(universe.stringObject("Y6"),
+				universe.arrayType(intType, N));
+		Y7 = universe.symbolicConstant(universe.stringObject("Y7"),
+				universe.arrayType(intType, N));
+		Y11 = universe.symbolicConstant(universe.stringObject("Y11"),
+				universe.arrayType(intType, N));
+
+		BooleanExpression pred0 = universe.equals(universe.arrayRead(Y6, i),
+				universe.arrayRead(Y7, i));
+		BooleanExpression pred1 = universe.equals(universe.arrayRead(Y11, i),
+				universe.arrayRead(Y7, i));
+		BooleanExpression context = universe.forallInt(i, universe.zeroInt(), N,
+				pred0);
+
+		context = universe.and(context,
+				universe.forallInt(i, universe.zeroInt(), N, pred1));
+		context = universe.and(context, universe.equals(N, X));
+
+		Reasoner reasoner = universe.reasoner(context);
+		SymbolicExpression arrayLambdaY7 = universe.arrayLambda(
+				universe.arrayType(intType, N),
+				universe.lambda(i, universe.arrayRead(Y7, i)));
+		SymbolicExpression arrayLambdaY6 = universe.arrayLambda(
+				universe.arrayType(intType, N),
+				universe.lambda(i, universe.arrayRead(Y6, i)));
+		SymbolicExpression arrayLambdaY11 = universe.arrayLambda(
+				universe.arrayType(intType, N),
+				universe.lambda(i, universe.arrayRead(Y11, i)));
+
+		System.out.println(reasoner.getFullContext());
+		System.out.println(reasoner.getReducedContext());
+		System.out.println(arrayLambdaY7);
+		System.out.println(reasoner.simplify(arrayLambdaY7));
+		System.out.println(arrayLambdaY6);
+		System.out.println(reasoner.simplify(arrayLambdaY6));
+		System.out.println(arrayLambdaY11);
+		System.out.println(reasoner.simplify(arrayLambdaY11));
+	}
 }
