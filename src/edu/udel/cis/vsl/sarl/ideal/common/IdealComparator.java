@@ -306,7 +306,7 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	 *            the monic to insert
 	 * @return the canonicalized monic
 	 */
-	private Monic insertMonic(Monic monic) {
+	Monic insertMonic(Monic monic) {
 		if (monic.getOrder() != null) // already inserted
 			return monic;
 
@@ -329,16 +329,18 @@ public class IdealComparator implements Comparator<NumericExpression> {
 	public int compareMonics(Monic m1, Monic m2) {
 		RationalNumber o1 = m1.getOrder(), o2 = m2.getOrder();
 
-		if (o1 != null && o2 != null)
-			return o1.numericalCompareTo(o2);
+		assert o1 != null && o2 != null;
 
-		int result = compareMonicsWork(m1, m2);
+		// if (o1 != null && o2 != null)
+		return o1.numericalCompareTo(o2);
 
-		if (o1 == null)
-			insertMonic(m1);
-		if (o2 == null)
-			insertMonic(m2);
-		return result;
+		// int result = compareMonicsWork(m1, m2);
+
+		// if (o1 == null)
+		// insertMonic(m1);
+		// if (o2 == null)
+		// insertMonic(m2);
+		// return result;
 
 		// the following might be faster but has an infinite
 		// recursion in some cases: if (say) m2 is not in the

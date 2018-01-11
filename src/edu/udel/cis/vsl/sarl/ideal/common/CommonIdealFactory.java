@@ -436,7 +436,11 @@ public class CommonIdealFactory implements IdealFactory {
 	 */
 	private NTPrimitivePower ntPrimitivePower(Primitive primitive,
 			NumberObject exponent) {
-		return objectFactory.canonic(new NTPrimitivePower(primitive, exponent));
+		NTPrimitivePower result = objectFactory
+				.canonic(new NTPrimitivePower(primitive, exponent));
+
+		comparator.insertMonic(result);
+		return result;
 	}
 
 	// Monics...
@@ -454,7 +458,10 @@ public class CommonIdealFactory implements IdealFactory {
 	 *         <code>monicMap</code>
 	 */
 	private NTMonic ntMonic(SymbolicType type, PrimitivePower[] factorSet) {
-		return objectFactory.canonic(new NTMonic(type, factorSet));
+		NTMonic result = objectFactory.canonic(new NTMonic(type, factorSet));
+
+		comparator.insertMonic(result);
+		return result;
 	}
 
 	/**
@@ -1826,8 +1833,10 @@ public class CommonIdealFactory implements IdealFactory {
 		this.oneIntObject = objectFactory.oneIntObj();
 		this.oneInt = objectFactory.canonic(new One(integerType,
 				objectFactory.numberObject(numberFactory.oneInteger())));
+		comparator.insertMonic(oneInt);
 		this.oneReal = objectFactory.canonic(new One(realType,
 				objectFactory.numberObject(numberFactory.oneRational())));
+		comparator.insertMonic(oneReal);
 		this.zeroInt = intConstant(0);
 		this.negOneInt = intConstant(-1);
 		this.zeroReal = realConstant(0);
@@ -1873,8 +1882,11 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public NumericPrimitive expression(SymbolicOperator operator,
 			SymbolicType numericType, SymbolicObject... arguments) {
-		return objectFactory.canonic(
+		NumericPrimitive result = objectFactory.canonic(
 				new NumericPrimitive(operator, numericType, arguments));
+
+		comparator.insertMonic(result);
+		return result;
 	}
 
 	@Override
@@ -2120,7 +2132,12 @@ public class CommonIdealFactory implements IdealFactory {
 	@Override
 	public NumericSymbolicConstant symbolicConstant(StringObject name,
 			SymbolicType type) {
-		return objectFactory.canonic(new IdealSymbolicConstant(name, type));
+		IdealSymbolicConstant result = objectFactory
+				.canonic(new IdealSymbolicConstant(name, type));
+
+		comparator.insertMonic(result);
+		return result;
+
 	}
 
 	@Override
@@ -2343,7 +2360,11 @@ public class CommonIdealFactory implements IdealFactory {
 
 	@Override
 	public NTPolynomial polynomial(SymbolicType type, Monomial[] terms) {
-		return objectFactory.canonic(new NTPolynomial(type, terms));
+		NTPolynomial result = objectFactory
+				.canonic(new NTPolynomial(type, terms));
+
+		comparator.insertMonic(result);
+		return result;
 	}
 
 	@Override

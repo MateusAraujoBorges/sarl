@@ -89,13 +89,6 @@ public class Context {
 	 */
 	public final boolean backwardsSub;
 
-	// /**
-	// * Is this context in the process of being modified. This is a little bit
-	// of
-	// * a kluge. Think of a way to get rid of it.
-	// */
-	// private boolean initialized = false;
-
 	/**
 	 * A cache of all simplifications computed under this {@link Context}. For
 	 * any entry (x,y), the following formula must be valid: context -> x=y.
@@ -1108,7 +1101,8 @@ public class Context {
 	 * Clears the simplification cache.
 	 */
 	private void clear() {
-		simplificationCache.clear();
+		if (simplificationCache != null)
+			simplificationCache.clear();
 	}
 
 	/**
@@ -2077,7 +2071,6 @@ public class Context {
 	 *            context
 	 */
 	protected void initialize(BooleanExpression assumption) {
-		// this.originalAssumption = assumption;
 		simplificationCache = new HashMap<>();
 		// can also use a TreeMap, but HashMap seems faster...
 		// this.simplificationCache = new TreeMap<SymbolicObject,
@@ -2090,7 +2083,6 @@ public class Context {
 		} catch (InconsistentContextException e) {
 			makeInconsistent();
 		}
-		// initialized = true;
 		// simplificationCache = new HashMap<>();
 	}
 
@@ -2265,10 +2257,9 @@ public class Context {
 		return simplificationCache.get(key);
 	}
 
-	protected boolean isInitialized() {
-		// return initialized;
-		return simplificationCache != null;
-	}
+	// protected boolean isInitialized() {
+	// return simplificationCache != null;
+	// }
 
 	/**
 	 * Computes an (over-)estimate of the possible values of a

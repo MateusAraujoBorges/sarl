@@ -38,10 +38,11 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
 
 /**
- * An ideal simplifier worker is created by an {@link OldIdealSimplifier} to
- * simplify one symbolic expression. It disappears once that task has completed.
- * The {@link OldIdealSimplifier} is persistent and will usually continue to
- * live through the lifetime of the JVM.
+ * An ideal simplifier worker is created to simplify one symbolic expression. It
+ * disappears once that task has completed. It maintains a reference to a
+ * {@link Context} under which the simplification is taking place. It makes no
+ * changes to the context, other than to cache the results of simplification in
+ * the context's cache.
  * 
  * @author siegel
  */
@@ -352,52 +353,6 @@ public class IdealSimplifierWorker {
 				: universe().exists(boundVar, body2);
 	}
 
-	/**
-	 * Simplifies a boolean expression.
-	 * 
-	 * Implementation notes: for relational expression, a {@link SubContext} is
-	 * formed and then the full assumption is taken from that sub-context.
-	 * Similarly for boolean operators (and, or, not). For other expressions,
-	 * generic simplification is used.
-	 * 
-	 * @param expression
-	 *            a non-<code>null</code> boolean expression
-	 * @return a simplified version of the expression, under the assumption of
-	 *         {@link #theContext}.
-	 */
-	private BooleanExpression simplifyBoolean(BooleanExpression expression) {
-		if (expression.isTrue() || expression.isFalse())
-			return expression;
-		switch (expression.operator()) {
-		case AND:
-		case EQUALS:
-		case LESS_THAN:
-		case LESS_THAN_EQUALS:
-		case NEQ:
-		case NOT:
-		case OR:
-			// TODO: no, I just want to skip if theContext is being
-			// formed around expression
-			return new SubContext((Context) theContext, expression)
-					.getFullAssumption();
-		// case EXISTS:
-		// case FORALL:
-		// return simplifyQuantifiedBooleanExpression(expression);
-		// case APPLY:
-		// case ARRAY_READ:
-		// case CAST:
-		// case CONCRETE:
-		// case COND:
-		// case DIFFERENTIABLE:
-		// case SYMBOLIC_CONSTANT:
-		// case TUPLE_READ:
-		// case UNION_EXTRACT:
-		// case UNION_TEST:
-		default:
-		}
-		return (BooleanExpression) simplifyExpressionGeneric(expression);
-	}
-
 	private SymbolicExpression simplifyLambda(SymbolicExpression expr) {
 		// lambda x . e;
 		SymbolicConstant boundVar = (SymbolicConstant) expr.argument(0);
@@ -650,7 +605,7 @@ public class IdealSimplifierWorker {
 	 *         , or <code>null</code> if no such result is cached
 	 */
 	private SymbolicObject getCachedSimplification(SymbolicObject object) {
-		// if (theContext.isInconsistent())
+		// if (theContext.isInitialized())
 		return theContext.getSimplification(object);
 		// else
 		// return null;
@@ -781,6 +736,8 @@ public class IdealSimplifierWorker {
 	 * 
 	 * @param expression
 	 *            any non-<code>null</code> {@link SymbolicExpression}
+	 * @param noMoreSubcontexts
+	 *            do not create {@link SubContext}s to simplify the expression
 	 * @return an expression guaranteed to be equivalent to the given one under
 	 *         the assumption of {@link #theContext}
 	 */
@@ -790,16 +747,32 @@ public class IdealSimplifierWorker {
 
 		if (type == null)
 			return expression;
-		// Note: the following excludes Herbrand expressions, as it should:
-		if (expression instanceof RationalExpression)
-			return simplifyRationalExpression((RationalExpression) expression);
 
 		SymbolicExpression result = theContext.getSub(expression);
 
 		if (result != null)
 			return result;
-		if (type.isBoolean() && !noMoreSubcontexts)
-			return simplifyBoolean((BooleanExpression) expression);
+		// Note: the following excludes Herbrand expressions, as it should:
+		if (expression instanceof RationalExpression)
+			return simplifyRationalExpression((RationalExpression) expression);
+		if (type.isBoolean()) {
+			if (expression.isTrue() || expression.isFalse())
+				return expression;
+			if (!noMoreSubcontexts) {
+				switch (expression.operator()) {
+				case AND:
+				case EQUALS:
+				case LESS_THAN:
+				case LESS_THAN_EQUALS:
+				case NEQ:
+				case NOT:
+				case OR:
+					return new SubContext((Context) theContext,
+							(BooleanExpression) expression).getFullAssumption();
+				default:
+				}
+			}
+		}
 		return simplifyExpressionGeneric(expression);
 	}
 

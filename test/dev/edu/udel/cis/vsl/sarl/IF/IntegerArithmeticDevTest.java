@@ -109,6 +109,9 @@ public class IntegerArithmeticDevTest {
 		assertEquals(ResultType.YES, result.getResultType());
 	}
 
+	/**
+	 * (i%2)%2=1, (j%2)%2=1
+	 */
 	@Test
 	public void modmodCrash() {
 		NumericExpression i = (NumericExpression) universe.symbolicConstant(
