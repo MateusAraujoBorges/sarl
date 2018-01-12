@@ -86,6 +86,11 @@ public class SimplifyExpressionTest {
 	}
 
 	@Test
+	// context:
+	// forall i0 : int . ((Y7[i0] == Y6[i0]) || (_uf_$mpi_sizeof(Y9)*Y8 - 1*i0
+	// <= 0) || (i0 + 1 <= 0))
+	// forall i0 : int . ((Y7[i0] == Y11[i0]) || (2*_uf_$mpi_sizeof(Y9)*Y8 -
+	// 1*i0 <= 0) || (i0 + 1 <= 0))
 	public void backwardsSubstitutionWithForall() {
 		NumericSymbolicConstant i = (NumericSymbolicConstant) universe
 				.symbolicConstant(universe.stringObject("i"), intType);
@@ -101,7 +106,7 @@ public class SimplifyExpressionTest {
 		Y7 = universe.symbolicConstant(universe.stringObject("Y7"),
 				universe.arrayType(intType, N));
 		Y11 = universe.symbolicConstant(universe.stringObject("Y11"),
-				universe.arrayType(intType, N));
+				universe.arrayType(intType, X));
 
 		BooleanExpression pred0 = universe.equals(universe.arrayRead(Y6, i),
 				universe.arrayRead(Y7, i));
@@ -133,5 +138,9 @@ public class SimplifyExpressionTest {
 		System.out.println(reasoner.simplify(arrayLambdaY6));
 		System.out.println(arrayLambdaY11);
 		System.out.println(reasoner.simplify(arrayLambdaY11));
+		assertTrue(reasoner.simplify(arrayLambdaY7)
+				.equals(reasoner.simplify(arrayLambdaY6)));
+		assertTrue(reasoner.simplify(arrayLambdaY7)
+				.equals(reasoner.simplify(arrayLambdaY11)));
 	}
 }
