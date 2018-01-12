@@ -374,4 +374,20 @@ public class IntegerArithmeticTest {
 	public void infinityTest() {
 		universe.number(universe.numberFactory().infiniteNumber(true, true));
 	}
+
+	@Test
+	public void modmod() {
+		NumericExpression i = (NumericExpression) universe.symbolicConstant(
+				universe.stringObject("i"), universe.integerType());
+		NumericExpression j = (NumericExpression) universe.symbolicConstant(
+				universe.stringObject("j"), universe.integerType());
+		BooleanExpression mod = universe
+				.equals(universe.modulo(universe.modulo(i, universe.integer(2)),
+						universe.integer(2)), universe.oneInt());
+		mod = universe.and(mod,
+				universe.equals(
+						universe.modulo(universe.modulo(j, universe.integer(2)),
+								universe.integer(2)),
+						universe.oneInt()));
+	}
 }

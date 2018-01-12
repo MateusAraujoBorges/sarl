@@ -108,23 +108,4 @@ public class IntegerArithmeticDevTest {
 		ValidityResult result = r.valid(deduction);
 		assertEquals(ResultType.YES, result.getResultType());
 	}
-
-	/**
-	 * (i%2)%2=1, (j%2)%2=1
-	 */
-	@Test
-	public void modmodCrash() {
-		NumericExpression i = (NumericExpression) universe.symbolicConstant(
-				universe.stringObject("i"), universe.integerType());
-		NumericExpression j = (NumericExpression) universe.symbolicConstant(
-				universe.stringObject("j"), universe.integerType());
-		BooleanExpression mod = universe
-				.equals(universe.modulo(universe.modulo(i, universe.integer(2)),
-						universe.integer(2)), universe.oneInt());
-		mod = universe.and(mod,
-				universe.equals(
-						universe.modulo(universe.modulo(j, universe.integer(2)),
-								universe.integer(2)),
-						universe.oneInt()));
-	}
 }
