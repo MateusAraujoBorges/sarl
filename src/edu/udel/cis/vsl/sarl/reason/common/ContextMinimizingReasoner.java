@@ -139,14 +139,16 @@ public class ContextMinimizingReasoner implements Reasoner {
 				useBackwardSubstitution);
 	}
 
-	private synchronized TheoremProver getProver(boolean useWhy3Instead) {
-		if (useWhy3Instead)
-			return why3ProvePlatform == null
+	private synchronized TheoremProver getProver(boolean useWhy3Instead,
+			boolean createNewProver, BooleanExpression context) {
+		if (useWhy3Instead) {
+			return why3ProvePlatform == null || createNewProver
 					? (why3ProvePlatform = factory.getWhy3ProvePlatformFactory()
-							.newProver(getReducedContext()))
+							.newProver(context))
 					: why3ProvePlatform;
-		return prover == null ? (prover = factory.getTheoremProverFactory()
-				.newProver(getReducedContext())) : prover;
+		}
+		return prover == null || createNewProver ? (prover = factory
+				.getTheoremProverFactory().newProver(context)) : prover;
 	}
 
 	/**
@@ -361,10 +363,25 @@ public class ContextMinimizingReasoner implements Reasoner {
 				debugOut.flush();
 			}
 			result = newReasoner.valid1(newPredicate, getModel, useWhy3Instead);
-		} else if (getModel) {
-			result = getProver(useWhy3Instead).validOrModel(newPredicate);
 		} else {
-			result = getProver(useWhy3Instead).valid(newPredicate);
+			StatefulArrayLambdaRemover arrayLambdaRemover = new StatefulArrayLambdaRemover(
+					simplifier.universe());
+
+			newContext = (BooleanExpression) arrayLambdaRemover
+					.apply(getReducedContext());
+			newPredicate = (BooleanExpression) arrayLambdaRemover
+					.apply(newPredicate);
+			newContext = simplifier.universe().and(newContext,
+					arrayLambdaRemover.getIndependentArrayLambdaAxioms());
+			if (getModel) {
+				result = getProver(useWhy3Instead,
+						getReducedContext() != newContext, newContext)
+								.validOrModel(newPredicate);
+			} else {
+				result = getProver(useWhy3Instead,
+						getReducedContext() != newContext, newContext)
+								.valid(newPredicate);
+			}
 		}
 		return result;
 	}
