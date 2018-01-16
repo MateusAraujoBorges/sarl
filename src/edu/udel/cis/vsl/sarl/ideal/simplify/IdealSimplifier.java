@@ -18,6 +18,7 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
+import java.util.HashSet;
 import java.util.Map;
 
 import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
@@ -85,7 +86,7 @@ public class IdealSimplifier implements Simplifier {
 	}
 
 	protected IdealSimplifierWorker newWorker() {
-		return new IdealSimplifierWorker(theContext);
+		return new IdealSimplifierWorker(theContext, new HashSet<>());
 	}
 
 	@Override

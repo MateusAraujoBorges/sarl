@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -614,8 +615,8 @@ public class Context {
 	 */
 	private Iterable<Primitive> findArrayReads(Monomial[] terms,
 			NumericSymbolicConstant indexVar) {
-		Set<Primitive> nonlinearFactors = new HashSet<>();
-		Set<Primitive> linearFactors = new HashSet<>();
+		Set<Primitive> nonlinearFactors = new LinkedHashSet<>();
+		Set<Primitive> linearFactors = new LinkedHashSet<>();
 		IdealFactory idf = info.idealFactory;
 
 		for (Monomial term : terms) {
@@ -742,6 +743,9 @@ public class Context {
 	 * "array of length n of T" for some type T, and f is some expression, then
 	 * return a structure in which the array field is e and the lambda field is
 	 * the expression <code>arraylambda i . f</code>.
+	 * 
+	 * TODO (int[n])<lambda i : int . e[i]>, where e has type int[n], should
+	 * immediately be replaced by e. Do this in universe.
 	 * 
 	 * @param forallExpr
 	 *            a boolean expression with operator
@@ -2327,8 +2331,10 @@ public class Context {
 	 * @return the simplified expression
 	 */
 	protected SymbolicExpression simplify(SymbolicExpression expr) {
-		return new IdealSimplifierWorker(this).simplifyExpressionWork(expr,
-				false);
+		Set<SymbolicExpression> seenSet = new HashSet<>();
+
+		return new IdealSimplifierWorker(this, seenSet)
+				.simplifyExpressionWork(expr /* , false */);
 	}
 
 	// Public methods...

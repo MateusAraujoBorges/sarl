@@ -4,11 +4,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import edu.udel.cis.vsl.sarl.IF.CoreUniverse;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
@@ -26,6 +28,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
+import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Constant;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monic;
@@ -36,6 +39,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
+import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 
 /**
  * An ideal simplifier worker is created to simplify one symbolic expression. It
@@ -57,6 +61,8 @@ public class IdealSimplifierWorker {
 	 */
 	private Context theContext;
 
+	private Set<SymbolicExpression> seenExpressions;
+
 	// Constructors ...
 
 	/**
@@ -68,8 +74,13 @@ public class IdealSimplifierWorker {
 	 * @param context
 	 *            the assumption under which simplification is taking place
 	 */
-	public IdealSimplifierWorker(Context context) {
+	public IdealSimplifierWorker(Context context,
+			Set<SymbolicExpression> seenExpressions) {
 		this.theContext = context;
+		// this.boundCleaner = boundCleaner;
+		// TODO: need a reference to the boundCleaner. Will have to put it in
+		// Context too.
+		this.seenExpressions = seenExpressions;
 	}
 
 	// Private methods ...
@@ -343,7 +354,7 @@ public class IdealSimplifierWorker {
 			BooleanExpression expr) {
 		SymbolicConstant boundVar = (SymbolicConstant) expr.argument(0);
 		BooleanExpression body = (BooleanExpression) expr.argument(1);
-		Context subContext = new SubContext(theContext, body);
+		Context subContext = new SubContext(theContext, seenExpressions, body);
 		BooleanExpression body2 = subContext.getFullAssumption();
 
 		if (body == body2)
@@ -357,12 +368,74 @@ public class IdealSimplifierWorker {
 		// lambda x . e;
 		SymbolicConstant boundVar = (SymbolicConstant) expr.argument(0);
 		SymbolicExpression body = (SymbolicExpression) expr.argument(1);
-		Context subContext = new SubContext(theContext, info().trueExpr);
+		Context subContext = new SubContext(theContext, seenExpressions,
+				info().trueExpr);
 		SymbolicExpression body2 = subContext.simplify(body);
 
 		if (body2 == body)
 			return expr;
 		return universe().lambda(boundVar, body2);
+	}
+
+	private SymbolicExpression simplifyArrayLambda(SymbolicExpression expr) {
+		assert expr.operator() == SymbolicOperator.ARRAY_LAMBDA;
+		SymbolicArrayType arrayType = (SymbolicArrayType) expr.type();
+		// SymbolicType elementType = arrayType.elementType();
+		SymbolicExpression function = (SymbolicExpression) expr.argument(0);
+		BooleanExpressionFactory bf = info().booleanFactory;
+		IdealFactory idf = idealFactory();
+		SymbolicTypeFactory tf = idf.typeFactory();
+		PreUniverse uv = universe();
+
+		if (arrayType.isComplete()) {
+			SymbolicCompleteArrayType completeType = (SymbolicCompleteArrayType) arrayType;
+			SymbolicCompleteArrayType newCompleteType = (SymbolicCompleteArrayType) simplifyType(
+					arrayType);
+			NumericExpression length = newCompleteType.extent();
+			// function : [0,length-1] -> elementType
+			// when simplifying function, can assume domain is [0,length-1].
+			// create temporary symbolic constant i
+			// create sub-context, add assumption 0<=i<length
+			// simplify (APPLY function i) in this context, yielding g.
+			// result is lambda(i).g.
+			// small optimization: if function is a lambda expression, just
+			// use the existing bound variable of that lambda expression,
+			// no need to create a new one
+			if (function.operator() == SymbolicOperator.LAMBDA) {
+				NumericSymbolicConstant boundVar = (NumericSymbolicConstant) function
+						.argument(0);
+				SymbolicExpression body = (SymbolicExpression) function
+						.argument(1);
+				BooleanExpression boundAssumption = bf.and(
+						idf.lessThanEquals(idf.zeroInt(), boundVar),
+						idf.lessThan(boundVar, length));
+				SubContext subContext = new SubContext(theContext,
+						seenExpressions, boundAssumption);
+				SymbolicExpression newBody = subContext.simplify(body);
+
+				if (newBody == body && newCompleteType == completeType)
+					return expr;
+
+				SymbolicFunctionType functionType = (SymbolicFunctionType) function
+						.type();
+				SymbolicFunctionType newFunctionType = tf.functionType(
+						functionType.inputTypes(), newBody.type());
+				SymbolicExpression newFunction = uv.make(
+						SymbolicOperator.LAMBDA, newFunctionType,
+						new SymbolicObject[] { boundVar, newBody });
+				SymbolicExpression result = uv.make(
+						SymbolicOperator.ARRAY_LAMBDA, newCompleteType,
+						new SymbolicObject[] { newFunction });
+
+				return result;
+			} else {
+				// TODO: need a fresh bound variable
+			}
+		} else {
+			// TODO: incomplete array type.
+			// Still know i>=0.
+		}
+		return simplifyExpressionGeneric(expr);
 	}
 
 	/**
@@ -537,7 +610,8 @@ public class IdealSimplifierWorker {
 		case CHAR:
 			return object;
 		case EXPRESSION:
-			return simplifyExpressionWork((SymbolicExpression) object, false);
+			return simplifyExpressionWork(
+					(SymbolicExpression) object /* , false */);
 		case SEQUENCE:
 			return simplifySequenceWork((SymbolicSequence<?>) object);
 		case TYPE:
@@ -741,24 +815,32 @@ public class IdealSimplifierWorker {
 	 * @return an expression guaranteed to be equivalent to the given one under
 	 *         the assumption of {@link #theContext}
 	 */
-	SymbolicExpression simplifyExpressionWork(SymbolicExpression expression,
-			boolean noMoreSubcontexts) {
-		SymbolicType type = expression.type();
-
-		if (type == null)
+	SymbolicExpression simplifyExpressionWork(SymbolicExpression expression
+	// ,boolean noMoreSubcontexts
+	) {
+		if (expression.isNull())
+			return expression;
+		if (seenExpressions.contains(expression))
 			return expression;
 
-		SymbolicExpression result = theContext.getSub(expression);
+		SymbolicExpression result;
+		SymbolicExpression originalExpression = expression;
 
-		if (result != null)
-			return result;
-		// Note: the following excludes Herbrand expressions, as it should:
-		if (expression instanceof RationalExpression)
-			return simplifyRationalExpression((RationalExpression) expression);
-		if (type.isBoolean()) {
-			if (expression.isTrue() || expression.isFalse())
-				return expression;
-			if (!noMoreSubcontexts) {
+		seenExpressions.add(originalExpression);
+		while (true) {
+			result = theContext.getSub(expression);
+			if (result != null)
+				break;
+			if (expression.operator() == SymbolicOperator.ARRAY_LAMBDA) {
+				result = simplifyArrayLambda(expression);
+			} else if (expression instanceof RationalExpression) {
+				// the following excludes Herbrand expressions, as it should:
+				result = simplifyRationalExpression(
+						(RationalExpression) expression);
+			} else if (expression instanceof BooleanExpression) {
+				if (expression.isTrue() || expression.isFalse())
+					return expression;
+				// if (!noMoreSubcontexts) {
 				switch (expression.operator()) {
 				case AND:
 				case EQUALS:
@@ -767,13 +849,23 @@ public class IdealSimplifierWorker {
 				case NEQ:
 				case NOT:
 				case OR:
-					return new SubContext((Context) theContext,
-							(BooleanExpression) expression).getFullAssumption();
+					result = new SubContext((Context) theContext,
+							seenExpressions, (BooleanExpression) expression)
+									.getFullAssumption();
+					break;
 				default:
+					result = simplifyExpressionGeneric(expression);
 				}
-			}
+				// } else
+				// result = simplifyExpressionGeneric(expression);
+			} else
+				result = simplifyExpressionGeneric(expression);
+			if (result == expression)
+				break;
+			expression = result;
 		}
-		return simplifyExpressionGeneric(expression);
+		seenExpressions.remove(originalExpression);
+		return result;
 	}
 
 	/**
@@ -793,7 +885,7 @@ public class IdealSimplifierWorker {
 				expression);
 
 		if (result == null) {
-			result = simplifyExpressionWork(expression, false);
+			result = simplifyExpressionWork(expression /* , false */);
 			cacheSimplification(expression, result);
 		}
 		return result;

@@ -2,8 +2,10 @@ package edu.udel.cis.vsl.sarl.simplify;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -16,9 +18,19 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class SimplifyExpressionTest {
+
+	private static PrintStream out = System.out;
+
 	private static SymbolicUniverse universe = SARL.newStandardUniverse();
+
 	private static SymbolicType boolType = universe.booleanType();
+
 	private static SymbolicType intType = universe.integerType();
+
+	@BeforeClass
+	public static void setUpBeforeClass() {
+		universe.setUseBackwardSubstitution(true);
+	}
 
 	@Test
 	public void conditionalExpr() {
@@ -31,8 +43,8 @@ public class SimplifyExpressionTest {
 		Reasoner reasoner = universe.reasoner(universe.trueExpression());
 		SymbolicExpression symplified = reasoner.simplify(cond);
 
-		System.out.println("original expression: " + cond);
-		System.out.println("symplified expression: " + symplified);
+		out.println("original expression: " + cond);
+		out.println("symplified expression: " + symplified);
 		assertTrue(universe.equals(Y, symplified).isTrue());
 	}
 
@@ -56,7 +68,7 @@ public class SimplifyExpressionTest {
 				.or(Arrays.asList(clause0, clause1, clause2, clause3));
 		predicate = universe.reasoner(universe.trueExpression())
 				.simplify(predicate);
-		System.out.println(predicate);
+		out.println(predicate);
 	}
 
 	// context : X_N - 1*Y3 <= 0 && 0 <= X_N - 1*Y3 && 0 <= X_N - 1 && 0 <= Y3
@@ -80,8 +92,8 @@ public class SimplifyExpressionTest {
 
 		Reasoner reasoner = u.reasoner(context);
 
-		System.out.println(context);
-		System.out.println(reasoner.getReducedContext());
+		out.println(context);
+		out.println(reasoner.getReducedContext());
 		assertTrue(reasoner.isValid(u.lessThanEquals(u.zeroInt(), X_N)));
 	}
 
@@ -120,6 +132,12 @@ public class SimplifyExpressionTest {
 		context = universe.and(context, universe.equals(N, X));
 
 		Reasoner reasoner = universe.reasoner(context);
+
+		out.println("full context    : " + reasoner.getFullContext());
+		out.println("reduced context : " + reasoner.getReducedContext());
+		out.println("SubMap: " + reasoner.constantSubstitutionMap());
+		out.println();
+
 		SymbolicExpression arrayLambdaY7 = universe.arrayLambda(
 				universe.arrayType(intType, N),
 				universe.lambda(i, universe.arrayRead(Y7, i)));
@@ -130,14 +148,12 @@ public class SimplifyExpressionTest {
 				universe.arrayType(intType, N),
 				universe.lambda(i, universe.arrayRead(Y11, i)));
 
-		System.out.println(reasoner.getFullContext());
-		System.out.println(reasoner.getReducedContext());
-		System.out.println(arrayLambdaY7);
-		System.out.println(reasoner.simplify(arrayLambdaY7));
-		System.out.println(arrayLambdaY6);
-		System.out.println(reasoner.simplify(arrayLambdaY6));
-		System.out.println(arrayLambdaY11);
-		System.out.println(reasoner.simplify(arrayLambdaY11));
+		out.println(arrayLambdaY7);
+		out.println(reasoner.simplify(arrayLambdaY7));
+		out.println(arrayLambdaY6);
+		out.println(reasoner.simplify(arrayLambdaY6));
+		out.println(arrayLambdaY11);
+		out.println(reasoner.simplify(arrayLambdaY11));
 		assertTrue(reasoner.simplify(arrayLambdaY7)
 				.equals(reasoner.simplify(arrayLambdaY6)));
 		assertTrue(reasoner.simplify(arrayLambdaY7)

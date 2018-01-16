@@ -2351,6 +2351,27 @@ public class CommonPreUniverse implements PreUniverse {
 		}
 
 		NumericExpression lengthExpression = arrayType.extent();
+		//
+
+		// if elementExpr has form lambda (i) e[i], and the type of e
+		// equals arrayType, then return e.
+		if (function.operator() == SymbolicOperator.LAMBDA) {
+			SymbolicExpression body = (SymbolicExpression) function.argument(1);
+
+			if (body.operator() == SymbolicOperator.ARRAY_READ) {
+				SymbolicConstant boundVar = (SymbolicConstant) function
+						.argument(0);
+
+				if (body.argument(1) == boundVar) {
+					SymbolicExpression e = (SymbolicExpression) body
+							.argument(0);
+
+					if (e.type() == arrayType)
+						return e;
+				}
+			}
+		}
+
 		Number lengthNumber = this.extractNumber(lengthExpression);
 
 		if (lengthNumber != null) {
@@ -2358,6 +2379,9 @@ public class CommonPreUniverse implements PreUniverse {
 
 			if (length < DENSE_ARRAY_MAX_SIZE) {
 				SymbolicExpression[] elements = new SymbolicExpression[length];
+				// TODO: this is assuming function is a lambda expression.
+				// Fix me. If it's not a lambda expression, you can just call
+				// method apply.
 				SymbolicConstant boundVar = (SymbolicConstant) function
 						.argument(0);
 				SymbolicExpression elementExpr = (SymbolicExpression) function

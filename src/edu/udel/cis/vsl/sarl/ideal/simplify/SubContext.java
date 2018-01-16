@@ -2,6 +2,7 @@ package edu.udel.cis.vsl.sarl.ideal.simplify;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
@@ -25,6 +26,8 @@ public class SubContext extends Context {
 	 */
 	private Context superContext;
 
+	private Set<SymbolicExpression> seenExpressions;
+
 	/**
 	 * Creates new sub-context and initializes it using the given assumption.
 	 * 
@@ -33,9 +36,12 @@ public class SubContext extends Context {
 	 * @param assumption
 	 *            the boolean expression to be represented by this sub-context
 	 */
-	protected SubContext(Context superContext, BooleanExpression assumption) {
+	protected SubContext(Context superContext,
+			Set<SymbolicExpression> seenExpressions,
+			BooleanExpression assumption) {
 		super(superContext.getInfo(), superContext.backwardsSub);
 		this.superContext = superContext;
+		this.seenExpressions = seenExpressions;
 		initialize(assumption);
 	}
 
@@ -154,15 +160,17 @@ public class SubContext extends Context {
 
 	@Override
 	protected SymbolicExpression simplify(SymbolicExpression expr) {
-		if (isEmpty()) {
-			// this case is to provide a base case in an otherwise
-			// infinite recursion
-			return new IdealSimplifierWorker(superContext)
-					.simplifyExpressionWork(expr, true);
-		} else {
-			return new IdealSimplifierWorker(this.collapse())
-					.simplifyExpressionWork(expr, false);
-		}
+		// if (isEmpty()) {
+		// // this case is to provide a base case in an otherwise
+		// // infinite recursion
+		// return new IdealSimplifierWorker(superContext, seenExpressions)
+		// .simplifyExpressionWork(expr, true);
+		// } else {
+		// return new IdealSimplifierWorker(this.collapse(), seenExpressions)
+		// .simplifyExpressionWork(expr, false);
+		// }
+		return new IdealSimplifierWorker(this.collapse(), seenExpressions)
+				.simplifyExpressionWork(expr);
 	}
 
 	/**
