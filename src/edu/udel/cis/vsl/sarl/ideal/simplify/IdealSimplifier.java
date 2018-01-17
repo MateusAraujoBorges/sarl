@@ -28,8 +28,6 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
-import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
-import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
 import edu.udel.cis.vsl.sarl.ideal.IF.IdealFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
@@ -91,26 +89,9 @@ public class IdealSimplifier implements Simplifier {
 
 	@Override
 	public SymbolicExpression apply(SymbolicExpression x) {
-		// some optimizations...no need to create new worker in these
-		// basic cases...
-		if (x.isNull())
+		// no need to create new worker in these basic cases...
+		if (IdealSimplifierWorker.isSimpleConstant(x))
 			return x;
-
-		SymbolicOperator operator = x.operator();
-
-		if (operator == SymbolicOperator.CONCRETE) {
-			SymbolicObject object = (SymbolicObject) x.argument(0);
-			SymbolicObjectKind kind = object.symbolicObjectKind();
-
-			switch (kind) {
-			case BOOLEAN:
-			case INT:
-			case NUMBER:
-			case STRING:
-				return x;
-			default:
-			}
-		}
 		simplifyCount++;
 		// rename bound variables with counts starting from where the
 		// original assumption renaming left off. This ensures that
@@ -118,7 +99,7 @@ public class IdealSimplifier implements Simplifier {
 		// two different x's can have same bound variables (thus
 		// improving canonicalization)...
 		x = theContext.info.universe.cloneBoundCleaner(boundCleaner).apply(x);
-		return newWorker().simplifyExpression(x);
+		return newWorker().simplifyNonSimpleConstant(x);
 	}
 
 	@Override

@@ -61,7 +61,19 @@ public class IdealSimplifierWorker {
 	 */
 	private Context theContext;
 
-	private Set<SymbolicExpression> seenExpressions;
+	/**
+	 * This is a stack of expressions being simplified, but since an expression
+	 * is only allowed to occur at most once on the stack, a set is used. When
+	 * simplifying an expression e, first e will be pushed onto the stack. In
+	 * the process of simplifying e, other expressions may need to be simplified
+	 * and are pushed onto the stack. If at any point an expression is
+	 * encountered that is already on the stack, simplification returns
+	 * immediately with that expression (no simplification is done). This is to
+	 * avoid infinite cycles in the simplification process.
+	 * 
+	 * @see #simplifyExpressionWork(SymbolicExpression)
+	 */
+	private Set<SymbolicExpression> simplificationStack;
 
 	// Constructors ...
 
@@ -77,10 +89,10 @@ public class IdealSimplifierWorker {
 	public IdealSimplifierWorker(Context context,
 			Set<SymbolicExpression> seenExpressions) {
 		this.theContext = context;
+		this.simplificationStack = seenExpressions;
 		// this.boundCleaner = boundCleaner;
 		// TODO: need a reference to the boundCleaner. Will have to put it in
 		// Context too.
-		this.seenExpressions = seenExpressions;
 	}
 
 	// Private methods ...
@@ -99,6 +111,313 @@ public class IdealSimplifierWorker {
 
 	private PreUniverse universe() {
 		return theContext.getInfo().universe;
+	}
+
+	/**
+	 * Caches the given simplification result within {@link #theContext}.
+	 * 
+	 * @param object
+	 *            any non-<code>null</code> {@link SymbolicObject}
+	 * @param result
+	 *            the result returned of simplifying that object
+	 */
+	private void cacheSimplification(SymbolicObject object,
+			SymbolicObject result) {
+		theContext.cacheSimplification(object, result);
+	}
+
+	// Package-private methods...
+
+	/**
+	 * Retrieves a cached simplification result. Simplification results are
+	 * cached using method
+	 * {@link #cacheSimplification(SymbolicObject, SymbolicObject)}, which in
+	 * turns uses {@link #theContext}'s simplification cache to cache results.
+	 * Note that every time {@link #theContext} changes, its cache is cleared.
+	 * 
+	 * @param object
+	 *            the object to be simplified
+	 * @return the result of a previous simplification applied to {@code object}
+	 *         , or <code>null</code> if no such result is cached
+	 */
+	private SymbolicObject getCachedSimplification(SymbolicObject object) {
+		return theContext.getSimplification(object);
+	}
+
+	/**
+	 * Is this a simple type --- i.e., one that is its own simplification.
+	 * 
+	 * @param type
+	 *            a non-{@code null} type
+	 * @return {@code true} iff {@code type} is a simple type
+	 */
+	private static boolean isSimpleType(SymbolicType type) {
+		switch (type.typeKind()) {
+		case BOOLEAN:
+		case INTEGER:
+		case REAL:
+		case CHAR:
+			return true;
+		default:
+		}
+		return false;
+	}
+
+	/**
+	 * Performs the work required to simplify a non-simple symbolic type. A
+	 * primitive type is returned unchanged. For compound types, simplification
+	 * is recursive on the structure of the type. Ultimately a non-trivial
+	 * simplification can occur because array types may involve an expression
+	 * for the length of the array.
+	 * 
+	 * @param type
+	 *            any non-null non-simple symbolic type
+	 * @return simplified version of that type
+	 */
+	private SymbolicType simplifyTypeWork(SymbolicType type) {
+		SymbolicTypeKind kind = type.typeKind();
+		PreUniverse universe = universe();
+
+		switch (kind) {
+		case ARRAY: {
+			SymbolicArrayType arrayType = (SymbolicArrayType) type;
+			SymbolicType elementType = arrayType.elementType();
+			SymbolicType simplifiedElementType = simplifyType(elementType);
+
+			if (arrayType.isComplete()) {
+				NumericExpression extent = ((SymbolicCompleteArrayType) arrayType)
+						.extent();
+				NumericExpression simplifiedExtent = (NumericExpression) simplifyExpression(
+						extent);
+
+				if (elementType != simplifiedElementType
+						|| extent != simplifiedExtent)
+					return universe.arrayType(simplifiedElementType,
+							simplifiedExtent);
+				return arrayType;
+			} else {
+				if (elementType != simplifiedElementType)
+					return universe.arrayType(simplifiedElementType);
+				return arrayType;
+			}
+		}
+		case FUNCTION: {
+			SymbolicFunctionType functionType = (SymbolicFunctionType) type;
+			SymbolicTypeSequence inputs = functionType.inputTypes();
+			SymbolicTypeSequence simplifiedInputs = simplifyTypeSequence(
+					inputs);
+			SymbolicType output = functionType.outputType();
+			SymbolicType simplifiedOutput = simplifyType(output);
+
+			if (inputs != simplifiedInputs || output != simplifiedOutput)
+				return universe.functionType(simplifiedInputs,
+						simplifiedOutput);
+			return type;
+		}
+		case TUPLE: {
+			SymbolicTypeSequence sequence = ((SymbolicTupleType) type)
+					.sequence();
+			SymbolicTypeSequence simplifiedSequence = simplifyTypeSequence(
+					sequence);
+
+			if (simplifiedSequence != sequence)
+				return universe.tupleType(((SymbolicTupleType) type).name(),
+						simplifiedSequence);
+			return type;
+		}
+		case UNION: {
+			SymbolicTypeSequence sequence = ((SymbolicUnionType) type)
+					.sequence();
+			SymbolicTypeSequence simplifiedSequence = simplifyTypeSequence(
+					sequence);
+
+			if (simplifiedSequence != sequence)
+				return universe.unionType(((SymbolicUnionType) type).name(),
+						simplifiedSequence);
+			return type;
+		}
+		default:
+			throw new SARLInternalException("unreachable");
+		}
+	}
+
+	/**
+	 * Simplifies a symbolic type, using caching.
+	 * 
+	 * @param type
+	 *            a non-{@code null} symbolic type
+	 * @return the simplified version of the type
+	 */
+	private SymbolicType simplifyType(SymbolicType type) {
+		if (isSimpleType(type))
+			return type;
+
+		SymbolicType result = (SymbolicType) getCachedSimplification(type);
+
+		if (result == null) {
+			result = simplifyTypeWork(type);
+			cacheSimplification(type, result);
+		}
+		return result;
+	}
+
+	/**
+	 * Performs the work necessary to simplify a type sequence. The
+	 * simplification of a type sequence is the sequence resulting from
+	 * simplifying each component type individually.
+	 * 
+	 * @param sequence
+	 *            any non-{@code null} type sequence
+	 * @return the simplified sequence
+	 */
+	private SymbolicTypeSequence simplifyTypeSequenceWork(
+			SymbolicTypeSequence sequence) {
+		int size = sequence.numTypes();
+
+		for (int i = 0; i < size; i++) {
+			SymbolicType type = sequence.getType(i);
+			SymbolicType simplifiedType = simplifyType(type);
+
+			if (type != simplifiedType) {
+				SymbolicType[] newTypes = new SymbolicType[size];
+
+				for (int j = 0; j < i; j++)
+					newTypes[j] = sequence.getType(j);
+				newTypes[i] = simplifiedType;
+				for (int j = i + 1; j < size; j++)
+					newTypes[j] = simplifyType(sequence.getType(j));
+
+				return universe().typeSequence(Arrays.asList(newTypes));
+			}
+		}
+		return sequence;
+	}
+
+	/**
+	 * Simplifies a type sequence, using caching.
+	 * 
+	 * @param seq
+	 *            and non-{@code null} type sequence
+	 * @return the simplified version of that type sequence
+	 */
+	private SymbolicTypeSequence simplifyTypeSequence(
+			SymbolicTypeSequence seq) {
+		SymbolicTypeSequence result = (SymbolicTypeSequence) getCachedSimplification(
+				seq);
+
+		if (result == null) {
+			result = simplifyTypeSequenceWork(seq);
+			cacheSimplification(seq, result);
+		}
+		return result;
+	}
+
+	/**
+	 * Performs the work necessary for simplifying a sequence of symbolic
+	 * expressions. The result is obtained by simplifying each component
+	 * individually.
+	 * 
+	 * @param sequence
+	 *            any canonic symbolic expression sequence
+	 * @return the simplified sequence
+	 */
+	private SymbolicSequence<?> simplifySequenceWork(
+			SymbolicSequence<?> sequence) {
+		int size = sequence.size();
+		SymbolicSequence<?> result = sequence;
+
+		for (int i = 0; i < size; i++) {
+			SymbolicExpression oldElement = sequence.get(i);
+			SymbolicExpression newElement = simplifyExpression(oldElement);
+
+			if (newElement != oldElement) {
+				SymbolicExpression[] newElements = new SymbolicExpression[size];
+
+				for (int j = 0; j < i; j++)
+					newElements[j] = sequence.get(j);
+				newElements[i] = newElement;
+				for (int j = i + 1; j < size; j++)
+					newElements[j] = simplifyExpression(sequence.get(j));
+				result = universe().objectFactory().sequence(newElements);
+				break;
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Is the object a "simple object", i.e., one which is its own
+	 * simplification?
+	 * 
+	 * @param object
+	 * @return if {@code true}, the object is a simple object
+	 */
+	private static boolean isSimpleObject(SymbolicObject object) {
+		switch (object.symbolicObjectKind()) {
+		case BOOLEAN:
+		case INT:
+		case NUMBER:
+		case STRING:
+		case CHAR:
+			return true;
+		case EXPRESSION:
+			return isSimpleConstant((SymbolicExpression) object);
+		case SEQUENCE:
+			return false;
+		case TYPE:
+			return isSimpleType((SymbolicType) object);
+		case TYPE_SEQUENCE:
+			return false;
+		default:
+			throw new SARLInternalException("unreachable");
+		}
+	}
+
+	/**
+	 * Performs the work necessary to simplify a non-simple symbolic object.
+	 * This just redirects to the appropriate specific method, such as
+	 * {@link #simplifySequenceWork(SymbolicSequence)},
+	 * {@link #simplifyTypeWork(SymbolicType)}, etc.
+	 * 
+	 * @param object
+	 *            a non-null non-simple symbolic object
+	 * @return the simplified version of that object
+	 */
+	private SymbolicObject simplifyObjectWork(SymbolicObject object) {
+		switch (object.symbolicObjectKind()) {
+		case EXPRESSION:
+			return simplifyExpressionWork((SymbolicExpression) object);
+		case SEQUENCE:
+			return simplifySequenceWork((SymbolicSequence<?>) object);
+		case TYPE:
+			return simplifyTypeWork((SymbolicType) object);
+		case TYPE_SEQUENCE:
+			return simplifyTypeSequenceWork((SymbolicTypeSequence) object);
+		default:
+			throw new SARLInternalException("unreachable");
+		}
+	}
+
+	/**
+	 * Simplifies a symbolic object by first looking in the cache for the
+	 * previous result of simplifying that object, and, if not found there,
+	 * invoking {@link #simplifyObjectWork(SymbolicObject)}
+	 * 
+	 * @param object
+	 *            any non-<code>null</code> symbolic object
+	 * @return result of simplification of <code>object</code>
+	 */
+	private SymbolicObject simplifyObject(SymbolicObject object) {
+		if (isSimpleObject(object))
+			return object;
+
+		SymbolicObject result = getCachedSimplification(object);
+
+		if (result == null) {
+			result = simplifyObjectWork(object);
+			cacheSimplification(object, result);
+		}
+		return result;
 	}
 
 	/**
@@ -354,7 +673,8 @@ public class IdealSimplifierWorker {
 			BooleanExpression expr) {
 		SymbolicConstant boundVar = (SymbolicConstant) expr.argument(0);
 		BooleanExpression body = (BooleanExpression) expr.argument(1);
-		Context subContext = new SubContext(theContext, seenExpressions, body);
+		Context subContext = new SubContext(theContext, simplificationStack,
+				body);
 		BooleanExpression body2 = subContext.getFullAssumption();
 
 		if (body == body2)
@@ -368,7 +688,7 @@ public class IdealSimplifierWorker {
 		// lambda x . e;
 		SymbolicConstant boundVar = (SymbolicConstant) expr.argument(0);
 		SymbolicExpression body = (SymbolicExpression) expr.argument(1);
-		Context subContext = new SubContext(theContext, seenExpressions,
+		Context subContext = new SubContext(theContext, simplificationStack,
 				info().trueExpr);
 		SymbolicExpression body2 = subContext.simplify(body);
 
@@ -380,7 +700,6 @@ public class IdealSimplifierWorker {
 	private SymbolicExpression simplifyArrayLambda(SymbolicExpression expr) {
 		assert expr.operator() == SymbolicOperator.ARRAY_LAMBDA;
 		SymbolicArrayType arrayType = (SymbolicArrayType) expr.type();
-		// SymbolicType elementType = arrayType.elementType();
 		SymbolicExpression function = (SymbolicExpression) expr.argument(0);
 		BooleanExpressionFactory bf = info().booleanFactory;
 		IdealFactory idf = idealFactory();
@@ -410,7 +729,7 @@ public class IdealSimplifierWorker {
 						idf.lessThanEquals(idf.zeroInt(), boundVar),
 						idf.lessThan(boundVar, length));
 				SubContext subContext = new SubContext(theContext,
-						seenExpressions, boundAssumption);
+						simplificationStack, boundAssumption);
 				SymbolicExpression newBody = subContext.simplify(body);
 
 				if (newBody == body && newCompleteType == completeType)
@@ -437,269 +756,6 @@ public class IdealSimplifierWorker {
 		}
 		return simplifyExpressionGeneric(expr);
 	}
-
-	/**
-	 * Performs the work required to simplify a symbolic type. A primitive type
-	 * is returned unchanged. For compound types, simplification is recursive on
-	 * the structure of the type. Ultimately a non-trivial simplification can
-	 * occur because array types may involve an expression for the length of the
-	 * array.
-	 * 
-	 * @param type
-	 *            any canonic symbolic type
-	 * @return simplified version of that type
-	 */
-	private SymbolicType simplifyTypeWork(SymbolicType type) {
-		SymbolicTypeKind kind = type.typeKind();
-
-		switch (kind) {
-		case BOOLEAN:
-		case INTEGER:
-		case REAL:
-		case CHAR:
-			return type;
-		default:
-		}
-
-		PreUniverse universe = universe();
-
-		switch (kind) {
-		case ARRAY: {
-			SymbolicArrayType arrayType = (SymbolicArrayType) type;
-			SymbolicType elementType = arrayType.elementType();
-			SymbolicType simplifiedElementType = simplifyType(elementType);
-
-			if (arrayType.isComplete()) {
-				NumericExpression extent = ((SymbolicCompleteArrayType) arrayType)
-						.extent();
-				NumericExpression simplifiedExtent = (NumericExpression) simplifyExpression(
-						extent);
-
-				if (elementType != simplifiedElementType
-						|| extent != simplifiedExtent)
-					return universe.arrayType(simplifiedElementType,
-							simplifiedExtent);
-				return arrayType;
-			} else {
-				if (elementType != simplifiedElementType)
-					return universe.arrayType(simplifiedElementType);
-				return arrayType;
-			}
-		}
-		case FUNCTION: {
-			SymbolicFunctionType functionType = (SymbolicFunctionType) type;
-			SymbolicTypeSequence inputs = functionType.inputTypes();
-			SymbolicTypeSequence simplifiedInputs = simplifyTypeSequence(
-					inputs);
-			SymbolicType output = functionType.outputType();
-			SymbolicType simplifiedOutput = simplifyType(output);
-
-			if (inputs != simplifiedInputs || output != simplifiedOutput)
-				return universe.functionType(simplifiedInputs,
-						simplifiedOutput);
-			return type;
-		}
-		case TUPLE: {
-			SymbolicTypeSequence sequence = ((SymbolicTupleType) type)
-					.sequence();
-			SymbolicTypeSequence simplifiedSequence = simplifyTypeSequence(
-					sequence);
-
-			if (simplifiedSequence != sequence)
-				return universe.tupleType(((SymbolicTupleType) type).name(),
-						simplifiedSequence);
-			return type;
-		}
-		case UNION: {
-			SymbolicTypeSequence sequence = ((SymbolicUnionType) type)
-					.sequence();
-			SymbolicTypeSequence simplifiedSequence = simplifyTypeSequence(
-					sequence);
-
-			if (simplifiedSequence != sequence)
-				return universe.unionType(((SymbolicUnionType) type).name(),
-						simplifiedSequence);
-			return type;
-		}
-		default:
-			throw new SARLInternalException("unreachable");
-		}
-	}
-
-	/**
-	 * Performs the work necessary to simplify a type sequence. The
-	 * simplification of a type sequence is the sequence resulting from
-	 * simplifying each component type individually.
-	 * 
-	 * @param sequence
-	 *            any canonic type sequence
-	 * @return the simplified sequence
-	 */
-	private SymbolicTypeSequence simplifyTypeSequenceWork(
-			SymbolicTypeSequence sequence) {
-		int size = sequence.numTypes();
-
-		for (int i = 0; i < size; i++) {
-			SymbolicType type = sequence.getType(i);
-			SymbolicType simplifiedType = simplifyType(type);
-
-			if (type != simplifiedType) {
-				SymbolicType[] newTypes = new SymbolicType[size];
-
-				for (int j = 0; j < i; j++)
-					newTypes[j] = sequence.getType(j);
-				newTypes[i] = simplifiedType;
-				for (int j = i + 1; j < size; j++)
-					newTypes[j] = simplifyType(sequence.getType(j));
-
-				return universe().typeSequence(Arrays.asList(newTypes));
-			}
-		}
-		return sequence;
-	}
-
-	/**
-	 * Performs the work necessary for simplifying a sequence of symbolic
-	 * expressions. The result is obtained by simplifying each component
-	 * individually.
-	 * 
-	 * @param sequence
-	 *            any canonic symbolic expression sequence
-	 * @return the simplified sequence
-	 */
-	private SymbolicSequence<?> simplifySequenceWork(
-			SymbolicSequence<?> sequence) {
-		int size = sequence.size();
-		SymbolicSequence<?> result = sequence;
-
-		for (int i = 0; i < size; i++) {
-			SymbolicExpression oldElement = sequence.get(i);
-			SymbolicExpression newElement = simplifyExpression(oldElement);
-
-			if (newElement != oldElement) {
-				SymbolicExpression[] newElements = new SymbolicExpression[size];
-
-				for (int j = 0; j < i; j++)
-					newElements[j] = sequence.get(j);
-				newElements[i] = newElement;
-				for (int j = i + 1; j < size; j++)
-					newElements[j] = simplifyExpression(sequence.get(j));
-				result = universe().objectFactory().sequence(newElements);
-				break;
-			}
-		}
-		return result;
-	}
-
-	/**
-	 * Performs the work necessary to simplify a symbolic object. This just
-	 * redirects to the appropriate specific method, such as
-	 * {@link #simplifySequenceWork(SymbolicSequence)},
-	 * {@link #simplifyTypeWork(SymbolicType)}, etc.
-	 * 
-	 * @param object
-	 *            any canonic symbolic object
-	 * @return the simplified version of that object
-	 */
-	private SymbolicObject simplifyObjectWork(SymbolicObject object) {
-		switch (object.symbolicObjectKind()) {
-		case BOOLEAN:
-		case INT:
-		case NUMBER:
-		case STRING:
-		case CHAR:
-			return object;
-		case EXPRESSION:
-			return simplifyExpressionWork(
-					(SymbolicExpression) object /* , false */);
-		case SEQUENCE:
-			return simplifySequenceWork((SymbolicSequence<?>) object);
-		case TYPE:
-			return simplifyTypeWork((SymbolicType) object);
-		case TYPE_SEQUENCE:
-			return simplifyTypeSequenceWork((SymbolicTypeSequence) object);
-		default:
-			throw new SARLInternalException("unreachable");
-		}
-	}
-
-	/**
-	 * Simplifies a symbolic object by first looking in the cache for the
-	 * previous result of simplifying that object, and, if not found there,
-	 * invoking {@link #simplifyObjectWork(SymbolicObject)}
-	 * 
-	 * @param object
-	 *            any non-<code>null</code> symbolic object
-	 * @return result of simplification of <code>object</code>
-	 */
-	private SymbolicObject simplifyObject(SymbolicObject object) {
-		SymbolicObject result = getCachedSimplification(object);
-
-		if (result == null) {
-			result = simplifyObjectWork(object);
-			cacheSimplification(object, result);
-		}
-		return result;
-	}
-
-	private SymbolicType simplifyType(SymbolicType type) {
-		SymbolicType result = (SymbolicType) getCachedSimplification(type);
-
-		if (result == null) {
-			result = simplifyTypeWork(type);
-			cacheSimplification(type, result);
-		}
-		return result;
-	}
-
-	private SymbolicTypeSequence simplifyTypeSequence(
-			SymbolicTypeSequence seq) {
-		SymbolicTypeSequence result = (SymbolicTypeSequence) getCachedSimplification(
-				seq);
-
-		if (result == null) {
-			result = simplifyTypeSequenceWork(seq);
-			cacheSimplification(seq, result);
-		}
-		return result;
-	}
-
-	// Package-private methods...
-
-	/**
-	 * Retrieves a cached simplification result. Simplification results are
-	 * cached using method
-	 * {@link #cacheSimplification(SymbolicObject, SymbolicObject)}, which in
-	 * turns uses {@link #theContext}'s simplification cache to cache results.
-	 * Note that every time {@link #theContext} changes, its cache is cleared.
-	 * 
-	 * @param object
-	 *            the object to be simplified
-	 * @return the result of a previous simplification applied to {@code object}
-	 *         , or <code>null</code> if no such result is cached
-	 */
-	private SymbolicObject getCachedSimplification(SymbolicObject object) {
-		// if (theContext.isInitialized())
-		return theContext.getSimplification(object);
-		// else
-		// return null;
-	}
-
-	/**
-	 * Caches the given simplification result within {@link #theContext}.
-	 * 
-	 * @param object
-	 *            any non-<code>null</code> {@link SymbolicObject}
-	 * @param result
-	 *            the result returned of simplifying that object
-	 */
-	private void cacheSimplification(SymbolicObject object,
-			SymbolicObject result) {
-		// if (theContext.isInitialized())
-		theContext.cacheSimplification(object, result);
-	}
-
-	// Package-private methods...
 
 	/**
 	 * <p>
@@ -786,47 +842,24 @@ public class IdealSimplifierWorker {
 	}
 
 	/**
-	 * Computes an interval over-approximation to the possible values that can
-	 * be taken by the given numeric expression under the assumption of the
-	 * context.
-	 * 
-	 * @param expr
-	 *            a numeric expression (or integer or real type)
-	 * @return an {@link Interval} of the same type as <code>expr</code> with
-	 *         the property that the set of concrete values that can result from
-	 *         evaluating <code>expr</code> at any point satisfying the
-	 *         assumption of {@link #theContext} is contained within that
-	 *         interval
-	 */
-	Interval intervalApproximation(NumericExpression expr) {
-		Range range = theContext.computeRange((RationalExpression) expr);
-		Interval result = range.intervalOverApproximation();
-
-		return result;
-	}
-
-	/**
-	 * Simplifies a symbolic expression without caching the result.
+	 * Simplifies a non-simple-constant symbolic expression without caching the
+	 * result.
 	 * 
 	 * @param expression
-	 *            any non-<code>null</code> {@link SymbolicExpression}
-	 * @param noMoreSubcontexts
-	 *            do not create {@link SubContext}s to simplify the expression
+	 *            any non-<code>null</code> non-simple constant
+	 *            {@link SymbolicExpression}
 	 * @return an expression guaranteed to be equivalent to the given one under
 	 *         the assumption of {@link #theContext}
 	 */
-	SymbolicExpression simplifyExpressionWork(SymbolicExpression expression
-	// ,boolean noMoreSubcontexts
-	) {
-		if (expression.isNull())
-			return expression;
-		if (seenExpressions.contains(expression))
+	private SymbolicExpression simplifyExpressionWork(
+			SymbolicExpression expression) {
+		if (simplificationStack.contains(expression))
 			return expression;
 
 		SymbolicExpression result;
 		SymbolicExpression originalExpression = expression;
 
-		seenExpressions.add(originalExpression);
+		simplificationStack.add(originalExpression);
 		while (true) {
 			result = theContext.getSub(expression);
 			if (result != null)
@@ -840,7 +873,6 @@ public class IdealSimplifierWorker {
 			} else if (expression instanceof BooleanExpression) {
 				if (expression.isTrue() || expression.isFalse())
 					return expression;
-				// if (!noMoreSubcontexts) {
 				switch (expression.operator()) {
 				case AND:
 				case EQUALS:
@@ -850,23 +882,78 @@ public class IdealSimplifierWorker {
 				case NOT:
 				case OR:
 					result = new SubContext((Context) theContext,
-							seenExpressions, (BooleanExpression) expression)
+							simplificationStack, (BooleanExpression) expression)
 									.getFullAssumption();
 					break;
 				default:
 					result = simplifyExpressionGeneric(expression);
 				}
-				// } else
-				// result = simplifyExpressionGeneric(expression);
 			} else
 				result = simplifyExpressionGeneric(expression);
 			if (result == expression)
 				break;
 			expression = result;
 		}
-		seenExpressions.remove(originalExpression);
+		simplificationStack.remove(originalExpression);
 		return result;
 	}
+
+	// Package-private methods...
+
+	/**
+	 * Simplifies an expression that is not a simple constant.
+	 * 
+	 * @param expression
+	 *            a non-{@code null} symbolic expression not a simple constant
+	 * @return the simplified version of the given expression
+	 */
+	SymbolicExpression simplifyNonSimpleConstant(
+			SymbolicExpression expression) {
+		// It is OK to cache simplification results even if the context
+		// is changing because the context clears its cache every time
+		// a change is made...
+		SymbolicExpression result = (SymbolicExpression) getCachedSimplification(
+				expression);
+
+		if (result == null) {
+			result = simplifyExpressionWork(expression);
+			cacheSimplification(expression, result);
+		}
+		return result;
+	}
+
+	/**
+	 * Is the given expression a "simple constant": "NULL", a concrete boolean,
+	 * int, number, or string? If so, there is nothing to do --- it is its own
+	 * simplification.
+	 * 
+	 * @param x
+	 *            any non-{@code null} symbolic expression
+	 * @return {@code true} iff {@code x} is a simple constant
+	 */
+	static boolean isSimpleConstant(SymbolicExpression x) {
+		if (x.isNull())
+			return true;
+
+		SymbolicOperator operator = x.operator();
+
+		if (operator == SymbolicOperator.CONCRETE) {
+			SymbolicObject object = (SymbolicObject) x.argument(0);
+			SymbolicObjectKind kind = object.symbolicObjectKind();
+
+			switch (kind) {
+			case BOOLEAN:
+			case INT:
+			case NUMBER:
+			case STRING:
+				return true;
+			default:
+			}
+		}
+		return false;
+	}
+
+	// public methods ...
 
 	/**
 	 * Simplifies a symbolic expression, caching the result in the underlying
@@ -877,17 +964,30 @@ public class IdealSimplifierWorker {
 	 * @return an expression guaranteed to be equivalent to the given one under
 	 *         the assumption of {@link #theContext}
 	 */
-	SymbolicExpression simplifyExpression(SymbolicExpression expression) {
-		// It is OK to cache simplification results even if the context
-		// is changing because the context clears its cache every time
-		// a change is made...
-		SymbolicExpression result = (SymbolicExpression) getCachedSimplification(
-				expression);
+	public SymbolicExpression simplifyExpression(
+			SymbolicExpression expression) {
+		if (isSimpleConstant(expression))
+			return expression;
+		return simplifyNonSimpleConstant(expression);
+	}
 
-		if (result == null) {
-			result = simplifyExpressionWork(expression /* , false */);
-			cacheSimplification(expression, result);
-		}
+	/**
+	 * Computes an interval over-approximation to the possible values that can
+	 * be taken by the given numeric expression under the assumption of the
+	 * context.
+	 * 
+	 * @param expr
+	 *            a numeric expression (or integer or real type)
+	 * @return an {@link Interval} of the same type as <code>expr</code> with
+	 *         the property that the set of concrete values that can result from
+	 *         evaluating <code>expr</code> at any point satisfying the
+	 *         assumption of {@link #theContext} is contained within that
+	 *         interval
+	 */
+	public Interval intervalApproximation(NumericExpression expr) {
+		Range range = theContext.computeRange((RationalExpression) expr);
+		Interval result = range.intervalOverApproximation();
+
 		return result;
 	}
 }

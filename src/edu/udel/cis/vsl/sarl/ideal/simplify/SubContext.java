@@ -26,7 +26,10 @@ public class SubContext extends Context {
 	 */
 	private Context superContext;
 
-	private Set<SymbolicExpression> seenExpressions;
+	/**
+	 * Set of expressions currently in the process of being simplified.s
+	 */
+	private Set<SymbolicExpression> simplificationStack;
 
 	/**
 	 * Creates new sub-context and initializes it using the given assumption.
@@ -37,11 +40,11 @@ public class SubContext extends Context {
 	 *            the boolean expression to be represented by this sub-context
 	 */
 	protected SubContext(Context superContext,
-			Set<SymbolicExpression> seenExpressions,
+			Set<SymbolicExpression> simplificationStack,
 			BooleanExpression assumption) {
 		super(superContext.getInfo(), superContext.backwardsSub);
 		this.superContext = superContext;
-		this.seenExpressions = seenExpressions;
+		this.simplificationStack = simplificationStack;
 		initialize(assumption);
 	}
 
@@ -160,17 +163,8 @@ public class SubContext extends Context {
 
 	@Override
 	protected SymbolicExpression simplify(SymbolicExpression expr) {
-		// if (isEmpty()) {
-		// // this case is to provide a base case in an otherwise
-		// // infinite recursion
-		// return new IdealSimplifierWorker(superContext, seenExpressions)
-		// .simplifyExpressionWork(expr, true);
-		// } else {
-		// return new IdealSimplifierWorker(this.collapse(), seenExpressions)
-		// .simplifyExpressionWork(expr, false);
-		// }
-		return new IdealSimplifierWorker(this.collapse(), seenExpressions)
-				.simplifyExpressionWork(expr);
+		return new IdealSimplifierWorker(this.collapse(), simplificationStack)
+				.simplifyExpression(expr);
 	}
 
 	/**

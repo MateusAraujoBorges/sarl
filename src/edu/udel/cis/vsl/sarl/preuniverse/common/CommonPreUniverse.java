@@ -97,7 +97,7 @@ public class CommonPreUniverse implements PreUniverse {
 	 * Shall this universe use backwards substitution to solve for certain
 	 * numeric expressions in terms of others when simplifying?
 	 */
-	private boolean useBackwardSubstitution = false;
+	private boolean useBackwardSubstitution = true;
 
 	/**
 	 * The upper bound on the probability of error when deciding whether a
@@ -399,11 +399,6 @@ public class CommonPreUniverse implements PreUniverse {
 		else
 			throw ierr("Expected type int or real, not " + type);
 	}
-
-	// protected SymbolicSet<SymbolicExpression> hashSet(SymbolicExpression x,
-	// SymbolicExpression y) {
-	// return collectionFactory.singletonHashSet(x).add(y);
-	// }
 
 	private SymbolicConstant boundVar(int index, SymbolicType type) {
 		return symbolicConstant(stringObject("x" + index), type);

@@ -2331,10 +2331,10 @@ public class Context {
 	 * @return the simplified expression
 	 */
 	protected SymbolicExpression simplify(SymbolicExpression expr) {
-		Set<SymbolicExpression> seenSet = new HashSet<>();
+		Set<SymbolicExpression> simplificationStack = new HashSet<>();
 
-		return new IdealSimplifierWorker(this, seenSet)
-				.simplifyExpressionWork(expr /* , false */);
+		return new IdealSimplifierWorker(this, simplificationStack)
+				.simplifyExpression(expr);
 	}
 
 	// Public methods...
