@@ -97,7 +97,7 @@ public class CommonPreUniverse implements PreUniverse {
 	 * Shall this universe use backwards substitution to solve for certain
 	 * numeric expressions in terms of others when simplifying?
 	 */
-	private boolean useBackwardSubstitution = true;
+	private boolean useBackwardSubstitution = false;
 
 	/**
 	 * The upper bound on the probability of error when deciding whether a
