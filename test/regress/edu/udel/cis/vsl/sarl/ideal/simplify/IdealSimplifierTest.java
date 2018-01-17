@@ -12,15 +12,20 @@ import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.x;
 import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xeq5;
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.CoreUniverse.ForallStructure;
+import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 
 /**
@@ -189,6 +194,63 @@ public class IdealSimplifierTest {
 		ForallStructure structure1 = universe.getForallStructure(forall1);
 
 		assert structure1 != null;
+	}
+
+	/**
+	 * context: 0 <= x && x < 5 && 0 <= y && y < 5 && $forall (int i | i == 0 ||
+	 * i == x) ($forall (int j | j == 0 || j == y) a[i][j] == 0)
+	 * 
+	 * the program "stuck" at when using a reasoner of this context simplifies
+	 * not(context).
+	 */
+	@Test
+	public void verySlowSimplification() {
+		SymbolicUniverse universe = SARL.newIdealUniverse();
+
+		universe.setUseBackwardSubstitution(true);
+
+		NumericSymbolicConstant i = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("i"),
+						universe.integerType());
+		NumericSymbolicConstant j = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("j"),
+						universe.integerType());
+		NumericSymbolicConstant x = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X_x"),
+						universe.integerType());
+		NumericSymbolicConstant y = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X_y"),
+						universe.integerType());
+		NumericExpression five = universe.integer(5);
+		SymbolicExpression array = universe.symbolicConstant(
+				universe.stringObject("X_a"),
+				universe.arrayType(
+						universe.arrayType(universe.integerType(), five),
+						five));
+
+		BooleanExpression outerRestrict = universe.or(
+				universe.equals(i, universe.zeroInt()), universe.equals(i, x));
+		BooleanExpression innerRestrict = universe.or(
+				universe.equals(j, universe.zeroInt()), universe.equals(j, y));
+		BooleanExpression assumption = universe.and(
+				Arrays.asList(universe.lessThanEquals(universe.zeroInt(), x),
+						universe.lessThan(x, five),
+						universe.lessThanEquals(universe.zeroInt(), y),
+						universe.lessThan(y, five)));
+		BooleanExpression pred = universe.equals(
+				universe.arrayRead(universe.arrayRead(array, i), j),
+				universe.zeroInt());
+
+		pred = universe.implies(innerRestrict, pred);
+		pred = universe.implies(outerRestrict, pred);
+		pred = universe.forall(j, pred);
+		pred = universe.forall(i, pred);
+
+		BooleanExpression context = universe.and(assumption, pred);
+		Reasoner reasoner = universe.reasoner(context);
+
+		System.out.println(reasoner.getReducedContext());
+		reasoner.isValid(universe.not(reasoner.getReducedContext()));
 	}
 
 	/*
