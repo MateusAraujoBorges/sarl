@@ -165,14 +165,6 @@ public class NTConstant extends HomogeneousExpression<SymbolicObject>
 			base_num = numFactory.integer(((RationalNumber) base).numerator());
 			base_den = numFactory
 					.integer(((RationalNumber) base).denominator());
-			/*
-			 * base is positive but numerator and denominator may both be
-			 * negative, in such case we only need the absolute values of them.
-			 */
-			if (base.signum() > 0) {
-				base_num = (IntegerNumber) numFactory.abs(base_num);
-				base_den = (IntegerNumber) numFactory.abs(base_den);
-			}
 		}
 
 		IntegerNumber result_num = null;

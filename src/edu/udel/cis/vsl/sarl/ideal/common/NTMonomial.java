@@ -20,6 +20,7 @@ package edu.udel.cis.vsl.sarl.ideal.common;
 
 import java.util.Set;
 
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
@@ -195,9 +196,54 @@ public class NTMonomial extends HomogeneousExpression<SymbolicObject>
 	@Override
 	public RationalExpression powerRational(IdealFactory factory,
 			RationalExpression exponent) {
-		return factory.multiply(
-				monomialConstant().powerRational(factory, exponent),
-				monic().powerRational(factory, exponent));
+		/*
+		 * Generally we don't know if monomial^n can be safely transformed to
+		 * monomialConstant^n * monic^n. But for several specific cases, we know
+		 * that's fine:
+		 * 
+		 * 1. this monomial is negative (which means the exponent is meaningful
+		 * for negative numbers)
+		 * 
+		 * 2. both monomialConstant and monic are positive
+		 * 
+		 * 3. monomialConstant, monic or this monomial is zero
+		 * 
+		 * 4. "1/exponent" can be casted to integer without loss of precision
+		 * and "1/exponent" is odd.
+		 * 
+		 * 5. "exponent" can be casted to integer without loss of precision.
+		 */
+		boolean separate = false;
+
+		if (factory.isPositive(this).isFalse())
+			separate = true;
+		if (factory.isPositive(monomialConstant()).isTrue()
+				&& factory.isPositive(monic()).isTrue())
+			separate = true;
+		if (this.isZero() || monomialConstant().isZero() || monic().isZero())
+			separate = true;
+		if (factory.floor(exponent).equals(factory.ceil(exponent)))
+			separate = true;
+
+		RationalExpression exponentReciprocal = factory
+				.divide(factory.oneReal(), exponent);
+
+		if (factory.floor(exponentReciprocal)
+				.equals(factory.ceil(exponentReciprocal))) {
+			NumericExpression safelyCastedExponentDenominator = factory.cast(
+					exponentReciprocal, factory.typeFactory().integerType());
+
+			if (factory.modulo(safelyCastedExponentDenominator,
+					factory.intConstant(2)).isOne())
+				separate = true;
+		}
+		if (separate)
+			return factory.multiply(
+					monomialConstant().powerRational(factory, exponent),
+					monic().powerRational(factory, exponent));
+		else
+			return factory.expression(SymbolicOperator.POWER, type(), this,
+					exponent);
 	}
 
 	@Override
