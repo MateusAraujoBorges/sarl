@@ -100,11 +100,6 @@ public class Why3Translator {
 	static private int union_flag_field = 0;
 
 	/**
-	 * prefix for field name of tuple types
-	 */
-	static private String tuple_field_prefix = "_t";
-
-	/**
 	 * Pre-defined formal parameter names for sigma
 	 */
 	private NumericSymbolicConstant sigma_low = null;
