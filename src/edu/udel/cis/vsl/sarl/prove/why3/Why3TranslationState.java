@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeMap;
 
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3Lib;
-import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3TupleType;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3Type;
 
 /**
@@ -38,12 +39,12 @@ public class Why3TranslationState {
 	private Map<SymbolicExpression, String> lambdaFunctionMap;
 
 	/**
-	 * Map from Why3 tuple type to its' alias name.
+	 * Map from SARL tuple type to {@link TupleTypeSigniture}
 	 * 
 	 * There must be a type aliasing declaration that is associated to an alias
 	 * name in {@link #declarations}.
 	 */
-	private Map<Why3Type, String> tupleTypeAliasMap;
+	private Map<SymbolicTupleType, TupleTypeSigniture> tupleTypeSignitureMap;
 
 	/**
 	 * Mapping of SARL symbolic type to corresponding {@link Why3Type}. Used to
@@ -70,7 +71,7 @@ public class Why3TranslationState {
 	/**
 	 * type aliasing declarations
 	 */
-	private Map<String, String> typeAliasingDeclarations;
+	private LinkedList<String> typeAliasingDeclarations;
 
 	/**
 	 * The name of the bound variable at each recursive level of a quantified
@@ -93,11 +94,6 @@ public class Why3TranslationState {
 	private int identNameCounter = 0;
 
 	/**
-	 * a counter for generated identifiers for tuple type.
-	 */
-	private int tupleAliasCounter = 0;
-
-	/**
 	 * a counter for generated identifiers of lambda functions.
 	 */
 	private int lambdaNameCounter = 0;
@@ -107,13 +103,13 @@ public class Why3TranslationState {
 	/* **************** Constructor ****************** */
 	public Why3TranslationState() {
 		this.declarations = new HashMap<>();
-		this.tupleTypeAliasMap = new HashMap<>();
-		this.typeAliasingDeclarations = new HashMap<>();
+		this.tupleTypeSignitureMap = new TreeMap<>();
+		this.typeAliasingDeclarations = new LinkedList<>();
 		this.translationCache = new HashMap<>();
 		this.typeMap = new HashMap<>();
-		this.tupleTypeAliasMap = new HashMap<>();
+		this.tupleTypeSignitureMap = new HashMap<>();
 		this.lambdaFunctionMap = new HashMap<>();
-		this.tupleTypeAliasMap = new HashMap<>();
+		this.tupleTypeSignitureMap = new HashMap<>();
 		this.libraries = new HashSet<>();
 		this.quantifiedContexts = new Stack<>();
 	}
@@ -162,17 +158,20 @@ public class Why3TranslationState {
 	}
 
 	/**
-	 * @return An alias of a {@link Why3TupleType}. There is a unique alias
-	 *         corresponds to a tuple type.
+	 * @return A {@link TupleTypeSigniture} which is associated with the given
+	 *         sarl tuple type.
 	 */
-	public String getTupleTypeAlias(Why3TupleType tupleType) {
-		String alias = tupleTypeAliasMap.get(tupleType);
+	public TupleTypeSigniture tupleTypeSigniture(
+			SymbolicTupleType sarlTupleType) {
+		TupleTypeSigniture tupleSigniture = tupleTypeSignitureMap
+				.get(sarlTupleType);
 
-		if (alias == null) {
-			alias = "_tuple_" + tupleAliasCounter++;
-			tupleTypeAliasMap.put(tupleType, alias);
+		if (tupleSigniture == null) {
+			tupleSigniture = new TupleTypeSigniture(
+					tupleTypeSignitureMap.size(), sarlTupleType);
+			tupleTypeSignitureMap.put(sarlTupleType, tupleSigniture);
 		}
-		return alias;
+		return tupleSigniture;
 	}
 
 	/**
@@ -194,8 +193,7 @@ public class Why3TranslationState {
 	 * @return All declarations.
 	 */
 	public Iterable<String> getDeclaration() {
-		List<String> result = new LinkedList<>(
-				typeAliasingDeclarations.values());
+		List<String> result = new LinkedList<>(typeAliasingDeclarations);
 
 		result.addAll(declarations.values());
 		return result;
@@ -212,7 +210,7 @@ public class Why3TranslationState {
 	 * Inserts a declaration at the beginning of the declaration list.
 	 */
 	public void addTypeAliasDeclaration(String alias, String declaration) {
-		typeAliasingDeclarations.putIfAbsent(alias, declaration);
+		typeAliasingDeclarations.addLast(declaration);
 	}
 
 	/**
@@ -278,5 +276,48 @@ public class Why3TranslationState {
 			sigmaNameMap.put(lambda, name);
 		}
 		return name;
+	}
+
+	/**
+	 * Each tuple type (union is tuple as well) must have unique field names.
+	 * (This is a strange restriction in why3 language). Hence, each tuple will
+	 * be assigned a unique id for identifying field names.
+	 * 
+	 * @author ziqing
+	 *
+	 */
+	class TupleTypeSigniture {
+
+		public final int id;
+
+		public final SymbolicTupleType tupleType;
+
+		public final String alias;
+
+		/**
+		 * prefix for field name of tuple types
+		 */
+		static private final String tuple_field_prefix = "_t";
+
+		/**
+		 * infix for field name of tuple types that separates the tuple id and
+		 * the field index
+		 */
+		static private final String tuple_field_infix = "_";
+
+		/**
+		 * prefix for tuple alias names
+		 */
+		static private final String tuple_alias_prefix = "_tuple_";
+
+		TupleTypeSigniture(int id, SymbolicTupleType tupleType) {
+			this.id = id;
+			this.tupleType = tupleType;
+			this.alias = tuple_alias_prefix + id;
+		}
+
+		public String nthFieldName(int nth) {
+			return tuple_field_prefix + id + tuple_field_infix + nth;
+		}
 	}
 }

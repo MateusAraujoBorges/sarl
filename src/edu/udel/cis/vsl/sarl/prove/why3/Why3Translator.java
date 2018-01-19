@@ -38,6 +38,7 @@ import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3InfixOperator;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3Lib;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3TupleType;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3Type;
+import edu.udel.cis.vsl.sarl.prove.why3.Why3TranslationState.TupleTypeSigniture;
 
 /**
  * <p>
@@ -899,30 +900,37 @@ public class Why3Translator {
 	 * Tuple is a first-class type in Why3 {_t0 : type, _t1 : type, ...}
 	 */
 	private String translateTuple(SymbolicExpression expr) {
-		Why3Type type = translateType(expr.type());
+		SymbolicTupleType sarlTupleType = (SymbolicTupleType) expr.type();
+		Why3Type type = translateType(sarlTupleType);
 		String identifier = createIdentifier(type);
 		String fieldValueTexts[] = translateArgumentList(expr.getArguments(),
 				expr.numArguments());
 		String fieldNameTexts[] = new String[fieldValueTexts.length];
+		TupleTypeSigniture tupleTypeSigniture = state
+				.tupleTypeSigniture(sarlTupleType);
 
 		for (int i = 0; i < fieldNameTexts.length; i++)
-			fieldNameTexts[i] = nthFieldName(i);
+			fieldNameTexts[i] = tupleTypeSigniture.nthFieldName(i);
 		return Why3Primitives.why3TupleDenseUpdate(identifier, fieldNameTexts,
 				fieldValueTexts, fieldNameTexts.length);
 	}
 
 	private String translateDenseTupleWrite(SymbolicExpression expr) {
+		SymbolicExpression sarlTuple = (SymbolicExpression) expr.argument(0);
 		@SuppressWarnings("unchecked")
 		String[] fieldValueTexts = translateArgumentList(
 				(Iterable<? extends SymbolicObject>) expr.argument(1));
-		String tuple = translate((SymbolicExpression) expr.argument(0));
+		String tuple = translate(sarlTuple);
 		String nonEmptyFieldValueTexts[] = new String[fieldValueTexts.length];
 		String fieldNameTexts[] = new String[fieldValueTexts.length];
+		TupleTypeSigniture tupleTypeSigniture = state
+				.tupleTypeSigniture((SymbolicTupleType) sarlTuple.type());
 		int counter = 0;
 
 		for (int i = 0; i < fieldNameTexts.length; i++) {
 			if (fieldValueTexts[i] != NULL) {
-				fieldNameTexts[counter] = nthFieldName(counter);
+				fieldNameTexts[counter] = tupleTypeSigniture
+						.nthFieldName(counter);
 				nonEmptyFieldValueTexts[counter++] = fieldValueTexts[i];
 			}
 		}
@@ -934,12 +942,15 @@ public class Why3Translator {
 	 * Tuple read in why3 <code>tuple.field</code>
 	 */
 	private String translateTupleRead(SymbolicExpression expr) {
-		String tuple = translate((SymbolicExpression) expr.argument(0));
+		SymbolicExpression sarlTuple = (SymbolicExpression) expr.argument(0);
+		String tuple = translate(sarlTuple);
 		int fieldIdx = ((IntObject) expr.argument(1)).getInt();
 		String[] tupleTexts = new String[2];
+		TupleTypeSigniture tupleTypeSigniture = state
+				.tupleTypeSigniture((SymbolicTupleType) sarlTuple.type());
 
 		tupleTexts[0] = tuple;
-		tupleTexts[1] = nthFieldName(fieldIdx);
+		tupleTexts[1] = tupleTypeSigniture.nthFieldName(fieldIdx);
 		return interpolateOperator(tupleTexts, Why3Primitives.tuple_read);
 	}
 
@@ -947,12 +958,15 @@ public class Why3Translator {
 	 * Tuple write in why3 <code>{tuple with field = newValue}</code>
 	 */
 	private String translateTupleWrite(SymbolicExpression expr) {
-		String tuple = translate((SymbolicExpression) expr.argument(0));
+		SymbolicExpression sarlTuple = (SymbolicExpression) expr.argument(0);
+		String tuple = translate(sarlTuple);
 		int fieldIdx = ((IntObject) expr.argument(1)).getInt();
 		String newValue = translate((SymbolicExpression) expr.argument(2));
+		TupleTypeSigniture tupleTypeSigniture = state
+				.tupleTypeSigniture((SymbolicTupleType) sarlTuple.type());
 
-		return Why3Primitives.why3TupleUpdate(tuple, nthFieldName(fieldIdx),
-				newValue);
+		return Why3Primitives.why3TupleUpdate(tuple,
+				tupleTypeSigniture.nthFieldName(fieldIdx), newValue);
 	}
 
 	/**
@@ -965,7 +979,15 @@ public class Why3Translator {
 		SymbolicExpression unionVal = (SymbolicExpression) expr.argument(1);
 		String union = translate(unionVal);
 		String flag, cond;
-		String[] unionTexts = { union, nthFieldName(union_flag_field) };
+		SymbolicUnionType sarlUnionType = (SymbolicUnionType) unionVal.type();
+		// cast union type to tuple type:
+		SymbolicTupleType castedSarlTupleType = castUnionType2TupleType(
+				sarlUnionType);
+		Why3Type unionType = translateType(castedSarlTupleType);
+		TupleTypeSigniture typeSigniture = state
+				.tupleTypeSigniture(castedSarlTupleType);
+		String[] unionTexts = { union,
+				typeSigniture.nthFieldName(union_flag_field) };
 
 		// read the first field
 		flag = interpolateOperator(unionTexts, Why3Primitives.tuple_read);
@@ -974,18 +996,16 @@ public class Why3Translator {
 		unionTexts[1] = "" + fieldIdx;
 		cond = interpolateOperator(unionTexts, Why3Primitives.num_equals);
 		unionTexts[0] = union;
-		unionTexts[1] = nthFieldName(fieldIdx);
+		unionTexts[1] = typeSigniture.nthFieldName(fieldIdx);
 
-		Why3TupleType unionType = (Why3TupleType) translateType(
-				unionVal.type());
-		String alias = state.getTupleTypeAlias(unionType);
-
-		addUnionExtractUninterpretedFunctionDeclaration(alias, unionType,
+		String uninterpretedFuncName = addUnionExtractUninterpretedFunctionDeclaration(
+				typeSigniture.alias, unionType,
+				translateType(castedSarlTupleType.sequence().getType(fieldIdx)),
 				fieldIdx);
+
 		return Why3Primitives.why3IfThenElse(cond,
 				interpolateOperator(unionTexts, Why3Primitives.tuple_read),
-				Why3Primitives.why3FunctionCall(
-						union_extract_undefined_function_name, union,
+				Why3Primitives.why3FunctionCall(uninterpretedFuncName, union,
 						"" + fieldIdx));
 	}
 
@@ -997,24 +1017,34 @@ public class Why3Translator {
 		int fieldIdx = ((IntObject) expr.argument(0)).getInt() + 1;
 		SymbolicExpression newValue = (SymbolicExpression) expr.argument(1);
 		String value = translate(newValue);
-		Why3Type unionType = translateType(newValue.type());
+		SymbolicTupleType castedSarlType = castUnionType2TupleType(
+				(SymbolicUnionType) expr.type());
+		Why3Type unionType = translateType(castedSarlType);
 		String unionTmpVar = state.newIdentifierName();
+		TupleTypeSigniture typeSigniture = state
+				.tupleTypeSigniture(castedSarlType);
 
 		state.addDeclaration(unionTmpVar,
 				Why3Primitives.constantDecl(unionTmpVar, unionType));
 		// write the flag field first:
 		unionTmpVar = Why3Primitives.why3TupleUpdate(unionTmpVar,
-				nthFieldName(0), "" + fieldIdx);
+				typeSigniture.nthFieldName(0), "" + fieldIdx);
 		// the write the real field:
 		return Why3Primitives.why3TupleUpdate(unionTmpVar,
-				nthFieldName(fieldIdx), value);
+				typeSigniture.nthFieldName(fieldIdx), value);
 	}
 
 	private String translateUnionTest(SymbolicExpression expr) {
 		SymbolicExpression union = (SymbolicExpression) expr.argument(1);
+		SymbolicTupleType castedTupleType = castUnionType2TupleType(
+				(SymbolicUnionType) union.type());
+		TupleTypeSigniture typeSigniture;
 		int fieldIdx = ((IntObject) expr.argument(0)).getInt();
+
+		translateType(castedTupleType);
+		typeSigniture = state.tupleTypeSigniture(castedTupleType);
 		String[] unionText = { translate(union),
-				nthFieldName(union_flag_field) };
+				typeSigniture.nthFieldName(union_flag_field) };
 
 		unionText[0] = interpolateOperator(unionText,
 				Why3Primitives.tuple_read);
@@ -1194,17 +1224,11 @@ public class Why3Translator {
 			state.addLibrary(Why3Lib.REAL);
 			return Why3Primitives.real_t;
 		case TUPLE:
-			Why3TupleType tupleType = makeWhy3TupleType(
-					((SymbolicTupleType) type).sequence());
-			String alias = state.getTupleTypeAlias(tupleType);
+			TupleTypeSigniture tupleTypeSigniture = state
+					.tupleTypeSigniture((SymbolicTupleType) type);
+			Why3TupleType tupleType = makeWhy3TupleType(tupleTypeSigniture);
+			String alias = tupleTypeSigniture.alias;
 
-			state.addTypeAliasDeclaration(alias,
-					Why3Primitives.why3TypeAlias(alias, tupleType));
-			return new Why3Primitives.Why3Type(alias);
-		case UNION:
-			tupleType = makeWhy3TupleType(
-					((SymbolicUnionType) type).sequence());
-			alias = state.getTupleTypeAlias(tupleType);
 			state.addTypeAliasDeclaration(alias,
 					Why3Primitives.why3TypeAlias(alias, tupleType));
 			return new Why3Primitives.Why3Type(alias);
@@ -1227,11 +1251,14 @@ public class Why3Translator {
 	/**
 	 * Create a {@link Why3TupleType}
 	 * 
-	 * @param typeSequence
-	 *            The list of types of fields
+	 * @param sarlTupleType
+	 *            a SARL tuple type
 	 * @return the {@link Why3TupleType}
 	 */
-	private Why3TupleType makeWhy3TupleType(SymbolicTypeSequence typeSequence) {
+	private Why3TupleType makeWhy3TupleType(
+			TupleTypeSigniture tupleTypeSigniture) {
+		SymbolicTypeSequence typeSequence = tupleTypeSigniture.tupleType
+				.sequence();
 		int fieldCounter = 0;
 		int size = typeSequence.numTypes();
 		Why3Type types[] = new Why3Type[size];
@@ -1239,7 +1266,8 @@ public class Why3Translator {
 
 		for (SymbolicType fieldType : typeSequence) {
 			types[fieldCounter] = translateType(fieldType);
-			fieldNames[fieldCounter] = this.nthFieldName(fieldCounter++);
+			fieldNames[fieldCounter] = tupleTypeSigniture
+					.nthFieldName(fieldCounter++);
 		}
 		return Why3Primitives.why3TupleType(null, fieldNames, types);
 	}
@@ -1262,7 +1290,7 @@ public class Why3Translator {
 			break;
 		case INTEGER:
 			state.addLibrary(Why3Lib.INT);
-			result = object.toString();
+			result = wrap(object.toString());
 			break;
 		case REAL: {
 			RationalNumber number = (RationalNumber) ((NumberObject) object)
@@ -1305,20 +1333,31 @@ public class Why3Translator {
 		return newName;
 	}
 
-	private String nthFieldName(int fieldIdx) {
-		return tuple_field_prefix + fieldIdx;
-	}
-
-	private void addUnionExtractUninterpretedFunctionDeclaration(
-			String unionTypeAlias, Why3Type unionType, int fieldIdx) {
+	private String addUnionExtractUninterpretedFunctionDeclaration(
+			String unionTypeAlias, Why3Type unionType, Why3Type fieldType,
+			int fieldIdx) {
 		String declName = union_extract_undefined_function_name + unionTypeAlias
 				+ fieldIdx;
 		Why3Type formals[] = { unionType, Why3Primitives.int_t };
 		String decl = Why3Primitives.why3UninterpretedFunctionDecl(declName,
-				Why3Primitives.why3FunctionType(
-						unionType.nthArgumentType(fieldIdx), formals));
+				Why3Primitives.why3FunctionType(fieldType, formals));
 
 		state.addDeclaration(declName, decl);
+		return declName;
+	}
+
+	/**
+	 * Cast union type to tuple type. All union fields become tuple fields.
+	 */
+	private SymbolicTupleType castUnionType2TupleType(
+			SymbolicUnionType unionType) {
+		LinkedList<SymbolicType> unionFieldTypes = new LinkedList<>();
+
+		for (SymbolicType type : unionType.sequence())
+			unionFieldTypes.add(type);
+		// add significant member flag:
+		unionFieldTypes.addFirst(universe.integerType());
+		return universe.tupleType(unionType.name(), unionFieldTypes);
 	}
 
 	/**

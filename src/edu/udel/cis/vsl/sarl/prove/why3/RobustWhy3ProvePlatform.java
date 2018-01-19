@@ -64,7 +64,9 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 	 */
 	private BooleanExpression cleanedContext;
 
-	private static String temporary_file_name = "./CIVLREP/_sarl_why3.why";
+	private static String temporary_file_dir = "./SARL_Why3/";
+
+	private static String temporary_file_name = "./SARL_Why3/_sarl_why3.why";
 
 	private static String prove_command = "prove";
 
@@ -157,6 +159,9 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 		if (doSplitGoals) {
 			BooleanExpression goals[] = splitGoals(predicate);
 			numGoals = goals.length;
+
+			if (numGoals == 1)
+				return result;
 			goalsTexts = new String[numGoals];
 			for (int i = 0; i < numGoals; i++)
 				goalsTexts[i] = why3Translator.translateGoal(goals[i]);
@@ -168,8 +173,11 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 
 		// Write the why3 translation into a temporary file, run process, then
 		// delete it:
-		File queryFile = new File(temporary_file_name);
+		File queryFile = new File(temporary_file_dir);
 
+		if (!queryFile.exists())
+			queryFile.mkdirs();
+		queryFile = new File(temporary_file_name);
 		try {
 			FileWriter filewriter = new FileWriter(queryFile);
 
