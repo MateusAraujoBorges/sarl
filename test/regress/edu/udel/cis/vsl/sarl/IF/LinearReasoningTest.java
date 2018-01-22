@@ -23,6 +23,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class LinearReasoningTest {
 
+	@SuppressWarnings("unused")
 	private static boolean debug = true;
 
 	private static PrintStream out = System.out;
@@ -33,14 +34,18 @@ public class LinearReasoningTest {
 
 	private static SymbolicRealType realType = uv.realType();
 
+	@SuppressWarnings("unused")
 	private static SymbolicType booleanType = uv.booleanType();
 
+	@SuppressWarnings("unused")
 	private static NumericSymbolicConstant a = (NumericSymbolicConstant) uv
 			.symbolicConstant(uv.stringObject("a"), intType);
 
+	@SuppressWarnings("unused")
 	private static NumericSymbolicConstant b = (NumericSymbolicConstant) uv
 			.symbolicConstant(uv.stringObject("b"), intType);
 
+	@SuppressWarnings("unused")
 	private static NumericSymbolicConstant c = (NumericSymbolicConstant) uv
 			.symbolicConstant(uv.stringObject("c"), intType);
 
@@ -50,15 +55,16 @@ public class LinearReasoningTest {
 	private static NumericSymbolicConstant y = (NumericSymbolicConstant) uv
 			.symbolicConstant(uv.stringObject("y"), realType);
 
+	@SuppressWarnings("unused")
 	private static NumericSymbolicConstant z = (NumericSymbolicConstant) uv
 			.symbolicConstant(uv.stringObject("z"), realType);
-
+	@SuppressWarnings("unused")
 	private static NumericExpression i0 = uv.zeroInt(), i1 = uv.oneInt(),
 			i2 = uv.integer(2);
-
+	@SuppressWarnings("unused")
 	private static NumericExpression r0 = uv.zeroReal(), r1 = uv.oneReal(),
 			r2 = uv.rational(2);
-
+	@SuppressWarnings("unused")
 	private static BooleanExpression trueExpr = uv.trueExpression(),
 			falseExpr = uv.falseExpression();
 
