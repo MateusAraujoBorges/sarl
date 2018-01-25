@@ -241,8 +241,8 @@ public class RealNumberFactory implements NumberFactory {
 	/**
 	 * Returns a RealRational formed from given BigInteger numerator and
 	 * denominator. Detects and protects against zero valued denominators. Moves
-	 * any negation to the numerator. Simplifies the RealRational If numerator
-	 * equals zero, simplifies to 0/1 regardless of denominator.
+	 * any negation to the numerator. If numerator equals zero, simplifies to
+	 * 0/1 regardless of denominator.
 	 */
 	public RealRational rational(BigInteger numerator, BigInteger denominator) {
 		int signum = denominator.signum();
@@ -253,7 +253,6 @@ public class RealNumberFactory implements NumberFactory {
 			throw new ArithmeticException("Division by 0");
 		}
 		// ensures any negation is in numerator
-		// protects signum method in RealRational
 		if (signum < 0) {
 			numerator = numerator.negate();
 			denominator = denominator.negate();

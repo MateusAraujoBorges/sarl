@@ -496,7 +496,7 @@ public class Context {
 	 *         probability that it is not 0 is less than or equal to epsilon. If
 	 *         this method returns false, then poly is not zero.
 	 */
-	private boolean is0WithProbability(Polynomial poly,
+	private boolean is0WithProbability1(Polynomial poly,
 			IntegerNumber totalDegree, Set<Primitive> vars,
 			RationalNumber epsilon) {
 		NumberFactory nf = info.numberFactory;
@@ -516,6 +516,15 @@ public class Context {
 			prob = nf.multiply(prob, ratio);
 		} while (nf.compare(epsilon, prob) < 0);
 		return true;
+	}
+
+	private boolean is0WithProbability(Polynomial poly,
+			IntegerNumber totalDegree, Set<Primitive> vars,
+			RationalNumber epsilon) {
+		FastEvaluator2 fe = new FastEvaluator2(random, info.numberFactory, poly,
+				totalDegree);
+
+		return fe.isZero(epsilon);
 	}
 
 	/**

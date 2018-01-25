@@ -488,7 +488,9 @@ public abstract class ExpressionSubstituter
 	 */
 	@Override
 	public SymbolicExpression apply(SymbolicExpression expression) {
-		return substituteExpression(expression, newState());
+		SymbolicExpression result = substituteExpression(expression, newState());
+		
+		return result;
 	}
 
 }
