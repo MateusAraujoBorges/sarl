@@ -521,10 +521,17 @@ public class Context {
 	private boolean is0WithProbability(Polynomial poly,
 			IntegerNumber totalDegree, Set<Primitive> vars,
 			RationalNumber epsilon) {
-		FastEvaluator2 fe = new FastEvaluator2(random, info.numberFactory, poly,
-				totalDegree);
+		if (poly.type().isReal()) {
+			FastEvaluator3 fe = new FastEvaluator3(random, info.numberFactory,
+					poly, totalDegree);
 
-		return fe.isZero(epsilon);
+			return fe.isZero(epsilon);
+		} else {
+			FastEvaluator2 fe = new FastEvaluator2(random, info.numberFactory,
+					poly, totalDegree);
+
+			return fe.isZero(epsilon);
+		}
 	}
 
 	/**
