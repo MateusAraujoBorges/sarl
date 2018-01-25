@@ -40,6 +40,8 @@ public class FastEvaluator2 {
 
 		protected List<EvalNode> parents = new LinkedList<>();
 
+		protected int evalCount = 0; // number of times evaluate called
+
 		public EvalNode(NumericExpression expr) {
 			this.expr = expr;
 		}
@@ -62,6 +64,17 @@ public class FastEvaluator2 {
 
 		abstract Number evaluate();
 
+		Number clearOnCount() {
+			evalCount++;
+			if (evalCount == parents.size()) {
+				Number result = value;
+
+				value = null;
+				return result;
+			} else {
+				return value;
+			}
+		}
 	}
 
 	class AddNode extends EvalNode {
@@ -81,7 +94,7 @@ public class FastEvaluator2 {
 				for (int i = 1; i < children.length; i++)
 					value = nf.add(value, children[i].evaluate());
 			}
-			return value;
+			return clearOnCount();
 		}
 	}
 
@@ -102,7 +115,7 @@ public class FastEvaluator2 {
 				for (int i = 1; i < children.length; i++)
 					value = nf.multiply(value, children[i].evaluate());
 			}
-			return value;
+			return clearOnCount();
 		}
 	}
 
@@ -123,7 +136,7 @@ public class FastEvaluator2 {
 			if (value == null) {
 				value = nf.power(base.evaluate(), exponent);
 			}
-			return value;
+			return clearOnCount();
 		}
 	}
 
