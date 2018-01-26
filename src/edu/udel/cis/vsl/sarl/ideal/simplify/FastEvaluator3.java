@@ -3,6 +3,7 @@ package edu.udel.cis.vsl.sarl.ideal.simplify;
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Random;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
+import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
@@ -217,6 +219,8 @@ public class FastEvaluator3 {
 		 */
 		protected int evalCount = 0;
 
+		protected int hashCode = -1;
+
 		/**
 		 * Add the given node to the parent list of this node.
 		 * 
@@ -271,6 +275,25 @@ public class FastEvaluator3 {
 				return value;
 			}
 		}
+
+		int depth() {
+			return 1;
+		}
+
+		long numDescendants() {
+			return 1;
+		}
+
+		public int numChildren() {
+			return 0;
+		}
+
+		public EvalNode[] getChildren() {
+			return null;
+		}
+
+		public abstract SymbolicOperator operator();
+
 	}
 
 	/**
@@ -280,6 +303,10 @@ public class FastEvaluator3 {
 	 */
 	class AddNode extends EvalNode {
 		private EvalNode[] children;
+
+		private int depth = -1;
+
+		private long numDescendants = -1;
 
 		AddNode(EvalNode[] children) {
 			assert children.length >= 1;
@@ -297,6 +324,61 @@ public class FastEvaluator3 {
 			}
 			return clearOnCount();
 		}
+
+		@Override
+		int depth() {
+			if (depth < 0) {
+				int maxChildDepth = 0;
+
+				for (EvalNode child : children) {
+					int childDepth = child.depth();
+
+					maxChildDepth = childDepth > maxChildDepth ? childDepth
+							: maxChildDepth;
+				}
+				depth = 1 + maxChildDepth;
+			}
+			return depth;
+		}
+
+		@Override
+		long numDescendants() {
+			if (numDescendants < 0) {
+				numDescendants = children.length;
+
+				for (int i = 0; i < children.length; i++)
+					numDescendants += children[i].numDescendants();
+			}
+			return numDescendants;
+		}
+
+		@Override
+		public int hashCode() {
+			if (hashCode == -1) {
+				int[] childrenHashCodes = new int[children.length];
+
+				for (int i = 0; i < children.length; i++)
+					childrenHashCodes[i] = children[i].hashCode();
+				hashCode = Arrays.hashCode(childrenHashCodes)
+						^ SymbolicOperator.ADD.hashCode() + parents.size();
+			}
+			return hashCode;
+		}
+
+		@Override
+		public SymbolicOperator operator() {
+			return SymbolicOperator.ADD;
+		}
+
+		@Override
+		public int numChildren() {
+			return children.length;
+		}
+
+		@Override
+		public EvalNode[] getChildren() {
+			return children;
+		}
 	}
 
 	/**
@@ -306,6 +388,10 @@ public class FastEvaluator3 {
 	 */
 	class MultiplyNode extends EvalNode {
 		private EvalNode[] children;
+
+		private int depth = -1;
+
+		private long numDescendants = -1;
 
 		MultiplyNode(EvalNode[] children) {
 			assert children.length >= 1;
@@ -322,6 +408,61 @@ public class FastEvaluator3 {
 					value.multiply(children[i].evaluate());
 			}
 			return clearOnCount();
+		}
+
+		@Override
+		int depth() {
+			if (depth < 0) {
+				int maxChildDepth = 0;
+
+				for (EvalNode child : children) {
+					int childDepth = child.depth();
+
+					maxChildDepth = childDepth > maxChildDepth ? childDepth
+							: maxChildDepth;
+				}
+				depth = 1 + maxChildDepth;
+			}
+			return depth;
+		}
+
+		@Override
+		long numDescendants() {
+			if (numDescendants < 0) {
+				numDescendants = children.length;
+
+				for (int i = 0; i < children.length; i++)
+					numDescendants += children[i].numDescendants();
+			}
+			return numDescendants;
+		}
+
+		@Override
+		public int hashCode() {
+			if (hashCode == -1) {
+				int[] childrenHashCodes = new int[children.length];
+
+				for (int i = 0; i < children.length; i++)
+					childrenHashCodes[i] = children[i].hashCode();
+				hashCode = Arrays.hashCode(childrenHashCodes)
+						^ SymbolicOperator.MULTIPLY.hashCode() + parents.size();
+			}
+			return hashCode;
+		}
+
+		@Override
+		public SymbolicOperator operator() {
+			return SymbolicOperator.MULTIPLY;
+		}
+
+		@Override
+		public int numChildren() {
+			return children.length;
+		}
+
+		@Override
+		public EvalNode[] getChildren() {
+			return children;
 		}
 	}
 
@@ -349,6 +490,20 @@ public class FastEvaluator3 {
 			}
 			return clearOnCount();
 		}
+
+		@Override
+		public int hashCode() {
+			if (hashCode == -1) {
+				hashCode = base.hashCode() ^ exponent.hashCode()
+						^ SymbolicOperator.POWER.hashCode() + parents.size();
+			}
+			return hashCode;
+		}
+
+		@Override
+		public SymbolicOperator operator() {
+			return SymbolicOperator.POWER;
+		}
 	}
 
 	/**
@@ -363,6 +518,21 @@ public class FastEvaluator3 {
 
 		Rat evaluate() {
 			return value;
+		}
+
+		@Override
+		public int hashCode() {
+			if (hashCode == -1) {
+				BigInteger bigIntArray[] = { value.a, value.b };
+				hashCode = Arrays.hashCode(bigIntArray)
+						^ SymbolicOperator.CONCRETE.hashCode() + parents.size();
+			}
+			return hashCode;
+		}
+
+		@Override
+		public SymbolicOperator operator() {
+			return SymbolicOperator.CONCRETE;
 		}
 	}
 
@@ -389,6 +559,17 @@ public class FastEvaluator3 {
 		@Override
 		Rat evaluate() {
 			return value;
+		}
+
+		@Override
+		public int hashCode() {
+			return SymbolicOperator.SYMBOLIC_CONSTANT.hashCode()
+					+ parents.size();
+		}
+
+		@Override
+		public SymbolicOperator operator() {
+			return SymbolicOperator.SYMBOLIC_CONSTANT;
 		}
 	}
 
