@@ -11,59 +11,97 @@ import java.util.Map;
 import java.util.Random;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
-import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
 import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
-import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 
 /**
- * Object used to evaluate a polynomial. Real type only. Integer type should be
- * easier.
+ * An object used to determine whether an expression is equivalent to 0 within
+ * some probability. Real type only. Integer type should be easier.
  * 
  * @author siegel
- *
  */
 public class FastEvaluator3 {
 
+	/**
+	 * Print debugging output?
+	 */
 	public final static boolean debug = true;
 
+	/**
+	 * Where to print the debugging output.
+	 */
 	public final static PrintStream out = System.out;
 
 	/**
-	 * Mutable infinite precision rational number.
+	 * A mutable infinite precision rational number.
 	 * 
 	 * @author siegel
-	 *
 	 */
 	class Rat {
 		BigInteger a; // numerator
 		BigInteger b; // denominator
 
+		/**
+		 * Construct new rational number from numerator a and denominator b.
+		 * Place it into canonical form: b>0; a/b=0 iff (a=0 and b=1);
+		 * gcd(a,b)=1.
+		 * 
+		 * @param a
+		 *            the numerator
+		 * @param b
+		 *            the denominator
+		 */
 		Rat(BigInteger a, BigInteger b) {
 			this.a = a;
 			this.b = b;
 			normalize();
 		}
 
+		/**
+		 * Constructs new rational number a=a/1.
+		 * 
+		 * @param a
+		 *            the big integer value
+		 */
 		Rat(BigInteger a) {
 			this.a = a;
 			this.b = BigInteger.ONE;
 		}
 
+		/**
+		 * Constructs new rational number copying the numerator and denominator
+		 * from the given rational number.
+		 * 
+		 * @param that
+		 *            the other rational number
+		 */
 		Rat(Rat that) {
 			a = that.a;
 			b = that.b;
 		}
 
-		Rat(RationalNumber num) {
-			a = num.numerator();
-			b = num.denominator();
+		/**
+		 * Constructs new rational number from a SARL {@link RationalNumber},
+		 * which uses the same canonical form. (The reason why we aren't using
+		 * SARL {@link RationalNumber}s is because they are all flyweighted
+		 * (cached), which is too expensive for the huge numbers we need in this
+		 * class.)
+		 * 
+		 * @param that
+		 *            the SARL number to copy
+		 */
+		Rat(RationalNumber that) {
+			a = that.numerator();
+			b = that.denominator();
 		}
 
+		/**
+		 * Places this rational number into canonic form.
+		 */
 		private void normalize() {
 			int signum = b.signum();
 
@@ -88,29 +126,50 @@ public class FastEvaluator3 {
 			}
 		}
 
-		// void set(Rat that) {
-		// a = that.a;
-		// b = that.b;
-		// }
-
+		/**
+		 * Add that number to this one. Modifies this number so that its new
+		 * value is the sum of its old value and that. Does not modify that.
+		 * 
+		 * @param that
+		 *            the other value
+		 */
 		void add(Rat that) {
 			a = a.multiply(that.b).add(b.multiply(that.a));
 			b = b.multiply(that.b);
 			normalize();
 		}
 
+		/**
+		 * Modifies this number so that its new value is the product of its old
+		 * value and that. Does not modify that.
+		 * 
+		 * @param that
+		 *            the other value
+		 */
 		void multiply(Rat that) {
 			a = a.multiply(that.a);
 			b = b.multiply(that.b);
 			normalize();
 		}
 
+		/**
+		 * Modifies this number by raising it to the {@code exponent} power.
+		 * 
+		 * @param exponent
+		 *            a positive int
+		 */
 		void power(int exponent) {
 			a = a.pow(exponent);
 			b = b.pow(exponent);
 			// no need to normalize: (a,b)=1 --> (a^e,b^e)=1
 		}
 
+		/**
+		 * Modifies this number by raising it to the {@code exp} power.
+		 * 
+		 * @param exp
+		 *            a positive big integer
+		 */
 		void power(BigInteger exp) {
 			try {
 				power(exp.intValueExact());
@@ -121,29 +180,58 @@ public class FastEvaluator3 {
 			}
 		}
 
+		/**
+		 * Is this rational number equal to 0?
+		 * 
+		 * @return {@code true} iff this is 0
+		 */
 		boolean isZero() {
 			return a.signum() == 0;
 		}
 	}
 
+	/**
+	 * A node in the "tree" used to represent the polynomial. Leaf nodes are
+	 * either constants or variables. Non-leaf nodes represent either addition,
+	 * multiplication, or exponentiation. It's not really a tree, because we
+	 * allow sharing. So it's a DAG.
+	 * 
+	 * @author siegel
+	 *
+	 */
 	abstract class EvalNode {
 
-		protected NumericExpression expr; // for debugging
-
+		/**
+		 * The cached result of evaluating this node.
+		 */
 		protected Rat value = null;
 
+		/**
+		 * The parent nodes of this node, i.e., all nodes in the tree that have
+		 * this node as a child. (So, it isn't really a tree.)
+		 */
 		protected List<EvalNode> parents = new LinkedList<>();
 
-		protected int evalCount = 0; // number of times evaluate called
+		/**
+		 * The number of times method {@link #evaluate()} has been called.
+		 */
+		protected int evalCount = 0;
 
-		public EvalNode(NumericExpression expr) {
-			this.expr = expr;
-		}
-
+		/**
+		 * Add the given node to the parent list of this node.
+		 * 
+		 * @param parent
+		 *            the node to make a parent
+		 */
 		void addParent(EvalNode parent) {
 			parents.add(parent);
 		}
 
+		/**
+		 * Returns the set of parents.
+		 * 
+		 * @return the parents of this node
+		 */
 		Collection<EvalNode> getParents() {
 			return parents;
 		}
@@ -156,8 +244,22 @@ public class FastEvaluator3 {
 			}
 		}
 
+		/**
+		 * Computes the value of this node, a concrete rational number. Might
+		 * return a cached value.
+		 * 
+		 * @return the result of evaluating this node
+		 */
 		abstract Rat evaluate();
 
+		/**
+		 * Increments the evaluation count; if that count then equals the number
+		 * of parents of this node, sets the {@link #value} to {@code null} so
+		 * the {@link BigInteger}s can be swept up by the garbage collector.
+		 * 
+		 * @return the {@link #value} in the pre-state (before possibly setting
+		 *         it to {@code null})
+		 */
 		Rat clearOnCount() {
 			evalCount++;
 			if (evalCount == parents.size()) {
@@ -171,17 +273,22 @@ public class FastEvaluator3 {
 		}
 	}
 
+	/**
+	 * A node representing the sum of its children.
+	 * 
+	 * @author siegel
+	 */
 	class AddNode extends EvalNode {
 		private EvalNode[] children;
 
-		AddNode(NumericExpression expr, EvalNode[] children) {
-			super(expr);
+		AddNode(EvalNode[] children) {
 			assert children.length >= 1;
 			this.children = children;
 			for (EvalNode child : children)
 				child.addParent(this);
 		}
 
+		@Override
 		Rat evaluate() {
 			if (value == null) {
 				value = new Rat(children[0].evaluate());
@@ -192,17 +299,22 @@ public class FastEvaluator3 {
 		}
 	}
 
+	/**
+	 * A node representing the product of its children
+	 * 
+	 * @author siegel
+	 */
 	class MultiplyNode extends EvalNode {
 		private EvalNode[] children;
 
-		MultiplyNode(NumericExpression expr, EvalNode[] children) {
-			super(expr);
+		MultiplyNode(EvalNode[] children) {
 			assert children.length >= 1;
 			this.children = children;
 			for (EvalNode child : children)
 				child.addParent(this);
 		}
 
+		@Override
 		Rat evaluate() {
 			if (value == null) {
 				value = new Rat(children[0].evaluate());
@@ -213,12 +325,18 @@ public class FastEvaluator3 {
 		}
 	}
 
+	/**
+	 * A node representing a power operation: a base raised to some fixed power.
+	 * This node has one child, the base. The exponent is a constant number, so
+	 * a field in this node.
+	 * 
+	 * @author siegel
+	 */
 	class PowerNode extends EvalNode {
 		private EvalNode base;
 		private BigInteger exponent;
 
-		PowerNode(NumericExpression expr, EvalNode base, BigInteger exponent) {
-			super(expr);
+		PowerNode(EvalNode base, BigInteger exponent) {
 			this.base = base;
 			this.exponent = exponent;
 			base.addParent(this);
@@ -233,10 +351,13 @@ public class FastEvaluator3 {
 		}
 	}
 
+	/**
+	 * A constant node. This is a leaf node in the tree.
+	 * 
+	 * @author siegel
+	 */
 	class ConstantNode extends EvalNode {
-
-		ConstantNode(NumericExpression expr, Rat value) {
-			super(expr);
+		ConstantNode(Rat value) {
 			this.value = value;
 		}
 
@@ -245,12 +366,19 @@ public class FastEvaluator3 {
 		}
 	}
 
+	/**
+	 * A variable node. This is a leaf node in the tree.
+	 * 
+	 * @author siegel
+	 */
 	class VarNode extends EvalNode {
-
-		VarNode(Primitive primitive) {
-			super(primitive);
-		}
-
+		/**
+		 * Sets the value of this variable. This automatically nullifies all
+		 * ancestor nodes of this node, since their values depend on this value.
+		 * 
+		 * @param value
+		 *            the value to associate to this node
+		 */
 		public void setValue(Rat value) {
 			this.value = value;
 			for (EvalNode parent : getParents()) {
@@ -258,21 +386,35 @@ public class FastEvaluator3 {
 			}
 		}
 
+		@Override
 		Rat evaluate() {
 			return value;
 		}
 	}
 
+	/**
+	 * The number factory.
+	 */
 	private NumberFactory nf;
 
-	// private boolean isInteger;
-
+	/**
+	 * The root node of the tree.
+	 */
 	private EvalNode root;
 
+	/**
+	 * The number of variable nodes in the tree.
+	 */
 	private int numVars;
 
+	/**
+	 * The variable nodes in the tree.
+	 */
 	private VarNode[] varNodes;
 
+	/**
+	 * Upper bound on total degree of the original polynomial after expansion.
+	 */
 	private IntegerNumber totalDegree;
 
 	private Map<Monomial, EvalNode> exprMap = new HashMap<>();
@@ -297,13 +439,28 @@ public class FastEvaluator3 {
 	 */
 	private RationalNumber randSize;
 
+	/**
+	 * Random number generator ---- produces sequence of random Java {@code int}
+	 * s.
+	 */
 	private Random random;
 
+	/**
+	 * 
+	 * @param random
+	 *            a random number generator
+	 * @param nf
+	 *            the number factory
+	 * @param monomial
+	 *            the monomial being tested for zero-ness
+	 * @param totalDegree
+	 *            an upper bound on the total degree of the monomial after
+	 *            expansion
+	 */
 	public FastEvaluator3(Random random, NumberFactory nf, Monomial monomial,
 			IntegerNumber totalDegree) {
 		this.random = random;
 		this.nf = nf;
-		// this.isInteger = monomial.type().isInteger();
 		this.root = makeNode(monomial);
 		this.numVars = varNodeList.size();
 		this.varNodes = varNodeList.toArray(new VarNode[numVars]);
@@ -317,24 +474,19 @@ public class FastEvaluator3 {
 			this.randBound = -1;
 			this.randSize = nf.rational(nf.power(nf.integer(2), 32));
 		}
-		out.println("FAST3: randBoundNumber = " + randSize);
+		// out.println("FAST3: randBoundNumber = " + randSize);
 	}
 
+	/**
+	 * Constructs a new fast evaluator, computing the total degree of the
+	 * monomial.
+	 * 
+	 * @param random
+	 * @param nf
+	 * @param monomial
+	 */
 	public FastEvaluator3(Random random, NumberFactory nf, Monomial monomial) {
 		this(random, nf, monomial, monomial.totalDegree(nf));
-	}
-
-	@SuppressWarnings("unused")
-	private void print(int[] array) {
-		int n = array.length;
-
-		out.print("[");
-		for (int i = 0; i < n; i++) {
-			if (i > 0)
-				out.print(",");
-			out.print(array[i]);
-		}
-		out.print("]");
 	}
 
 	private EvalNode makeNode(Monomial expr) {
@@ -350,7 +502,7 @@ public class FastEvaluator3 {
 
 			for (int i = 0; i < numArgs; i++)
 				children[i] = makeNode((Monomial) expr.argument(i));
-			result = new AddNode(expr, children);
+			result = new AddNode(children);
 			break;
 		}
 		case MULTIPLY: {
@@ -359,7 +511,7 @@ public class FastEvaluator3 {
 
 			for (int i = 0; i < numArgs; i++)
 				children[i] = makeNode((Monomial) expr.argument(i));
-			result = new MultiplyNode(expr, children);
+			result = new MultiplyNode(children);
 			break;
 		}
 		case CONCRETE: {
@@ -367,11 +519,10 @@ public class FastEvaluator3 {
 					.argument(0)).getNumber();
 			Rat rat = new Rat(number);
 
-			result = new ConstantNode(expr, rat);
+			result = new ConstantNode(rat);
 			break;
 		}
 		case POWER: {
-			// depends: int object or real
 			SymbolicObject exp = expr.argument(1);
 
 			if (exp instanceof NumberObject) {
@@ -379,13 +530,13 @@ public class FastEvaluator3 {
 				IntegerNumber expNum = (IntegerNumber) ((NumberObject) exp)
 						.getNumber();
 
-				result = new PowerNode(expr, base, expNum.bigIntegerValue());
+				result = new PowerNode(base, expNum.bigIntegerValue());
 				break;
 			}
 			// flow right into default case...
 		}
 		default: // variable
-			result = new VarNode((Primitive) expr);
+			result = new VarNode();
 			varNodeList.add((VarNode) result);
 		}
 		exprMap.put(expr, result);
@@ -424,5 +575,4 @@ public class FastEvaluator3 {
 		} while (nf.compare(epsilon, prob) < 0);
 		return true;
 	}
-
 }
