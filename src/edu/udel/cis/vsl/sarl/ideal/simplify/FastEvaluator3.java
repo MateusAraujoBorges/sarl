@@ -359,8 +359,10 @@ public class FastEvaluator3 {
 
 				for (int i = 0; i < children.length; i++)
 					childrenHashCodes[i] = children[i].hashCode();
-				hashCode = Arrays.hashCode(childrenHashCodes)
-						^ SymbolicOperator.ADD.hashCode() + parents.size();
+				hashCode = 1777773
+						* (Arrays.hashCode(childrenHashCodes)
+								^ SymbolicOperator.ADD.hashCode())
+						+ parents.size();
 			}
 			return hashCode;
 		}
@@ -444,8 +446,10 @@ public class FastEvaluator3 {
 
 				for (int i = 0; i < children.length; i++)
 					childrenHashCodes[i] = children[i].hashCode();
-				hashCode = Arrays.hashCode(childrenHashCodes)
-						^ SymbolicOperator.MULTIPLY.hashCode() + parents.size();
+				hashCode = 1777773
+						* (Arrays.hashCode(childrenHashCodes)
+								^ SymbolicOperator.MULTIPLY.hashCode())
+						+ parents.size();
 			}
 			return hashCode;
 		}
@@ -524,8 +528,10 @@ public class FastEvaluator3 {
 		public int hashCode() {
 			if (hashCode == -1) {
 				BigInteger bigIntArray[] = { value.a, value.b };
-				hashCode = Arrays.hashCode(bigIntArray)
-						^ SymbolicOperator.CONCRETE.hashCode() + parents.size();
+				hashCode = 345
+						* (Arrays.hashCode(bigIntArray)
+								^ SymbolicOperator.CONCRETE.hashCode())
+						+ parents.size();
 			}
 			return hashCode;
 		}
@@ -563,7 +569,7 @@ public class FastEvaluator3 {
 
 		@Override
 		public int hashCode() {
-			return SymbolicOperator.SYMBOLIC_CONSTANT.hashCode()
+			return 345 * SymbolicOperator.SYMBOLIC_CONSTANT.hashCode()
 					+ parents.size();
 		}
 
@@ -581,7 +587,7 @@ public class FastEvaluator3 {
 	/**
 	 * The root node of the tree.
 	 */
-	private EvalNode root;
+	final EvalNode root;
 
 	/**
 	 * The number of variable nodes in the tree.
