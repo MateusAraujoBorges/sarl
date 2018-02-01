@@ -42,6 +42,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
+import edu.udel.cis.vsl.sarl.ideal.simplify.ConcurrentRandomPoint32Evaluator.RandomPoint32Evaluation;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
@@ -503,22 +504,40 @@ public class Context {
 		RationalNumber prob = nf.oneRational();
 		RationalNumber twoTo32 = nf.power(nf.rational(nf.integer(2)), 32);
 		RationalNumber ratio = nf.divide(nf.rational(totalDegree), twoTo32);
-		Map<SymbolicExpression, SymbolicExpression> localSubMap = new HashMap<>();
+		Primitive[] ps = new Primitive[vars.size()];
 
-		for (Primitive var : vars)
-			localSubMap.put(var, null);
+		vars.toArray(ps);
+
+		int maxNumProcs = Runtime.getRuntime().availableProcessors();
+		boolean reachEpsilon = false;
+
 		do {
-			NumericExpression evaluation = evaluateAtRandomPoint32(poly,
-					localSubMap);
+			int nprocs = 0;
+			List<RandomPoint32Evaluation> resultsPool = new LinkedList<>();
 
-			if (!evaluation.isZero())
-				return false;
-			prob = nf.multiply(prob, ratio);
-		} while (nf.compare(epsilon, prob) < 0);
+			while (nprocs < maxNumProcs) {
+				prob = nf.multiply(prob, ratio);
+				nprocs++;
+				if (nf.compare(epsilon, prob) >= 0) {
+					reachEpsilon = true;
+					break;
+				}
+			}
+			System.out.println("random points run with " + nprocs + " / "
+					+ maxNumProcs + " threads.");
+			for (int i = 0; i < nprocs; i++)
+				resultsPool.add(new RandomPoint32Evaluation());
+			System.gc();
+			resultsPool.parallelStream()
+					.forEach(new ConcurrentRandomPoint32Evaluator(poly, ps,
+							info.universe));
+			for (RandomPoint32Evaluation result : resultsPool) {
+				if (!result.value().isZero())
+					return false;
+			}
+		} while (!reachEpsilon);
 		return true;
 	}
-
-	private static EvalNode knownPolyTree = null;
 
 	private boolean is0WithProbability(Polynomial poly,
 			IntegerNumber totalDegree, Set<Primitive> vars,
@@ -527,10 +546,8 @@ public class Context {
 			FastEvaluator3 fe = new FastEvaluator3(random, info.numberFactory,
 					poly, totalDegree);
 
-			if (knownPolyTree != null && IsomorphicTreeComparator
-					.isIsomophicTrees(knownPolyTree, fe.root))
-				return true;
-			knownPolyTree = fe.root;
+			if (debug)
+				fe.printTreeInformation(info.out);
 			return fe.isZero(epsilon);
 		} else {
 			FastEvaluator2 fe = new FastEvaluator2(random, info.numberFactory,
@@ -761,10 +778,10 @@ public class Context {
 	 * forall int i in [0,n-1] . e[i]=f
 	 * </pre>
 	 * 
-	 * where n is an integer expressions not involving i, e has type
-	 * "array of length n of T" for some type T, and f is some expression, then
-	 * return a structure in which the array field is e and the lambda field is
-	 * the expression <code>arraylambda i . f</code>.
+	 * where n is an integer expressions not involving i, e has type "array of
+	 * length n of T" for some type T, and f is some expression, then return a
+	 * structure in which the array field is e and the lambda field is the
+	 * expression <code>arraylambda i . f</code>.
 	 * 
 	 * TODO (int[n])<lambda i : int . e[i]>, where e has type int[n], should
 	 * immediately be replaced by e. Do this in universe.
