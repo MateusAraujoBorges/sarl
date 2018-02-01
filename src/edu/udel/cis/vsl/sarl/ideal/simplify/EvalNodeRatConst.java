@@ -5,8 +5,8 @@ package edu.udel.cis.vsl.sarl.ideal.simplify;
  * 
  * @author siegel
  */
-class ConstantNode extends EvalNode {
-	ConstantNode(Rat value) {
+class EvalNodeRatConst extends EvalNode {
+	EvalNodeRatConst(Rat value) {
 		this.value = value;
 	}
 

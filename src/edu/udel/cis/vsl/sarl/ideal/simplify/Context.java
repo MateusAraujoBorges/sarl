@@ -42,7 +42,6 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Polynomial;
 import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 import edu.udel.cis.vsl.sarl.ideal.IF.PrimitivePower;
 import edu.udel.cis.vsl.sarl.ideal.IF.RationalExpression;
-import edu.udel.cis.vsl.sarl.ideal.simplify.ConcurrentRandomPoint32Evaluator.RandomPoint32Evaluation;
 import edu.udel.cis.vsl.sarl.number.IF.Numbers;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.simplify.IF.Range;
@@ -436,108 +435,110 @@ public class Context {
 		}
 	}
 
-	/**
-	 * Chooses a random integer with uniform probability from the set of all
-	 * 2^32 ints for each "variable" occurring in the polynomial, and evaluates
-	 * the polynomial. A "variable" is any maximal sub-expression which is not a
-	 * sum or product or difference or negation. Hence the polynomial should
-	 * only use +, -, and * to combine the "variable"s into an expression.
-	 *
-	 * @param poly
-	 *            the {@link Polynomial} to evaluate
-	 * @param map
-	 *            a {@link Map} with one {@link Entry} for each "variable"
-	 *            occurring in {@code poly}. The key of the {@link Entry} is the
-	 *            variable; the value is not used and will be overwritten with
-	 *            the random integers
-	 * @return the result of evaluating; this is guaranteed to be a concrete
-	 *         number as long as {@code map} includes every variable occurring
-	 *         in {@code poly}
-	 */
-	private NumericExpression evaluateAtRandomPoint32(Polynomial poly,
-			Map<SymbolicExpression, SymbolicExpression> map) {
+	// /**
+	// * Chooses a random integer with uniform probability from the set of all
+	// * 2^32 ints for each "variable" occurring in the polynomial, and
+	// evaluates
+	// * the polynomial. A "variable" is any maximal sub-expression which is not
+	// a
+	// * sum or product or difference or negation. Hence the polynomial should
+	// * only use +, -, and * to combine the "variable"s into an expression.
+	// *
+	// * @param poly
+	// * the {@link Polynomial} to evaluate
+	// * @param map
+	// * a {@link Map} with one {@link Entry} for each "variable"
+	// * occurring in {@code poly}. The key of the {@link Entry} is the
+	// * variable; the value is not used and will be overwritten with
+	// * the random integers
+	// * @return the result of evaluating; this is guaranteed to be a concrete
+	// * number as long as {@code map} includes every variable occurring
+	// * in {@code poly}
+	// */
+	// private NumericExpression evaluateAtRandomPoint32(Polynomial poly,
+	// Map<SymbolicExpression, SymbolicExpression> map) {
+	//
+	// for (Entry<SymbolicExpression, SymbolicExpression> entry : map
+	// .entrySet()) {
+	// // an int randomly chosen with uniform probability from
+	// // the set of all 2^32 ints:
+	// int randomInt = random.nextInt();
+	// SymbolicExpression concrete = entry.getKey().type().isInteger()
+	// ? info.universe.integer(randomInt)
+	// : info.universe.rational(randomInt);
+	//
+	// entry.setValue(concrete);
+	// }
+	//
+	// NumericExpression result = (NumericExpression) info.universe
+	// .mapSubstituter(map).apply(poly);
+	//
+	// return result;
+	// }
 
-		for (Entry<SymbolicExpression, SymbolicExpression> entry : map
-				.entrySet()) {
-			// an int randomly chosen with uniform probability from
-			// the set of all 2^32 ints:
-			int randomInt = random.nextInt();
-			SymbolicExpression concrete = entry.getKey().type().isInteger()
-					? info.universe.integer(randomInt)
-					: info.universe.rational(randomInt);
-
-			entry.setValue(concrete);
-		}
-
-		NumericExpression result = (NumericExpression) info.universe
-				.mapSubstituter(map).apply(poly);
-
-		return result;
-	}
-
-	/**
-	 * Can you show that <code>poly</code> is equivalent to 0 with probability
-	 * of being wrong less than or equal to epsilon?
-	 *
-	 * @param poly
-	 *            the {@link Polynomial} being tested for zero-ness
-	 * @param totalDegree
-	 *            the total degree of {@code poly}; see
-	 *            {@link Monomial#totalDegree(NumberFactory)}
-	 * 
-	 * @param vars
-	 *            the set of all "variables" occurring in {@code poly}. A
-	 *            "variable" is a maximal sub-expression which is not a sum or
-	 *            product or difference or negation. Hence the polynomial should
-	 *            only use +, -, and * to combine the "variable"s into an
-	 *            expression. See {@link Monomial#getTruePrimitives()}.
-	 * @param epsilon
-	 *            a real number in (0,1)
-	 * @return if this method returns true, then poly is probably 0 and the
-	 *         probability that it is not 0 is less than or equal to epsilon. If
-	 *         this method returns false, then poly is not zero.
-	 */
-	private boolean is0WithProbability1(Polynomial poly,
-			IntegerNumber totalDegree, Set<Primitive> vars,
-			RationalNumber epsilon) {
-		NumberFactory nf = info.numberFactory;
-		RationalNumber prob = nf.oneRational();
-		RationalNumber twoTo32 = nf.power(nf.rational(nf.integer(2)), 32);
-		RationalNumber ratio = nf.divide(nf.rational(totalDegree), twoTo32);
-		Primitive[] ps = new Primitive[vars.size()];
-
-		vars.toArray(ps);
-
-		int maxNumProcs = Runtime.getRuntime().availableProcessors();
-		boolean reachEpsilon = false;
-
-		do {
-			int nprocs = 0;
-			List<RandomPoint32Evaluation> resultsPool = new LinkedList<>();
-
-			while (nprocs < maxNumProcs) {
-				prob = nf.multiply(prob, ratio);
-				nprocs++;
-				if (nf.compare(epsilon, prob) >= 0) {
-					reachEpsilon = true;
-					break;
-				}
-			}
-			System.out.println("random points run with " + nprocs + " / "
-					+ maxNumProcs + " threads.");
-			for (int i = 0; i < nprocs; i++)
-				resultsPool.add(new RandomPoint32Evaluation());
-			System.gc();
-			resultsPool.parallelStream()
-					.forEach(new ConcurrentRandomPoint32Evaluator(poly, ps,
-							info.universe));
-			for (RandomPoint32Evaluation result : resultsPool) {
-				if (!result.value().isZero())
-					return false;
-			}
-		} while (!reachEpsilon);
-		return true;
-	}
+	// /**
+	// * Can you show that <code>poly</code> is equivalent to 0 with probability
+	// * of being wrong less than or equal to epsilon?
+	// *
+	// * @param poly
+	// * the {@link Polynomial} being tested for zero-ness
+	// * @param totalDegree
+	// * the total degree of {@code poly}; see
+	// * {@link Monomial#totalDegree(NumberFactory)}
+	// *
+	// * @param vars
+	// * the set of all "variables" occurring in {@code poly}. A
+	// * "variable" is a maximal sub-expression which is not a sum or
+	// * product or difference or negation. Hence the polynomial should
+	// * only use +, -, and * to combine the "variable"s into an
+	// * expression. See {@link Monomial#getTruePrimitives()}.
+	// * @param epsilon
+	// * a real number in (0,1)
+	// * @return if this method returns true, then poly is probably 0 and the
+	// * probability that it is not 0 is less than or equal to epsilon. If
+	// * this method returns false, then poly is not zero.
+	// */
+	// private boolean is0WithProbability1(Polynomial poly,
+	// IntegerNumber totalDegree, Set<Primitive> vars,
+	// RationalNumber epsilon) {
+	// NumberFactory nf = info.numberFactory;
+	// RationalNumber prob = nf.oneRational();
+	// RationalNumber twoTo32 = nf.power(nf.rational(nf.integer(2)), 32);
+	// RationalNumber ratio = nf.divide(nf.rational(totalDegree), twoTo32);
+	// Primitive[] ps = new Primitive[vars.size()];
+	//
+	// vars.toArray(ps);
+	//
+	// int maxNumProcs = Runtime.getRuntime().availableProcessors();
+	// boolean reachEpsilon = false;
+	//
+	// do {
+	// int nprocs = 0;
+	// List<RandomPoint32Evaluation> resultsPool = new LinkedList<>();
+	//
+	// while (nprocs < maxNumProcs) {
+	// prob = nf.multiply(prob, ratio);
+	// nprocs++;
+	// if (nf.compare(epsilon, prob) >= 0) {
+	// reachEpsilon = true;
+	// break;
+	// }
+	// }
+	// System.out.println("random points run with " + nprocs + " / "
+	// + maxNumProcs + " threads.");
+	// for (int i = 0; i < nprocs; i++)
+	// resultsPool.add(new RandomPoint32Evaluation());
+	// System.gc();
+	// resultsPool.parallelStream()
+	// .forEach(new ConcurrentRandomPoint32Evaluator(poly, ps,
+	// info.universe));
+	// for (RandomPoint32Evaluation result : resultsPool) {
+	// if (!result.value().isZero())
+	// return false;
+	// }
+	// } while (!reachEpsilon);
+	// return true;
+	// }
 
 	private boolean is0WithProbability(Polynomial poly,
 			IntegerNumber totalDegree, Set<Primitive> vars,

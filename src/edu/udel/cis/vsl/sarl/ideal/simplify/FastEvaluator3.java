@@ -51,7 +51,7 @@ public class FastEvaluator3 {
 	/**
 	 * The variable nodes in the tree.
 	 */
-	protected VarNode[] varNodes;
+	protected EvalNodeRatVar[] varNodes;
 
 	/**
 	 * Upper bound on total degree of the original polynomial after expansion.
@@ -60,7 +60,7 @@ public class FastEvaluator3 {
 
 	protected Map<Monomial, EvalNode> exprMap = new HashMap<>();
 
-	private ArrayList<VarNode> varNodeList = new ArrayList<>();
+	private ArrayList<EvalNodeRatVar> varNodeList = new ArrayList<>();
 
 	// any value from 1 to 32, except for 31. Why? Because
 	// range of int is [-2^31,2^31-1]. For r less
@@ -111,7 +111,7 @@ public class FastEvaluator3 {
 		this.nf = nf;
 		this.root = makeNode(monomial);
 		this.numVars = varNodeList.size();
-		this.varNodes = varNodeList.toArray(new VarNode[numVars]);
+		this.varNodes = varNodeList.toArray(new EvalNodeRatVar[numVars]);
 		this.totalDegree = totalDegree;
 		if (randBits < 1 || randBits == 31 || randBits > 32) {
 			throw new SARLException("Illegal randBits: " + randBits);
@@ -151,7 +151,7 @@ public class FastEvaluator3 {
 
 			for (int i = 0; i < numArgs; i++)
 				children[i] = makeNode((Monomial) expr.argument(i));
-			result = new AddNode(children);
+			result = new EvalNodeRatAdd(children);
 			break;
 		}
 		case MULTIPLY: {
@@ -160,7 +160,7 @@ public class FastEvaluator3 {
 
 			for (int i = 0; i < numArgs; i++)
 				children[i] = makeNode((Monomial) expr.argument(i));
-			result = new MultiplyNode(children);
+			result = new EvalNodeRatMul(children);
 			break;
 		}
 		case CONCRETE: {
@@ -168,7 +168,7 @@ public class FastEvaluator3 {
 					.argument(0)).getNumber();
 			Rat rat = new Rat(number);
 
-			result = new ConstantNode(rat);
+			result = new EvalNodeRatConst(rat);
 			break;
 		}
 		case POWER: {
@@ -179,14 +179,14 @@ public class FastEvaluator3 {
 				IntegerNumber expNum = (IntegerNumber) ((NumberObject) exp)
 						.getNumber();
 
-				result = new PowerNode(base, expNum.bigIntegerValue());
+				result = new EvalNodeRatPow(base, expNum.bigIntegerValue());
 				break;
 			}
 			// flow right into default case...
 		}
 		default: // variable
-			result = new VarNode();
-			varNodeList.add((VarNode) result);
+			result = new EvalNodeRatVar();
+			varNodeList.add((EvalNodeRatVar) result);
 		}
 		exprMap.put(expr, result);
 		return result;

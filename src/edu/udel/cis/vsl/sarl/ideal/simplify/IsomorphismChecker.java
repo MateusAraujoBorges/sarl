@@ -54,14 +54,14 @@ public class IsomorphismChecker {
 		if (kind != v.kind())
 			return false;
 		if (kind == EvalNodeKind.CONST) {
-			Rat val1 = ((ConstantNode) u).value;
+			Rat val1 = ((EvalNodeRatConst) u).value;
 
-			if (!val1.equals(((ConstantNode) v).value))
+			if (!val1.equals(((EvalNodeRatConst) v).value))
 				return false;
 		} else if (kind == EvalNodeKind.POW) {
-			BigInteger exp = ((PowerNode) u).exponent;
+			BigInteger exp = ((EvalNodeRatPow) u).exponent;
 
-			if (!exp.equals(((PowerNode) v).exponent))
+			if (!exp.equals(((EvalNodeRatPow) v).exponent))
 				return false;
 		}
 		if (u.parents.size() != v.parents.size())

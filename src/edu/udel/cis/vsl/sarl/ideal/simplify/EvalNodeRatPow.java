@@ -9,11 +9,11 @@ import java.math.BigInteger;
  * 
  * @author siegel
  */
-class PowerNode extends EvalNode {
+class EvalNodeRatPow extends EvalNode {
 	private EvalNode base;
 	protected BigInteger exponent;
 
-	PowerNode(EvalNode base, BigInteger exponent) {
+	EvalNodeRatPow(EvalNode base, BigInteger exponent) {
 		this.base = base;
 		this.exponent = exponent;
 		base.addParent(this);

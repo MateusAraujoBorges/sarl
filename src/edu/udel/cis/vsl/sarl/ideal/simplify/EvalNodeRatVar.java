@@ -5,7 +5,7 @@ package edu.udel.cis.vsl.sarl.ideal.simplify;
  * 
  * @author siegel
  */
-class VarNode extends EvalNode {
+class EvalNodeRatVar extends EvalNode {
 
 	/**
 	 * Sets the value of this variable. This automatically nullifies all
