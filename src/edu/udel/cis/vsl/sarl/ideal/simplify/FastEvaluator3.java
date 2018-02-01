@@ -46,19 +46,19 @@ public class FastEvaluator3 {
 	/**
 	 * The number of variable nodes in the tree.
 	 */
-	private int numVars;
+	protected int numVars;
 
 	/**
 	 * The variable nodes in the tree.
 	 */
-	private VarNode[] varNodes;
+	protected VarNode[] varNodes;
 
 	/**
 	 * Upper bound on total degree of the original polynomial after expansion.
 	 */
-	private IntegerNumber totalDegree;
+	protected IntegerNumber totalDegree;
 
-	private Map<Monomial, EvalNode> exprMap = new HashMap<>();
+	protected Map<Monomial, EvalNode> exprMap = new HashMap<>();
 
 	private ArrayList<VarNode> varNodeList = new ArrayList<>();
 
@@ -133,7 +133,8 @@ public class FastEvaluator3 {
 	 * @param nf
 	 * @param monomial
 	 */
-	public FastEvaluator3(Random random, NumberFactory nf, Monomial monomial) {
+	public FastEvaluator3(Random random, NumberFactory nf, Monomial monomial,
+			SimplifierInfo info) {
 		this(random, nf, monomial, monomial.totalDegree(nf));
 	}
 
@@ -222,5 +223,19 @@ public class FastEvaluator3 {
 			prob = nf.multiply(prob, ratio);
 		} while (nf.compare(epsilon, prob) < 0);
 		return true;
+	}
+
+	/**
+	 * Print all kinds of informations of the polynomial tree
+	 * 
+	 * @param ps
+	 */
+	public void printTreeInformation(PrintStream ps) {
+		ps.printf(
+				"depth     #vars     degree     #descents(b)            #compressed_descents        \n");
+		ps.printf("%-10d%-10d%-11d", root.depth(), numVars,
+				totalDegree.intValue());
+		ps.printf("%-24.6f %-20d\n",
+				((double) root.numDescendants() / 1000000000), exprMap.size());
 	}
 }
