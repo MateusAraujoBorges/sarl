@@ -26,7 +26,7 @@ public class FastEvaluator3 {
 	/**
 	 * Print debugging output?
 	 */
-	public final static boolean debug = true;
+	public final static boolean debug = false;
 
 	/**
 	 * Where to print the debugging output.
