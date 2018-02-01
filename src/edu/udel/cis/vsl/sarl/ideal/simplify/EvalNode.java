@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
-
 /**
  * A node in the "tree" used to represent the polynomial. Leaf nodes are either
  * constants or variables. Non-leaf nodes represent either addition,
@@ -17,6 +15,12 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
  *
  */
 abstract class EvalNode {
+
+	public static enum EvalNodeKind {
+		ADD, MUL, CONST, VAR, POW
+	}
+
+	protected int nodeId = -1;
 
 	/**
 	 * The cached result of evaluating this node.
@@ -34,7 +38,7 @@ abstract class EvalNode {
 	 */
 	protected int evalCount = 0;
 
-	protected int hashCode = -1;
+	protected int isoCode = 0;
 
 	/**
 	 * Add the given node to the parent list of this node.
@@ -102,15 +106,16 @@ abstract class EvalNode {
 	public int numChildren() {
 		return 0;
 	}
-	
+
 	// numDistinctChildren?
 
 	public EvalNode[] getChildren() {
 		return null;
 	}
 
-	public abstract SymbolicOperator operator();
+	public abstract EvalNodeKind kind();
 
+	public abstract int isoCode();
 	// @Override public boolean equals(Object object) {
 	//
 	// }

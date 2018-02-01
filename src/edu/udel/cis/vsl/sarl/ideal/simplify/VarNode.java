@@ -1,13 +1,12 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
-
 /**
  * A variable node. This is a leaf node in the tree.
  * 
  * @author siegel
  */
 class VarNode extends EvalNode {
+
 	/**
 	 * Sets the value of this variable. This automatically nullifies all
 	 * ancestor nodes of this node, since their values depend on this value.
@@ -28,14 +27,16 @@ class VarNode extends EvalNode {
 	}
 
 	@Override
-	public int hashCode() {
-		return 345 * SymbolicOperator.SYMBOLIC_CONSTANT.hashCode()
-				+ parents.size();
+	public EvalNodeKind kind() {
+		return EvalNodeKind.VAR;
 	}
 
-	// TODO: it's not necessarily a symbolic constant...
 	@Override
-	public SymbolicOperator operator() {
-		return SymbolicOperator.SYMBOLIC_CONSTANT;
+	public int isoCode() {
+		if (isoCode == 0) {
+			isoCode = 345 * EvalNodeKind.VAR.hashCode()
+					^ ((parents.size() + 345) * 179426339);
+		}
+		return isoCode;
 	}
 }

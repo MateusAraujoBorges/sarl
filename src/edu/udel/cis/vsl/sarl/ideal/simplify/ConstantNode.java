@@ -1,10 +1,5 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
-import java.math.BigInteger;
-import java.util.Arrays;
-
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
-
 /**
  * A constant node. This is a leaf node in the tree.
  * 
@@ -20,19 +15,15 @@ class ConstantNode extends EvalNode {
 	}
 
 	@Override
-	public int hashCode() {
-		if (hashCode == -1) {
-			BigInteger bigIntArray[] = { value.a, value.b };
-			hashCode = 345
-					* (Arrays.hashCode(bigIntArray)
-							^ SymbolicOperator.CONCRETE.hashCode())
-					+ parents.size();
-		}
-		return hashCode;
+	public EvalNodeKind kind() {
+		return EvalNodeKind.CONST;
 	}
 
 	@Override
-	public SymbolicOperator operator() {
-		return SymbolicOperator.CONCRETE;
+	public int isoCode() {
+		if (isoCode == 0)
+			isoCode = value.hashCode() ^ (parents.size() * 179424797)
+					^ EvalNodeKind.CONST.hashCode();
+		return isoCode;
 	}
 }

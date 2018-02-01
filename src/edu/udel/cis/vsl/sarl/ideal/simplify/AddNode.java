@@ -1,9 +1,5 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
-import java.util.Arrays;
-
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
-
 /**
  * A node representing the sum of its children.
  * 
@@ -61,26 +57,6 @@ class AddNode extends EvalNode {
 	}
 
 	@Override
-	public int hashCode() {
-		if (hashCode == -1) {
-			int[] childrenHashCodes = new int[children.length];
-
-			for (int i = 0; i < children.length; i++)
-				childrenHashCodes[i] = children[i].hashCode();
-			hashCode = 1777773
-					* (Arrays.hashCode(childrenHashCodes)
-							^ SymbolicOperator.ADD.hashCode())
-					+ parents.size();
-		}
-		return hashCode;
-	}
-
-	@Override
-	public SymbolicOperator operator() {
-		return SymbolicOperator.ADD;
-	}
-
-	@Override
 	public int numChildren() {
 		return children.length;
 	}
@@ -88,5 +64,21 @@ class AddNode extends EvalNode {
 	@Override
 	public EvalNode[] getChildren() {
 		return children;
+	}
+
+	@Override
+	public EvalNodeKind kind() {
+		return EvalNodeKind.ADD;
+	}
+
+	@Override
+	public int isoCode() {
+		if (isoCode == 0) {
+			for (int i = 0; i < children.length; i++)
+				isoCode += children[i].isoCode;
+			isoCode = isoCode ^ EvalNodeKind.ADD.hashCode()
+					^ (depth() * 179426339) ^ parents.size();
+		}
+		return isoCode;
 	}
 }
