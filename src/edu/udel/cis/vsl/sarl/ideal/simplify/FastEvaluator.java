@@ -1,222 +1,148 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
 import java.io.PrintStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
-import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
-import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
-import edu.udel.cis.vsl.sarl.IF.object.IntObject;
+import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.ideal.IF.Monomial;
-import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
 
 /**
- * Object used to evaluate a polynomial at a grid of points.
+ * An object used to determine whether an expression is equivalent to 0 within
+ * some probability. Real type only. Integer type should be easier.
  * 
  * @author siegel
- *
  */
 public class FastEvaluator {
 
-	public final static boolean debug = true;
+	/**
+	 * Print debugging output?
+	 */
+	public final static boolean debug = false;
 
+	/**
+	 * Where to print the debugging output.
+	 */
 	public final static PrintStream out = System.out;
 
-	abstract class EvalNode {
-
-		protected NumericExpression expr; // for debugging
-
-		protected Number value = null;
-
-		protected List<EvalNode> parents = new LinkedList<>();
-
-		public EvalNode(NumericExpression expr) {
-			this.expr = expr;
-		}
-
-		void addParent(EvalNode parent) {
-			parents.add(parent);
-		}
-
-		Collection<EvalNode> getParents() {
-			return parents;
-		}
-
-		void nullifyValue() {
-			if (value != null) {
-				value = null;
-				for (EvalNode parent : parents)
-					parent.nullifyValue();
-			}
-		}
-
-		abstract Number evaluate();
-
-	}
-
-	class AddNode extends EvalNode {
-		private EvalNode[] children;
-
-		AddNode(NumericExpression expr, EvalNode[] children) {
-			super(expr);
-			assert children.length >= 1;
-			this.children = children;
-			for (EvalNode child : children)
-				child.addParent(this);
-		}
-
-		Number evaluate() {
-			if (value == null) {
-				value = children[0].evaluate();
-				for (int i = 1; i < children.length; i++)
-					value = nf.add(value, children[i].evaluate());
-			}
-			return value;
-		}
-	}
-
-	class MultiplyNode extends EvalNode {
-		private EvalNode[] children;
-
-		MultiplyNode(NumericExpression expr, EvalNode[] children) {
-			super(expr);
-			assert children.length >= 1;
-			this.children = children;
-			for (EvalNode child : children)
-				child.addParent(this);
-		}
-
-		Number evaluate() {
-			if (value == null) {
-				value = children[0].evaluate();
-				for (int i = 1; i < children.length; i++)
-					value = nf.multiply(value, children[i].evaluate());
-			}
-			return value;
-		}
-	}
-
-	class PowerNode extends EvalNode {
-		private EvalNode base;
-		private IntegerNumber exponent;
-
-		PowerNode(NumericExpression expr, EvalNode base,
-				IntegerNumber exponent) {
-			super(expr);
-			assert exponent.numericalCompareTo(nf.integer(2)) >= 0;
-			this.base = base;
-			this.exponent = exponent;
-			base.addParent(this);
-		}
-
-		Number evaluate() {
-			if (value == null) {
-				value = nf.power(base.evaluate(), exponent);
-			}
-			return value;
-		}
-	}
-
-	class ConstantNode extends EvalNode {
-
-		ConstantNode(NumericExpression expr, Number value) {
-			super(expr);
-			this.value = value;
-		}
-
-		Number evaluate() {
-			return value;
-		}
-	}
-
-	class VarNode extends EvalNode {
-
-		VarNode(Primitive primitive) {
-			super(primitive);
-		}
-
-		public void setValue(Number value) {
-			this.value = value;
-			for (EvalNode parent : getParents()) {
-				parent.nullifyValue();
-			}
-		}
-
-		Number evaluate() {
-			return value;
-		}
-	}
-
+	/**
+	 * The number factory.
+	 */
 	private NumberFactory nf;
 
-	private boolean isInteger;
+	/**
+	 * The root node of the tree.
+	 */
+	final EvalNode<?> root;
 
-	private EvalNode root;
+	/**
+	 * The number of variable nodes in the tree.
+	 */
+	protected int numVars;
 
-	private int numVars;
+	/**
+	 * The variable nodes in the tree.
+	 */
+	protected EvalNodeRatVar[] varNodes;
 
-	private VarNode[] varNodes;
+	/**
+	 * Upper bound on total degree of the original polynomial after expansion.
+	 */
+	protected IntegerNumber totalDegree;
 
-	private IntegerNumber[] maxDegrees;
+	protected Map<Monomial, EvalNode<?>> exprMap = new HashMap<>();
 
-	private IntegerNumber[] varVals;
+	private ArrayList<EvalNode<?>> varNodeList = new ArrayList<>();
 
-	private Map<Monomial, EvalNode> exprMap = new HashMap<>();
+	// any value from 1 to 32, except for 31. Why? Because
+	// range of int is [-2^31,2^31-1]. For r less
+	// than 32, the domain is [0,2^r) and must be specified
+	// using an int 2^r. The case r=32 is special and the domain
+	// is all ints.
+	private int randBits = 32;
 
-	private ArrayList<VarNode> varNodeList = new ArrayList<>();
+	/**
+	 * 2^randBits, or -1.
+	 */
+	private int randBound;
 
-	public FastEvaluator(NumberFactory nf, Monomial monomial) {
+	/**
+	 * The number of elements in the random domain. The random number generator
+	 * chooses one element from that domain ... all with equal probability.
+	 */
+	private RationalNumber randSize;
+
+	/**
+	 * Random number generator ---- produces sequence of random Java {@code int}
+	 * s.
+	 */
+	private Random random;
+
+	/**
+	 * 
+	 * @param random
+	 *            a random number generator
+	 * @param nf
+	 *            the number factory
+	 * @param monomial
+	 *            the monomial being tested for zero-ness
+	 * @param totalDegree
+	 *            an upper bound on the total degree of the monomial after
+	 *            expansion
+	 */
+	public FastEvaluator(Random random, NumberFactory nf, Monomial monomial,
+			IntegerNumber totalDegree) {
+		if (debug) {
+			out.println("FastEvaluator3: testing zero-ness of");
+			monomial.printCompressedTree(out);
+			out.println();
+			out.println("Total degree: " + totalDegree);
+			assert totalDegree == monomial.totalDegree(nf);
+		}
+		this.random = random;
 		this.nf = nf;
-		this.isInteger = monomial.type().isInteger();
-		this.root = makeNode(monomial);
+		if (monomial.type().isReal())
+			this.root = makeRatNode(monomial);
+		else
+			this.root = makeIntNode(monomial);
 		this.numVars = varNodeList.size();
-		this.varNodes = varNodeList.toArray(new VarNode[numVars]);
-		this.varVals = new IntegerNumber[numVars];
-		this.maxDegrees = new IntegerNumber[numVars];
-		for (int i = 0; i < varNodes.length; i++) {
-			this.maxDegrees[i] = monomial.maxDegreeOf(nf,
-					(Primitive) varNodes[i].expr);
-			this.varVals[i] = nf.zeroInteger();
-			this.varNodes[i]
-					.setValue(isInteger ? nf.zeroInteger() : nf.zeroRational());
+		this.varNodes = varNodeList.toArray(new EvalNodeRatVar[numVars]);
+		this.totalDegree = totalDegree;
+		if (randBits < 1 || randBits == 31 || randBits > 32) {
+			throw new SARLException("Illegal randBits: " + randBits);
+		} else if (randBits < 31) {
+			this.randBound = 1 << randBits;
+			this.randSize = nf.rational(nf.integer(randBound));
+		} else if (randBits == 32) {
+			this.randBound = -1;
+			this.randSize = nf.rational(nf.power(nf.integer(2), 32));
 		}
+		// out.println("FAST3: randBoundNumber = " + randSize);
 	}
 
-	private void print(IntegerNumber[] array) {
-		int n = array.length;
-
-		out.print("[");
-		for (int i = 0; i < n; i++) {
-			if (i > 0)
-				out.print(",");
-			out.print(array[i]);
-		}
-		out.print("]");
+	/**
+	 * Constructs a new fast evaluator, computing the total degree of the
+	 * monomial.
+	 * 
+	 * @param random
+	 * @param nf
+	 * @param monomial
+	 */
+	public FastEvaluator(Random random, NumberFactory nf, Monomial monomial,
+			SimplifierInfo info) {
+		this(random, nf, monomial, monomial.totalDegree(nf));
 	}
 
-	@SuppressWarnings("unused")
-	private void print(int[] array) {
-		int n = array.length;
-
-		out.print("[");
-		for (int i = 0; i < n; i++) {
-			if (i > 0)
-				out.print(",");
-			out.print(array[i]);
-		}
-		out.print("]");
-	}
-
-	private EvalNode makeNode(Monomial expr) {
-		EvalNode result = exprMap.get(expr);
+	private EvalNodeRat makeRatNode(Monomial expr) {
+		EvalNodeRat result = (EvalNodeRat) exprMap.get(expr);
 
 		if (result != null)
 			return result;
@@ -224,89 +150,150 @@ public class FastEvaluator {
 		switch (expr.operator()) {
 		case ADD: {
 			int numArgs = expr.numArguments();
-			EvalNode[] children = new EvalNode[numArgs];
+			EvalNodeRat[] children = new EvalNodeRat[numArgs];
 
 			for (int i = 0; i < numArgs; i++)
-				children[i] = makeNode((Monomial) expr.argument(i));
-			result = new AddNode(expr, children);
+				children[i] = makeRatNode((Monomial) expr.argument(i));
+			result = new EvalNodeRatAdd(children);
 			break;
 		}
 		case MULTIPLY: {
 			int numArgs = expr.numArguments();
-			EvalNode[] children = new EvalNode[numArgs];
+			EvalNodeRat[] children = new EvalNodeRat[numArgs];
 
 			for (int i = 0; i < numArgs; i++)
-				children[i] = makeNode((Monomial) expr.argument(i));
-			result = new MultiplyNode(expr, children);
+				children[i] = makeRatNode((Monomial) expr.argument(i));
+			result = new EvalNodeRatMul(children);
 			break;
 		}
 		case CONCRETE: {
-			result = new ConstantNode(expr,
-					((NumberObject) expr.argument(0)).getNumber());
+			RationalNumber number = (RationalNumber) ((NumberObject) expr
+					.argument(0)).getNumber();
+			Rat rat = new Rat(number);
+
+			result = new EvalNodeRatConst(rat);
 			break;
 		}
 		case POWER: {
-			// depends: int object or real
 			SymbolicObject exp = expr.argument(1);
 
-			if (exp instanceof IntObject) {
-				EvalNode base = makeNode((Monomial) expr.argument(0));
+			if (exp instanceof NumberObject) {
+				EvalNodeRat base = makeRatNode((Monomial) expr.argument(0));
+				IntegerNumber expNum = (IntegerNumber) ((NumberObject) exp)
+						.getNumber();
 
-				result = new PowerNode(expr, base,
-						(IntegerNumber) ((NumberObject) exp).getNumber());
+				result = new EvalNodeRatPow(base, expNum.bigIntegerValue());
 				break;
 			}
 			// flow right into default case...
 		}
 		default: // variable
-			result = new VarNode((Primitive) expr);
-			varNodeList.add((VarNode) result);
+			result = new EvalNodeRatVar();
+			varNodeList.add((EvalNodeRatVar) result);
 		}
 		exprMap.put(expr, result);
 		return result;
 	}
 
-	private boolean next() {
-		for (int i = 0; i < numVars; i++) {
-			IntegerNumber val = varVals[i];
+	private EvalNodeInt makeIntNode(Monomial expr) {
+		EvalNodeInt result = (EvalNodeInt) exprMap.get(expr);
 
-			if (val.numericalCompareTo(maxDegrees[i]) < 0) {
-				val = nf.increment(val);
-				varVals[i] = val;
-				varNodes[i]
-						.setValue(isInteger ? val : nf.integerToRational(val));
-				return true;
-			} else {
-				varVals[i] = nf.zeroInteger();
-				varNodes[i]
-						.setValue(isInteger ? val : nf.integerToRational(val));
+		if (result != null)
+			return result;
+
+		switch (expr.operator()) {
+		case ADD: {
+			int numArgs = expr.numArguments();
+			EvalNodeInt[] children = new EvalNodeInt[numArgs];
+
+			for (int i = 0; i < numArgs; i++)
+				children[i] = makeIntNode((Monomial) expr.argument(i));
+			result = new EvalNodeIntAdd(children);
+			break;
+		}
+		case MULTIPLY: {
+			int numArgs = expr.numArguments();
+			EvalNodeInt[] children = new EvalNodeInt[numArgs];
+
+			for (int i = 0; i < numArgs; i++)
+				children[i] = makeIntNode((Monomial) expr.argument(i));
+			result = new EvalNodeIntMul(children);
+			break;
+		}
+		case CONCRETE: {
+			IntegerNumber number = (IntegerNumber) ((NumberObject) expr
+					.argument(0)).getNumber();
+			BigInteger val = number.bigIntegerValue();
+
+			result = new EvalNodeIntConst(val);
+			break;
+		}
+		case POWER: {
+			SymbolicObject exp = expr.argument(1);
+
+			if (exp instanceof NumberObject) {
+				EvalNodeInt base = makeIntNode((Monomial) expr.argument(0));
+				IntegerNumber expNum = (IntegerNumber) ((NumberObject) exp)
+						.getNumber();
+
+				result = new EvalNodeIntPow(base, expNum.bigIntegerValue());
+				break;
 			}
+			// flow right into default case...
 		}
-		return false;
+		default: // variable
+			result = new EvalNodeIntVar();
+			varNodeList.add((EvalNodeIntVar) result);
+		}
+		exprMap.put(expr, result);
+		return result;
 	}
 
-	public boolean isZero() {
-		if (debug) {
-			out.println(
-					"Testing zeroness of expression with number of variables: "
-							+ numVars);
-			out.print("maxDegrees: ");
-			print(maxDegrees);
-			out.println();
-			out.flush();
+	private void next() {
+		for (int i = 0; i < varNodes.length; i++) {
+			int randomInt = randBits == 32 ? random.nextInt()
+					: random.nextInt(randBound);
+			BigInteger big = new BigInteger("" + randomInt);
+			Rat value = new Rat(big);
+
+			this.varNodes[i].setValue(value);
 		}
-		while (true) {
-			// if (debug) {
-			// out.print("Values: ");
-			// print(varVals);
-			// out.println();
-			// out.flush();
-			// }
-			if (!root.evaluate().isZero())
+	}
+
+	/**
+	 * Attempts to determine if the expression represented by this object is
+	 * equivalent to zero, with probability of error at most {@code epsilon}.
+	 * 
+	 * @param epsilon
+	 *            upper bound on probability of error (e.g., 1/2^{128}).
+	 * @return if this method returns {@code false}, the expression is not
+	 *         equivalent to zero, otherwise, it probably is equivalent to zero
+	 */
+	public boolean isZero(RationalNumber epsilon) {
+		RationalNumber prob = nf.oneRational();
+		RationalNumber ratio = nf.divide(nf.rational(totalDegree), randSize);
+		EvalNodeRat rootRat = (EvalNodeRat) root;
+
+		do {
+			next();
+			if (!rootRat.evaluate().isZero())
 				return false;
-			if (!next())
-				return true;
-		}
+			prob = nf.multiply(prob, ratio);
+		} while (nf.compare(epsilon, prob) < 0);
+		return true;
 	}
 
+	/**
+	 * Print all kinds of informations of the polynomial tree
+	 * 
+	 * @param ps
+	 */
+	public void printTreeInformation(PrintStream ps) {
+		ps.printf(
+				"depth     #vars     degree     #descents(b)            #compressed_descents        \n");
+		ps.printf("%-10d%-10d%-11d", root.depth(), numVars,
+				totalDegree.intValue());
+		ps.printf("%-24.6f %-20d\n",
+				((double) root.numDescendants() / 1000000000), exprMap.size());
+	}
 }

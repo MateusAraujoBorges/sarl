@@ -1,28 +1,30 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
+import java.math.BigInteger;
+
 /**
  * A node representing the product of its children
  * 
  * @author siegel
  */
-class EvalNodeRatMul extends EvalNodeRat {
-	private EvalNodeRat[] children;
+class EvalNodeIntMul extends EvalNodeInt {
+	private EvalNodeInt[] children;
 
 	private int depth = -1;
 
 	private long numDescendants = -1;
 
-	EvalNodeRatMul(EvalNodeRat[] children) {
+	EvalNodeIntMul(EvalNodeInt[] children) {
 		assert children.length >= 1;
 		this.children = children;
-		for (EvalNode<Rat> child : children)
+		for (EvalNodeInt child : children)
 			child.addParent(this);
 	}
 
 	@Override
-	Rat evaluate() {
+	BigInteger evaluate() {
 		if (value == null) {
-			value = new Rat(children[0].evaluate());
+			value = children[0].evaluate();
 			for (int i = 1; i < children.length; i++)
 				value.multiply(children[i].evaluate());
 		}
@@ -34,7 +36,7 @@ class EvalNodeRatMul extends EvalNodeRat {
 		if (depth < 0) {
 			int maxChildDepth = 0;
 
-			for (EvalNode<Rat> child : children) {
+			for (EvalNodeInt child : children) {
 				int childDepth = child.depth();
 
 				maxChildDepth = childDepth > maxChildDepth ? childDepth
@@ -67,7 +69,7 @@ class EvalNodeRatMul extends EvalNodeRat {
 	}
 
 	@Override
-	public EvalNode<Rat>[] getChildren() {
+	public EvalNodeInt[] getChildren() {
 		return children;
 	}
 

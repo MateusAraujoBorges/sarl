@@ -1,11 +1,13 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
+import java.math.BigInteger;
+
 /**
  * A variable node. This is a leaf node in the tree.
  * 
  * @author siegel
  */
-class EvalNodeRatVar extends EvalNodeRat {
+class EvalNodeIntVar extends EvalNodeInt {
 
 	/**
 	 * Sets the value of this variable. This automatically nullifies all
@@ -14,15 +16,15 @@ class EvalNodeRatVar extends EvalNodeRat {
 	 * @param value
 	 *            the value to associate to this node
 	 */
-	public void setValue(Rat value) {
+	public void setValue(BigInteger value) {
 		this.value = value;
-		for (EvalNode<Rat> parent : getParents()) {
+		for (EvalNode<BigInteger> parent : getParents()) {
 			parent.nullifyValue();
 		}
 	}
 
 	@Override
-	Rat evaluate() {
+	BigInteger evaluate() {
 		return value;
 	}
 

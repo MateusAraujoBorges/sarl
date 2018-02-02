@@ -9,20 +9,26 @@ import java.math.BigInteger;
  * 
  * @author siegel
  */
-class EvalNodeRatPow extends EvalNodeRat {
-	private EvalNodeRat base;
+class EvalNodeIntPow extends EvalNodeInt {
+	private EvalNodeInt base;
 	protected BigInteger exponent;
 
-	EvalNodeRatPow(EvalNodeRat base, BigInteger exponent) {
+	EvalNodeIntPow(EvalNodeInt base, BigInteger exponent) {
 		this.base = base;
 		this.exponent = exponent;
 		base.addParent(this);
 	}
 
-	Rat evaluate() {
+	@Override
+	BigInteger evaluate() {
 		if (value == null) {
-			value = new Rat(base.evaluate());
-			value.power(exponent);
+			BigInteger ct = BigInteger.ZERO;
+
+			value = base.evaluate();
+			while (ct.compareTo(exponent) < 0) {
+				value = base.value.multiply(ct);
+				ct.add(BigInteger.ONE);
+			}
 		}
 		return clearOnCount();
 	}

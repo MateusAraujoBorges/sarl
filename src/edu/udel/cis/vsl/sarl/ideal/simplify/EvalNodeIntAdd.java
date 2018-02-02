@@ -1,30 +1,28 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
-/**
- * A node representing the product of its children
- * 
- * @author siegel
- */
-class EvalNodeRatMul extends EvalNodeRat {
-	private EvalNodeRat[] children;
+import java.math.BigInteger;
+
+public class EvalNodeIntAdd extends EvalNodeInt {
+
+	private EvalNodeInt[] children;
 
 	private int depth = -1;
 
 	private long numDescendants = -1;
 
-	EvalNodeRatMul(EvalNodeRat[] children) {
+	EvalNodeIntAdd(EvalNodeInt[] children) {
 		assert children.length >= 1;
 		this.children = children;
-		for (EvalNode<Rat> child : children)
+		for (EvalNodeInt child : children)
 			child.addParent(this);
 	}
 
 	@Override
-	Rat evaluate() {
+	BigInteger evaluate() {
 		if (value == null) {
-			value = new Rat(children[0].evaluate());
+			value = children[0].evaluate();
 			for (int i = 1; i < children.length; i++)
-				value.multiply(children[i].evaluate());
+				value.add(children[i].evaluate());
 		}
 		return clearOnCount();
 	}
@@ -34,7 +32,7 @@ class EvalNodeRatMul extends EvalNodeRat {
 		if (depth < 0) {
 			int maxChildDepth = 0;
 
-			for (EvalNode<Rat> child : children) {
+			for (EvalNodeInt child : children) {
 				int childDepth = child.depth();
 
 				maxChildDepth = childDepth > maxChildDepth ? childDepth
@@ -57,18 +55,18 @@ class EvalNodeRatMul extends EvalNodeRat {
 	}
 
 	@Override
-	public EvalNodeKind kind() {
-		return EvalNodeKind.MUL;
-	}
-
-	@Override
 	public int numChildren() {
 		return children.length;
 	}
 
 	@Override
-	public EvalNode<Rat>[] getChildren() {
+	public EvalNodeInt[] getChildren() {
 		return children;
+	}
+
+	@Override
+	public EvalNodeKind kind() {
+		return EvalNodeKind.ADD;
 	}
 
 	@Override
@@ -76,9 +74,10 @@ class EvalNodeRatMul extends EvalNodeRat {
 		if (isoCode == 0) {
 			for (int i = 0; i < children.length; i++)
 				isoCode += children[i].isoCode;
-			isoCode = isoCode ^ EvalNodeKind.MUL.hashCode()
-					^ ((depth() * parents.size()) * 15486277);
+			isoCode = isoCode ^ EvalNodeKind.ADD.hashCode()
+					^ (depth() * 179426339) ^ parents.size();
 		}
 		return isoCode;
 	}
+
 }

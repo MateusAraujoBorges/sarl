@@ -11,30 +11,30 @@ import java.util.Stack;
  */
 public class EvalTree {
 
-	EvalNode root;
+	EvalNode<?> root;
 
 	/**
 	 * Array of the nodes of this DAG by ID number.
 	 */
 	// EvalNode[] nodes;
 
-	public EvalTree(EvalNode root) {
+	public EvalTree(EvalNode<?> root) {
 		this.root = root;
 		// TODO: set IDs
 
 		int idCounter = 0;
-		Stack<EvalNode> dfsStack = new Stack<>();
+		Stack<EvalNode<?>> dfsStack = new Stack<>();
 
 		// traverse the tree to set IDs:
 		dfsStack.push(root);
 		while (!dfsStack.isEmpty()) {
-			EvalNode node = dfsStack.pop();
+			EvalNode<?> node = dfsStack.pop();
 
 			if (node.nodeId == -1) {
 				node.nodeId = idCounter++;
 
 				int numChildren = node.numChildren();
-				EvalNode children[] = node.getChildren();
+				EvalNode<?> children[] = node.getChildren();
 
 				for (int i = 0; i < numChildren; i++)
 					if (children[i].nodeId == -1)

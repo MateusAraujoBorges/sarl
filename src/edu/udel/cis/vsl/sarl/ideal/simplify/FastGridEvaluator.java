@@ -26,7 +26,7 @@ import edu.udel.cis.vsl.sarl.ideal.IF.Primitive;
  * @author siegel
  *
  */
-public class FastEvaluator2 {
+public class FastGridEvaluator {
 
 	public final static boolean debug = true;
 
@@ -206,7 +206,7 @@ public class FastEvaluator2 {
 
 	private Random random;
 
-	public FastEvaluator2(Random random, NumberFactory nf, Monomial monomial,
+	public FastGridEvaluator(Random random, NumberFactory nf, Monomial monomial,
 			IntegerNumber totalDegree) {
 		this.random = random;
 		this.nf = nf;
@@ -228,7 +228,7 @@ public class FastEvaluator2 {
 		out.println("randBoundNumber = " + randSize);
 	}
 
-	public FastEvaluator2(Random random, NumberFactory nf, Monomial monomial) {
+	public FastGridEvaluator(Random random, NumberFactory nf, Monomial monomial) {
 		this(random, nf, monomial, monomial.totalDegree(nf));
 	}
 

@@ -5,17 +5,17 @@ package edu.udel.cis.vsl.sarl.ideal.simplify;
  * 
  * @author siegel
  */
-class EvalNodeRatAdd extends EvalNode {
-	private EvalNode[] children;
+class EvalNodeRatAdd extends EvalNodeRat {
+	private EvalNodeRat[] children;
 
 	private int depth = -1;
 
 	private long numDescendants = -1;
 
-	EvalNodeRatAdd(EvalNode[] children) {
+	EvalNodeRatAdd(EvalNodeRat[] children) {
 		assert children.length >= 1;
 		this.children = children;
-		for (EvalNode child : children)
+		for (EvalNodeRat child : children)
 			child.addParent(this);
 	}
 
@@ -34,7 +34,7 @@ class EvalNodeRatAdd extends EvalNode {
 		if (depth < 0) {
 			int maxChildDepth = 0;
 
-			for (EvalNode child : children) {
+			for (EvalNode<Rat> child : children) {
 				int childDepth = child.depth();
 
 				maxChildDepth = childDepth > maxChildDepth ? childDepth
@@ -62,7 +62,7 @@ class EvalNodeRatAdd extends EvalNode {
 	}
 
 	@Override
-	public EvalNode[] getChildren() {
+	public EvalNode<Rat>[] getChildren() {
 		return children;
 	}
 

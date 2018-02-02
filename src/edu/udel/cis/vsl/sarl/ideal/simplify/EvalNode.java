@@ -14,7 +14,7 @@ import java.util.List;
  * @author siegel
  *
  */
-abstract class EvalNode {
+abstract class EvalNode<T> {
 
 	public static enum EvalNodeKind {
 		ADD, MUL, CONST, VAR, POW
@@ -25,13 +25,13 @@ abstract class EvalNode {
 	/**
 	 * The cached result of evaluating this node.
 	 */
-	protected Rat value = null;
+	protected T value = null;
 
 	/**
 	 * The parent nodes of this node, i.e., all nodes in the tree that have this
 	 * node as a child. (So, it isn't really a tree.)
 	 */
-	protected List<EvalNode> parents = new LinkedList<>();
+	protected List<EvalNode<T>> parents = new LinkedList<>();
 
 	/**
 	 * The number of times method {@link #evaluate()} has been called.
@@ -46,7 +46,7 @@ abstract class EvalNode {
 	 * @param parent
 	 *            the node to make a parent
 	 */
-	void addParent(EvalNode parent) {
+	void addParent(EvalNode<T> parent) {
 		parents.add(parent);
 	}
 
@@ -55,14 +55,14 @@ abstract class EvalNode {
 	 * 
 	 * @return the parents of this node
 	 */
-	Collection<EvalNode> getParents() {
+	Collection<EvalNode<T>> getParents() {
 		return parents;
 	}
 
 	void nullifyValue() {
 		if (value != null) {
 			value = null;
-			for (EvalNode parent : parents)
+			for (EvalNode<T> parent : parents)
 				parent.nullifyValue();
 		}
 	}
@@ -73,7 +73,7 @@ abstract class EvalNode {
 	 * 
 	 * @return the result of evaluating this node
 	 */
-	abstract Rat evaluate();
+	abstract T evaluate();
 
 	/**
 	 * Increments the evaluation count; if that count then equals the number of
@@ -83,10 +83,10 @@ abstract class EvalNode {
 	 * @return the {@link #value} in the pre-state (before possibly setting it
 	 *         to {@code null})
 	 */
-	Rat clearOnCount() {
+	T clearOnCount() {
 		evalCount++;
 		if (evalCount == parents.size()) {
-			Rat result = value;
+			T result = value;
 
 			value = null;
 			return result;
@@ -109,15 +109,14 @@ abstract class EvalNode {
 
 	// numDistinctChildren?
 
-	public EvalNode[] getChildren() {
+	public EvalNode<T>[] getChildren() {
 		return null;
 	}
 
 	public abstract EvalNodeKind kind();
 
 	public abstract int isoCode();
-	// @Override public boolean equals(Object object) {
-	//
-	// }
 
+	protected class EvalNodeValue {
+	};
 }

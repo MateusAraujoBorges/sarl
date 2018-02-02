@@ -543,19 +543,18 @@ public class Context {
 	private boolean is0WithProbability(Polynomial poly,
 			IntegerNumber totalDegree, Set<Primitive> vars,
 			RationalNumber epsilon) {
-		if (poly.type().isReal()) {
-			FastEvaluator3 fe = new FastEvaluator3(random, info.numberFactory,
-					poly, totalDegree);
+		FastEvaluator fe = new FastEvaluator(random, info.numberFactory, poly,
+				totalDegree);
 
-			if (debug)
-				fe.printTreeInformation(info.out);
-			return fe.isZero(epsilon);
-		} else {
-			FastEvaluator2 fe = new FastEvaluator2(random, info.numberFactory,
-					poly, totalDegree);
-
-			return fe.isZero(epsilon);
-		}
+		if (debug)
+			fe.printTreeInformation(info.out);
+		return fe.isZero(epsilon);
+		// TODO : when do you want to use GridEvaluator ?
+		// FastGridEvaluator fe = new FastGridEvaluator(random,
+		// info.numberFactory,
+		// poly, totalDegree);
+		//
+		// return fe.isZero(epsilon);
 	}
 
 	/**

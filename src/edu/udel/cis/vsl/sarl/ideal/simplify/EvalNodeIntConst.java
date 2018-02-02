@@ -1,17 +1,20 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
+import java.math.BigInteger;
+
 /**
  * A constant node. This is a leaf node in the tree.
  * 
  * @author siegel
  */
-class EvalNodeRatConst extends EvalNodeRat {
-	EvalNodeRatConst(Rat value) {
+class EvalNodeIntConst extends EvalNodeInt {
+
+	EvalNodeIntConst(BigInteger value) {
 		this.value = value;
 	}
 
 	@Override
-	Rat evaluate() {
+	BigInteger evaluate() {
 		return value;
 	}
 

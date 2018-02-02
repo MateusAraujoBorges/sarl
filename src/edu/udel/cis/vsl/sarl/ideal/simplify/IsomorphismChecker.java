@@ -34,9 +34,9 @@ public class IsomorphismChecker {
 
 	EvalTree tree2;
 
-	Map<EvalNode, EvalNode> map1;
+	Map<EvalNode<?>, EvalNode<?>> map1;
 
-	Map<EvalNode, EvalNode> map2;
+	Map<EvalNode<?>, EvalNode<?>> map2;
 
 	public IsomorphismChecker(EvalTree tree1, EvalTree tree2) {
 		this.tree1 = tree1;
@@ -45,7 +45,7 @@ public class IsomorphismChecker {
 		this.map2 = new HashMap<>();
 	}
 
-	private static boolean match(EvalNode u, EvalNode v) {
+	private static boolean match(EvalNode<?> u, EvalNode<?> v) {
 		if (u.isoCode() != v.isoCode())
 			return false;
 
@@ -84,17 +84,17 @@ public class IsomorphismChecker {
 	 * @param n1
 	 * @return
 	 */
-	private boolean iso(EvalNode n0, EvalNode n1) {
-		EvalNode[] children0 = n0.getChildren();
-		EvalNode[] children1 = n1.getChildren();
-		Set<EvalNode> set1 = new HashSet<>();
+	private boolean iso(EvalNode<?> n0, EvalNode<?> n1) {
+		EvalNode<?>[] children0 = n0.getChildren();
+		EvalNode<?>[] children1 = n1.getChildren();
+		Set<EvalNode<?>> set1 = new HashSet<>();
 		int n = children0.length;
 
 		for (int i = 0; i < n; i++)
 			set1.add(children1[i]);
 		for (int i = 0; i < n; i++) {
-			EvalNode u = children0[i];
-			EvalNode u_match = map1.get(u);
+			EvalNode<?> u = children0[i];
+			EvalNode<?> u_match = map1.get(u);
 
 			if (u_match != null) {
 				if (!set1.remove(u_match))
@@ -103,7 +103,7 @@ public class IsomorphismChecker {
 				boolean matched = false;
 
 				for (int j = 0; j < n; j++) {
-					EvalNode v = children1[j];
+					EvalNode<?> v = children1[j];
 
 					if (!map2.containsKey(v) && match(u, v)) {
 						map1.put(u, v);
