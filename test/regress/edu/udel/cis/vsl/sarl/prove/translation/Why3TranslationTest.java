@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.config.Configurations;
+import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
@@ -21,19 +22,28 @@ import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 public class Why3TranslationTest {
 	PreUniverse universe;
 
-	private TheoremProverFactory proverFactory;
+	private TheoremProverFactory proverFactory = null;
 
 	@Before
 	public void setUp() throws Exception {
 		universe = PreUniverses
 				.newPreUniverse(PreUniverses.newIdealFactorySystem());
-		proverFactory = Prove.newWhy3ProvePlatformFactory(universe,
-				Configurations.getDefaultConfiguration()
-						.getWhy3ProvePlatform());
+
+		ProverInfo why3 = Configurations.getDefaultConfiguration()
+				.getWhy3ProvePlatform();
+
+		if (why3 != null)
+			proverFactory = Prove.newWhy3ProvePlatformFactory(universe,
+					Configurations.getDefaultConfiguration()
+							.getWhy3ProvePlatform());
 	}
 
 	@Test
 	public void unionTest() {
+		if (proverFactory == null) {
+			System.err.println("Warning: no why3 installed.");
+			return;
+		}
 		List<SymbolicType> unionTypes = new LinkedList<>();
 
 		unionTypes.add(universe.integerType());
