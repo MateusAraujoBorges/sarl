@@ -1,6 +1,7 @@
 package edu.udel.cis.vsl.sarl.reason.common;
 
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -114,6 +115,11 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 * obtained by delegation to a reduced context.
 	 */
 	private Map<BooleanExpression, ValidityResult> validityCache = new ConcurrentHashMap<>();
+
+	/**
+	 * Cached results of calls to {@link #validWhy3(BooleanExpression)}.
+	 */
+	private Map<BooleanExpression, ValidityResult> why3ValidityCache = new HashMap<>();
 
 	// Constructors...
 
@@ -229,7 +235,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 		if (predicate.isFalse())
 			return Prove.RESULT_NO;
 
-		ValidityResult result = validCheckCache(predicate, getModel);
+		ValidityResult result = validCheckCache(predicate, getModel,
+				useWhy3Instead);
 
 		if (result != null)
 			return result;
@@ -264,7 +271,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 			result = this.validNoCacheNoReduce(transformedPredicate, getModel,
 					useWhy3Instead);
 		}
-		updateCache(predicate, result);
+		updateCache(predicate, result, useWhy3Instead);
 		return result;
 	}
 
@@ -295,12 +302,13 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 */
 	private ValidityResult validCacheNoReduce(BooleanExpression predicate,
 			boolean getModel, boolean useWhy3Instead) {
-		ValidityResult result = validCheckCache(predicate, getModel);
+		ValidityResult result = validCheckCache(predicate, getModel,
+				useWhy3Instead);
 
 		if (result != null)
 			return result;
 		result = validNoCacheNoReduce(predicate, getModel, useWhy3Instead);
-		updateCache(predicate, result);
+		updateCache(predicate, result, useWhy3Instead);
 		return result;
 	}
 
@@ -393,11 +401,14 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 * 
 	 * @param predicate
 	 *            boolean expression whose validity is being checked
+	 * @param getModel
+	 * @param useWhy3Instead
+	 *            set to true iff only why3 is used for this validity checking.
 	 * @return cached result from previous check on this predicate or
 	 *         <code>null</code> if no such result is cached
 	 */
 	private ValidityResult validCheckCache(BooleanExpression predicate,
-			boolean getModel) {
+			boolean getModel, boolean useWhy3Instead) {
 		BooleanExpression fullContext = getFullContext();
 		ValidityResult result;
 
@@ -411,7 +422,10 @@ public class ContextMinimizingReasoner implements Reasoner {
 					break;
 				case NO:
 					if (getModel)
-						result = validityCache.get(predicate);
+						if (useWhy3Instead)
+							result = why3ValidityCache.get(predicate);
+						else
+							result = validityCache.get(predicate);
 					else
 						result = Prove.RESULT_NO;
 					break;
@@ -425,7 +439,10 @@ public class ContextMinimizingReasoner implements Reasoner {
 				result = null;
 			}
 		} else {
-			result = validityCache.get(predicate);
+			if (useWhy3Instead)
+				result = why3ValidityCache.get(predicate);
+			else
+				result = validityCache.get(predicate);
 		}
 		return result;
 	}
@@ -436,19 +453,29 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 * @param predicate
 	 *            boolean expression whose validity was checked
 	 * @param result
+	 * @param useWhy3Instead
+	 *            set to true iff the cached query is a query for why3.
+	 * @param result
 	 *            the (non-<code>null</code>) result of the validity check on
 	 *            <code>predicate</code>
 	 */
-	private void updateCache(BooleanExpression predicate,
-			ValidityResult result) {
+	private void updateCache(BooleanExpression predicate, ValidityResult result,
+			boolean useWhy3Instead) {
 		BooleanExpression fullContext = getFullContext();
 
 		if (fullContext.isTrue()) {
 			predicate.setValidity(result.getResultType());
-			if (result instanceof ModelResult)
-				validityCache.putIfAbsent(predicate, result);
+			if (result instanceof ModelResult) {
+				if (useWhy3Instead)
+					why3ValidityCache.putIfAbsent(predicate, result);
+				else
+					validityCache.putIfAbsent(predicate, result);
+			}
 		} else {
-			validityCache.putIfAbsent(predicate, result);
+			if (useWhy3Instead)
+				why3ValidityCache.putIfAbsent(predicate, result);
+			else
+				validityCache.putIfAbsent(predicate, result);
 		}
 	}
 
