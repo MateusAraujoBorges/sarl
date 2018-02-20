@@ -266,4 +266,65 @@ public class IdealSimplifierTest {
 	 * 
 	 * }
 	 */
+
+	@Test
+	public void negationCacheError() {
+		SymbolicUniverse universe = SARL.newStandardUniverse();
+		// at one state:
+		NumericExpression old_Y2 = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("Y2"),
+						universe.integerType());
+		NumericExpression old_Y3 = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("Y3"),
+						universe.integerType());
+		BooleanExpression falseExpr;
+
+		// Y2 <= 0 && 0 <= Y2 - 1 && 0 <= Y3 - 1
+		falseExpr = universe.and(
+				universe.lessThanEquals(old_Y2, universe.zeroInt()),
+				universe.lessThanEquals(universe.oneInt(), old_Y3));
+		falseExpr = universe.and(falseExpr,
+				universe.lessThanEquals(universe.oneInt(), old_Y2));
+		falseExpr = universe.reasoner(universe.not(falseExpr))
+				.getReducedContext();
+		System.err.println("!" + falseExpr + " = " + universe.not(falseExpr));
+		// at another state:
+		/*
+		 * NumericSymbolicConstant N, Y1, t, ccbv5; SymbolicConstant Y2, Y3;
+		 * 
+		 * N = (NumericSymbolicConstant) universe.symbolicConstant(
+		 * universe.stringObject("X_N"), universe.integerType()); Y1 =
+		 * (NumericSymbolicConstant) universe.symbolicConstant(
+		 * universe.stringObject("Y1"), universe.integerType()); t =
+		 * (NumericSymbolicConstant) universe.symbolicConstant(
+		 * universe.stringObject("t"), universe.integerType()); Y2 =
+		 * universe.symbolicConstant(universe.stringObject("Y2"),
+		 * universe.arrayType(universe.integerType(), N)); Y3 =
+		 * universe.symbolicConstant(universe.stringObject("Y3"),
+		 * universe.arrayType(universe.integerType(), N)); ccbv5 =
+		 * (NumericSymbolicConstant) universe.symbolicConstant(
+		 * universe.stringObject("_cc_bv_5"), universe.integerType()); // 0 == N
+		 * - Y1: BooleanExpression cxt = universe.equals(N, Y1);
+		 * 
+		 * // ((forall t : int . ((0 == Y2[t] - 1*t) || (Y1 - 1*t <= 0) || (t +
+		 * 1 // <= 0))) || (0 <= Y2 - 1)) && cxt = universe.and(cxt,
+		 * universe.forallInt(t, universe.zeroInt(), Y1,
+		 * universe.equals(universe.arrayRead(Y2, t), t))); // N >= 2 && Y1 >= 0
+		 * cxt = universe.and(cxt, universe.lessThanEquals(universe.integer(2),
+		 * N)); cxt = universe.and(cxt,
+		 * universe.lessThanEquals(universe.integer(0), Y1)); // forall _cc_bv_5
+		 * : int . ((0 == Y2[_cc_bv_5] - 1*Y3[_cc_bv_5]) || (0 // <= X_N -
+		 * 1*_cc_bv_5 - 1)) && // forall _cc_bv_5 : int . ((0 == Y2[_cc_bv_5] -
+		 * 1*Y3[_cc_bv_5]) || (0 // <= _cc_bv_5)) &&
+		 */
+		/*
+		 * cxt = universe.and(cxt, universe.forall(ccbv5, universe.or(
+		 * universe.equals(universe.arrayRead(Y2, ccbv5), universe.arrayRead(Y3,
+		 * ccbv5)), universe.lessThan(ccbv5, N)))); cxt = universe.and(cxt,
+		 * universe.forall(ccbv5, universe.or(
+		 * universe.equals(universe.arrayRead(Y2, ccbv5), universe.arrayRead(Y3,
+		 * ccbv5)), universe.lessThanEquals(universe.zeroInt(), ccbv5))));
+		 * System.out.println(cxt); universe.reasoner(cxt);
+		 */
+	}
 }
