@@ -4261,6 +4261,8 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public ForallStructure getForallStructure(BooleanExpression forallExpr) {
+		if (forallExpr.operator() != SymbolicOperator.FORALL)
+			return null;
 		if (!((SymbolicExpression) forallExpr.argument(0)).type().isInteger())
 			return null;
 
