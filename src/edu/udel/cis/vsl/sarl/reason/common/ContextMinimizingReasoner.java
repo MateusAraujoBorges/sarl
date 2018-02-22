@@ -1,7 +1,6 @@
 package edu.udel.cis.vsl.sarl.reason.common;
 
 import java.io.PrintStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,6 +19,7 @@ import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.simplify.IF.ContextPartition;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
@@ -71,14 +71,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 * expensive and may be never necessary if all of the queries are delegated
 	 * to reduced contexts.
 	 */
-	private TheoremProver prover = null;
-
-	/**
-	 * The why3 prove platform. Only initialized when and if it is needed,
-	 * because it may be expensive and may be never necessary if all of the
-	 * queries are delegated to reduced contexts.
-	 */
-	private TheoremProver why3ProvePlatform;
+	protected TheoremProver prover = null;
 
 	/**
 	 * The simplifier. Only initialized when and if it is needed, because it may
@@ -92,7 +85,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 * {@link ContextMinimizingReasoner}, including this one. It is needed to
 	 * produce the {@link #prover} and/or {@link #simplifier}.
 	 */
-	private ContextMinimizingReasonerFactory factory;
+	protected ContextMinimizingReasonerFactory factory;
 
 	/**
 	 * The context (i.e., path condition) associated to this reasoner. All
@@ -115,11 +108,6 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 * obtained by delegation to a reduced context.
 	 */
 	private Map<BooleanExpression, ValidityResult> validityCache = new ConcurrentHashMap<>();
-
-	/**
-	 * Cached results of calls to {@link #validWhy3(BooleanExpression)}.
-	 */
-	private Map<BooleanExpression, ValidityResult> why3ValidityCache = new HashMap<>();
 
 	// Constructors...
 
@@ -145,14 +133,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 				useBackwardSubstitution);
 	}
 
-	private synchronized TheoremProver getProver(boolean useWhy3Instead,
-			boolean createNewProver, BooleanExpression context) {
-		if (useWhy3Instead) {
-			return why3ProvePlatform == null || createNewProver
-					? (why3ProvePlatform = factory.getWhy3ProvePlatformFactory()
-							.newProver(context))
-					: why3ProvePlatform;
-		}
+	protected synchronized TheoremProver getProver(boolean createNewProver,
+			BooleanExpression context) {
 		return prover == null || createNewProver ? (prover = factory
 				.getTheoremProverFactory().newProver(context)) : prover;
 	}
@@ -182,7 +164,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 			reasoner = this;
 		} else {
 			reasoner = factory.getReasoner(renamedContext,
-					simplifier.useBackwardSubstitution());
+					simplifier.useBackwardSubstitution(),
+					new ProverPredicate[0]);
 		}
 		return new Pair<ContextMinimizingReasoner, SymbolicExpression>(reasoner,
 				renamedExpression);
@@ -206,7 +189,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 			reducedReasoner = this;
 		} else {
 			reducedReasoner = factory.getReasoner(reducedContext,
-					simplifier.useBackwardSubstitution());
+					simplifier.useBackwardSubstitution(),
+					new ProverPredicate[0]);
 		}
 		return reducedReasoner;
 	}
@@ -223,20 +207,16 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            if <code>true</code>, try to find a model (concrete
 	 *            counterexample) if the result is not valid, i.e., return an
 	 *            instance of {@link ModelResult}.
-	 * @param useWhy3Instead
-	 *            Use Why3 instead of theorem provers like cvc4, z3, which is
-	 *            more powerful but expensive.
 	 * @return a non-<code>null</code> validity result
 	 */
-	private ValidityResult valid1(BooleanExpression predicate, boolean getModel,
-			boolean useWhy3Instead) {
+	private ValidityResult valid1(BooleanExpression predicate,
+			boolean getModel) {
 		if (predicate.isTrue())
 			return Prove.RESULT_YES;
 		if (predicate.isFalse())
 			return Prove.RESULT_NO;
 
-		ValidityResult result = validCheckCache(predicate, getModel,
-				useWhy3Instead);
+		ValidityResult result = validCheckCache(predicate, getModel);
 
 		if (result != null)
 			return result;
@@ -266,12 +246,11 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 		if (reducedReasoner != this) {
 			result = reducedReasoner.validCacheNoReduce(transformedPredicate,
-					getModel, useWhy3Instead);
+					getModel);
 		} else {
-			result = this.validNoCacheNoReduce(transformedPredicate, getModel,
-					useWhy3Instead);
+			result = this.validNoCacheNoReduce(transformedPredicate, getModel);
 		}
-		updateCache(predicate, result, useWhy3Instead);
+		updateCache(predicate, result);
 		return result;
 	}
 
@@ -295,20 +274,16 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            if <code>true</code>, try to find a model (concrete
 	 *            counterexample) if the result is not valid, i.e., return an
 	 *            instance of {@link ModelResult}.
-	 * @param useWhy3Instead
-	 *            Use Why3 instead of theorem provers like cvc4, z3, which is
-	 *            more powerful but expensive.
 	 * @return a non-<code>null</code> validity result
 	 */
 	private ValidityResult validCacheNoReduce(BooleanExpression predicate,
-			boolean getModel, boolean useWhy3Instead) {
-		ValidityResult result = validCheckCache(predicate, getModel,
-				useWhy3Instead);
+			boolean getModel) {
+		ValidityResult result = validCheckCache(predicate, getModel);
 
 		if (result != null)
 			return result;
-		result = validNoCacheNoReduce(predicate, getModel, useWhy3Instead);
-		updateCache(predicate, result, useWhy3Instead);
+		result = validNoCacheNoReduce(predicate, getModel);
+		updateCache(predicate, result);
 		return result;
 	}
 
@@ -334,13 +309,10 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            if <code>true</code>, try to find a model (concrete
 	 *            counterexample) if the result is not valid, i.e., return an
 	 *            instance of {@link ModelResult}.
-	 * @param useWhy3Instead
-	 *            Use Why3 instead of theorem provers like cvc4, z3, which is
-	 *            more powerful but expensive.
 	 * @return a non-<code>null</code> validity result
 	 */
 	private ValidityResult validNoCacheNoReduce(BooleanExpression predicate,
-			boolean getModel, boolean useWhy3Instead) {
+			boolean getModel) {
 		if (debug) {
 			dbgcnt1++;
 			debugOut.println("dbgcnt1 = " + dbgcnt1);
@@ -357,7 +329,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 			newReasoner = this;
 		} else {
 			newReasoner = factory.getReasoner(newContext,
-					simplifier.useBackwardSubstitution());
+					simplifier.useBackwardSubstitution(),
+					new ProverPredicate[0]);
 		}
 
 		if (newPredicate != predicate || newContext != context) {
@@ -370,7 +343,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 				debugOut.println("Simplified predicate : " + newPredicate);
 				debugOut.flush();
 			}
-			result = newReasoner.valid1(newPredicate, getModel, useWhy3Instead);
+			result = newReasoner.valid1(newPredicate, getModel);
 		} else {
 			StatefulArrayLambdaRemover arrayLambdaRemover = new StatefulArrayLambdaRemover(
 					simplifier.universe());
@@ -382,13 +355,11 @@ public class ContextMinimizingReasoner implements Reasoner {
 			newContext = simplifier.universe().and(newContext,
 					arrayLambdaRemover.getIndependentArrayLambdaAxioms());
 			if (getModel) {
-				result = getProver(useWhy3Instead,
-						getReducedContext() != newContext, newContext)
-								.validOrModel(newPredicate);
+				result = getProver(getReducedContext() != newContext,
+						newContext).validOrModel(newPredicate);
 			} else {
-				result = getProver(useWhy3Instead,
-						getReducedContext() != newContext, newContext)
-								.valid(newPredicate);
+				result = getProver(getReducedContext() != newContext,
+						newContext).valid(newPredicate);
 			}
 		}
 		return result;
@@ -402,13 +373,11 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 * @param predicate
 	 *            boolean expression whose validity is being checked
 	 * @param getModel
-	 * @param useWhy3Instead
-	 *            set to true iff only why3 is used for this validity checking.
 	 * @return cached result from previous check on this predicate or
 	 *         <code>null</code> if no such result is cached
 	 */
 	private ValidityResult validCheckCache(BooleanExpression predicate,
-			boolean getModel, boolean useWhy3Instead) {
+			boolean getModel) {
 		BooleanExpression fullContext = getFullContext();
 		ValidityResult result;
 
@@ -422,10 +391,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 					break;
 				case NO:
 					if (getModel)
-						if (useWhy3Instead)
-							result = why3ValidityCache.get(predicate);
-						else
-							result = validityCache.get(predicate);
+						result = validityCache.get(predicate);
 					else
 						result = Prove.RESULT_NO;
 					break;
@@ -438,12 +404,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 			} else {
 				result = null;
 			}
-		} else {
-			if (useWhy3Instead)
-				result = why3ValidityCache.get(predicate);
-			else
-				result = validityCache.get(predicate);
-		}
+		} else
+			result = validityCache.get(predicate);
 		return result;
 	}
 
@@ -453,29 +415,20 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 * @param predicate
 	 *            boolean expression whose validity was checked
 	 * @param result
-	 * @param useWhy3Instead
-	 *            set to true iff the cached query is a query for why3.
-	 * @param result
 	 *            the (non-<code>null</code>) result of the validity check on
 	 *            <code>predicate</code>
 	 */
-	private void updateCache(BooleanExpression predicate, ValidityResult result,
-			boolean useWhy3Instead) {
+	private void updateCache(BooleanExpression predicate,
+			ValidityResult result) {
 		BooleanExpression fullContext = getFullContext();
 
 		if (fullContext.isTrue()) {
 			predicate.setValidity(result.getResultType());
 			if (result instanceof ModelResult) {
-				if (useWhy3Instead)
-					why3ValidityCache.putIfAbsent(predicate, result);
-				else
-					validityCache.putIfAbsent(predicate, result);
+				validityCache.putIfAbsent(predicate, result);
 			}
 		} else {
-			if (useWhy3Instead)
-				why3ValidityCache.putIfAbsent(predicate, result);
-			else
-				validityCache.putIfAbsent(predicate, result);
+			validityCache.putIfAbsent(predicate, result);
 		}
 	}
 
@@ -563,7 +516,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 			out.flush();
 		}
 
-		ValidityResult result = valid1(predicate, false, false);
+		ValidityResult result = valid1(predicate, false);
 
 		if (showQuery)
 
@@ -592,7 +545,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 			out.flush();
 		}
 
-		ValidityResult result = valid1(predicate, true, false);
+		ValidityResult result = valid1(predicate, true);
 
 		if (showQuery) {
 			PrintStream out = universe.getOutputStream();
@@ -633,7 +586,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 		BooleanExpression oldContext = simplifier.getFullContext();
 		BooleanExpression newContext = universe.and(oldContext,
 				indexConstraint);
-		Reasoner newReasoner = factory.getReasoner(newContext, true);
+		Reasoner newReasoner = factory.getReasoner(newContext, true,
+				new ProverPredicate[0]);
 		TaylorSubstituter taylorSubstituter = new TaylorSubstituter(universe,
 				universe.objectFactory(), universe.typeFactory(), newReasoner,
 				limitVars, orders);
@@ -643,34 +597,5 @@ public class ContextMinimizingReasoner implements Reasoner {
 		newLhs = taylorSubstituter.reduceModLimits(newLhs);
 		return newReasoner
 				.isValid(universe.equals(newLhs, universe.zeroReal()));
-	}
-
-	@Override
-	public ValidityResult validWhy3(BooleanExpression predicate) {
-		PreUniverse universe = factory.getUniverse();
-		boolean showQuery = universe.getShowQueries();
-
-		if (showQuery) {
-			PrintStream out = universe.getOutputStream();
-			int id = universe.numValidCalls();
-
-			out.println("Query " + id + " context        : " + context);
-			out.println("Query " + id + " assertion      : " + predicate);
-			out.flush();
-		}
-
-		ValidityResult result = valid1(predicate, false, true);
-
-		if (showQuery)
-
-		{
-			PrintStream out = universe.getOutputStream();
-			int id = universe.numValidCalls();
-
-			out.println("Query " + id + " result         : " + result);
-			out.flush();
-		}
-		universe.incrementValidCount();
-		return result;
 	}
 }

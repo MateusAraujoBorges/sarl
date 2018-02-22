@@ -4,6 +4,7 @@ import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 import edu.udel.cis.vsl.sarl.prove.cvc.RobustCVCTheoremProver;
@@ -37,7 +38,8 @@ public class RobustZ3TheoremProverFactory implements TheoremProverFactory {
 	 *            information object for underlying prover, which must have
 	 *            {@link ProverKind} {@link ProverKind#Z3}
 	 */
-	public RobustZ3TheoremProverFactory(PreUniverse universe, ProverInfo prover) {
+	public RobustZ3TheoremProverFactory(PreUniverse universe,
+			ProverInfo prover) {
 		this.universe = universe;
 		this.prover = prover;
 	}
@@ -45,5 +47,11 @@ public class RobustZ3TheoremProverFactory implements TheoremProverFactory {
 	@Override
 	public TheoremProver newProver(BooleanExpression context) {
 		return new RobustZ3TheoremProver(universe, context, prover);
+	}
+
+	@Override
+	public TheoremProver newProver(BooleanExpression context,
+			ProverPredicate[] ppreds) {
+		return newProver(context);
 	}
 }

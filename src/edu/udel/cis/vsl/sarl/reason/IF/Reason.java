@@ -18,10 +18,12 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.reason.IF;
 
+import edu.udel.cis.vsl.sarl.IF.config.SARLConfig;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 import edu.udel.cis.vsl.sarl.prove.why3.RobustWhy3ProvePlatformFactory;
 import edu.udel.cis.vsl.sarl.reason.common.ContextMinimizingReasonerFactory;
+import edu.udel.cis.vsl.sarl.reason.common.Why3ReasonerFactory;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 
 /**
@@ -41,17 +43,35 @@ public class Reason {
 	 *            A reference to a {@link SimplifierFactory}
 	 * @param proverFactory
 	 *            A reference to a {@link TheoremProverFactory}
-	 * @param why3Factory
-	 *            A reference to a {@link RobustWhy3ProvePlatformFactory},
-	 *            optional, can be null.
 	 * @return
 	 */
 	public static ReasonerFactory newReasonerFactory(PreUniverse universe,
 			SimplifierFactory simplifierFactory,
-			TheoremProverFactory proverFactory,
-			RobustWhy3ProvePlatformFactory why3Factory) {
+			TheoremProverFactory proverFactory) {
 		ReasonerFactory result = new ContextMinimizingReasonerFactory(universe,
-				proverFactory, simplifierFactory, why3Factory);
+				proverFactory, simplifierFactory);
+
+		return result;
+	}
+
+	/**
+	 * Create a why3 reasoner factory iff why3 is installed. If why3 is not
+	 * installed, this function shall not be called.
+	 * 
+	 * @param universe
+	 *            A reference to a {@link PreUniverse}
+	 * @param simplifierFactory
+	 *            A reference to a {@link SimplifierFactory}
+	 * @param proverFactory
+	 *            A reference to a {@link RobustWhy3ProvePlatformFactory}
+	 * @return
+	 */
+	public static Why3ReasonerFactory newWhy3ReasonerFactory(SARLConfig config,
+			PreUniverse universe, SimplifierFactory simplifierFactory,
+			RobustWhy3ProvePlatformFactory proverFactory) {
+		assert config.getWhy3ProvePlatform() != null;
+		Why3ReasonerFactory result = new Why3ReasonerFactory(universe,
+				simplifierFactory, proverFactory);
 
 		return result;
 	}

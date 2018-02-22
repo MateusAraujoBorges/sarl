@@ -4,6 +4,7 @@ import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 
@@ -39,7 +40,8 @@ public class RobustCVCTheoremProverFactory implements TheoremProverFactory {
 	 *            {@link ProverKind} either {@link ProverKind#CVC3} or
 	 *            {@link ProverKind#CVC4}
 	 */
-	public RobustCVCTheoremProverFactory(PreUniverse universe, ProverInfo prover) {
+	public RobustCVCTheoremProverFactory(PreUniverse universe,
+			ProverInfo prover) {
 		this.universe = universe;
 		this.prover = prover;
 	}
@@ -47,5 +49,11 @@ public class RobustCVCTheoremProverFactory implements TheoremProverFactory {
 	@Override
 	public TheoremProver newProver(BooleanExpression context) {
 		return new RobustCVCTheoremProver(universe, context, prover);
+	}
+
+	@Override
+	public TheoremProver newProver(BooleanExpression context,
+			ProverPredicate[] ppreds) {
+		return newProver(context);
 	}
 }

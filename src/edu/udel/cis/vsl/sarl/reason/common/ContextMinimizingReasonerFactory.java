@@ -6,9 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
-import edu.udel.cis.vsl.sarl.prove.why3.RobustWhy3ProvePlatformFactory;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
@@ -25,14 +25,6 @@ public class ContextMinimizingReasonerFactory implements ReasonerFactory {
 	 * the reasoners to check validity.
 	 */
 	private TheoremProverFactory proverFactory;
-
-	/**
-	 * Factory used to produce new why3 provers, which will be used by the
-	 * reasoners to check validity. why3 is a prove platform and is suppose to
-	 * be more expensive than other provers. This factory is null if no why3 is
-	 * installed.
-	 */
-	private TheoremProverFactory why3Factory = null;
 
 	/**
 	 * Factory used to produce new {@link Simplifier}s, which will be used by
@@ -70,18 +62,17 @@ public class ContextMinimizingReasonerFactory implements ReasonerFactory {
 	 */
 	public ContextMinimizingReasonerFactory(PreUniverse universe,
 			TheoremProverFactory proverFactory,
-			SimplifierFactory simplifierFactory,
-			RobustWhy3ProvePlatformFactory why3Factory) {
+			SimplifierFactory simplifierFactory) {
 		this.universe = universe;
 		this.proverFactory = proverFactory;
 		this.simplifierFactory = simplifierFactory;
 		this.universe = universe;
-		this.why3Factory = why3Factory;
 	}
 
 	@Override
 	public ContextMinimizingReasoner getReasoner(BooleanExpression context,
-			boolean useBackwardSubstitution) {
+			boolean useBackwardSubstitution,
+			ProverPredicate proverPredicates[]) {
 		assert context.isCanonic();
 
 		ContextMinimizingReasoner result = reasonerMap.get(context);
@@ -118,11 +109,5 @@ public class ContextMinimizingReasonerFactory implements ReasonerFactory {
 	@Override
 	public TheoremProverFactory getTheoremProverFactory() {
 		return proverFactory;
-	}
-
-	@Override
-	public TheoremProverFactory getWhy3ProvePlatformFactory() {
-		// If there is no why3 installed, use regular proverFactory:
-		return why3Factory == null ? proverFactory : why3Factory;
 	}
 }

@@ -397,6 +397,20 @@ public class Why3Primitives {
 	}
 
 	/**
+	 * @return A why3 predicate definition.
+	 */
+	public static String why3ProverPredicate(String predName,
+			Why3FunctionType type, String bodyText, String... formalParams) {
+		String formals = "";
+
+		for (int i = 0; i < formalParams.length; i++)
+			formals += "(" + formalParams[i] + " : "
+					+ type.nthArgumentType(i).text + ")";
+		return keyword_predicate + " " + predName + " " + formals + " = "
+				+ bodyText;
+	}
+
+	/**
 	 * @return A why3 type aliasing declaration.
 	 */
 	public static String why3TypeAlias(String alias, Why3Type type) {

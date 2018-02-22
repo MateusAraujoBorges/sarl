@@ -4,6 +4,8 @@ import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 
 public class RobustWhy3ProvePlatformFactory implements TheoremProverFactory {
@@ -38,6 +40,16 @@ public class RobustWhy3ProvePlatformFactory implements TheoremProverFactory {
 
 	@Override
 	public RobustWhy3ProvePlatform newProver(BooleanExpression context) {
-		return new RobustWhy3ProvePlatform(universe, prover, context);
+		return new RobustWhy3ProvePlatform(universe, prover, context,
+				new ProverPredicate[0]);
+	}
+
+	@Override
+	public TheoremProver newProver(BooleanExpression context,
+			ProverPredicate[] ppreds) {
+		RobustWhy3ProvePlatform why3prover = new RobustWhy3ProvePlatform(
+				universe, prover, context, ppreds);
+
+		return why3prover;
 	}
 }

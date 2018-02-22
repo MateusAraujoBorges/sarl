@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -12,6 +13,7 @@ import java.util.TreeMap;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3Lib;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3Type;
 
@@ -69,6 +71,12 @@ public class Why3TranslationState {
 	private Map<String, String> declarations;
 
 	/**
+	 * a set of prover predicate names that used for checking if a function is a
+	 * prover predicate
+	 */
+	private final Map<String, ProverPredicate> proverPredicateDictionary;
+
+	/**
 	 * type aliasing declarations
 	 */
 	private LinkedList<String> typeAliasingDeclarations;
@@ -101,7 +109,7 @@ public class Why3TranslationState {
 	private int sigmaCounter = 0;
 
 	/* **************** Constructor ****************** */
-	public Why3TranslationState() {
+	public Why3TranslationState(ProverPredicate ppreds[]) {
 		this.declarations = new HashMap<>();
 		this.tupleTypeSignitureMap = new TreeMap<>();
 		this.typeAliasingDeclarations = new LinkedList<>();
@@ -112,6 +120,11 @@ public class Why3TranslationState {
 		this.tupleTypeSignitureMap = new HashMap<>();
 		this.libraries = new HashSet<>();
 		this.quantifiedContexts = new Stack<>();
+		this.proverPredicateDictionary = new HashMap<>();
+		if (ppreds != null)
+			for (int i = 0; i < ppreds.length; i++)
+				this.proverPredicateDictionary.put(ppreds[i].identifier,
+						ppreds[i]);
 	}
 
 	/**
@@ -194,8 +207,16 @@ public class Why3TranslationState {
 	 */
 	public Iterable<String> getDeclaration() {
 		List<String> result = new LinkedList<>(typeAliasingDeclarations);
+		List<String> predicates = new LinkedList<>();
 
-		result.addAll(declarations.values());
+		// put prover predicates after all other declarations ...
+		for (Entry<String, String> key_decl : declarations.entrySet()) {
+			if (!proverPredicateDictionary.containsKey(key_decl.getKey()))
+				result.add(key_decl.getValue());
+			else
+				predicates.add(key_decl.getValue());
+		}
+		result.addAll(predicates);
 		return result;
 	}
 
@@ -204,6 +225,23 @@ public class Why3TranslationState {
 	 */
 	public void addDeclaration(String identifier, String declaration) {
 		declarations.putIfAbsent(identifier, declaration);
+	}
+
+	/**
+	 * @return true iff a declaration that is associated with the given key
+	 *         already exists.
+	 */
+	public boolean existsDeclaration(String identifier) {
+		return declarations.containsKey(identifier);
+	}
+
+	/**
+	 * 
+	 * @return a {@link ProverPredicate} iff the given function name is a name
+	 *         of a prover predicate
+	 */
+	public ProverPredicate isProverPredicate(String name) {
+		return proverPredicateDictionary.get(name);
 	}
 
 	/**

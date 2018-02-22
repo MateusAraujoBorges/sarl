@@ -38,6 +38,7 @@ import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
@@ -67,13 +68,6 @@ public class CommonReasoner implements Reasoner {
 	 * re-used for subsequence queries. It is stored in this variable.
 	 */
 	private TheoremProver prover = null;
-
-	/**
-	 * The why3 prove platform. Only initialized when and if it is needed,
-	 * because it may be expensive and may be never necessary if all of the
-	 * queries are delegated to reduced contexts.
-	 */
-	private TheoremProver why3ProvePlatform;
 
 	/**
 	 * The simplifier, which must be non-<code>null</code> and is set at
@@ -196,7 +190,7 @@ public class CommonReasoner implements Reasoner {
 				else {
 					result = validityCache.get(simplifiedPredicate);
 					if (result == null) {
-						result = getProver(false).valid(simplifiedPredicate);
+						result = getProver().valid(simplifiedPredicate);
 						validityCache.putIfAbsent(predicate, result);
 					}
 				}
@@ -227,7 +221,7 @@ public class CommonReasoner implements Reasoner {
 			result = validityCache.get(simplifiedPredicate);
 			if (result != null && result instanceof ModelResult)
 				return result;
-			result = getProver(false).validOrModel(simplifiedPredicate);
+			result = getProver().validOrModel(simplifiedPredicate);
 			validityCache.putIfAbsent(predicate, result);
 		}
 		return result;
@@ -267,7 +261,8 @@ public class CommonReasoner implements Reasoner {
 		BooleanExpression oldContext = simplifier.getFullContext();
 		BooleanExpression newContext = universe.and(oldContext,
 				indexConstraint);
-		Reasoner newReasoner = reasonerFactory.getReasoner(newContext, true);
+		Reasoner newReasoner = reasonerFactory.getReasoner(newContext, true,
+				new ProverPredicate[0]);
 		UnaryOperator<SymbolicExpression> taylorSubstituter = new TaylorSubstituter(
 				universe, universe.objectFactory(), universe.typeFactory(),
 				newReasoner, limitVars, orders);
@@ -279,84 +274,9 @@ public class CommonReasoner implements Reasoner {
 		// throw new UnsupportedOperationException();
 	}
 
-	private synchronized TheoremProver getProver(boolean useWhy3Instead) {
-		if (useWhy3Instead)
-			return why3ProvePlatform == null
-					? (why3ProvePlatform = reasonerFactory
-							.getWhy3ProvePlatformFactory()
-							.newProver(getReducedContext()))
-					: why3ProvePlatform;
-		else
-			return prover == null ? (prover = reasonerFactory
-					.getTheoremProverFactory().newProver(getReducedContext()))
-					: prover;
-
-	}
-
-	@Override
-	public ValidityResult validWhy3(BooleanExpression predicate) {
-		boolean showQuery = universe().getShowQueries();
-
-		if (showQuery) {
-			PrintStream out = universe().getOutputStream();
-			int id = universe().numValidCalls();
-
-			out.println("Query " + id + " assumption: "
-					+ simplifier.getFullContext());
-			out.println("Query " + id + " predicate:  " + predicate);
-		}
-		if (predicate == null)
-			throw new SARLException("Argument to Reasoner.valid is null.");
-		else {
-			ValidityResult result = null;
-			BooleanExpression fullContext = getFullContext();
-
-			universe().incrementValidCount();
-			if (fullContext.isTrue()) {
-				ResultType resultType = predicate.getValidity();
-
-				if (resultType != null) {
-					switch (resultType) {
-					case MAYBE:
-						result = Prove.RESULT_MAYBE;
-						break;
-					case NO:
-						result = Prove.RESULT_NO;
-						break;
-					case YES:
-						result = Prove.RESULT_YES;
-						break;
-					default:
-						throw new SARLInternalException("unrechable");
-					}
-				}
-			}
-			if (result == null) {
-				BooleanExpression simplifiedPredicate = (BooleanExpression) simplifier
-						.apply(predicate);
-
-				if (simplifiedPredicate.isTrue())
-					result = Prove.RESULT_YES;
-				else if (simplifiedPredicate.isFalse())
-					result = Prove.RESULT_NO;
-				else {
-					result = validityCache.get(simplifiedPredicate);
-					if (result == null) {
-						result = getProver(true).valid(simplifiedPredicate);
-						validityCache.putIfAbsent(predicate, result);
-					}
-				}
-			}
-			if (showQuery) {
-				int id = universe().numValidCalls() - 1;
-				PrintStream out = universe().getOutputStream();
-
-				out.println("Query " + id + " result:     " + result);
-			}
-			if (fullContext.isTrue()) {
-				predicate.setValidity(result.getResultType());
-			}
-			return result;
-		}
+	private synchronized TheoremProver getProver() {
+		return prover == null ? (prover = reasonerFactory
+				.getTheoremProverFactory().newProver(getReducedContext()))
+				: prover;
 	}
 }

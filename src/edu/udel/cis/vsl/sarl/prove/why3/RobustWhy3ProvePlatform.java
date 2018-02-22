@@ -19,6 +19,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 
 public class RobustWhy3ProvePlatform implements TheoremProver {
@@ -64,6 +65,12 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 	 */
 	private BooleanExpression cleanedContext;
 
+	/**
+	 * A list of {@link ProverPredicate}s, which is suppose to be used by both
+	 * context and queries
+	 */
+	private ProverPredicate[] ppreds;
+
 	private static String temporary_file_dir = "./SARL_Why3/";
 
 	private static String temporary_file_name = "./SARL_Why3/_sarl_why3.why";
@@ -71,7 +78,7 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 	private static String prove_command = "prove";
 
 	public RobustWhy3ProvePlatform(PreUniverse universe, ProverInfo info,
-			BooleanExpression context) {
+			BooleanExpression context, ProverPredicate[] ppreds) {
 		String[] command = new String[7];
 
 		assert universe != null;
@@ -102,6 +109,7 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 				Runtime.getRuntime().availableProcessors() - 2);
 		this.why3RunnerPool = new ExecutorCompletionService<ValidityResult>(
 				executor);
+		this.ppreds = ppreds;
 	}
 
 	@Override
@@ -152,7 +160,7 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 			boolean show, PrintStream out, boolean doSplitGoals) {
 		ValidityResult result = Prove.RESULT_MAYBE;
 		Why3Translator why3Translator = new Why3Translator(universe,
-				cleanedContext);
+				cleanedContext, ppreds);
 		int numGoals;
 		String goalsTexts[];
 

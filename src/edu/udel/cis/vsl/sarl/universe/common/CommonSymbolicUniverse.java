@@ -23,9 +23,13 @@ import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
+import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.common.CommonPreUniverse;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
+import edu.udel.cis.vsl.sarl.reason.common.Why3Reasoner;
+import edu.udel.cis.vsl.sarl.reason.common.Why3ReasonerFactory;
 
 /**
  * A standard implementation of {@link SymbolicUniverse}, relying heavily on a
@@ -41,6 +45,11 @@ public class CommonSymbolicUniverse extends CommonPreUniverse
 	 * The factory for producing new Reasoner instances.
 	 */
 	private ReasonerFactory reasonerFactory;
+
+	/**
+	 * The factory for producing new {@link Why3Reasoner} instances.
+	 */
+	private Why3ReasonerFactory why3ReasonerFactory = null;
 
 	// Constructor...
 
@@ -60,7 +69,7 @@ public class CommonSymbolicUniverse extends CommonPreUniverse
 	@Override
 	public Reasoner reasoner(BooleanExpression context) {
 		return reasonerFactory.getReasoner(context,
-				getUseBackwardSubstitution());
+				getUseBackwardSubstitution(), new ProverPredicate[0]);
 	}
 
 	public void setReasonerFactory(ReasonerFactory reasonerFactory) {
@@ -75,5 +84,19 @@ public class CommonSymbolicUniverse extends CommonPreUniverse
 		if (result != null)
 			return result;
 		return reasoner(assumption).extractNumber(expression);
+	}
+
+	@Override
+	public Reasoner why3Reasoner(BooleanExpression context,
+			ProverPredicate[] proverPredicates) {
+		if (why3ReasonerFactory == null)
+			return reasoner(context);
+		else
+			return why3ReasonerFactory.getReasoner(context,
+					getUseBackwardSubstitution(), proverPredicates);
+	}
+
+	public void setWhy3ReasonerFactory(Why3ReasonerFactory reasonerFactory) {
+		this.why3ReasonerFactory = reasonerFactory;
 	}
 }

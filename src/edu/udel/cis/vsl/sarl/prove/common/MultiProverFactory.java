@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import edu.udel.cis.vsl.sarl.IF.TheoremProverException;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 
@@ -43,6 +44,12 @@ public class MultiProverFactory implements TheoremProverFactory {
 			}
 		}
 		return new MultiProver(universe, provers.toArray(new TheoremProver[0]));
+	}
+
+	@Override
+	public TheoremProver newProver(BooleanExpression context,
+			ProverPredicate[] ppreds) {
+		return newProver(context);
 	}
 
 }

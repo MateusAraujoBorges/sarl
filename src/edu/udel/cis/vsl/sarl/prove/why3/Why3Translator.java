@@ -32,6 +32,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Axiom;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3FunctionType;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3InfixOperator;
@@ -134,8 +135,9 @@ public class Why3Translator {
 
 	private PreUniverse universe;
 
-	public Why3Translator(PreUniverse universe, SymbolicExpression theContext) {
-		initialize(universe);
+	public Why3Translator(PreUniverse universe, SymbolicExpression theContext,
+			ProverPredicate ppreds[]) {
+		initialize(universe, ppreds);
 
 		String ctx = translate(theContext);
 
@@ -144,7 +146,7 @@ public class Why3Translator {
 	}
 
 	public Why3Translator(PreUniverse universe) {
-		initialize(universe);
+		initialize(universe, null);
 		this.contexts.put(context_name,
 				Why3Primitives.newAxiom(context_name, "true"));
 		state.addLibrary(Why3Lib.BOOL); // add Bool lib for literal true.
@@ -155,9 +157,9 @@ public class Why3Translator {
 	 * 
 	 * @param universe
 	 */
-	private void initialize(PreUniverse universe) {
+	private void initialize(PreUniverse universe, ProverPredicate ppreds[]) {
 		// this.universe = universe;
-		this.state = new Why3TranslationState();
+		this.state = new Why3TranslationState(ppreds);
 		this.universe = universe;
 		this.contexts = new TreeMap<>();
 	}
@@ -203,8 +205,9 @@ public class Why3Translator {
 	public String declarations() {
 		String result = "";
 
-		for (String decl : state.getDeclaration())
+		for (String decl : state.getDeclaration()) {
 			result += decl + "\n";
+		}
 		result = stringPostProcess(result);
 		return result;
 	}
@@ -880,14 +883,22 @@ public class Why3Translator {
 		Why3Type type = translateType(var.type());
 		String declaration;
 
-		if (!type.isFunctionType())
+		if (!type.isFunctionType()) {
 			declaration = Why3Primitives.constantDecl(name, type);
-		else {
-			declaration = Why3Primitives.why3UninterpretedFunctionDecl(name,
-					(Why3FunctionType) type);
+			state.addDeclaration(name, declaration);
+		} else {
+			ProverPredicate ppred = state
+					.isProverPredicate(var.name().getString());
+			// if the function is a ProverPredicate:
+			if (ppred != null)
+				translateProverPredicate(ppred);
+			// uninterpreted function:
+			else {
+				declaration = Why3Primitives.why3UninterpretedFunctionDecl(name,
+						(Why3FunctionType) type);
+				state.addDeclaration(name, declaration);
+			}
 		}
-
-		state.addDeclaration(name, declaration);
 		return name;
 	}
 
@@ -1164,6 +1175,41 @@ public class Why3Translator {
 		return Why3Primitives.why3FunctionCall(sigmaName, formals);
 	}
 
+	private void translateProverPredicate(ProverPredicate ppred) {
+		if (state.existsDeclaration(ppred.identifier))
+			return;
+
+		Why3Type paramTypes[] = new Why3Type[ppred.parameters.length];
+		String foramls[] = new String[ppred.parameters.length];
+
+		for (int i = 0; i < ppred.parameters.length; i++) {
+			String ident = ppred.parameters[i].name().getString();
+
+			paramTypes[i] = translateType(ppred.parameters[i].type());
+			foramls[i] = originalIdentifier2Name(ident);
+			state.pushQuantifiedContext(foramls[i]);
+		}
+
+		Why3FunctionType funcType = Why3Primitives
+				.why3FunctionType(Why3Primitives.bool_t, paramTypes);
+		String bodyText = translate(ppred.definition);
+
+		for (int i = 0; i < ppred.parameters.length; i++)
+			state.popQuantifiedContext();
+		state.addDeclaration(ppred.identifier,
+				Why3Primitives.why3ProverPredicate(
+						originalIdentifier2Name(ppred.identifier), funcType,
+						bodyText, foramls));
+//		if (ppred.identifier.equals("gt")) {
+//			String ngtTransitiveAxiomText = "forall _t0 _t1 _t2 : int. "
+//					+ "(not (_gt _t0 _t1)) && (not (_gt _t1 _t2)) -> (not (_gt _t0 _t2)) ";
+//			Axiom gtTransitiveAxiom = new Axiom("gt", ngtTransitiveAxiomText);
+//
+//			this.contexts.putIfAbsent(gtTransitiveAxiom.name,
+//					gtTransitiveAxiom);
+//		}
+	}
+
 	private SymbolicConstant[] findBoundVarsInFunctionBody(
 			Why3TranslationState state, SymbolicExpression body) {
 		Set<SymbolicConstant> allVars = universe.getFreeSymbolicConstants(body);
@@ -1368,5 +1414,9 @@ public class Why3Translator {
 
 	private String symbolicConstant2Name(SymbolicConstant var) {
 		return "_" + var.name().getString();
+	}
+
+	private String originalIdentifier2Name(String identifier) {
+		return "_" + identifier;
 	}
 }

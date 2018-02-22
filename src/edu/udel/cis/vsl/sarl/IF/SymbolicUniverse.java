@@ -23,6 +23,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 
 /**
  * <p>
@@ -81,4 +82,19 @@ public interface SymbolicUniverse extends CoreUniverse {
 	Number extractNumber(BooleanExpression assumption,
 			NumericExpression expression);
 
+	/**
+	 * Same as {@link #reasoner(BooleanExpression, boolean)} but only Why3 prove
+	 * platform will be used if it is installed. If Why3 is not installed, this
+	 * function is equivalent to {@link #reasoner(BooleanExpression, boolean)}
+	 * 
+	 * @param context
+	 *            a non-<code>null</code> boolean expression to be used as the
+	 *            context for the {@link Reasoner}
+	 * @param proverPredicates
+	 *            {@link ProverPredicate}s which factor out the common parts of
+	 *            boolean expressions from complex prover contexts and queries
+	 * @return a {@link Reasoner} based on the given <code>context</code>
+	 */
+	Reasoner why3Reasoner(BooleanExpression context,
+			ProverPredicate[] proverPredicates);
 }

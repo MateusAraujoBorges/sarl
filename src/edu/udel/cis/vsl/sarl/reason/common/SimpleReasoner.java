@@ -142,9 +142,4 @@ public class SimpleReasoner implements Reasoner {
 			int[] orders) {
 		return false;
 	}
-
-	@Override
-	public ValidityResult validWhy3(BooleanExpression predicate) {
-		return valid(predicate);
-	}
 }

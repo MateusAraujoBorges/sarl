@@ -20,6 +20,7 @@ package edu.udel.cis.vsl.sarl.reason.IF;
 
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 
 /**
@@ -56,10 +57,14 @@ public interface ReasonerFactory {
 	 *            shall the reasoner use backwards substitution to solve for
 	 *            certain numeric expressions in terms of others when
 	 *            simplifying?
+	 * @param proverPredicates
+	 *            {@link ProverPredicate}s which factor out common boolean
+	 *            expressions from complex prover contexts and queries
 	 * @return a {@link Reasoner} based on the given <code>context</code>
 	 */
 	Reasoner getReasoner(BooleanExpression context,
-			boolean useBackwardSubstitution);
+			boolean useBackwardSubstitution,
+			ProverPredicate[] proverPredicates);
 
 	/**
 	 * Returns the theorem prover factory used by this reasoner factory. Every
@@ -68,15 +73,4 @@ public interface ReasonerFactory {
 	 * @return the theorem prover factory used by this reasoner factory
 	 */
 	TheoremProverFactory getTheoremProverFactory();
-
-	/**
-	 * Returns why3 prove platform factory used by this reasoner factory. Every
-	 * reasoner factory may have one (if why3 is installed).
-	 * 
-	 * @return the why3 prove platform factory used by this reasoner factory. If
-	 *         why3 is not installed, the behavior is same as
-	 *         {@link #getTheoremProverFactory()}
-	 */
-	TheoremProverFactory getWhy3ProvePlatformFactory();
-
 }
