@@ -25,20 +25,22 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
-/** 
+/**
  * CommonArrayElement Reference extends the CommonNTReference superclass and
  * implements the ArrayElementReference interface. It is used to get the index
  * of the CommonArrayElementReference and the kind of reference.
  * 
  * @author siegel
  */
-public class CommonArrayElementReference extends CommonNTReference implements
-		ArrayElementReference {
-	
-	/** 
+public class CommonArrayElementReference extends CommonNTReference
+		implements ArrayElementReference {
+
+	private int size = -1;
+
+	/**
 	 * Constructor that builds a CommonArrayElementReference.
 	 * 
-	 * @param referenceType 
+	 * @param referenceType
 	 * @param arrayElementReferenceFunction
 	 * @param parentIndexSequence
 	 * @param parentIndexSequence
@@ -48,10 +50,12 @@ public class CommonArrayElementReference extends CommonNTReference implements
 	public CommonArrayElementReference(SymbolicType referenceType,
 			SymbolicConstant arrayElementReferenceFunction,
 			SymbolicSequence<SymbolicExpression> parentIndexSequence) {
-		super(referenceType, arrayElementReferenceFunction, parentIndexSequence);
+		super(referenceType, arrayElementReferenceFunction,
+				parentIndexSequence);
 	}
 
-	/** Method that returns NumericExpression.
+	/**
+	 * Method that returns NumericExpression.
 	 * 
 	 * @return NumericExpression
 	 */
@@ -78,5 +82,12 @@ public class CommonArrayElementReference extends CommonNTReference implements
 	@Override
 	public ReferenceKind referenceKind() {
 		return ReferenceKind.ARRAY_ELEMENT;
+	}
+
+	@Override
+	public int size() {
+		if (size < 0)
+			size = 1 + getIndex().size() + getParent().size();
+		return size;
 	}
 }

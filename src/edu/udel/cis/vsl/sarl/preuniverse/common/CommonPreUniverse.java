@@ -3610,8 +3610,12 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	@Override
-	public void printCompressedTree(SymbolicExpression expr, PrintStream out) {
-		expr.printCompressedTree(out);
+	public void printCompressedTree(String prefix, SymbolicExpression expr,
+			PrintStream out) {
+		StringBuffer sbuf = new StringBuffer();
+
+		expr.printCompressedTree(prefix, sbuf);
+		out.print(sbuf.toString());
 	}
 
 	@Override

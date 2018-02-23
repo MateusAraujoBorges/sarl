@@ -2219,13 +2219,17 @@ public interface CoreUniverse {
 	 * Use this method to print large symbolic expression hierarchically.
 	 * </p>
 	 * 
+	 * @param prefix
+	 *            any string the callers of this method want to put at the
+	 *            beginning of each line.
 	 * @param expr
 	 *            the input symbolic expression
 	 * @param out
 	 *            the output stream
 	 * 
 	 */
-	void printCompressedTree(SymbolicExpression expr, PrintStream out);
+	void printCompressedTree(String prefix, SymbolicExpression expr,
+			PrintStream out);
 
 	/**
 	 * <p>

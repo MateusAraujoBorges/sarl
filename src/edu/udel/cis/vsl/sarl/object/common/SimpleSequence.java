@@ -46,6 +46,8 @@ public class SimpleSequence<T extends SymbolicExpression>
 	 */
 	private ResultType containsQuantifier = ResultType.MAYBE;
 
+	private int treeSize = -1;
+
 	/**
 	 * The numNull is NOT checked. It better be right, or all bets are off.
 	 * 
@@ -393,5 +395,14 @@ public class SimpleSequence<T extends SymbolicExpression>
 		}
 		containsQuantifier = ResultType.NO;
 		return false;
+	}
+
+	public int treeSize() {
+		if (treeSize < 0) {
+			treeSize = 1;
+			for (SymbolicExpression se : elements)
+				treeSize += se.size();
+		}
+		return treeSize;
 	}
 }

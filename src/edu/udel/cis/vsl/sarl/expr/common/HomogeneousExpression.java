@@ -18,7 +18,6 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.expr.common;
 
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,7 +28,6 @@ import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
-import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
@@ -43,6 +41,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.object.common.CommonSymbolicObject;
+import edu.udel.cis.vsl.sarl.object.common.SimpleSequence;
 import edu.udel.cis.vsl.sarl.util.ArrayIterable;
 
 /**
@@ -63,6 +62,8 @@ public class HomogeneousExpression<T extends SymbolicObject>
 
 	/** The arguments of this expression */
 	protected T[] arguments;
+
+	private int size = -1;
 
 	/**
 	 * Does this sequence contain an expression that contains a quantified
@@ -474,12 +475,12 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		}
 	}
 
-	private void printCompressedTreeWorker(String prefix, PrintStream out,
+	private void printCompressedTreeWorker(String prefix, StringBuffer out,
 			Set<SymbolicObject> seen, SymbolicObject expr) {
 		switch (expr.symbolicObjectKind()) {
 		case EXPRESSION: {
 			SymbolicExpression symExpr = (SymbolicExpression) expr;
-	
+
 			prefix += " ";
 			/*
 			 * logic: first check if the expr is CONCRETE type, then check if
@@ -487,22 +488,22 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			 * add it to set.
 			 */
 			if (symExpr.operator() == SymbolicOperator.CONCRETE)
-				out.println(prefix + symExpr);
+				out.append(prefix + symExpr + "\n");
 			else if (seen.contains(symExpr))
 				if (symExpr.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
-					out.println(prefix + symExpr + " " + "(" + "e"
-							+ symExpr.id() + ")");
+					out.append(prefix + symExpr + " " + "(" + "e" + symExpr.id()
+							+ ")\n");
 				else
-					out.println(prefix + "e" + symExpr.id());
+					out.append(prefix + "e" + symExpr.id() + "\n");
 			else {
 				seen.add(symExpr);
 				if (symExpr.operator() == SymbolicOperator.SYMBOLIC_CONSTANT)
-					out.println(prefix + symExpr + " " + "(" + "e"
-							+ symExpr.id() + ")");
+					out.append(prefix + symExpr + " " + "(" + "e" + symExpr.id()
+							+ ")\n");
 				else {
-					out.print(prefix);
-					out.print(symExpr.operator());
-					out.println(" (" + "e" + symExpr.id() + ")");
+					out.append(prefix);
+					out.append(symExpr.operator());
+					out.append(" (" + "e" + symExpr.id() + ")\n");
 					for (SymbolicObject arg : symExpr.getArguments())
 						printCompressedTreeWorker(prefix + "|", out, seen, arg);
 				}
@@ -511,11 +512,11 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		}
 		case SEQUENCE: {
 			SymbolicSequence<?> symSeq = (SymbolicSequence<?>) expr;
-	
-			out.println(prefix + " SEQ");
+
+			out.append(prefix + " SEQ\n");
 			for (int i = 0; i < symSeq.size(); i++) {
 				SymbolicObject seq = symSeq.get(i);
-	
+
 				printCompressedTreeWorker(prefix + " |", out, seen, seq);
 			}
 			break;
@@ -525,13 +526,12 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		case BOOLEAN:
 		case STRING:
 		case NUMBER:
-			out.println(prefix + " " + expr);
+			out.append(prefix + " " + expr + "\n");
 			break;
 		case TYPE:
 		case TYPE_SEQUENCE:
 		default:
-			out.println(
-					"Unkownn Symbolic Object: " + expr.symbolicObjectKind());
+			out.append("Unkownn Symbolic Object: " + expr.symbolicObjectKind());
 		}
 	}
 
@@ -541,7 +541,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	@Override
 	protected boolean intrinsicEquals(SymbolicObject o) {
 		HomogeneousExpression<?> that = (HomogeneousExpression<?>) o;
-	
+
 		return operator == that.operator()
 				&& ((type == null && that.type == null)
 						|| type.equals(that.type))
@@ -556,7 +556,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	protected int computeHashCode() {
 		int numArgs = this.numArguments();
 		int result = operator.hashCode();
-	
+
 		if (type != null)
 			result ^= type.hashCode();
 		for (int i = 0; i < numArgs; i++)
@@ -583,7 +583,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	 */
 	public StringBuffer toStringBuffer1(boolean atomize) {
 		StringBuffer result = new StringBuffer();
-	
+
 		switch (operator) {
 		case ADD:
 			processSum(result, atomize);
@@ -649,7 +649,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			return result;
 		case CONCRETE: {
 			SymbolicTypeKind tk = type.typeKind();
-	
+
 			if (tk == SymbolicTypeKind.CHAR) {
 				result.append("'");
 				result.append(arguments[0].toStringBuffer(false));
@@ -684,7 +684,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		case DENSE_ARRAY_WRITE: {
 			int count = 0;
 			boolean first = true;
-	
+
 			result.append(arguments[0].toStringBuffer(true));
 			result.append("[");
 			for (SymbolicExpression value : (SymbolicSequence<?>) arguments[1]) {
@@ -704,7 +704,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		case DENSE_TUPLE_WRITE: {
 			int count = 0;
 			boolean first = true;
-	
+
 			result.append(arguments[0].toStringBuffer(true));
 			result.append("<");
 			for (SymbolicExpression value : (SymbolicSequence<?>) arguments[1]) {
@@ -736,7 +736,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			result.append(", ");
 			result.append(arguments[1].toString());
 			result.append(", ");
-	
+
 			@SuppressWarnings("unchecked")
 			Iterator<NumericExpression> lows = ((Iterable<NumericExpression>) arguments[2])
 					.iterator();
@@ -744,10 +744,10 @@ public class HomogeneousExpression<T extends SymbolicObject>
 			Iterator<NumericExpression> highs = ((Iterable<NumericExpression>) arguments[3])
 					.iterator();
 			boolean first = true;
-	
+
 			while (lows.hasNext()) {
 				NumericExpression low = lows.next(), high = highs.next();
-	
+
 				if (first)
 					first = false;
 				else
@@ -942,7 +942,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	@Override
 	public StringBuffer toStringBufferLong() {
 		StringBuffer buffer = new StringBuffer(getClass().getSimpleName());
-	
+
 		buffer.append("[");
 		buffer.append(operator.toString());
 		buffer.append("; ");
@@ -957,7 +957,8 @@ public class HomogeneousExpression<T extends SymbolicObject>
 	public StringBuffer toStringBuffer(boolean atomize) {
 		if (debug)
 			return toStringBufferLong();
-		return toStringBuffer1(atomize);
+		else
+			return toStringBuffer1(atomize);
 	}
 
 	@Override
@@ -1112,11 +1113,31 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		}
 		return freeVars;
 	}
-	
+
 	@Override
-	public void printCompressedTree(PrintStream out) {
+	public void printCompressedTree(String prefix, StringBuffer out) {
 		Set<SymbolicObject> seen = new HashSet<SymbolicObject>();
 
-		printCompressedTreeWorker("", out, seen, this);
+		printCompressedTreeWorker(prefix, out, seen, this);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public int size() {
+		if (size < 0) {
+			size = 1;
+			for (int i = 0; i < arguments.length; i++) {
+				if (arguments[i]
+						.symbolicObjectKind() == SymbolicObjectKind.EXPRESSION) {
+					size += ((SymbolicExpression) arguments[i]).size();
+				} else if (arguments[i]
+						.symbolicObjectKind() == SymbolicObjectKind.SEQUENCE) {
+					size += ((SimpleSequence<SymbolicExpression>) arguments[i])
+							.treeSize();
+				} else
+					size += 1;
+			}
+		}
+		return size;
 	}
 }

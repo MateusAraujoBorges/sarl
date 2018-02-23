@@ -568,12 +568,17 @@ public class CommonIdealFactory implements IdealFactory {
 	 */
 	private Monic[] extractCommonality(Monic monic1, Monic monic2) {
 		if (debug) {
+			StringBuffer sbuf = new StringBuffer();
+
 			out.println("extractCommonality: ");
-			monic1.printCompressedTree(out);
+			monic1.printCompressedTree("", sbuf);
+			out.print(sbuf.toString());
 			out.println();
 			out.println("VS.");
 			out.println();
-			monic2.printCompressedTree(out);
+			sbuf.delete(0, sbuf.length());
+			monic2.printCompressedTree("", sbuf);
+			out.print(sbuf.toString());
 			out.println();
 			out.flush();
 		}

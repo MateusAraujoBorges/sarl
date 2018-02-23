@@ -101,8 +101,11 @@ public class FastEvaluator {
 	public FastEvaluator(Random random, NumberFactory nf, Monomial monomial,
 			IntegerNumber totalDegree) {
 		if (debug) {
+			StringBuffer sbuf = new StringBuffer();
+
 			out.println("FastEvaluator3: testing zero-ness of");
-			monomial.printCompressedTree(out);
+			monomial.printCompressedTree("", sbuf);
+			out.print(sbuf.toString());
 			out.println();
 			out.println("Total degree: " + totalDegree);
 			assert totalDegree == monomial.totalDegree(nf);

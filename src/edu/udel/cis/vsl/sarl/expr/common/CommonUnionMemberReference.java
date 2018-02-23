@@ -12,8 +12,10 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 /**
  * Implementation of a non-trivial reference to a UnionMember
  */
-public class CommonUnionMemberReference extends CommonNTReference implements
-		UnionMemberReference {
+public class CommonUnionMemberReference extends CommonNTReference
+		implements UnionMemberReference {
+
+	private int size = -1;
 
 	/**
 	 * The fieldIndex duplicated the information in one of the arguments, but
@@ -22,7 +24,6 @@ public class CommonUnionMemberReference extends CommonNTReference implements
 	 */
 	private IntObject memberIndex;
 
-	
 	/**
 	 * Constructor asserts that parentIndexSequnce is a valid IntegerNumber
 	 * 
@@ -36,11 +37,13 @@ public class CommonUnionMemberReference extends CommonNTReference implements
 			SymbolicSequence<SymbolicExpression> parentIndexSequence,
 			IntObject memberIndex) {
 		super(referenceType, unionMemberReferenceFunction, parentIndexSequence);
-		assert parentIndexSequence.get(1).operator() == SymbolicOperator.CONCRETE
-				&& parentIndexSequence.get(1).argument(0) instanceof NumberObject
+		assert parentIndexSequence.get(1)
+				.operator() == SymbolicOperator.CONCRETE
+				&& parentIndexSequence.get(1)
+						.argument(0) instanceof NumberObject
 				&& ((IntegerNumber) ((NumberObject) parentIndexSequence.get(1)
 						.argument(0)).getNumber()).intValue() == memberIndex
-						.getInt();
+								.getInt();
 		this.memberIndex = memberIndex;
 	}
 
@@ -61,10 +64,17 @@ public class CommonUnionMemberReference extends CommonNTReference implements
 	}
 
 	/**
-	 *@return ReferenceKind.UNION_MEMBER
+	 * @return ReferenceKind.UNION_MEMBER
 	 */
 	@Override
 	public ReferenceKind referenceKind() {
 		return ReferenceKind.UNION_MEMBER;
+	}
+
+	@Override
+	public int size() {
+		if (size < 0)
+			size = 2 + getParent().size();
+		return size;
 	}
 }

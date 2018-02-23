@@ -27,11 +27,12 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 /**
  * CommonOfsetReference extends the CommonNTReference superclass and implements
- * the OffsetReference interface. 
- * Implementation of a non-trivial Reference that is offset by a Numeric value.
+ * the OffsetReference interface. Implementation of a non-trivial Reference that
+ * is offset by a Numeric value.
  */
-public class CommonOffsetReference extends CommonNTReference implements
-		OffsetReference {
+public class CommonOffsetReference extends CommonNTReference
+		implements OffsetReference {
+	private int size = -1;
 
 	/**
 	 * Constructor that creates a CommonOffsetReference.
@@ -76,5 +77,12 @@ public class CommonOffsetReference extends CommonNTReference implements
 	@Override
 	public ReferenceKind referenceKind() {
 		return ReferenceKind.OFFSET;
+	}
+
+	@Override
+	public int size() {
+		if (size < 0)
+			size = 1 + getOffset().size() + getParent().size();
+		return size;
 	}
 }

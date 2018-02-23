@@ -39,7 +39,10 @@ public class PowerSimplificationTest {
 		NumericExpression base = universe.multiply(baseMonic, baseMonomial);
 		NumericExpression expr = universe.power(base, NUM_1D2);
 		BooleanExpression pred = universe.lessThan(NUM_0, expr);
-		pred.printCompressedTree(System.out);
+		StringBuffer sbuf = new StringBuffer();
+
+		pred.printCompressedTree("", sbuf);
+		System.out.print(sbuf.toString());
 		assertTrue(pred.isTrue());
 	}
 
@@ -65,7 +68,10 @@ public class PowerSimplificationTest {
 		NumericExpression base = universe.multiply(baseMonic, baseMonomial);
 		NumericExpression expr = universe.power(base, NUM_1D2);
 		BooleanExpression pred = universe.lessThan(NUM_0, expr);
-		expr.printCompressedTree(System.out);
+		StringBuffer sbuf = new StringBuffer();
+
+		expr.printCompressedTree("", sbuf);
+		System.out.print(sbuf.toString());
 		assertTrue(pred.isTrue());
 	}
 }

@@ -18,7 +18,6 @@
  ******************************************************************************/
 package edu.udel.cis.vsl.sarl.IF.expr;
 
-import java.io.PrintStream;
 import java.util.Set;
 
 import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
@@ -578,8 +577,19 @@ public interface SymbolicExpression extends SymbolicObject {
 	/**
 	 * Prints compressed tree representation of this expression.
 	 * 
+	 * @param prefix
+	 *            any string that callers of this method want to add before each
+	 *            line
 	 * @param out
-	 *            where to send the output
+	 *            the output StringBuffer
 	 */
-	void printCompressedTree(PrintStream out);
+	void printCompressedTree(String prefix, StringBuffer out);
+
+	/**
+	 * @return the size of this {@link SymbolicExpression}. The size of a
+	 *         symbolic expression is the total number of "node"s in the "tree".
+	 *         A symbolic expression is essentially a tree of (sub-)symbolic
+	 *         expressions.
+	 */
+	int size();
 }

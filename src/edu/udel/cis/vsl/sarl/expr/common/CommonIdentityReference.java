@@ -59,4 +59,9 @@ public class CommonIdentityReference extends CommonReferenceExpression {
 		return ReferenceKind.IDENTITY;
 	}
 
+	@Override
+	public int size() {
+		return 1;
+	}
+
 }

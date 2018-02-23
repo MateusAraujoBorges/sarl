@@ -64,4 +64,8 @@ public class CommonNullReference extends CommonReferenceExpression {
 		return ReferenceKind.NULL;
 	}
 
+	@Override
+	public int size() {
+		return 1;
+	}
 }
