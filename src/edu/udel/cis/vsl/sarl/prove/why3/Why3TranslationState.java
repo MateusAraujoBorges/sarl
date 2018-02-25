@@ -108,6 +108,27 @@ public class Why3TranslationState {
 
 	private int sigmaCounter = 0;
 
+	/**
+	 * A map that maps {@link SymbolicExpression}s to temporary binding names so
+	 * that they can be reused. The translation is then processed in a
+	 * compressed way. If this map is instantiated, this translator is working
+	 * in this compressed way.
+	 */
+	private Map<SymbolicExpression, String> subExpressionsBindingNames = null;
+
+	/**
+	 * All binding translations. Eventually, these bindings will be added on the
+	 * head of the translation as <code>(let (bindings) (translation))</code>
+	 */
+	private List<String> subExpressionBindings = null;
+
+	/**
+	 * If the size of a single symbolic expression exceeds this threshold, it
+	 * will be translated into a binding and keep being used in a compressed
+	 * way.
+	 */
+	private static final int SINGLE_EXPR_SIZE_THRESHOLD = 5;
+
 	/* **************** Constructor ****************** */
 	public Why3TranslationState(ProverPredicate ppreds[]) {
 		this.declarations = new HashMap<>();
@@ -314,6 +335,58 @@ public class Why3TranslationState {
 			sigmaNameMap.put(lambda, name);
 		}
 		return name;
+	}
+
+	public void setCompressedMode(boolean enable) {
+		if (enable && subExpressionsBindingNames == null) {
+			this.subExpressionsBindingNames = new HashMap<>();
+			this.subExpressionBindings = new LinkedList<>();
+		}
+	}
+
+	/**
+	 * @return true iff it should use an simple alias to refer this expression.
+	 */
+	public boolean useCompressedName(SymbolicExpression expression) {
+		return expression.size() > SINGLE_EXPR_SIZE_THRESHOLD
+				&& quantifiedContexts.isEmpty() && subExpressionBindings != null
+				&& expression.isNumeric(); // if expression is numeric, it must
+											// be a "term"
+	}
+
+	/**
+	 * @return the alias of the given expression if the expression has been
+	 *         compressed, otherwise null;
+	 */
+	public String getCompressedName(SymbolicExpression expression) {
+		return subExpressionsBindingNames.get(expression);
+	}
+
+	/**
+	 * Save a compressed name (alias) for an expression
+	 */
+	public void addCompressedName(SymbolicExpression expression,
+			String compressedName) {
+		this.subExpressionsBindingNames.put(expression, compressedName);
+	}
+
+	/**
+	 * 
+	 * @return All "binding"s. A binding is a definition of a compressed
+	 *         expression.
+	 */
+	public List<String> getCompressedBindings() {
+		if (subExpressionBindings != null)
+			return this.subExpressionBindings;
+		else
+			return new LinkedList<>();
+	}
+
+	/**
+	 * Save a "binding". A binding is a definition of a compressed expression.
+	 */
+	public void addCompressedBinding(String binding) {
+		this.subExpressionBindings.add(binding);
 	}
 
 	/**

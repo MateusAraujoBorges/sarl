@@ -220,6 +220,9 @@ public class Why3Primitives {
 	public static Why3BuiltinFunction real_power = new Why3BuiltinFunction(
 			"SR.sarl_power", 2);
 
+	public static Why3BuiltinFunction real_real_power = new Why3BuiltinFunction(
+			"SR.sarl_power_real", 2);
+
 	public static Why3BuiltinFunction real_plus = new Why3BuiltinFunction(
 			"SR.add", 2);
 
@@ -272,6 +275,8 @@ public class Why3Primitives {
 
 	public static String keyword_type = "type";
 
+	public static String keyword_let = "let";
+
 	public static String keyword_goal = "goal";
 
 	public static String keyword_theory = "theory";
@@ -290,7 +295,7 @@ public class Why3Primitives {
 	 * @return A why3 cast operation.
 	 */
 	public static String why3cast(String expr, Why3Type type) {
-		return expr + " : " + type;
+		return expr + " : " + type.text;
 	}
 
 	/**
@@ -417,6 +422,14 @@ public class Why3Primitives {
 		return keyword_type + " " + alias + " = " + type.text + "\n";
 	}
 
+	/**
+	 *
+	 * @return <code>let alias = expr in</code>
+	 */
+	public static String why3Let(String alias, String expr) {
+		return keyword_let + " " + alias + " = " + expr + " in";
+	}
+
 	/* ******** Helpers methods for creating derived Why3 types ******* */
 	public static Why3Type why3ArrayType(Why3Type elementType) {
 		return new Why3Type("map", true, int_t, elementType);
@@ -457,6 +470,8 @@ public class Why3Primitives {
 			+ "predicate lte (a b : real) = a <= b\n"
 			+ "clone import int.Exponentiation as POWREAL with type t = real\n"
 			+ "function sarl_power (a : real) (b : int) : real = (POWREAL.power a b)\n"
+			+ "use import real.PowerReal as POWREALREAL\n"
+			+ "function sarl_power_real (a : real) (b : real) : real = (POWREALREAL.pow a b)\n"
 			+ "end\n";
 
 	static private String IMPORT_REAL_NAME_SPACE = "use import SARL_REAL as SR\n";
@@ -524,6 +539,11 @@ public class Why3Primitives {
 			this.axiom = axiom;
 			this.text = keyword_predicate + " " + this.name + " = " + axiom
 					+ "\n";
+		}
+
+		String getTextWithBindings(String allBindings) {
+			return keyword_predicate + " " + this.name + " = " + allBindings
+					+ axiom + "\n";
 		}
 	}
 

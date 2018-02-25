@@ -2,7 +2,10 @@ package edu.udel.cis.vsl.sarl.prove.z3;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.TheoremProverException;
@@ -204,6 +207,40 @@ public class Z3Translator {
 	 */
 	private FastList<String> z3Translation;
 
+	/**
+	 * A map that maps {@link SymbolicExpression}s to temporary binding names so
+	 * that they can be reused. The translation is then processed in a
+	 * compressed way. If this map is instantiated, this translator is working
+	 * in this compressed way.
+	 */
+	private Map<SymbolicExpression, FastList<String>> subExpressionsBindingNames = null;
+
+	/**
+	 * All binding translations. Eventually, these bindings will be added on the
+	 * head of the translation as <code>(let (bindings) (translation))</code>
+	 */
+	private List<FastList<String>> subExpressionBindings = null;
+
+	/**
+	 * If the size of the context or a predicate exceends this threshold, this
+	 * translator is working in a compressed way.
+	 */
+	private static final int FULL_EXPR_SIZE_THRESHOLD = 100;
+
+	/**
+	 * If the size of a single symbolic expression exceeds this threshold, it
+	 * will be translated into a binding and keep being used in a compressed
+	 * way.
+	 */
+	private static final int SINGLE_EXPR_SIZE_THRESHOLD = 10;
+
+	/**
+	 * A stack of bound variables. A new entry will be pushed onto this stack
+	 * once the translation enters a quantified expression, and a top entry will
+	 * gets popped out once the translation finishes a quantified expression.
+	 */
+	private Stack<SymbolicConstant> boundVariableStack = new Stack<>();
+
 	// Constructors...
 
 	public Z3Translator(PreUniverse universe, SymbolicExpression theExpression,
@@ -216,6 +253,10 @@ public class Z3Translator {
 		this.variableMap = new HashMap<>();
 		this.typeMap = new HashMap<>();
 		this.z3Declarations = new FastList<>();
+		if (theExpression.size() >= FULL_EXPR_SIZE_THRESHOLD) {
+			this.subExpressionsBindingNames = new HashMap<>();
+			this.subExpressionBindings = new LinkedList<>();
+		}
 		this.z3Translation = translate(theExpression);
 	}
 
@@ -224,10 +265,19 @@ public class Z3Translator {
 		this.universe = startingContext.universe;
 		this.z3AuxVarCount = startingContext.z3AuxVarCount;
 		this.sarlAuxVarCount = startingContext.sarlAuxVarCount;
-		this.expressionMap = new HashMap<>(startingContext.expressionMap);
 		this.castMap = new HashMap<>(startingContext.castMap);
-		this.variableMap = new HashMap<>(startingContext.variableMap);
 		this.typeMap = new HashMap<>(startingContext.typeMap);
+		this.expressionMap = new HashMap<>(startingContext.expressionMap);
+		this.variableMap = new HashMap<>(startingContext.variableMap);
+		if (theExpression.size() >= FULL_EXPR_SIZE_THRESHOLD) {
+			this.subExpressionsBindingNames = new HashMap<>();
+			this.subExpressionBindings = new LinkedList<>();
+			// add bindings from context to this translation since some binding
+			// symbols created in context will be used again:
+			if (startingContext.subExpressionBindings != null)
+				this.subExpressionBindings
+						.addAll(startingContext.subExpressionBindings);
+		}
 		this.z3Declarations = new FastList<>();
 		this.z3Translation = translate(theExpression);
 	}
@@ -307,6 +357,7 @@ public class Z3Translator {
 		String name = "t" + z3AuxVarCount;
 
 		z3Declarations.addAll("(declare-const ", name);
+		type.addFront(" ");
 		z3Declarations.append(type);
 		z3Declarations.add(")\n");
 		z3AuxVarCount++;
@@ -892,6 +943,7 @@ public class Z3Translator {
 		BooleanExpression predicate = (BooleanExpression) expr.argument(1);
 		FastList<String> result = new FastList<String>("(");
 
+		boundVariableStack.push(boundVariable);
 		switch (kind) {
 		case FORALL:
 			result.add("forall");
@@ -909,6 +961,7 @@ public class Z3Translator {
 		result.add(")) ");
 		result.append(translate(predicate));
 		result.add(")");
+		boundVariableStack.pop();
 		return result;
 	}
 
@@ -1562,9 +1615,60 @@ public class Z3Translator {
 
 		if (result == null) {
 			result = translateWork(expression);
-			this.expressionMap.put(expression, result);
+			expressionMap.put(expression, result);
+//			if (expression.size() >= FULL_EXPR_SIZE_THRESHOLD
+//					&& subExpressionsBindingNames == null) {
+//				subExpressionBindings = new LinkedList<>();
+//				subExpressionsBindingNames = new HashMap<>();
+//			}
+			if (useCompressedName(expression)) {
+				// in compressed translation mode:
+				result = translateExpression2binding(expression, result);
+			}
+		} else if (useCompressedName(expression)) {
+			result = subExpressionsBindingNames.get(expression);
+			if (result == null)
+				result = translateExpression2binding(expression,
+						expressionMap.get(expression));
 		}
 		return result.clone();
+	}
+
+	private boolean useCompressedName(SymbolicExpression expression) {
+		return subExpressionsBindingNames != null
+				&& expression.size() > SINGLE_EXPR_SIZE_THRESHOLD
+				&& boundVariableStack.isEmpty();
+	}
+
+	/**
+	 * For a translated sub-expression, creating an alias for it. The aliasing
+	 * is implemented using <code>(let binding term)</code>.
+	 */
+	private FastList<String> translateExpression2binding(
+			SymbolicExpression expression, FastList<String> translation) {
+		// in compressed translation mode:
+		FastList<String> tmpVarName = new FastList<>("t" + z3AuxVarCount++);
+		FastList<String> binding = letTempVarRepresentExpression(
+				tmpVarName.clone(), translation.clone());
+
+		subExpressionBindings.add(binding);
+		subExpressionsBindingNames.put(expression, tmpVarName.clone());
+		return tmpVarName;
+	}
+
+	/**
+	 * Add a alias binding for the sub-expression: <code>(symbol term)</code>
+	 */
+	private FastList<String> letTempVarRepresentExpression(FastList<String> var,
+			FastList<String> subExpr) {
+		FastList<String> result = new FastList<String>();
+
+		result.add("(");
+		result.append(var);
+		result.add(" ");
+		result.append(subExpr);
+		result.add(") ");
+		return result;
 	}
 
 	// Exported methods...
@@ -1580,7 +1684,23 @@ public class Z3Translator {
 	 * @return result of translation of the specified symbolic expression
 	 */
 	public FastList<String> getTranslation() {
-		return z3Translation;
+		FastList<String> result = new FastList<>();
+		FastList<String> suffixes = new FastList<>();
+
+		if (subExpressionBindings != null) {
+			// add compressed sub-expression bindings
+			for (FastList<String> binding : subExpressionBindings) {
+				result.add("(let (");
+				result.append(binding.clone());
+				result.add(") ");
+				suffixes.add(")");
+			}
+			result.add(" ");
+			result.append(z3Translation.clone());
+			result.append(suffixes);
+			return result;
+		} else
+			return z3Translation;
 	}
 
 	/**

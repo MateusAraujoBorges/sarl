@@ -87,6 +87,12 @@ public class Why3Translator {
 	 */
 	static private String union_extract_undefined_function_name = "_union_undefined_extract";
 
+	/**
+	 * If the size of the context or a predicate exceends this threshold, this
+	 * translator is working in a compressed way.
+	 */
+	private static final int TRANSLATION_SIZE_THRESHOLD = 200;
+
 	/* ***************** Constants ********************/
 	/**
 	 * Translates SARL NULL to this following string. Such a string is NOT
@@ -138,6 +144,8 @@ public class Why3Translator {
 	public Why3Translator(PreUniverse universe, SymbolicExpression theContext,
 			ProverPredicate ppreds[]) {
 		initialize(universe, ppreds);
+		if (theContext.size() > TRANSLATION_SIZE_THRESHOLD)
+			state.setCompressedMode(true);
 
 		String ctx = translate(theContext);
 
@@ -175,26 +183,33 @@ public class Why3Translator {
 	 *         <code>goal G0 : the-translated-goal</code>
 	 */
 	public String translateGoal(SymbolicExpression theGoal) {
+		if (theGoal.size() > TRANSLATION_SIZE_THRESHOLD)
+			state.setCompressedMode(true);
+
 		String goalText = translate(theGoal);
-		String result;
-		String goalIdent = state.newGoalIdentifier();
 
 		goalText = this.stringPostProcess(goalText);
-		result = Why3Primitives.keyword_goal + " " + goalIdent + ": context"
-				+ Why3Primitives.implies.text + goalText + "\n";
-		return result;
+		return goalText;
 	}
 
 	public String getExecutableOutput(int id, String... goals) {
 		String queryName = executable_theory_name + id;
 		String output = Why3Primitives.REAL_NAME_SPACE;
+		String allBindings = "";
 
+		for (String binding : state.getCompressedBindings())
+			allBindings += binding + "\n";
+		allBindings = stringPostProcess(allBindings);
 		output += Why3Primitives.keyword_theory + " " + queryName + "\n";
 		output += importTranslation();
 		output += declarations();
-		output += context();
-		for (int i = 0; i < goals.length; i++)
-			output += goals[i] + "\n";
+		output += context(allBindings);
+		for (int i = 0; i < goals.length; i++) {
+			output += Why3Primitives.keyword_goal + " "
+					+ state.newGoalIdentifier() + ": context"
+					+ Why3Primitives.implies.text + allBindings + goals[i]
+					+ "\n";
+		}
 		output += Why3Primitives.keyword_end + "\n";
 		return output;
 	}
@@ -216,20 +231,32 @@ public class Why3Translator {
 	 * @return The translated "context"
 	 */
 	public String context() {
+		String allBindings = "";
+
+		for (String binding : state.getCompressedBindings())
+			allBindings += binding + "\n";
+		return context(allBindings);
+	}
+
+	/**
+	 * @return The translated "context"
+	 */
+	private String context(String allBindings) {
 		String result = null;
 		String context = Why3Primitives.keyword_predicate + " context = ";
 		boolean first = true;
 
 		for (Axiom ax : contexts.values()) {
 			if (first) {
-				result = ax.text;
+				result = ax.getTextWithBindings(allBindings);
 				context += ax.name;
 				first = false;
 				continue;
 			}
-			result += ax.text;
+			result += ax.getTextWithBindings(allBindings);
 			context += " && " + ax.name;
 		}
+
 		return result + context + "\n";
 	}
 
@@ -241,6 +268,14 @@ public class Why3Translator {
 		if (result == null) {
 			result = translateWorker(theExpression);
 			state.cacheExpressionTranslation(theExpression, result);
+			if (state.useCompressedName(theExpression)) {
+				String alias = state.newIdentifierName();
+				String binding = createBindingFor(alias, result);
+
+				state.addCompressedName(theExpression, alias);
+				state.addCompressedBinding(binding);
+				result = alias;
+			}
 		}
 		return result;
 	}
@@ -1061,13 +1096,13 @@ public class Why3Translator {
 	private String translatePower(SymbolicExpression expr) {
 		SymbolicExpression base = (SymbolicExpression) expr.argument(0);
 		Why3Type baseType = translateType(base.type());
-		boolean isReal = false;
+		boolean baseIsReal = false, expIsReal = false;
 
 		if (baseType == Why3Primitives.int_t)
 			state.addLibrary(Why3Primitives.Why3Lib.POWER_INT);
-		else if (baseType == Why3Primitives.real_t)
-			isReal = true;
-		else
+		else if (baseType == Why3Primitives.real_t) {
+			baseIsReal = true;
+		} else
 			throw new SARLException(
 					"Cannot translate a power expression whose base has neither INT nor REAL type.");
 
@@ -1075,26 +1110,32 @@ public class Why3Translator {
 		String expText;
 		String baseText = this.translate(base);
 
-		if (exp instanceof SymbolicExpression)
+		if (exp instanceof SymbolicExpression) {
 			expText = translate((SymbolicExpression) exp);
-		else {
+			expIsReal = ((SymbolicExpression) exp).type().isReal();
+		} else {
 			NumberObject concExp = (NumberObject) exp;
-			if (concExp.isReal())
+			if (concExp.isReal()) {
 				expText = concExp.toString();
-			else {
+				expIsReal = true;
+			} else {
 				int concVal = ((IntegerNumber) concExp.getNumber()).intValue();
 				String[] bases = new String[concVal];
 
 				for (int i = 0; i < concVal; i++)
 					bases[i] = baseText;
-				if (isReal)
+				if (baseIsReal)
 					return Why3Primitives.real_times.call(bases);
 				else
 					return wrap(
 							interpolateOperator(bases, Why3Primitives.times));
 			}
 		}
-		if (isReal)
+		// expText = wrap(Why3Primitives.why3cast(expText,
+		// Why3Primitives.int_t));
+		if (baseIsReal && expIsReal)
+			return Why3Primitives.real_real_power.call(baseText, expText);
+		else if (baseIsReal)
 			return Why3Primitives.real_power.call(baseText, expText);
 		else
 			return Why3Primitives.int_power.call(baseText, expText);
@@ -1200,14 +1241,15 @@ public class Why3Translator {
 				Why3Primitives.why3ProverPredicate(
 						originalIdentifier2Name(ppred.identifier), funcType,
 						bodyText, foramls));
-//		if (ppred.identifier.equals("gt")) {
-//			String ngtTransitiveAxiomText = "forall _t0 _t1 _t2 : int. "
-//					+ "(not (_gt _t0 _t1)) && (not (_gt _t1 _t2)) -> (not (_gt _t0 _t2)) ";
-//			Axiom gtTransitiveAxiom = new Axiom("gt", ngtTransitiveAxiomText);
-//
-//			this.contexts.putIfAbsent(gtTransitiveAxiom.name,
-//					gtTransitiveAxiom);
-//		}
+		// if (ppred.identifier.equals("gt")) {
+		// String ngtTransitiveAxiomText = "forall _t0 _t1 _t2 : int. "
+		// + "(not (_gt _t0 _t1)) && (not (_gt _t1 _t2)) -> (not (_gt _t0 _t2))
+		// ";
+		// Axiom gtTransitiveAxiom = new Axiom("gt", ngtTransitiveAxiomText);
+		//
+		// this.contexts.putIfAbsent(gtTransitiveAxiom.name,
+		// gtTransitiveAxiom);
+		// }
 	}
 
 	private SymbolicConstant[] findBoundVarsInFunctionBody(
@@ -1224,6 +1266,10 @@ public class Why3Translator {
 
 		ret = results.toArray(ret);
 		return ret;
+	}
+
+	private String createBindingFor(String alias, String translation) {
+		return Why3Primitives.why3Let(alias, translation);
 	}
 
 	/* ****************** type translation ********************* */
@@ -1326,8 +1372,8 @@ public class Why3Translator {
 			break;
 		case CHAR:
 			state.addLibrary(Why3Lib.INT);
-			result = String.valueOf(
-					Character.getNumericValue((object.toString().charAt(0))));
+			result = wrap(String.valueOf(
+					Character.getNumericValue((object.toString().charAt(0)))));
 			break;
 		case INTEGER:
 			state.addLibrary(Why3Lib.INT);
