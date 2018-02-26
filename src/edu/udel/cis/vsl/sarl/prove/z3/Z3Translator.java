@@ -1616,16 +1616,13 @@ public class Z3Translator {
 		if (result == null) {
 			result = translateWork(expression);
 			expressionMap.put(expression, result);
-//			if (expression.size() >= FULL_EXPR_SIZE_THRESHOLD
-//					&& subExpressionsBindingNames == null) {
-//				subExpressionBindings = new LinkedList<>();
-//				subExpressionsBindingNames = new HashMap<>();
-//			}
 			if (useCompressedName(expression)) {
 				// in compressed translation mode:
 				result = translateExpression2binding(expression, result);
 			}
 		} else if (useCompressedName(expression)) {
+			// expression has been translated but has no alias (when the context
+			// translator is reused for translating predicate):
 			result = subExpressionsBindingNames.get(expression);
 			if (result == null)
 				result = translateExpression2binding(expression,
