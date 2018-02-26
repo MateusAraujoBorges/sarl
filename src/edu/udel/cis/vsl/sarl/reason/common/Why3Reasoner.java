@@ -37,4 +37,15 @@ public class Why3Reasoner extends ContextMinimizingReasoner {
 					proverPredicates);
 		return prover;
 	}
+
+	@Override
+	/**
+	 * Get a {@link Why3Reasoner} from the reasoner factory. Override from the
+	 * super class so that {@link ProverPredicate}s can be used.
+	 */
+	protected ContextMinimizingReasoner getReasoner(BooleanExpression context,
+			boolean useBackwardsSubstitution) {
+		return factory.getReasoner(context, useBackwardsSubstitution,
+				proverPredicates);
+	}
 }

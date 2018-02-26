@@ -91,7 +91,7 @@ public class Why3Translator {
 	 * If the size of the context or a predicate exceends this threshold, this
 	 * translator is working in a compressed way.
 	 */
-	private static final int TRANSLATION_SIZE_THRESHOLD = 200;
+	private static final int TRANSLATION_SIZE_THRESHOLD = 2000;
 
 	/* ***************** Constants ********************/
 	/**

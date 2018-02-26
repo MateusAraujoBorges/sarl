@@ -163,9 +163,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 		if (renamedContext == context) {
 			reasoner = this;
 		} else {
-			reasoner = factory.getReasoner(renamedContext,
-					simplifier.useBackwardSubstitution(),
-					new ProverPredicate[0]);
+			reasoner = getReasoner(renamedContext,
+					simplifier.useBackwardSubstitution());
 		}
 		return new Pair<ContextMinimizingReasoner, SymbolicExpression>(reasoner,
 				renamedExpression);
@@ -188,9 +187,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 		if (reducedContext == context) {
 			reducedReasoner = this;
 		} else {
-			reducedReasoner = factory.getReasoner(reducedContext,
-					simplifier.useBackwardSubstitution(),
-					new ProverPredicate[0]);
+			reducedReasoner = getReasoner(reducedContext,
+					simplifier.useBackwardSubstitution());
 		}
 		return reducedReasoner;
 	}
@@ -328,9 +326,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 		if (newContext == context) {
 			newReasoner = this;
 		} else {
-			newReasoner = factory.getReasoner(newContext,
-					simplifier.useBackwardSubstitution(),
-					new ProverPredicate[0]);
+			newReasoner = getReasoner(newContext,
+					simplifier.useBackwardSubstitution());
 		}
 
 		if (newPredicate != predicate || newContext != context) {
@@ -586,8 +583,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 		BooleanExpression oldContext = simplifier.getFullContext();
 		BooleanExpression newContext = universe.and(oldContext,
 				indexConstraint);
-		Reasoner newReasoner = factory.getReasoner(newContext, true,
-				new ProverPredicate[0]);
+		Reasoner newReasoner = getReasoner(newContext, true);
 		TaylorSubstituter taylorSubstituter = new TaylorSubstituter(universe,
 				universe.objectFactory(), universe.typeFactory(), newReasoner,
 				limitVars, orders);
@@ -597,5 +593,16 @@ public class ContextMinimizingReasoner implements Reasoner {
 		newLhs = taylorSubstituter.reduceModLimits(newLhs);
 		return newReasoner
 				.isValid(universe.equals(newLhs, universe.zeroReal()));
+	}
+
+	/**
+	 * Get a {@link ContextMinimizingReasoner} from the reasoner factory. Hide
+	 * the information of {@link ProverPredicate}s from callers since this
+	 * reasoner does not support ProverPredicate.
+	 */
+	protected ContextMinimizingReasoner getReasoner(BooleanExpression context,
+			boolean useBackwardsSubstitution) {
+		return factory.getReasoner(context, useBackwardsSubstitution,
+				new ProverPredicate[0]);
 	}
 }
