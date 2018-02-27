@@ -17,6 +17,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
@@ -515,6 +516,65 @@ public class IdealSimplifierWorker {
 	}
 
 	/**
+	 * <p>
+	 * Attemp to decompose a power operation <code>base ^ exp</code> while the
+	 * base is a monomial with a non-trivial (not one) constant.
+	 * </p>
+	 * 
+	 * <p>
+	 * <code>base ^ exp</code> will be decomposed to
+	 * <code>monomial_constant ^ exp * monomial_monic ^ expr</code> if both
+	 * <code>monomial_constant & monomial_monic</code> are positive.
+	 * </p>
+	 * 
+	 * @param powerExpr
+	 *            the {@link SymbolicOperator#POWER} expression that might gets
+	 *            decomposed (simplified).
+	 * @param idf
+	 *            A reference to the {@link IdealFactory}
+	 * @return the simplified expression. If no simplification can be further
+	 *         applied, the expression in unchanged.
+	 */
+	private RationalExpression simplifyPowerDecompose(
+			RationalExpression powerExpr, IdealFactory idf) {
+		NumericExpression base = (NumericExpression) powerExpr.argument(0);
+		SymbolicObject exp = powerExpr.argument(1);
+		NumericExpression neExp;
+
+		if (exp.symbolicObjectKind() == SymbolicObjectKind.NUMBER) {
+			NumberObject nobj = (NumberObject) exp;
+
+			neExp = idf.number(nobj);
+		} else
+			neExp = (NumericExpression) exp;
+
+		if (!(base instanceof Monomial))
+			return powerExpr;
+
+		Monomial monomialBase = (Monomial) base;
+		Constant cons = monomialBase.monomialConstant(idf);
+		Monic monic = monomialBase.monic(idf);
+
+		if (cons.isOne())
+			return powerExpr;
+
+		// if exponent is an integer, both monic and constant are positive
+		// this power expression can be decomposed:
+		boolean decompose = false;
+
+		if (neExp.type().isInteger())
+			decompose = true;
+		if (!decompose && intervalApproximation(cons).lower().signum() >= 0
+				&& intervalApproximation(monic).lower().signum() >= 0)
+			decompose = true;
+		if (decompose)
+			return idf.multiply(simplifyPowersRational(idf.power(monic, neExp)),
+					idf.power(cons, neExp));
+		else
+			return powerExpr;
+	}
+
+	/**
 	 * Simplifies any {@link SymbolicOperator#POWER} operations occurring in a
 	 * rational expression.
 	 * 
@@ -659,6 +719,8 @@ public class IdealSimplifierWorker {
 		else
 			result1 = (RationalExpression) simplifyExpressionGeneric(
 					expression);
+		if (result1.operator() == SymbolicOperator.POWER)
+			result1 = simplifyPowerDecompose(result1, idealFactory());
 		if (result1 instanceof Primitive || result1 instanceof Constant)
 			return result1;
 

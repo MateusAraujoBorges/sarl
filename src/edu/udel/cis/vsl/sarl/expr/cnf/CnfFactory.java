@@ -434,8 +434,10 @@ public class CnfFactory implements BooleanExpressionFactory {
 				result = notExpr(expr);
 				break;
 			}
-			setNegation(expr, result);
-			setNegation(result, expr);
+			// cache the negation when a (possible) complex expression gets
+			// simplified to trivial expressions:
+			if (result.isFalse() || result.isTrue())
+				setNegation(expr, result);
 		}
 		return result;
 	}
