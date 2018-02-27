@@ -32,7 +32,7 @@ public class Why3Reasoner extends ContextMinimizingReasoner {
 	@Override
 	protected synchronized TheoremProver getProver(boolean createNewProver,
 			BooleanExpression context) {
-		if (prover == null)
+		if (prover == null || createNewProver)
 			prover = factory.getTheoremProverFactory().newProver(context,
 					proverPredicates);
 		return prover;
