@@ -716,12 +716,10 @@ public class CommonPreUniverse implements PreUniverse {
 						.argument(1);
 
 				if (arg1.operator() == SymbolicOperator.UNION_INJECT)
-					return index.equals(arg1.argument(0))
-							? and(result,
-									equals(value0,
-											(SymbolicExpression) arg1
-													.argument(1),
-											quantifierDepth))
+					return index.equals(arg1.argument(0)) ? and(result,
+							equals(value0,
+									(SymbolicExpression) arg1.argument(1),
+									quantifierDepth))
 							: falseExpr;
 				else
 					return and(result,
@@ -1454,14 +1452,14 @@ public class CommonPreUniverse implements PreUniverse {
 
 	@Override
 	public NumericExpression divide(NumericExpression arg0,
-			NumericExpression arg1) {
+			NumericExpression arg1) throws ArithmeticException {
 		checkSameType(arg0, arg1, "Arguments to divide had different types");
 		return numericFactory.divide(arg0, arg1);
 	}
 
 	@Override
 	public NumericExpression modulo(NumericExpression arg0,
-			NumericExpression arg1) {
+			NumericExpression arg1) throws ArithmeticException {
 		if (!arg0.type().isInteger())
 			throw err("Argument arg0 to modulo did not have integer type.\n"
 					+ "\narg0: " + arg0 + "\narg0 type: " + arg0.type());

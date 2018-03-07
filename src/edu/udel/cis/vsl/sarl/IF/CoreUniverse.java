@@ -1129,10 +1129,13 @@ public interface CoreUniverse {
 	 * @param arg1
 	 *            a symbolic expression of the same numeric type
 	 * @return the quotient, arg0 / arg1
+	 * @throws ArithmeticException
+	 *             If there is a division by zero.
 	 * @see SymbolicIntegerType
 	 * @see SymbolicRealType
 	 */
-	NumericExpression divide(NumericExpression arg0, NumericExpression arg1);
+	NumericExpression divide(NumericExpression arg0, NumericExpression arg1)
+			throws ArithmeticException;
 
 	/**
 	 * Returns a symbolic expression which represents arg0 modulo arg1. The two
@@ -1143,11 +1146,14 @@ public interface CoreUniverse {
 	 * @param arg1
 	 *            a symbolic expression of integer type
 	 * @return the modulus, arg0 % arg1
+	 * @throws ArithmeticException
+	 *             If there is a division by zero.
 	 * @see SymbolicIntegerType
 	 * @see #divide(NumericExpression, NumericExpression)
 	 * @see #divides(NumericExpression, NumericExpression)
 	 */
-	NumericExpression modulo(NumericExpression arg0, NumericExpression arg1);
+	NumericExpression modulo(NumericExpression arg0, NumericExpression arg1)
+			throws ArithmeticException;
 
 	/**
 	 * Returns a symbolic expression which is the negative of the given
@@ -1885,10 +1891,10 @@ public interface CoreUniverse {
 	 * a kind of symbolic expression used to represent a reference to a
 	 * subexpression of other expressions. It may be thought of as a sequence of
 	 * directions for navigating to a particular node in a tree, starting from
-	 * the root. For example, a reference expression <i>r</i> might encode
-	 * "the 3rd element of the 2nd component". Given an expression <i>e</i> of
-	 * tuple type in which the 2nd component has array type, that <i>r</i>
-	 * specifies a particular element of a particular component of <i>e</i>.
+	 * the root. For example, a reference expression <i>r</i> might encode "the
+	 * 3rd element of the 2nd component". Given an expression <i>e</i> of tuple
+	 * type in which the 2nd component has array type, that <i>r</i> specifies a
+	 * particular element of a particular component of <i>e</i>.
 	 * </p>
 	 * 
 	 * <p>
@@ -1978,10 +1984,9 @@ public interface CoreUniverse {
 	 * Given a reference to a tuple, and a field index, returns a reference to
 	 * that component of the tuple. Think of this as tacking on one more
 	 * instruction to the sequence of directions specified by a reference. For
-	 * example, if <code>tupleReference</code> encodes
-	 * "2nd component of element 3" and <code>fieldIndex</code> is 15, the
-	 * result returned specifies "the 15-th component of the 2nd component of
-	 * element 3".
+	 * example, if <code>tupleReference</code> encodes "2nd component of element
+	 * 3" and <code>fieldIndex</code> is 15, the result returned specifies "the
+	 * 15-th component of the 2nd component of element 3".
 	 * 
 	 * @param tupleReference
 	 *            a non-<code>null</code> reference for which the referenced
