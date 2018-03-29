@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
-import edu.udel.cis.vsl.sarl.IF.expr.ReferenceExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
@@ -15,6 +14,22 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.util.Pair;
 
+/**
+ * <p>
+ * This class simplifies symbolic expressions of tuple type that are
+ * non-concrete to concrete tuple expressions. A concrete tuple expression is
+ * <ol>
+ * <li>a symbolic expression whose {@link SymbolicOperator} equals to
+ * {@link SymbolicOperator#TUPLE}</li>
+ * <li>recursively that each tuple component must be either a concrete value or
+ * a symbolic expression whose operator is
+ * {@link SymbolicOperator#SYMBOLIC_CONSTANT} or
+ * {@link SymbolicOperator#APPLY}</li>
+ * </ol>
+ * </p>
+ * 
+ * @author ziqingluo
+ */
 public class SymbolicTupleSimplifier {
 
 	/**
@@ -23,57 +38,57 @@ public class SymbolicTupleSimplifier {
 	private PreUniverse universe;
 
 	/**
-	 * A queue of equations that have not been processed. To process each
-	 * equation x == v, where v is a concrete value,
-	 * <ul>
-	 * <li>if x is a TUPLE_READ operation, x == v will be processed and the
-	 * {@link #tupleComponentsMap} map will be updated correspondingly, then
-	 * remove the equation.</li>
-	 * <li>if v is zero and x has the form <code>R.0 + (-1)*Y</code>, where R is
-	 * a {@link ReferenceExpression}, the {@link #tupleSubstitutions} map will
-	 * be updated by adding an entry <code><Y, R></code>, then remove the
-	 * equation.</li>
-	 * <li>otherwise, ignore and remove equation x == v.</li>
-	 * </ul>
+	 * <p>
+	 * A queue of entries that have not been processed.
+	 * </p>
+	 * <p>
+	 * The process of each entry is mainly analyzing that if the key of this
+	 * entry is a component of a non-concrete tuple and simplify the
+	 * non-concrete tuple once all of its components have a value that is either
+	 * concrete or is a symbolic constant.
+	 * </p>
 	 */
-	private LinkedList<Pair<SymbolicExpression, SymbolicExpression>> workingEquations;
+	private LinkedList<Pair<SymbolicExpression, SymbolicExpression>> workingEntries;
 
 	/**
-	 * A map from symbolic expressions that have tuple types but whose operators
-	 * are not TUPLE to symbolic expressions whose operators are TUPLE and
-	 * components have concrete values. In other words, this is a map from
-	 * non-concrete tuples to concrete tuples.
+	 * A map from non-concrete tuples to their concrete equivalences.
 	 */
 	private Map<SymbolicExpression, SymbolicExpression> tupleSubstitutions;
 
 	/**
-	 * A map from symbolic expressions that have tuple types but whose operators
-	 * are not TUPLE (i.e. non-concrete tuples) to their component values. For
-	 * each non-concrete tuple, if all of its component values can be simplified
-	 * to some concrete values, the non-concrete tuple can be simplified to a
-	 * concrete tuple.
+	 * A map from non-concrete tuples to their component values. For each
+	 * component value, it can only be NULL, a concrete value or a symbolic
+	 * constant (or an APPLY expression).
 	 */
 	private Map<SymbolicExpression, SymbolicExpression[]> tupleComponentsMap;
 
 	SymbolicTupleSimplifier(Context context) {
-		this.workingEquations = new LinkedList<>();
+		this.workingEntries = new LinkedList<>();
 		this.tupleSubstitutions = new HashMap<>();
 		this.tupleComponentsMap = new HashMap<>();
 		this.universe = context.info.universe;
 		// initialize:
 		for (Entry<SymbolicExpression, SymbolicExpression> entry : context.subMap
 				.entrySet())
-			workingEquations.add(new Pair<>(entry.getKey(), entry.getValue()));
+			workingEntries.add(new Pair<>(entry.getKey(), entry.getValue()));
 		simplify();
 	}
 
+	/**
+	 * @return a map from non-concrete tuples to their concrete equivalences.
+	 */
 	Map<SymbolicExpression, SymbolicExpression> getTupleSubstitutionMap() {
 		return tupleSubstitutions;
 	}
 
+	/**
+	 * Collecting concrete component values for tuples from entries of the
+	 * {@link Context#subMap}. Add entries to {@link #tupleSubstitutions} once a
+	 * non-concrete tuple can be simplified to a concrete one.
+	 */
 	private void simplify() {
-		while (!workingEquations.isEmpty()) {
-			Pair<SymbolicExpression, SymbolicExpression> equation = workingEquations
+		while (!workingEntries.isEmpty()) {
+			Pair<SymbolicExpression, SymbolicExpression> equation = workingEntries
 					.removeFirst();
 			SymbolicExpression key = equation.left;
 			SymbolicExpression value = equation.right;
@@ -81,10 +96,23 @@ public class SymbolicTupleSimplifier {
 			if (key.operator() == SymbolicOperator.TUPLE_READ)
 				simplifyTupleRead(key, value);
 			else if (key.operator() == SymbolicOperator.ADD && value.isZero())
-				simplifyReference(key);
+				simplifyEquation(key);
 		}
 	}
 
+	/**
+	 * <p>
+	 * Given a TUPLE_READ expression : <code>tuple.field</code> that has a
+	 * concrete value <code>val</code>, updates the {@link #tupleComponentsMap}
+	 * by updating the corresponding component value to <code>val</code>.
+	 * </p>
+	 * 
+	 * <p>
+	 * If all components of the tuple have concrete values (or symbolic constant
+	 * values), updates the {@link #tupleSubstitutions} map and add a new
+	 * entry<code>tuple = {...} </code> to {@link #workingEntries}.
+	 * </p>
+	 */
 	private void simplifyTupleRead(SymbolicExpression tupleRead,
 			SymbolicExpression concreteValue) {
 		SymbolicExpression tuple = (SymbolicExpression) tupleRead.argument(0);
@@ -116,30 +144,63 @@ public class SymbolicTupleSimplifier {
 
 			tupleSubstitutions.put(tuple, concreteTuple);
 			tupleComponentsMap.remove(tuple);
-			workingEquations.add(new Pair<>(tuple, concreteTuple));
+			workingEntries.add(new Pair<>(tuple, concreteTuple));
 		} else
 			tupleComponentsMap.put(tuple, tupleComponents);
 	}
 
-	private void simplifyReference(SymbolicExpression add) {
+	/**
+	 * Process an expression expr of the pattern:
+	 * <code>tuple.field + e = 0 </code>. In such a case, the tuple component
+	 * has value <code>(-1) * e</code>. Now if
+	 * <ul>
+	 * <li><code>(-1) * e</code> is a symbolic constant, update
+	 * {@link #tupleComponentsMap} for the tuple.</li>
+	 * <li><code>tuple.field</code> matches the pattern <code>tuple.0</code> and
+	 * <code>(-1) * e</code> matches the pattern <code>c.0</code> where
+	 * <code>c</code> is a symbolic constant (or an APPLY expression) and both
+	 * <code>c</code> and <code>tuple</code> have the same tuple type with exact
+	 * one field, add entry <code>tuple = c</code> to
+	 * {@link #workingEntries}</li>
+	 * </ul>
+	 */
+	private void simplifyEquation(SymbolicExpression add) {
 		SymbolicExpression op0 = (SymbolicExpression) add.argument(0);
 		SymbolicExpression op1 = (SymbolicExpression) add.argument(1);
-		SymbolicExpression tuple, reference;
 
 		op1 = universe.minus((NumericExpression) op1);
 		if (op0.operator() == SymbolicOperator.TUPLE_READ
+				&& op1.operator() == SymbolicOperator.SYMBOLIC_CONSTANT) {
+			simplifyTupleRead(op0, op1);
+			return;
+		}
+		if (op1.operator() == SymbolicOperator.TUPLE_READ
+				&& op0.operator() == SymbolicOperator.SYMBOLIC_CONSTANT) {
+			simplifyTupleRead(op1, op0);
+			return;
+		}
+		if (op0.operator() == SymbolicOperator.TUPLE_READ
 				&& op1.operator() == SymbolicOperator.TUPLE_READ) {
-			tuple = (SymbolicExpression) op0.argument(0);
-			reference = (SymbolicExpression) op1.argument(0);
-			if (tuple instanceof ReferenceExpression
-					&& !(reference instanceof ReferenceExpression)) {
-				reference = tuple;
-				tuple = (SymbolicExpression) op1.argument(0);
-			} else if (!(reference instanceof ReferenceExpression
-					&& !(tuple instanceof ReferenceExpression)))
+			SymbolicExpression tuple0, tuple1;
+			SymbolicTupleType tupleType;
+
+			tuple0 = (SymbolicExpression) op0.argument(0);
+			tuple1 = (SymbolicExpression) op1.argument(0);
+			tupleType = (SymbolicTupleType) tuple0.type();
+			if (tupleType.sequence().numTypes() != 1)
 				return;
-			this.tupleSubstitutions.put(tuple, reference);
-			this.workingEquations.add(new Pair<>(tuple, reference));
+			if (!tuple0.type().equals(tuple1.type()))
+				return;
+			if (tuple0.operator() == SymbolicOperator.SYMBOLIC_CONSTANT
+					|| tuple0.operator() == SymbolicOperator.APPLY) {
+				this.workingEntries.add(new Pair<>(tuple1, tuple0));
+				return;
+			}
+			if (tuple1.operator() == SymbolicOperator.SYMBOLIC_CONSTANT
+					|| tuple1.operator() == SymbolicOperator.APPLY) {
+				this.workingEntries.add(new Pair<>(tuple0, tuple1));
+				return;
+			}
 		}
 	}
 }
