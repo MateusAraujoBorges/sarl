@@ -142,4 +142,23 @@ public class DivOrModuloTest {
 		assertEquals(ResultType.NO, result.getResultType());
 	}
 
+	/**
+	 * Assumption: x == 2*a && y == 2*b</br>
+	 * Predicate: (x % 2) % 2 == 0 && (y % 2 ) % 2 == 0
+	 */
+	@Test
+	public void ticket831_test_mod_and_mod() {
+		NumericExpression xModMod = universe.modulo(universe.modulo(x, two),
+				two);
+		NumericExpression yModMod = universe.modulo(universe.modulo(y, two),
+				two);
+		BooleanExpression xEqualExpr = universe.equals(xModMod, zero);
+		BooleanExpression yEqualExpr = universe.equals(yModMod, zero);
+		BooleanExpression predicate = universe.and(xEqualExpr, yEqualExpr);
+		BooleanExpression assumption = universe.and(
+				universe.equals(universe.multiply(two, a), x),
+				universe.equals(universe.multiply(two, b), y));
+		ValidityResult result = universe.reasoner(assumption).valid(predicate);
+		assertEquals(ResultType.YES, result.getResultType());
+	}
 }

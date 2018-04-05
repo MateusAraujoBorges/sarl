@@ -449,7 +449,7 @@ public class IdealSimplifierWorker {
 	 * 
 	 * @return true iff change occurred
 	 */
-	private boolean simplifyPowers(Map<Primitive, RationalExpression> powerMap1,
+	private boolean simplifyPowers(Map<Monomial, RationalExpression> powerMap1,
 			Map<Constant, RationalExpression> powerMap2, boolean positive,
 			Monic monic) {
 		IdealFactory idf = idealFactory();
@@ -464,11 +464,11 @@ public class IdealSimplifierWorker {
 					.primitivePowerExponent(idf).getNumber();
 			IntegerNumber signedOuterExp = positive ? outerExp
 					: nf.negate(outerExp);
-			RationalExpression realSignedOuterExp = idf.constant(isInteger
-					? signedOuterExp : nf.integerToRational(signedOuterExp));
+			RationalExpression realSignedOuterExp = idf
+					.constant(isInteger ? signedOuterExp
+							: nf.integerToRational(signedOuterExp));
 			RationalExpression newExp;
 			SymbolicObject baseObj = primitive.argument(0);
-			Primitive base;
 
 			if (baseObj instanceof Constant) {
 				Constant baseConst;
@@ -491,23 +491,25 @@ public class IdealSimplifierWorker {
 					}
 				}
 			} else {
+				Monomial baseMonomial;
+
 				if (primitive.operator() == SymbolicOperator.POWER) {
-					base = (Primitive) primitive.argument(0);
+					baseMonomial = (Monomial) primitive.argument(0);
 					newExp = idf.multiply(realSignedOuterExp,
 							(RationalExpression) primitive.argument(1));
 					change = change || outerExp.numericalCompareTo(
 							nf.abs(idf.getConcreteExponent(newExp))) != 0;
 				} else {
-					base = primitive;
+					baseMonomial = primitive;
 					newExp = realSignedOuterExp;
 				}
 
-				NumericExpression oldExponent = powerMap1.get(base);
+				NumericExpression oldExponent = powerMap1.get(baseMonomial);
 
 				if (oldExponent == null) {
-					powerMap1.put(base, newExp);
+					powerMap1.put(baseMonomial, newExp);
 				} else {
-					powerMap1.put(base, idf.add(oldExponent, newExp));
+					powerMap1.put(baseMonomial, idf.add(oldExponent, newExp));
 					change = true;
 				}
 			}
@@ -589,7 +591,7 @@ public class IdealSimplifierWorker {
 		Monomial numerator = rational.numerator(idf),
 				denominator = rational.denominator(idf);
 		Monic m1 = numerator.monic(idf), m2 = denominator.monic(idf);
-		Map<Primitive, RationalExpression> powerMap = new HashMap<>();
+		Map<Monomial, RationalExpression> powerMap = new HashMap<>();
 		Map<Constant, RationalExpression> powerMap2 = new HashMap<>();
 		boolean change1 = simplifyPowers(powerMap, powerMap2, true, m1);
 		boolean change2 = simplifyPowers(powerMap, powerMap2, false, m2);
@@ -602,7 +604,7 @@ public class IdealSimplifierWorker {
 				result = idf.multiply(result,
 						idf.power(entry.getKey(), entry.getValue()));
 			}
-			for (Entry<Primitive, RationalExpression> entry : powerMap
+			for (Entry<Monomial, RationalExpression> entry : powerMap
 					.entrySet()) {
 				result = idf.multiply(result,
 						idf.power(entry.getKey(), entry.getValue()));

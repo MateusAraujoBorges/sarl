@@ -6,7 +6,6 @@ import java.io.PrintStream;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -41,8 +40,7 @@ public class IntegerArithmeticDevTest {
 	/**
 	 * Negative exponent power test. Has been moved to realArithmaticTest
 	 */
-	@Ignore
-	@Test
+	@Test(expected=SARLException.class)
 	public void negativeExponentPowerTest() {
 		NumericExpression e = universe.power(x, negOneInt);
 
