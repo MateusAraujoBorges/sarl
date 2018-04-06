@@ -30,7 +30,7 @@ public class Why3ReasonerFactory extends ContextMinimizingReasonerFactory
 	 * is to have at most one Why3 {@link Reasoner} for each boolean expression
 	 * ("context").
 	 */
-	private Map<Why3ReasonerCacheKey, Why3Reasoner> why3ReasonerCache = new ConcurrentHashMap<>();
+	private Map<Why3ReasonerCacheKey, Why3Reasoner> why3ReasonerCache = null;
 
 	/**
 	 * Factory used to produce new why3 provers, which will be used by the
@@ -44,6 +44,7 @@ public class Why3ReasonerFactory extends ContextMinimizingReasonerFactory
 			RobustWhy3ProvePlatformFactory why3Factory) {
 		super(universe, why3Factory, simplifierFactory);
 		this.why3Factory = why3Factory;
+		why3ReasonerCache = new ConcurrentHashMap<>();
 	}
 
 	@Override
