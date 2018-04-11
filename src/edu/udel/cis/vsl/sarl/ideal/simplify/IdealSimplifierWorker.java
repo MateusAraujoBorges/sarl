@@ -158,6 +158,7 @@ public class IdealSimplifierWorker {
 		case INTEGER:
 		case REAL:
 		case CHAR:
+		case UNINTERPRETED:
 			return true;
 		default:
 		}
@@ -464,9 +465,8 @@ public class IdealSimplifierWorker {
 					.primitivePowerExponent(idf).getNumber();
 			IntegerNumber signedOuterExp = positive ? outerExp
 					: nf.negate(outerExp);
-			RationalExpression realSignedOuterExp = idf
-					.constant(isInteger ? signedOuterExp
-							: nf.integerToRational(signedOuterExp));
+			RationalExpression realSignedOuterExp = idf.constant(isInteger
+					? signedOuterExp : nf.integerToRational(signedOuterExp));
 			RationalExpression newExp;
 			SymbolicObject baseObj = primitive.argument(0);
 

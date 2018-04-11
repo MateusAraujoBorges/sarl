@@ -655,6 +655,14 @@ public class HomogeneousExpression<T extends SymbolicObject>
 				result.append("'");
 				result.append(arguments[0].toStringBuffer(false));
 				result.append("'");
+			} else if (tk == SymbolicTypeKind.UNINTERPRETED) {
+				result.append('(');
+				result.append(type.toStringBuffer(false));
+				result.append('(');
+				result.append(argument(0));
+				result.append(')');
+				result.append(')');
+				return result;
 			} else {
 				if (!type.isNumeric() && !type.isBoolean()) {
 					if (tk == SymbolicTypeKind.TUPLE)

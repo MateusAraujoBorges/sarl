@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.ReferenceExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
@@ -21,10 +22,9 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * <ol>
  * <li>a symbolic expression whose {@link SymbolicOperator} equals to
  * {@link SymbolicOperator#TUPLE}</li>
- * <li>recursively that each tuple component must be either a concrete value or
- * a symbolic expression whose operator is
- * {@link SymbolicOperator#SYMBOLIC_CONSTANT} or
- * {@link SymbolicOperator#APPLY}</li>
+ * <li>recursively that each tuple component must be a concrete tuple, a
+ * symbolic expression with CONCRETE operator or a
+ * {@link ReferenceExpression}</li>
  * </ol>
  * </p>
  * 
@@ -96,7 +96,7 @@ public class SymbolicTupleSimplifier {
 			if (key.operator() == SymbolicOperator.TUPLE_READ)
 				simplifyTupleRead(key, value);
 			else if (key.operator() == SymbolicOperator.ADD && value.isZero())
-				simplifyEquation(key);
+				simplifyReferenceExpression(key);
 		}
 	}
 
@@ -150,57 +150,46 @@ public class SymbolicTupleSimplifier {
 	}
 
 	/**
-	 * Process an expression expr of the pattern:
-	 * <code>tuple.field + e = 0 </code>. In such a case, the tuple component
-	 * has value <code>(-1) * e</code>. Now if
-	 * <ul>
-	 * <li><code>(-1) * e</code> is a symbolic constant, update
-	 * {@link #tupleComponentsMap} for the tuple.</li>
-	 * <li><code>tuple.field</code> matches the pattern <code>tuple.0</code> and
-	 * <code>(-1) * e</code> matches the pattern <code>c.0</code> where
-	 * <code>c</code> is a symbolic constant (or an APPLY expression) and both
-	 * <code>c</code> and <code>tuple</code> have the same tuple type with exact
-	 * one field, add entry <code>tuple = c</code> to
-	 * {@link #workingEntries}</li>
-	 * </ul>
+	 * <p>
+	 * Process an equation that asserts two expressions of reference typeS are
+	 * equivalent: <code>
+	 *   Ref0.0 + (-1)*Ref1.0 = 0
+	 * </code>. Such an equation means that Ref0 is identical to Ref1.
+	 * </p>
+	 * 
+	 * <p>
+	 * We consider that a {@link ReferenceExpression} is concrete. Hence, if
+	 * Ref0 (resp. Ref1) is an expression of reference type but not a
+	 * {@link ReferenceExpression} while Ref1 (resp. Ref0) is a
+	 * {@link ReferenceExpression}, add Ref0 (resp. Ref1) as key and Ref1(resp.
+	 * Ref0) as value to the {@link #tupleSubstitutions} map.
+	 * </p>
+	 * 
+	 * 
 	 */
-	private void simplifyEquation(SymbolicExpression add) {
+	private void simplifyReferenceExpression(SymbolicExpression add) {
 		SymbolicExpression op0 = (SymbolicExpression) add.argument(0);
 		SymbolicExpression op1 = (SymbolicExpression) add.argument(1);
 
 		op1 = universe.minus((NumericExpression) op1);
-		if (op0.operator() == SymbolicOperator.TUPLE_READ
-				&& op1.operator() == SymbolicOperator.SYMBOLIC_CONSTANT) {
-			simplifyTupleRead(op0, op1);
+		if (op0.operator() != SymbolicOperator.TUPLE_READ
+				|| op1.operator() != SymbolicOperator.TUPLE_READ)
 			return;
-		}
-		if (op1.operator() == SymbolicOperator.TUPLE_READ
-				&& op0.operator() == SymbolicOperator.SYMBOLIC_CONSTANT) {
-			simplifyTupleRead(op1, op0);
-			return;
-		}
-		if (op0.operator() == SymbolicOperator.TUPLE_READ
-				&& op1.operator() == SymbolicOperator.TUPLE_READ) {
-			SymbolicExpression tuple0, tuple1;
-			SymbolicTupleType tupleType;
 
-			tuple0 = (SymbolicExpression) op0.argument(0);
-			tuple1 = (SymbolicExpression) op1.argument(0);
-			tupleType = (SymbolicTupleType) tuple0.type();
-			if (tupleType.sequence().numTypes() != 1)
-				return;
-			if (!tuple0.type().equals(tuple1.type()))
-				return;
-			if (tuple0.operator() == SymbolicOperator.SYMBOLIC_CONSTANT
-					|| tuple0.operator() == SymbolicOperator.APPLY) {
-				this.workingEntries.add(new Pair<>(tuple1, tuple0));
-				return;
-			}
-			if (tuple1.operator() == SymbolicOperator.SYMBOLIC_CONSTANT
-					|| tuple1.operator() == SymbolicOperator.APPLY) {
-				this.workingEntries.add(new Pair<>(tuple0, tuple1));
-				return;
-			}
+		SymbolicExpression ref0 = (SymbolicExpression) op0.argument(0);
+		SymbolicExpression ref1 = (SymbolicExpression) op1.argument(0);
+
+		if (!ref0.type().equals(universe.referenceType())
+				|| !ref1.type().equals(universe.referenceType()))
+			return;
+		if (ref0 instanceof ReferenceExpression
+				&& !(ref1 instanceof ReferenceExpression)) {
+			tupleSubstitutions.put(ref1, ref0);
+			workingEntries.add(new Pair<>(ref1, ref0));
+		} else if (ref1 instanceof ReferenceExpression
+				&& !(ref0 instanceof ReferenceExpression)) {
+			tupleSubstitutions.put(ref0, ref1);
+			workingEntries.add(new Pair<>(ref0, ref1));
 		}
 	}
 }
