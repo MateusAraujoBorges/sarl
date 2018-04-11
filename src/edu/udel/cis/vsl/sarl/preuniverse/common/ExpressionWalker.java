@@ -82,6 +82,7 @@ public class ExpressionWalker {
 		case INTEGER:
 		case REAL:
 		case CHAR:
+		case UNINTERPRETED:
 			return;
 		case ARRAY: {
 			SymbolicArrayType arrayType = (SymbolicArrayType) type;

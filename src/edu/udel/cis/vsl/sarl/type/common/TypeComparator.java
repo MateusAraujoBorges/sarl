@@ -22,11 +22,13 @@ import java.util.Comparator;
 
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 
 /**
  * A {@link Comparator} on {@link SymbolicType}s.
@@ -44,13 +46,19 @@ public class TypeComparator implements Comparator<SymbolicType> {
 	private Comparator<SymbolicExpression> expressionComparator;
 
 	/**
+	 * The comparator on symbolic obejcts.
+	 */
+	private Comparator<SymbolicObject> objectComparator;
+
+	/**
 	 * Constructs a new instance of this class, but it can't be used until the
 	 * expression comparator and type sequence comparator have been set.
 	 * 
 	 * @see #setExpressionComparator(Comparator)
 	 * @see #setTypeSequenceComparator(Comparator)
 	 */
-	public TypeComparator() {
+	public TypeComparator(Comparator<SymbolicObject> objectComparator) {
+		this.objectComparator = objectComparator;
 	}
 
 	/**
@@ -164,6 +172,12 @@ public class TypeComparator implements Comparator<SymbolicType> {
 			result = compare(t1.valueType(), t2.valueType());
 			return result;
 
+		}
+		case UNINTERPRETED: {
+			SymbolicUninterpretedType t1 = (SymbolicUninterpretedType) o1;
+			SymbolicUninterpretedType t2 = (SymbolicUninterpretedType) o2;
+
+			return objectComparator.compare(t1.name(), t2.name());
 		}
 		}
 		throw new SARLInternalException("unreachable");

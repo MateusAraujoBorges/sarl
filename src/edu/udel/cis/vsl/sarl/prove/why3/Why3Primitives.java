@@ -171,6 +171,48 @@ public class Why3Primitives {
 		}
 	}
 
+	/**
+	 * This class represents an uninterpreted type in Why3. No variant types are
+	 * allowed to be in the definition of this uninterpreted type for now.
+	 * 
+	 * @author ziqingluo
+	 */
+	static class Why3UninterpretedType extends Why3Type {
+
+		private final String constructorName;
+
+		private final String definition;
+
+		private Why3UninterpretedType(String typeName, Why3Type... argTypes) {
+			super(typeName, false, argTypes);
+			this.text = "unintpret_" + typeName;
+			// add default constructor: (TODO: allow users to define
+			// constructor) :
+			constructorName = "Cons_" + typeName;
+
+			String tmpDef = this.text + " = " + constructorName;
+
+			for (int i = 0; i < argTypes.length; i++)
+				tmpDef += " " + "(" + argTypes[i].text + ")";
+			definition = tmpDef;
+		}
+
+		/**
+		 * Returns a literal of this uninterpreted type with its unique
+		 * constructor.
+		 * 
+		 * @param literals
+		 *            a list of arguments. For each argument in this list, the
+		 *            type of it must be consistent with the "argument type" in
+		 *            the definition of this uninterpreted type.
+		 * @return a translated text which is a literal with the given keys of
+		 *         this uninterpreted type.
+		 */
+		String constructLiteral(String... literals) {
+			return why3FunctionCall(constructorName, literals);
+		}
+	}
+
 	/* ****** Pre-defined static infix operators ****** */
 
 	public static Why3InfixOperator plus = new Why3InfixOperator(" + ");
@@ -284,6 +326,13 @@ public class Why3Primitives {
 	public static String keyword_end = "end";
 
 	/* ********* Why3 specific helper methods ********** */
+	/**
+	 * @return A why3 type declaration.
+	 */
+	public static String typeDecl(Why3UninterpretedType type) {
+		return keyword_type + " " + type.definition + "\n";
+	}
+
 	/**
 	 * @return A why3 constant declaration.
 	 */
@@ -454,6 +503,14 @@ public class Why3Primitives {
 	 */
 	public static Why3Type why3AliasType(String alias) {
 		return new Why3Type(alias);
+	}
+
+	/**
+	 * Return a uninterpreted type of the given name.
+	 */
+	public static Why3UninterpretedType why3UninterpretedType(String typeName,
+			Why3Type... argTypes) {
+		return new Why3UninterpretedType(typeName, argTypes);
 	}
 
 	/**

@@ -11,25 +11,25 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import edu.udel.cis.vsl.sarl.SARL;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicIntegerType.IntegerKind;
+import edu.udel.cis.vsl.sarl.object.common.ObjectComparator;
 
 /**
  * @author alali
  *
- *	Testing CommonSymbolicIntegerType:
- *	- IntegerKind integerKind()
- *	- typeEquals(...)
- *	- int computeHashCode()
- *	- StringBuffer toStringBuffer(...)
- *	- isHerbrand()
- *	- isIdeal()
- *	- SymbolicType getPureType()
+ *         Testing CommonSymbolicIntegerType: - IntegerKind integerKind() -
+ *         typeEquals(...) - int computeHashCode() - StringBuffer
+ *         toStringBuffer(...) - isHerbrand() - isIdeal() - SymbolicType
+ *         getPureType()
  */
 public class SymbolicIntegerTypeTest {
-	
-		CommonSymbolicIntegerType idealIntKind, idealIntKind2, boundedIntKind, herbrandIntKind;
-		TypeComparator typeComparator;
-		@BeforeClass
+
+	CommonSymbolicIntegerType idealIntKind, idealIntKind2, boundedIntKind,
+			herbrandIntKind;
+	TypeComparator typeComparator;
+
+	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 	}
 
@@ -39,7 +39,8 @@ public class SymbolicIntegerTypeTest {
 
 	@Before
 	public void setUp() throws Exception {
-		typeComparator = new TypeComparator();
+		typeComparator = new TypeComparator(new ObjectComparator(
+				SARL.newStandardUniverse().numberFactory()));
 		idealIntKind = new CommonSymbolicIntegerType(IntegerKind.IDEAL);
 		idealIntKind2 = new CommonSymbolicIntegerType(IntegerKind.IDEAL);
 		boundedIntKind = new CommonSymbolicIntegerType(IntegerKind.BOUNDED);
@@ -49,10 +50,10 @@ public class SymbolicIntegerTypeTest {
 	@After
 	public void tearDown() throws Exception {
 	}
-	
+
 	/**
-	 * testing integer kind from created objects 
-	 * with the enum type (IntegerKind)
+	 * testing integer kind from created objects with the enum type
+	 * (IntegerKind)
 	 */
 	@Test
 	public void testIntegerKind() {
@@ -60,7 +61,7 @@ public class SymbolicIntegerTypeTest {
 		assertEquals(boundedIntKind.integerKind(), IntegerKind.BOUNDED);
 		assertEquals(herbrandIntKind.integerKind(), IntegerKind.HERBRAND);
 	}
-	
+
 	/**
 	 * testing the same integer type and two identical integer types.
 	 */
@@ -70,8 +71,7 @@ public class SymbolicIntegerTypeTest {
 		assertTrue(idealIntKind.typeEquals(idealIntKind2));
 		assertFalse(idealIntKind.typeEquals(boundedIntKind));
 	}
-	
-	
+
 	/**
 	 * testing if the created herbrand integer types are really herbrand.
 	 */
@@ -81,7 +81,7 @@ public class SymbolicIntegerTypeTest {
 		assertFalse(idealIntKind.isHerbrand());
 		assertFalse(boundedIntKind.isHerbrand());
 	}
-	
+
 	/**
 	 * testing if the created ideal integer types are really Ideal!
 	 */
@@ -91,16 +91,17 @@ public class SymbolicIntegerTypeTest {
 		assertFalse(boundedIntKind.isIdeal());
 		assertFalse(herbrandIntKind.isIdeal());
 	}
-	
+
 	/**
-	 * testing the hash code for two integer types
-	 * they've to have the same hash code if they're identical
+	 * testing the hash code for two integer types they've to have the same hash
+	 * code if they're identical
 	 */
 	@Test
 	public void testComputeHashCode() {
-		assertEquals(idealIntKind.computeHashCode(),idealIntKind2.computeHashCode());
+		assertEquals(idealIntKind.computeHashCode(),
+				idealIntKind2.computeHashCode());
 	}
-	
+
 	/**
 	 * testing the string representation for the different integer types
 	 */
@@ -111,23 +112,25 @@ public class SymbolicIntegerTypeTest {
 		assertEquals(herbrandIntKind.toStringBuffer(true).toString(), "hint");
 		assertEquals(boundedIntKind.toStringBuffer(true).toString(), "bounded");
 	}
-	
+
 	/**
 	 * comparing the integer types using TypeComparator.
 	 */
 	@Test
-	public void testTypeComparator(){
+	public void testTypeComparator() {
 		assertEquals(typeComparator.compare(idealIntKind, idealIntKind2), 0);
-		assertNotEquals(typeComparator.compare(herbrandIntKind, boundedIntKind), 0);
+		assertNotEquals(typeComparator.compare(herbrandIntKind, boundedIntKind),
+				0);
 	}
-	
+
 	/**
 	 * checking the pure type of the integer type.
 	 */
 	@Test
 	public void testGetPureType() {
-		assertEquals(((CommonSymbolicIntegerType)idealIntKind.getPureType()).integerKind(), IntegerKind.IDEAL);
-		
+		assertEquals(((CommonSymbolicIntegerType) idealIntKind.getPureType())
+				.integerKind(), IntegerKind.IDEAL);
+
 	}
-	
+
 }

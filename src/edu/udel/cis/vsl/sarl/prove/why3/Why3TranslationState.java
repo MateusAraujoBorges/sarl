@@ -2,6 +2,7 @@ package edu.udel.cis.vsl.sarl.prove.why3;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -131,7 +132,7 @@ public class Why3TranslationState {
 
 	/* **************** Constructor ****************** */
 	public Why3TranslationState(ProverPredicate ppreds[]) {
-		this.declarations = new HashMap<>();
+		this.declarations = new LinkedHashMap<>(100);
 		this.tupleTypeSignitureMap = new TreeMap<>();
 		this.typeAliasingDeclarations = new LinkedList<>();
 		this.translationCache = new HashMap<>();

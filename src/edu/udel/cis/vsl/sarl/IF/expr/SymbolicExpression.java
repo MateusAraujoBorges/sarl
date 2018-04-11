@@ -472,7 +472,7 @@ public interface SymbolicExpression extends SymbolicObject {
 		 * <code>true</code> iff arg1 belongs to the specified member type of
 		 * the union type.
 		 */
-		UNION_TEST
+		UNION_TEST,
 	}
 
 	/**

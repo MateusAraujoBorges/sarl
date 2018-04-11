@@ -135,6 +135,7 @@ public class HomogeneousExpression<T extends SymbolicObject>
 		case INTEGER:
 		case REAL:
 		case CHAR:
+		case UNINTERPRETED:
 			return;
 		case ARRAY: {
 			SymbolicArrayType arrayType = (SymbolicArrayType) type;

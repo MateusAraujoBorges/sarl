@@ -28,6 +28,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.util.FastList;
@@ -71,6 +72,21 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * into: value: q (q is the result of a/b) constraints: b * q + r = a && r >= 0
  * && r < b value and constraint are encapsulated into an object
  * {@link Translation}.
+ * </p>
+ * 
+ * <p>
+ * // Uninterpreted type:
+ *
+ * Translation of expressions of uninterpreted types: For an uninterpreted type
+ * <code>t</code>, it will be translated to a type definition with a single key
+ * of int type:<code>
+ * DATATYPE
+ * Unintpret_t = Cons_t(Selector_t : INT)
+ * END;
+ * </code>. Symbolic expressions of type t with
+ * {@link SymbolicOperator#CONCRETE} operator will be translated using the
+ * constructor <code>Cons_t</code> as <code>Const_t(key)</code>. Selector
+ * <code>Select_key_t</code> will never be used for now.
  * </p>
  * 
  * @author siegel
@@ -340,6 +356,21 @@ public class CVCTranslator {
 		result.append(value);
 		result.add(")");
 		return result;
+	}
+
+	/**
+	 * @return The name of an uninterpreted type
+	 */
+	private String uninterpretedTypeName(SymbolicUninterpretedType unitType) {
+		return "Unintpre_" + unitType.name();
+	}
+
+	/**
+	 * @return The name of the sole constructor of an uninterpreted type
+	 */
+	private String uninterpretedTypeConstructor(
+			SymbolicUninterpretedType unitType) {
+		return "Cons_" + unitType.name();
 	}
 
 	/**
@@ -653,6 +684,16 @@ public class CVCTranslator {
 		case REAL:
 			result = new FastList<>(object.toString());
 			break;
+		case UNINTERPRETED: {
+			SymbolicUninterpretedType unintType = (SymbolicUninterpretedType) expr
+					.type();
+			String constructor = this.uninterpretedTypeConstructor(unintType);
+			int key = unintType.soleSelector().apply(expr).getInt();
+
+			translateType(unintType);
+			result = new FastList<>(constructor, "(", String.valueOf(key), ")");
+			break;
+		}
 		default:
 			throw new SARLInternalException("Unknown concrete object: " + expr);
 		}
@@ -691,6 +732,16 @@ public class CVCTranslator {
 		case REAL:
 			result = new FastList<>(object.toString());
 			break;
+		case UNINTERPRETED: {
+			SymbolicUninterpretedType unintType = (SymbolicUninterpretedType) expr
+					.type();
+			String constructor = this.uninterpretedTypeConstructor(unintType);
+			int key = unintType.soleSelector().apply(expr).getInt();
+
+			translateType(unintType);
+			result = new FastList<>(constructor, "(", String.valueOf(key), ")");
+			break;
+		}
 		default:
 			throw new SARLInternalException("Unknown concrete object: " + expr);
 		}
@@ -2418,6 +2469,18 @@ public class CVCTranslator {
 			}
 			cvcDeclarations.add("END;\n");
 			result = new FastList<>(name);
+			break;
+		}
+		case UNINTERPRETED: {
+			SymbolicUninterpretedType unitType = (SymbolicUninterpretedType) type;
+			String typeName = uninterpretedTypeName(unitType);
+			String consName = uninterpretedTypeConstructor(unitType);
+
+			cvcDeclarations.addAll("DATATYPE\n");
+			cvcDeclarations.addAll(typeName, " = ", consName, "(selector_",
+					unitType.name().getString(), " : INT)", "\n");
+			cvcDeclarations.addAll("END;\n");
+			result = new FastList<>(typeName);
 			break;
 		}
 		default:

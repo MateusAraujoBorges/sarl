@@ -56,6 +56,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.expr.IF.BooleanExpressionFactory;
 import edu.udel.cis.vsl.sarl.expr.IF.ExpressionFactory;
@@ -488,6 +489,12 @@ public class CommonPreUniverse implements PreUniverse {
 			return compatibleTypeSequence(t0.sequence(), t1.sequence(),
 					nestingDepth);
 		}
+		case UNINTERPRETED: {
+			SymbolicUninterpretedType t0 = (SymbolicUninterpretedType) type0;
+			SymbolicUninterpretedType t1 = (SymbolicUninterpretedType) type1;
+
+			return bool(t0.equals(t1));
+		}
 		default:
 			throw ierr("unreachable");
 		}
@@ -757,6 +764,18 @@ public class CommonPreUniverse implements PreUniverse {
 				return expr;
 			}
 		}
+		case UNINTERPRETED:
+			if (arg0.operator() == SymbolicOperator.CONCRETE
+					&& arg1.operator() == SymbolicOperator.CONCRETE) {
+				SymbolicUninterpretedType uninterpretedType = (SymbolicUninterpretedType) type;
+				IntObject key0 = uninterpretedType.soleSelector().apply(arg0);
+				IntObject key1 = uninterpretedType.soleSelector().apply(arg1);
+
+				return bool(key0.equals(key1));
+			} else {
+				return (BooleanExpression) expression(SymbolicOperator.EQUALS,
+						booleanType(), arg0, arg1);
+			}
 		default:
 			throw ierr("Unknown type: " + type);
 		}
@@ -1168,6 +1187,11 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public SymbolicRealType realType() {
 		return realType;
+	}
+
+	@Override
+	public SymbolicUninterpretedType symbolicUninterpretedType(String name) {
+		return typeFactory.uninterpretedType(stringObject(name));
 	}
 
 	@Override
@@ -4350,5 +4374,11 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public void setUseBackwardSubstitution(boolean value) {
 		this.useBackwardSubstitution = value;
+	}
+
+	@Override
+	public SymbolicExpression concreteValueOfUninterpretedType(
+			SymbolicUninterpretedType type, IntObject key) {
+		return expression(SymbolicOperator.CONCRETE, type, key);
 	}
 }

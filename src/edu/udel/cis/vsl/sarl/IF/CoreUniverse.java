@@ -36,6 +36,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicRealType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicSetType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.util.Pair;
 
@@ -479,6 +480,16 @@ public interface CoreUniverse {
 	 */
 	SymbolicTupleType entryType(SymbolicMapType mapType);
 
+	/**
+	 * Returns an uninterpreted type which is an instance of
+	 * {@link SymbolicUninterpretedType}.
+	 * 
+	 * @param name
+	 *            the name of the returning uninterpreted type
+	 * @return an instance of {@link SymbolicUninterpretedType} whose name is
+	 *         the given String.
+	 */
+	SymbolicUninterpretedType symbolicUninterpretedType(String name);
 	// Other...
 
 	/**
@@ -929,8 +940,6 @@ public interface CoreUniverse {
 	 * @return the {@link Number} value or <code>null</code>
 	 */
 	Number extractNumber(NumericExpression expression);
-
-	// Characters and string expressions:
 
 	/**
 	 * Returns a concrete symbolic expression of character type which wraps the
@@ -2316,6 +2325,18 @@ public interface CoreUniverse {
 	BooleanExpression differentiable(SymbolicExpression function,
 			IntObject degree, Iterable<? extends NumericExpression> lowerBounds,
 			Iterable<? extends NumericExpression> upperBounds);
+
+	/**
+	 * Returns a symbolic expression of a {@link SymbolicUninterpretedType}.
+	 * 
+	 * @param type
+	 *            an instance of {@link SymbolicUninterpretedType}
+	 * @param key
+	 *            an concrete integral key of the returning symbolic expression.
+	 * @return a symbolic expression of a {@link SymbolicUninterpretedType}.
+	 */
+	SymbolicExpression concreteValueOfUninterpretedType(
+			SymbolicUninterpretedType type, IntObject key);
 
 	/**
 	 * The result of analyzing certain "forall" expressions. The expression must

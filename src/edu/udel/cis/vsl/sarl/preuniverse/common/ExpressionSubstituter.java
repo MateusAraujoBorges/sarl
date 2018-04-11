@@ -222,6 +222,7 @@ public abstract class ExpressionSubstituter
 		case INTEGER:
 		case REAL:
 		case CHAR:
+		case UNINTERPRETED:
 			return type;
 		case ARRAY: {
 			SymbolicArrayType arrayType = (SymbolicArrayType) type;
@@ -287,6 +288,7 @@ public abstract class ExpressionSubstituter
 		case INTEGER:
 		case REAL:
 		case CHAR:
+		case UNINTERPRETED:
 			return type;
 		default:
 			if (state.isInitial()) {
@@ -488,8 +490,9 @@ public abstract class ExpressionSubstituter
 	 */
 	@Override
 	public SymbolicExpression apply(SymbolicExpression expression) {
-		SymbolicExpression result = substituteExpression(expression, newState());
-		
+		SymbolicExpression result = substituteExpression(expression,
+				newState());
+
 		return result;
 	}
 

@@ -33,6 +33,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicSetType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.type.common.TypeComparator;
@@ -197,6 +198,17 @@ public interface SymbolicTypeFactory {
 	SymbolicSetType setType(SymbolicType elementType);
 
 	SymbolicMapType mapType(SymbolicType keyType, SymbolicType valueType);
+
+	/**
+	 * Returns an uninterpreted type which is an instance of
+	 * {@link SymbolicUninterpretedType}.
+	 * 
+	 * @param name
+	 *            the name of the returning uninterpreted type
+	 * @return an instance of {@link SymbolicUninterpretedType} whose name is
+	 *         the given String.
+	 */
+	SymbolicUninterpretedType uninterpretedType(StringObject name);
 
 	/**
 	 * Creates a TypeComparator that is used to compare SymbolicTypes

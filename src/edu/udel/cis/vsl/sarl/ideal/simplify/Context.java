@@ -1182,6 +1182,7 @@ public class Context {
 				case CHAR:
 				case INTEGER:
 				case REAL:
+				case UNINTERPRETED:
 					if (value.operator() == SymbolicOperator.CONCRETE
 							&& old.operator() == SymbolicOperator.CONCRETE) {
 						throw new InconsistentContextException();
@@ -2123,10 +2124,32 @@ public class Context {
 		try {
 			addFact(assumption);
 			reduce();
+			simplifyNonConcreteTuples();
 		} catch (InconsistentContextException e) {
 			makeInconsistent();
 		}
 		// simplificationCache = new HashMap<>();
+	}
+
+	/**
+	 * <p>
+	 * Simplify non-concrete tuple type expressions to concrete tuples. A
+	 * concrete tuple is defined in {@link SymbolicTupleSimplifier}.
+	 * </p>
+	 * 
+	 * @throws InconsistentContextException
+	 *             if any new substitution from a non-concrete tuple to a
+	 *             concrete one violates the invariants of the {@link #subMap}.
+	 */
+	private void simplifyNonConcreteTuples()
+			throws InconsistentContextException {
+		Map<SymbolicExpression, SymbolicExpression> ncTuple2concrete = new SymbolicTupleSimplifier(
+				this).getTupleSubstitutionMap();
+
+		// simplify non-concrete tuples:
+		for (Entry<SymbolicExpression, SymbolicExpression> entry : ncTuple2concrete
+				.entrySet())
+			addSub(entry.getKey(), entry.getValue());
 	}
 
 	/**

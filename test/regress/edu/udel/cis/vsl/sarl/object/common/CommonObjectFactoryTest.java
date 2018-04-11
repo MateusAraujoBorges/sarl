@@ -58,7 +58,7 @@ public class CommonObjectFactoryTest {
 	@Test
 	public void testInit() {
 		this.fac.setExpressionComparator(new ExpressionComparatorStub());
-		this.fac.setTypeComparator(new TypeComparator());
+		this.fac.setTypeComparator(new TypeComparator(fac.comparator()));
 		this.fac.setTypeSequenceComparator(new TypeSequenceComparator());
 
 		try {

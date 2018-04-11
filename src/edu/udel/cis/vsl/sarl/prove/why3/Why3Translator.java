@@ -30,6 +30,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
@@ -39,6 +40,7 @@ import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3InfixOperator;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3Lib;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3TupleType;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3Type;
+import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3UninterpretedType;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3TranslationState.TupleTypeSigniture;
 
 /**
@@ -66,6 +68,14 @@ import edu.udel.cis.vsl.sarl.prove.why3.Why3TranslationState.TupleTypeSigniture;
  *   ...
  * end
  * </code>
+ * </p>
+ * 
+ * <p>
+ * Translation of expressions of uninterpreted types: For an uninterpreted type
+ * <code>t</code>, it will be translated to a type definition with a single key
+ * of int type:<code>type unintpret_t = Cons_t int</code>. Symbolic expressions
+ * of type t with {@link SymbolicOperator#CONCRETE} operator will be translated
+ * using the constructor <code>Cons_t</code> as <code>(Const_t key)</code>.
  * </p>
  * 
  * @author ziqingluo
@@ -1328,6 +1338,16 @@ public class Why3Translator {
 			for (SymbolicType formal : funcType.inputTypes())
 				formals[idx++] = translateType(formal);
 			return Why3Primitives.why3FunctionType(retType, formals);
+		case UNINTERPRETED: {
+			SymbolicUninterpretedType uninterpretedType = (SymbolicUninterpretedType) type;
+			Why3UninterpretedType why3Type = Why3Primitives
+					.why3UninterpretedType(uninterpretedType.name().getString(),
+							Why3Primitives.int_t);
+
+			state.addDeclaration(why3Type.text,
+					Why3Primitives.typeDecl(why3Type));
+			return why3Type;
+		}
 		case SET:
 		default:
 			throw new SARLException("translating " + kind
@@ -1400,6 +1420,15 @@ public class Why3Translator {
 			// avoid "-" (minus) conflict against integer "-":S
 			if (negative)
 				result = Why3Primitives.real_negative.call(result);
+			break;
+		}
+		case UNINTERPRETED: {
+			SymbolicUninterpretedType uninterpretedType = (SymbolicUninterpretedType) type;
+			int key = uninterpretedType.soleSelector().apply(concExpr).getInt();
+			Why3UninterpretedType why3Type = (Why3UninterpretedType) translateType(
+					uninterpretedType);
+
+			result = why3Type.constructLiteral(String.valueOf(key));
 			break;
 		}
 		default:

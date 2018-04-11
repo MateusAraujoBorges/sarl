@@ -30,6 +30,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.util.FastList;
@@ -135,6 +136,19 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * (forall ((x Int)) (p x))
  * 
  * </pre>
+ * 
+ * <p>
+ * // Uninterpreted type:
+ *
+ * Translation of expressions of uninterpreted types: For an uninterpreted type
+ * <code>t</code>, it will be translated to a type definition with a single key
+ * of int
+ * type:<code>(declare-datatypes (Int) (Unintpret_t (Cons-t (Select_key_t Int))))</code>.
+ * Symbolic expressions of type t with {@link SymbolicOperator#CONCRETE}
+ * operator will be translated using the constructor <code>Cons_t</code> as
+ * <code>(Const_t key)</code>. Selector <code>Select_key_t</code> will never be
+ * used for now.
+ * </p>
  * 
  * @author Stephen F. Siegel
  */
@@ -306,6 +320,16 @@ public class Z3Translator {
 
 	private String unionTypeName(SymbolicUnionType unionType) {
 		return "Union-" + unionType.name().getString();
+	}
+
+	private String uninterpretedTypeName(
+			SymbolicUninterpretedType uninterpretedType) {
+		return "Unintpret-" + uninterpretedType.name().getString();
+	}
+
+	private String uninterpretedTypeConstructor(
+			SymbolicUninterpretedType uninterpretedType) {
+		return "Cons-" + uninterpretedType.name().getString();
 	}
 
 	/**
@@ -626,6 +650,15 @@ public class Z3Translator {
 			else
 				result = new FastList<>("(/ ", numerator, " ", denominator,
 						")");
+			break;
+		}
+		case UNINTERPRETED: {
+			SymbolicUninterpretedType uintType = (SymbolicUninterpretedType) type;
+			int key = uintType.soleSelector().apply(expr).getInt();
+
+			translateType(uintType);
+			result = new FastList<>("(", uninterpretedTypeConstructor(uintType),
+					" ", String.valueOf(key), " )");
 			break;
 		}
 		default:
@@ -1599,6 +1632,17 @@ public class Z3Translator {
 				z3Declarations.add("))");
 			}
 			z3Declarations.add("\n)))\n");
+			result = new FastList<>(typeName);
+			break;
+		}
+		case UNINTERPRETED: {
+			SymbolicUninterpretedType uninterpretedType = (SymbolicUninterpretedType) type;
+			String typeName = uninterpretedTypeName(uninterpretedType);
+			String consName = uninterpretedTypeConstructor(uninterpretedType);
+			String typeDef = "() ((" + typeName + " (" + consName
+					+ " (Selector-" + uninterpretedType.name() + " Int))))";
+
+			z3Declarations.addAll("(declare-datatypes ", typeDef, ")\n");
 			result = new FastList<>(typeName);
 			break;
 		}

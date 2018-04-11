@@ -133,6 +133,7 @@ public abstract class CommonSimplifierWorker {
 		case INTEGER:
 		case REAL:
 		case CHAR:
+		case UNINTERPRETED:
 			return type;
 		case ARRAY: {
 			SymbolicArrayType arrayType = (SymbolicArrayType) type;

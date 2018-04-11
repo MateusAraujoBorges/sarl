@@ -38,6 +38,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType.SymbolicTypeKind;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.object.IF.ObjectFactory;
 import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
@@ -95,7 +96,7 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 	 */
 	public CommonSymbolicTypeFactory(ObjectFactory objectFactory) {
 		this.objectFactory = objectFactory;
-		typeComparator = new TypeComparator();
+		typeComparator = new TypeComparator(objectFactory.comparator());
 		typeSequenceComparator = new TypeSequenceComparator();
 		typeComparator.setTypeSequenceComparator(typeSequenceComparator);
 		typeSequenceComparator.setTypeComparator(typeComparator);
@@ -375,6 +376,7 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 			mapType.setPureType(result);
 			return result;
 		}
+		case UNINTERPRETED:
 		case BOOLEAN:
 		case CHAR:
 		case INTEGER:
@@ -411,6 +413,11 @@ public class CommonSymbolicTypeFactory implements SymbolicTypeFactory {
 		// result = objectFactory.canonic(result);
 		((CommonSymbolicMapType) mapType).setEntryType(result);
 		return result;
+	}
+
+	@Override
+	public SymbolicUninterpretedType uninterpretedType(StringObject name) {
+		return objectFactory.canonic(new CommonSymbolicUninterpretedType(name));
 	}
 
 }
