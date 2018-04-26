@@ -19,7 +19,7 @@ import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.simplify.IF.ContextPartition;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
@@ -597,12 +597,12 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 	/**
 	 * Get a {@link ContextMinimizingReasoner} from the reasoner factory. Hide
-	 * the information of {@link ProverPredicate}s from callers since this
+	 * the information of {@link ProverFunctionInterpretation}s from callers since this
 	 * reasoner does not support ProverPredicate.
 	 */
 	protected ContextMinimizingReasoner getReasoner(BooleanExpression context,
 			boolean useBackwardsSubstitution) {
 		return factory.getReasoner(context, useBackwardsSubstitution,
-				new ProverPredicate[0]);
+				new ProverFunctionInterpretation[0]);
 	}
 }

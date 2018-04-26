@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
@@ -72,7 +72,7 @@ public class ContextMinimizingReasonerFactory implements ReasonerFactory {
 	@Override
 	public ContextMinimizingReasoner getReasoner(BooleanExpression context,
 			boolean useBackwardSubstitution,
-			ProverPredicate proverPredicates[]) {
+			ProverFunctionInterpretation proverPredicates[]) {
 		assert context.isCanonic();
 
 		ContextMinimizingReasoner result = reasonerMap.get(context);

@@ -38,7 +38,7 @@ import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
@@ -262,7 +262,7 @@ public class CommonReasoner implements Reasoner {
 		BooleanExpression newContext = universe.and(oldContext,
 				indexConstraint);
 		Reasoner newReasoner = reasonerFactory.getReasoner(newContext, true,
-				new ProverPredicate[0]);
+				new ProverFunctionInterpretation[0]);
 		UnaryOperator<SymbolicExpression> taylorSubstituter = new TaylorSubstituter(
 				universe, universe.objectFactory(), universe.typeFactory(),
 				newReasoner, limitVars, orders);

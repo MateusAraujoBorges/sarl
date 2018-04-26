@@ -14,7 +14,7 @@ import java.util.TreeMap;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3Lib;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3Type;
 
@@ -75,7 +75,7 @@ public class Why3TranslationState {
 	 * a set of prover predicate names that used for checking if a function is a
 	 * prover predicate
 	 */
-	private final Map<String, ProverPredicate> proverPredicateDictionary;
+	private final Map<String, ProverFunctionInterpretation> proverPredicateDictionary;
 
 	/**
 	 * type aliasing declarations
@@ -131,7 +131,7 @@ public class Why3TranslationState {
 	private static final int SINGLE_EXPR_SIZE_THRESHOLD = 5;
 
 	/* **************** Constructor ****************** */
-	public Why3TranslationState(ProverPredicate ppreds[]) {
+	public Why3TranslationState(ProverFunctionInterpretation ppreds[]) {
 		this.declarations = new LinkedHashMap<>(100);
 		this.tupleTypeSignitureMap = new TreeMap<>();
 		this.typeAliasingDeclarations = new LinkedList<>();
@@ -259,10 +259,10 @@ public class Why3TranslationState {
 
 	/**
 	 * 
-	 * @return a {@link ProverPredicate} iff the given function name is a name
+	 * @return a {@link ProverFunctionInterpretation} iff the given function name is a name
 	 *         of a prover predicate
 	 */
-	public ProverPredicate isProverPredicate(String name) {
+	public ProverFunctionInterpretation isProverPredicate(String name) {
 		return proverPredicateDictionary.get(name);
 	}
 

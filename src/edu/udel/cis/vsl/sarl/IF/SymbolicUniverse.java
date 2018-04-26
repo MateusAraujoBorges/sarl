@@ -23,7 +23,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 
 /**
  * <p>
@@ -91,10 +91,10 @@ public interface SymbolicUniverse extends CoreUniverse {
 	 *            a non-<code>null</code> boolean expression to be used as the
 	 *            context for the {@link Reasoner}
 	 * @param proverPredicates
-	 *            {@link ProverPredicate}s which factor out the common parts of
+	 *            {@link ProverFunctionInterpretation}s which factor out the common parts of
 	 *            boolean expressions from complex prover contexts and queries
 	 * @return a {@link Reasoner} based on the given <code>context</code>
 	 */
 	Reasoner why3Reasoner(BooleanExpression context,
-			ProverPredicate[] proverPredicates);
+			ProverFunctionInterpretation[] proverPredicates);
 }

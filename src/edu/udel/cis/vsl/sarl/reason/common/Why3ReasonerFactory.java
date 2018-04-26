@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 import edu.udel.cis.vsl.sarl.prove.why3.RobustWhy3ProvePlatformFactory;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
@@ -15,7 +15,7 @@ import edu.udel.cis.vsl.sarl.simplify.IF.SimplifierFactory;
 
 /**
  * A factory that generates new {@link Why3Reasoner}s. For a unique pair of a
- * boolean typed context and a set of {@link ProverPredicate}s (see
+ * boolean typed context and a set of {@link ProverFunctionInterpretation}s (see
  * {@link Why3ReasonerCacheKey} as well), there is suppose to be only one
  * Why3Reasoner object.
  * 
@@ -55,10 +55,10 @@ public class Why3ReasonerFactory extends ContextMinimizingReasonerFactory
 	@Override
 	public Why3Reasoner getReasoner(BooleanExpression context,
 			boolean useBackwardSubstitution,
-			ProverPredicate[] proverPredicates) {
-		TreeSet<ProverPredicate> ppredSetOfKey = new TreeSet<>();
+			ProverFunctionInterpretation[] proverPredicates) {
+		TreeSet<ProverFunctionInterpretation> ppredSetOfKey = new TreeSet<>();
 
-		for (ProverPredicate ppred : proverPredicates)
+		for (ProverFunctionInterpretation ppred : proverPredicates)
 			ppredSetOfKey.add(ppred);
 
 		Why3ReasonerCacheKey key = new Why3ReasonerCacheKey(context,
@@ -84,10 +84,10 @@ public class Why3ReasonerFactory extends ContextMinimizingReasonerFactory
 	private static class Why3ReasonerCacheKey {
 		final private BooleanExpression context;
 
-		final private TreeSet<ProverPredicate> proverPredicates;
+		final private TreeSet<ProverFunctionInterpretation> proverPredicates;
 
 		Why3ReasonerCacheKey(BooleanExpression context,
-				TreeSet<ProverPredicate> proverPredicates) {
+				TreeSet<ProverFunctionInterpretation> proverPredicates) {
 			this.context = context;
 			this.proverPredicates = proverPredicates;
 		}

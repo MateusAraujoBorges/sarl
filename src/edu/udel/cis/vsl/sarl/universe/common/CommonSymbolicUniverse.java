@@ -26,7 +26,7 @@ import edu.udel.cis.vsl.sarl.IF.number.Number;
 import edu.udel.cis.vsl.sarl.expr.IF.NumericExpressionFactory;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.FactorySystem;
 import edu.udel.cis.vsl.sarl.preuniverse.common.CommonPreUniverse;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.reason.IF.ReasonerFactory;
 import edu.udel.cis.vsl.sarl.reason.common.Why3Reasoner;
 import edu.udel.cis.vsl.sarl.reason.common.Why3ReasonerFactory;
@@ -69,7 +69,7 @@ public class CommonSymbolicUniverse extends CommonPreUniverse
 	@Override
 	public Reasoner reasoner(BooleanExpression context) {
 		return reasonerFactory.getReasoner(context,
-				getUseBackwardSubstitution(), new ProverPredicate[0]);
+				getUseBackwardSubstitution(), new ProverFunctionInterpretation[0]);
 	}
 
 	public void setReasonerFactory(ReasonerFactory reasonerFactory) {
@@ -88,7 +88,7 @@ public class CommonSymbolicUniverse extends CommonPreUniverse
 
 	@Override
 	public Reasoner why3Reasoner(BooleanExpression context,
-			ProverPredicate[] proverPredicates) {
+			ProverFunctionInterpretation[] proverPredicates) {
 		if (why3ReasonerFactory == null)
 			return reasoner(context);
 		else

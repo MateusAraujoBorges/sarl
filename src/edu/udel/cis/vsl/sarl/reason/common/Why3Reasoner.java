@@ -1,7 +1,7 @@
 package edu.udel.cis.vsl.sarl.reason.common;
 
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 
 /**
@@ -15,15 +15,15 @@ import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 public class Why3Reasoner extends ContextMinimizingReasoner {
 
 	/**
-	 * A list of {@link ProverPredicate}s that is needed for calling why3
+	 * A list of {@link ProverFunctionInterpretation}s that is needed for calling why3
 	 * prover. A prover predicate factors a common part of complex boolean
 	 * expressions.
 	 */
-	protected ProverPredicate[] proverPredicates = null;
+	protected ProverFunctionInterpretation[] proverPredicates = null;
 
 	public Why3Reasoner(ContextMinimizingReasonerFactory factory,
 			BooleanExpression context, boolean useBackwardSubstitution,
-			ProverPredicate[] proverPredicates) {
+			ProverFunctionInterpretation[] proverPredicates) {
 		super(factory, context, useBackwardSubstitution);
 		this.proverPredicates = proverPredicates;
 		assert this.proverPredicates != null;

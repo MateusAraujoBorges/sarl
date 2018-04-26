@@ -20,7 +20,7 @@ package edu.udel.cis.vsl.sarl.reason.IF;
 
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 
 /**
@@ -58,13 +58,13 @@ public interface ReasonerFactory {
 	 *            certain numeric expressions in terms of others when
 	 *            simplifying?
 	 * @param proverPredicates
-	 *            {@link ProverPredicate}s which factor out common boolean
+	 *            {@link ProverFunctionInterpretation}s which factor out common boolean
 	 *            expressions from complex prover contexts and queries
 	 * @return a {@link Reasoner} based on the given <code>context</code>
 	 */
 	Reasoner getReasoner(BooleanExpression context,
 			boolean useBackwardSubstitution,
-			ProverPredicate[] proverPredicates);
+			ProverFunctionInterpretation[] proverPredicates);
 
 	/**
 	 * Returns the theorem prover factory used by this reasoner factory. Every

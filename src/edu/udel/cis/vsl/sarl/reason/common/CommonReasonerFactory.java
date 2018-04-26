@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import edu.udel.cis.vsl.sarl.IF.Reasoner;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 import edu.udel.cis.vsl.sarl.prove.why3.RobustWhy3ProvePlatformFactory;
@@ -82,7 +82,7 @@ public class CommonReasonerFactory implements ReasonerFactory {
 	@Override
 	public Reasoner getReasoner(BooleanExpression context,
 			boolean useBackwardSubstitution,
-			ProverPredicate[] proverPredicates) {
+			ProverFunctionInterpretation[] proverPredicates) {
 		Reasoner result = reasonerCache.get(context);
 
 		if (result == null) {

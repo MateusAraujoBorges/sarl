@@ -18,7 +18,7 @@ public class Why3Primitives {
 	 * @author ziqingluo
 	 */
 	public static enum Why3Lib {
-		INT, REAL, BOOL, MAP, INT_DIV_MOD, POWER_INT, POWER_REAL
+		INT, REAL, BOOL, MAP, MAP_PERMUT, INT_DIV_MOD, POWER_INT, POWER_REAL
 	}
 
 	/* ************* Classes of Why3 operators and types ************* */
@@ -550,6 +550,8 @@ public class Why3Primitives {
 			return "use import int.Int\n";
 		case MAP:
 			return "use import map.Map\n";
+		case MAP_PERMUT:
+			return "use import map.MapPermut\n";
 		case REAL:
 			return IMPORT_REAL_NAME_SPACE;
 		default:

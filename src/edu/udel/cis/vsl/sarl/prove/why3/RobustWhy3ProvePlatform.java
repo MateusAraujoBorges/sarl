@@ -19,7 +19,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 
 public class RobustWhy3ProvePlatform implements TheoremProver {
@@ -66,10 +66,10 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 	private BooleanExpression cleanedContext;
 
 	/**
-	 * A list of {@link ProverPredicate}s, which is suppose to be used by both
+	 * A list of {@link ProverFunctionInterpretation}s, which is suppose to be used by both
 	 * context and queries
 	 */
-	private ProverPredicate[] ppreds;
+	private ProverFunctionInterpretation[] ppreds;
 
 	private static String temporary_file_dir = "./SARL_Why3/";
 
@@ -78,7 +78,7 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 	private static String prove_command = "prove";
 
 	public RobustWhy3ProvePlatform(PreUniverse universe, ProverInfo info,
-			BooleanExpression context, ProverPredicate[] ppreds) {
+			BooleanExpression context, ProverFunctionInterpretation[] ppreds) {
 		String[] command = new String[7];
 
 		assert universe != null;

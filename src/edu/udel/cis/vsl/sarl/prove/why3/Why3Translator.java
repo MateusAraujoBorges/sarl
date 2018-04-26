@@ -33,7 +33,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicTypeSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Axiom;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3FunctionType;
 import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3InfixOperator;
@@ -152,7 +152,7 @@ public class Why3Translator {
 	private PreUniverse universe;
 
 	public Why3Translator(PreUniverse universe, SymbolicExpression theContext,
-			ProverPredicate ppreds[]) {
+			ProverFunctionInterpretation ppreds[]) {
 		initialize(universe, ppreds);
 		if (theContext.size() > TRANSLATION_SIZE_THRESHOLD)
 			state.setCompressedMode(true);
@@ -175,7 +175,8 @@ public class Why3Translator {
 	 * 
 	 * @param universe
 	 */
-	private void initialize(PreUniverse universe, ProverPredicate ppreds[]) {
+	private void initialize(PreUniverse universe,
+			ProverFunctionInterpretation ppreds[]) {
 		// this.universe = universe;
 		this.state = new Why3TranslationState(ppreds);
 		this.universe = universe;
@@ -266,8 +267,8 @@ public class Why3Translator {
 			result += ax.getTextWithBindings(allBindings);
 			context += " && " + ax.name;
 		}
-
 		return result + context + "\n";
+
 	}
 
 	/* *********************** Private methods ************************** */
@@ -932,7 +933,7 @@ public class Why3Translator {
 			declaration = Why3Primitives.constantDecl(name, type);
 			state.addDeclaration(name, declaration);
 		} else {
-			ProverPredicate ppred = state
+			ProverFunctionInterpretation ppred = state
 					.isProverPredicate(var.name().getString());
 			// if the function is a ProverPredicate:
 			if (ppred != null)
@@ -1226,7 +1227,7 @@ public class Why3Translator {
 		return Why3Primitives.why3FunctionCall(sigmaName, formals);
 	}
 
-	private void translateProverPredicate(ProverPredicate ppred) {
+	private void translateProverPredicate(ProverFunctionInterpretation ppred) {
 		if (state.existsDeclaration(ppred.identifier))
 			return;
 

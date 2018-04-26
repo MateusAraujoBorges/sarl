@@ -4,7 +4,7 @@ import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
-import edu.udel.cis.vsl.sarl.prove.IF.ProverPredicate;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 import edu.udel.cis.vsl.sarl.prove.cvc.RobustCVCTheoremProver;
@@ -51,7 +51,7 @@ public class RobustZ3TheoremProverFactory implements TheoremProverFactory {
 
 	@Override
 	public TheoremProver newProver(BooleanExpression context,
-			ProverPredicate[] ppreds) {
+			ProverFunctionInterpretation[] ppreds) {
 		return newProver(context);
 	}
 }
