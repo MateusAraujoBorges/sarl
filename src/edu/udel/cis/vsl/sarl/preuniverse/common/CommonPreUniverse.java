@@ -217,13 +217,6 @@ public class CommonPreUniverse implements PreUniverse {
 	private List<SymbolicConstant> int2bvConstants = Collections
 			.synchronizedList(new ArrayList<SymbolicConstant>());
 
-	/**
-	 * The name of a fold expression: Sigma. A sigma expression represents a
-	 * summation: Sigma(x, y, function(int)).
-	 * <code>Sigma(x, y, function(int)) = function(x) + function(x+1) + ... function(y)</code>
-	 */
-	private final String Sigma = "sigma";
-
 	// Constructor...
 
 	/**
@@ -723,10 +716,12 @@ public class CommonPreUniverse implements PreUniverse {
 						.argument(1);
 
 				if (arg1.operator() == SymbolicOperator.UNION_INJECT)
-					return index.equals(arg1.argument(0)) ? and(result,
-							equals(value0,
-									(SymbolicExpression) arg1.argument(1),
-									quantifierDepth))
+					return index.equals(arg1.argument(0))
+							? and(result,
+									equals(value0,
+											(SymbolicExpression) arg1
+													.argument(1),
+											quantifierDepth))
 							: falseExpr;
 				else
 					return and(result,
@@ -889,8 +884,10 @@ public class CommonPreUniverse implements PreUniverse {
 		case AND:
 			return and(args);
 		case APPLY: // 2 args: function and sequence
-			if (isSigmaApplied((SymbolicExpression) args[0]))
+			if (isSigmaCall((SymbolicExpression) args[0]))
 				return makeSigma((SymbolicSequence<?>) args[1]);
+			if (isPermutCall((SymbolicExpression) args[0]))
+				return makePermut((SymbolicSequence<?>) args[1]);
 			return apply((SymbolicExpression) args[0],
 					(SymbolicSequence<?>) args[1]);
 		case ARRAY_LAMBDA:
@@ -1320,6 +1317,11 @@ public class CommonPreUniverse implements PreUniverse {
 			return numericFactory.symbolicConstant(name, type);
 		if (type.isBoolean())
 			return booleanFactory.booleanSymbolicConstant(name);
+		if (type.typeKind() == SymbolicTypeKind.FUNCTION)
+			if (ReservedFunctions.isNameReserved(name.getString())) {
+				throw new SARLException("Function name " + name
+						+ " is reserved. Consider a different name.");
+			}
 		return expressionFactory.symbolicConstant(name, type);
 	}
 
@@ -3682,36 +3684,16 @@ public class CommonPreUniverse implements PreUniverse {
 			return sum;
 		}
 		// General case: return an uninterpreted function:
-		StringObject sigma = stringObject(Sigma);
-		SymbolicExpression result = symbolicConstant(sigma, functionType);
+		SymbolicExpression result = ReservedFunctions.sigma(this,
+				expressionFactory, functionType);
 
 		return (NumericExpression) apply(result,
 				Arrays.asList(low, high, function));
 	}
 
-	/**
-	 * @param function
-	 *            A symbolic expression may represent the "Sigma" function.
-	 * @return true if and only if the given {@link SymbolicExpression} is a
-	 *         {@link SymbolicConstant} which represents the {@link #Sigma}
-	 *         uninterpreted function.
-	 */
-	private boolean isSigmaApplied(SymbolicExpression function) {
-		// Uninterpreted function is a symbolic constant:
-		if (function.operator() == SymbolicOperator.SYMBOLIC_CONSTANT) {
-			StringObject functionName = (StringObject) function.argument(0);
-
-			return functionName.getString().equals(Sigma);
-		}
-		return false;
-	}
-
 	@Override
-	public boolean isSigmaExpression(SymbolicExpression expr) {
-		if (expr.operator() == SymbolicOperator.APPLY) {
-			return isSigmaApplied((SymbolicExpression) expr.argument(0));
-		}
-		return false;
+	public boolean isSigmaCall(SymbolicExpression expr) {
+		return ReservedFunctions.isSigmaCall(expr);
 	}
 
 	/**
@@ -3734,6 +3716,20 @@ public class CommonPreUniverse implements PreUniverse {
 		SymbolicExpression sigmaFunction = args.get(2);
 
 		return sigma(low, high, sigmaFunction);
+	}
+
+	/**
+	 * A helper method for
+	 * {@link #make(SymbolicOperator, SymbolicType, SymbolicObject[])} to make
+	 * {@link #permut(SymbolicExpression, SymbolicExpression, NumericExpression, NumericExpression)}
+	 */
+	private SymbolicExpression makePermut(SymbolicSequence<?> args) {
+		SymbolicExpression array_a = args.get(0);
+		SymbolicExpression array_b = args.get(1);
+		NumericExpression low = (NumericExpression) args.get(2);
+		NumericExpression high = (NumericExpression) args.get(3);
+
+		return permut(array_a, array_b, low, high);
 	}
 
 	@Override
@@ -4380,5 +4376,36 @@ public class CommonPreUniverse implements PreUniverse {
 	public SymbolicExpression concreteValueOfUninterpretedType(
 			SymbolicUninterpretedType type, IntObject key) {
 		return expression(SymbolicOperator.CONCRETE, type, key);
+	}
+
+	@Override
+	public SymbolicExpression permut(SymbolicExpression array_a,
+			SymbolicExpression array_b, NumericExpression low,
+			NumericExpression high) {
+		if (array_a.type().typeKind() != SymbolicTypeKind.ARRAY)
+			throw new SARLException("First argument " + array_a
+					+ " to permut predicate has no array type.");
+		if (array_b.type().typeKind() != SymbolicTypeKind.ARRAY)
+			throw new SARLException("Second argument " + array_b
+					+ " to permut predicate has no array type.");
+
+		SymbolicArrayType typea = (SymbolicArrayType) array_a.type();
+		SymbolicArrayType typeb = (SymbolicArrayType) array_b.type();
+
+		if (!typea.elementType().equals(typeb.elementType()))
+			throw new SARLException("First two arguments of permut predicate: "
+					+ array_a + ", " + array_b
+					+ " have inconsistent element types: " + typea.elementType()
+					+ ", " + typeb.elementType() + ".");
+
+		SymbolicExpression result = ReservedFunctions.permutation(this,
+				expressionFactory, typea.elementType());
+
+		return apply(result, Arrays.asList(array_a, array_b, low, high));
+	}
+
+	@Override
+	public boolean isPermutCall(SymbolicExpression expr) {
+		return ReservedFunctions.isPermutCall(expr);
 	}
 }

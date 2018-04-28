@@ -1039,8 +1039,6 @@ public interface CoreUniverse {
 	 * function f.
 	 * 
 	 * <code> s := f(b) + f(b+1) + ... + f(b+n-1); where b+n-1 == e and n > 0 </code>
-	 * Note that s(b, e, f) == s(e, b, f) but to use this interface, e must be
-	 * greater than or equal to b.
 	 * 
 	 *
 	 * @param low
@@ -1057,7 +1055,26 @@ public interface CoreUniverse {
 	NumericExpression sigma(NumericExpression low, NumericExpression high,
 			SymbolicExpression function);
 
-	boolean isSigmaExpression(SymbolicExpression expr);
+	boolean isSigmaCall(SymbolicExpression expr);
+
+	/**
+	 * A permutation predicate, which asserts the slice from lower index
+	 * <code>low</code> to higher index <code>high</code> in array
+	 * <code>array_a</code> is a permutation of the slice from lower index
+	 * <code>low</code> to higher index <code>high</code> in array
+	 * <code>array_b</code>.
+	 * 
+	 * @param array_a
+	 * @param array_b
+	 * @param low
+	 * @param high
+	 * @return an instance of the permutation predicate
+	 */
+	SymbolicExpression permut(SymbolicExpression array_a,
+			SymbolicExpression array_b, NumericExpression low,
+			NumericExpression high);
+
+	boolean isPermutCall(SymbolicExpression expr);
 
 	/**
 	 * Returns a symbolic expression which is the result of multiplying the two

@@ -518,7 +518,7 @@ public class Why3Translator {
 		SymbolicExpression func = (SymbolicExpression) expr.argument(0);
 
 		// Special handling for sum:
-		if (universe.isSigmaExpression(expr))
+		if (universe.isSigmaCall(expr))
 			return translateSigma(expr);
 
 		SymbolicFunctionType symbolicFuncType = (SymbolicFunctionType) func

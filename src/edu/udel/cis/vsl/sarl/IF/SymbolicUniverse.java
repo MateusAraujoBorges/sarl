@@ -91,8 +91,9 @@ public interface SymbolicUniverse extends CoreUniverse {
 	 *            a non-<code>null</code> boolean expression to be used as the
 	 *            context for the {@link Reasoner}
 	 * @param proverPredicates
-	 *            {@link ProverFunctionInterpretation}s which factor out the common parts of
-	 *            boolean expressions from complex prover contexts and queries
+	 *            {@link ProverFunctionInterpretation}s which factor out the
+	 *            common parts of boolean expressions from complex prover
+	 *            contexts and queries
 	 * @return a {@link Reasoner} based on the given <code>context</code>
 	 */
 	Reasoner why3Reasoner(BooleanExpression context,
