@@ -33,6 +33,13 @@ public class Why3TranslationState {
 	private Map<SymbolicExpression, String> sigmaNameMap = null;
 
 	/**
+	 * This is a map from array expressions to their corresponding bag names. A
+	 * bag name identifies a bag which contains same elements of its
+	 * corresponding array.
+	 */
+	private Map<SymbolicExpression, String> bagNameMap = null;
+
+	/**
 	 * Map from SARL lambda expression to a unique artificial function name.
 	 * 
 	 * <p>
@@ -259,8 +266,8 @@ public class Why3TranslationState {
 
 	/**
 	 * 
-	 * @return a {@link ProverFunctionInterpretation} iff the given function name is a name
-	 *         of a prover predicate
+	 * @return a {@link ProverFunctionInterpretation} iff the given function
+	 *         name is a name of a prover predicate
 	 */
 	public ProverFunctionInterpretation isProverPredicate(String name) {
 		return proverPredicateDictionary.get(name);
@@ -285,6 +292,13 @@ public class Why3TranslationState {
 	 */
 	public void addLibrary(Why3Lib lib) {
 		libraries.add(lib);
+	}
+
+	/**
+	 * @return true iff the given lib is needed to import
+	 */
+	public boolean hasLibrary(Why3Lib lib) {
+		return libraries.contains(lib);
 	}
 
 	/**
@@ -388,6 +402,25 @@ public class Why3TranslationState {
 	 */
 	public void addCompressedBinding(String binding) {
 		this.subExpressionBindings.add(binding);
+	}
+
+	/**
+	 * 
+	 * @param array
+	 *            a array type symbolic expression
+	 * @return the corresponding bag name of the given array.
+	 */
+	public String getBagName(SymbolicExpression array) {
+		if (bagNameMap == null)
+			bagNameMap = new HashMap<>();
+
+		String name = bagNameMap.get(array);
+
+		if (name == null) {
+			name = newIdentifierName();
+			bagNameMap.put(array, name);
+		}
+		return name;
 	}
 
 	/**

@@ -18,7 +18,7 @@ public class Why3Primitives {
 	 * @author ziqingluo
 	 */
 	public static enum Why3Lib {
-		INT, REAL, BOOL, MAP, MAP_PERMUT, INT_DIV_MOD, POWER_INT, POWER_REAL
+		INT, REAL, BOOL, MAP, BAG_PERMUT, INT_DIV_MOD, POWER_INT, POWER_REAL
 	}
 
 	/* ************* Classes of Why3 operators and types ************* */
@@ -283,6 +283,21 @@ public class Why3Primitives {
 	public static Why3BuiltinFunction real_negative = new Why3BuiltinFunction(
 			"SR.neg", 1);
 
+	public static Why3BuiltinFunction bag_aw = new Why3BuiltinFunction(
+			"BPT.aw_bag", 3);
+
+	public static Why3BuiltinFunction bag_add = new Why3BuiltinFunction(
+			"BAG.add", 2);
+
+	public static Why3BuiltinFunction bag_permut = new Why3BuiltinFunction(
+			"eq_bag", 2);
+
+	public static Why3BuiltinFunction bag_occ = new Why3BuiltinFunction(
+			"nb_occ", 2);
+
+	// function with no argument:
+	public static String empty_bag = "empty_bag";
+
 	/* ****** Pre-defined static why3 types ****** */
 
 	public static Why3Type int_t = new Why3Type("int");
@@ -488,6 +503,10 @@ public class Why3Primitives {
 		return new Why3Type("map", true, keyType, valueType);
 	}
 
+	public static Why3Type why3BagType(Why3Type valueType) {
+		return new Why3Type("bag", true, valueType);
+	}
+
 	public static Why3TupleType why3TupleType(String nameAliasOpt,
 			String fieldNames[], Why3Type fieldTypes[]) {
 		return new Why3TupleType(null, false, fieldNames, fieldTypes);
@@ -534,6 +553,28 @@ public class Why3Primitives {
 	static private String IMPORT_REAL_NAME_SPACE = "use import SARL_REAL as SR\n";
 
 	/**
+	 * functions and axioms that for permutation, which is done by taking arrays
+	 * as bags:
+	 */
+	static private String BAG_PERMUT_THEORY_NAME = "BAG_PERMUT_THEORY";
+
+	static public String BAG_PERMUT_THEORY = "theory " + BAG_PERMUT_THEORY_NAME
+			+ "\n" + "use import bag.Bag\n" + "use import int.Int\n"
+			// remove x from a:
+			+ "  function remove (x : 'a) (a : bag 'a) : bag 'a =\n"
+			+ "    diff a (singleton x)\n"
+			// swap lemma:
+			+ "    axiom L_swap: forall a : bag 'a, x : 'a.\n"
+			+ "    nb_occ x a > 0 -> eq_bag a (add x (remove x a))\n" +
+			// array write -> bag translation:
+			"  function aw_bag (a : bag 'a)(old_v v : 'a) : bag 'a\n"
+			+ "    = if old_v = v then	a\n"
+			+ "     else (add v (remove old_v a))\n" + "end\n";
+
+	static private String IMPORT_BAG_PERMUT_THEORY_SPACE = "use import "
+			+ BAG_PERMUT_THEORY_NAME + " as BPT\n";
+
+	/**
 	 * @return The text for importing a library.
 	 */
 	public static String importText(Why3Lib lib) {
@@ -550,8 +591,9 @@ public class Why3Primitives {
 			return "use import int.Int\n";
 		case MAP:
 			return "use import map.Map\n";
-		case MAP_PERMUT:
-			return "use import map.MapPermut\n";
+		case BAG_PERMUT:
+			return IMPORT_BAG_PERMUT_THEORY_SPACE
+					+ "use import bag.Bag as BAG\n";
 		case REAL:
 			return IMPORT_REAL_NAME_SPACE;
 		default:

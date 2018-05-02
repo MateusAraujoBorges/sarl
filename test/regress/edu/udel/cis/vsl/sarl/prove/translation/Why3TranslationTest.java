@@ -1,6 +1,7 @@
 package edu.udel.cis.vsl.sarl.prove.translation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -12,6 +13,7 @@ import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.config.Configurations;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
@@ -154,5 +156,135 @@ public class Why3TranslationTest {
 		comparison = universe.equals(X, Y);
 		assertEquals(proverFactory.newProver(context).valid(comparison)
 				.getResultType(), ResultType.YES);
+	}
+
+	@Test
+	public void testPermutConcArraySwap() {
+		SymbolicExpression array = universe.array(universe.integerType(),
+				new SymbolicExpression[] { universe.zeroInt(),
+						universe.oneInt(), universe.integer(2) });
+		SymbolicExpression swapped = universe.arrayWrite(array,
+				universe.zeroInt(), universe.integer(2));
+
+		swapped = universe.arrayWrite(swapped, universe.integer(2),
+				universe.zeroInt());
+
+		BooleanExpression permut = universe.permut(array, swapped,
+				universe.zeroInt(), universe.integer(3));
+
+		universe.setShowProverQueries(true);
+		assertEquals(proverFactory.newProver(universe.trueExpression())
+				.valid(permut).getResultType(), ResultType.YES);
+	}
+
+	@Test
+	public void testPermutConcArrayCycle() {
+		SymbolicExpression array = universe.array(universe.integerType(),
+				new SymbolicExpression[] { universe.zeroInt(),
+						universe.oneInt(), universe.integer(2),
+						universe.integer(3) });
+		SymbolicExpression swapped = universe.arrayWrite(array,
+				universe.zeroInt(), universe.integer(2));
+
+		swapped = universe.arrayWrite(swapped, universe.integer(1),
+				universe.zeroInt());
+		swapped = universe.arrayWrite(swapped, universe.integer(2),
+				universe.oneInt());
+
+		BooleanExpression permut = universe.permut(array, swapped,
+				universe.zeroInt(), universe.integer(3));
+
+		universe.setShowProverQueries(true);
+		assertEquals(proverFactory.newProver(universe.trueExpression())
+				.valid(permut).getResultType(), ResultType.YES);
+	}
+
+	@Test
+	public void testPermutSymArraySwap() {
+		SymbolicExpression array = universe.symbolicConstant(
+				universe.stringObject("X"),
+				universe.arrayType(universe.integerType()));
+		NumericExpression zero = universe.zeroInt();
+		NumericExpression two = universe.integer(2);
+
+		SymbolicExpression swapped = universe.arrayWrite(array, zero,
+				universe.arrayRead(array, two));
+
+		swapped = universe.arrayWrite(swapped, two,
+				universe.arrayRead(array, zero));
+
+		BooleanExpression permut = universe.permut(array, swapped,
+				universe.zeroInt(), universe.integer(3));
+
+		universe.setShowProverQueries(true);
+		assertEquals(proverFactory.newProver(universe.trueExpression())
+				.valid(permut).getResultType(), ResultType.YES);
+	}
+
+	@Test
+	public void testPermutSymArrayCycle() {
+		SymbolicExpression array = universe.symbolicConstant(
+				universe.stringObject("X"),
+				universe.arrayType(universe.integerType()));
+		NumericExpression b = (NumericExpression) universe.symbolicConstant(
+				universe.stringObject("x"), universe.integerType());
+		NumericExpression bOne = universe.add(b, universe.oneInt());
+		NumericExpression bTwo = universe.add(bOne, universe.oneInt());
+		NumericExpression lower = (NumericExpression) universe.symbolicConstant(
+				universe.stringObject("lower"), universe.integerType());
+		NumericExpression higher = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("higher"),
+						universe.integerType());
+
+		SymbolicExpression swapped = universe.arrayWrite(array, b,
+				universe.arrayRead(array, bOne));
+
+		swapped = universe.arrayWrite(swapped, bOne,
+				universe.arrayRead(array, bTwo));
+		swapped = universe.arrayWrite(swapped, bTwo,
+				universe.arrayRead(array, b));
+
+		BooleanExpression permut = universe.permut(array, swapped, lower,
+				higher);
+		BooleanExpression validB = universe.lessThanEquals(lower, b);
+
+		validB = universe.and(validB, universe.lessThan(bTwo, higher));
+		universe.setShowProverQueries(true);
+		assertEquals(
+				proverFactory.newProver(validB).valid(permut).getResultType(),
+				ResultType.YES);
+	}
+
+	@Test
+	public void testPermutSymArrayCycleBad() {
+		SymbolicExpression array = universe.symbolicConstant(
+				universe.stringObject("X"),
+				universe.arrayType(universe.integerType()));
+		NumericExpression b = (NumericExpression) universe.symbolicConstant(
+				universe.stringObject("x"), universe.integerType());
+		NumericExpression bOne = universe.add(b, universe.oneInt());
+		NumericExpression bTwo = universe.add(bOne, universe.oneInt());
+		NumericExpression lower = (NumericExpression) universe.symbolicConstant(
+				universe.stringObject("lower"), universe.integerType());
+		NumericExpression higher = (NumericExpression) universe
+				.symbolicConstant(universe.stringObject("higher"),
+						universe.integerType());
+
+		SymbolicExpression swapped = universe.arrayWrite(array, b,
+				universe.arrayRead(array, bOne));
+
+		swapped = universe.arrayWrite(swapped, bOne,
+				universe.arrayRead(array, bTwo));
+		swapped = universe.arrayWrite(swapped, bTwo,
+				universe.arrayRead(array, bTwo));
+
+		BooleanExpression permut = universe.permut(array, swapped, lower,
+				higher);
+		BooleanExpression validB = universe.lessThanEquals(lower, b);
+
+		validB = universe.and(validB, universe.lessThan(bTwo, higher));
+		universe.setShowProverQueries(true);
+		assertFalse(proverFactory.newProver(validB).valid(permut)
+				.getResultType() == ResultType.YES);
 	}
 }

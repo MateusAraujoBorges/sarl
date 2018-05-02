@@ -10,6 +10,7 @@ import java.util.TreeMap;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
+import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
@@ -147,9 +148,9 @@ public class Why3Translator {
 	 * All stateful informations including cache, counter for renaming, stack
 	 * for recursively translating quantified expressions
 	 */
-	private Why3TranslationState state;
+	Why3TranslationState state;
 
-	private PreUniverse universe;
+	PreUniverse universe;
 
 	public Why3Translator(PreUniverse universe, SymbolicExpression theContext,
 			ProverFunctionInterpretation ppreds[]) {
@@ -207,6 +208,9 @@ public class Why3Translator {
 		String queryName = executable_theory_name + id;
 		String output = Why3Primitives.REAL_NAME_SPACE;
 		String allBindings = "";
+
+		if (state.hasLibrary(Why3Lib.BAG_PERMUT))
+			output += Why3Primitives.BAG_PERMUT_THEORY;
 
 		for (String binding : state.getCompressedBindings())
 			allBindings += binding + "\n";
@@ -273,7 +277,7 @@ public class Why3Translator {
 
 	/* *********************** Private methods ************************** */
 
-	private String translate(SymbolicExpression theExpression) {
+	String translate(SymbolicExpression theExpression) {
 		String result = state.getCachedExpressionTranslation(theExpression);
 
 		if (result == null) {
@@ -342,8 +346,7 @@ public class Why3Translator {
 	 *            The operator
 	 * @return A single term that represents a sequence of operations.
 	 */
-	private String interpolateOperator(String[] operands,
-			Why3InfixOperator infixOp) {
+	String interpolateOperator(String[] operands, Why3InfixOperator infixOp) {
 		StringBuffer result = new StringBuffer();
 		int numPositions = (operands.length * 2 - 1);
 
@@ -520,6 +523,8 @@ public class Why3Translator {
 		// Special handling for sum:
 		if (universe.isSigmaCall(expr))
 			return translateSigma(expr);
+		if (universe.isPermutCall(expr))
+			return translatePermut((BooleanExpression) expr);
 
 		SymbolicFunctionType symbolicFuncType = (SymbolicFunctionType) func
 				.type();
@@ -1225,6 +1230,27 @@ public class Why3Translator {
 		formals[0] = translate(actualLow);
 		formals[1] = translate(actualHigh);
 		return Why3Primitives.why3FunctionCall(sigmaName, formals);
+	}
+
+	/**
+	 * For the idea of translating permut predicate, see
+	 * {@link Why3PermutTranslator}
+	 * 
+	 * @param expr
+	 * @return
+	 */
+	private String translatePermut(BooleanExpression expr) {
+		Why3PermutTranslator subTranslator = new Why3PermutTranslator(this,
+				expr);
+
+		state.addLibrary(Why3Lib.BAG_PERMUT);
+
+		// Factor out complex permut interpretations with predicates (axioms)
+		Axiom permutAxiom = Why3Primitives.newAxiom(state.newIdentifierName(),
+				subTranslator.result);
+
+		state.addDeclaration(permutAxiom.name, permutAxiom.text);
+		return permutAxiom.name;
 	}
 
 	private void translateProverPredicate(ProverFunctionInterpretation ppred) {

@@ -4379,7 +4379,7 @@ public class CommonPreUniverse implements PreUniverse {
 	}
 
 	@Override
-	public SymbolicExpression permut(SymbolicExpression array_a,
+	public BooleanExpression permut(SymbolicExpression array_a,
 			SymbolicExpression array_b, NumericExpression low,
 			NumericExpression high) {
 		if (array_a.type().typeKind() != SymbolicTypeKind.ARRAY)
@@ -4401,7 +4401,8 @@ public class CommonPreUniverse implements PreUniverse {
 		SymbolicExpression result = ReservedFunctions.permutation(this,
 				expressionFactory, typea.elementType());
 
-		return apply(result, Arrays.asList(array_a, array_b, low, high));
+		return (BooleanExpression) apply(result,
+				Arrays.asList(array_a, array_b, low, high));
 	}
 
 	@Override

@@ -1070,7 +1070,7 @@ public interface CoreUniverse {
 	 * @param high
 	 * @return an instance of the permutation predicate
 	 */
-	SymbolicExpression permut(SymbolicExpression array_a,
+	BooleanExpression permut(SymbolicExpression array_a,
 			SymbolicExpression array_b, NumericExpression low,
 			NumericExpression high);
 
