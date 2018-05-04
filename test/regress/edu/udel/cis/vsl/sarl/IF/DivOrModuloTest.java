@@ -159,6 +159,7 @@ public class DivOrModuloTest {
 				universe.equals(universe.multiply(two, a), x),
 				universe.equals(universe.multiply(two, b), y));
 		ValidityResult result = universe.reasoner(assumption).valid(predicate);
+		universe.setShowProverQueries(true);
 		assertEquals(ResultType.YES, result.getResultType());
 	}
 }
