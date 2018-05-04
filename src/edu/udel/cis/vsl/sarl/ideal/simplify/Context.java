@@ -1919,6 +1919,9 @@ public class Context {
 					: nf.zeroRational();
 			Pair<Monic, Number> pair = info.normalize(newMonomial, zero);
 
+			if (pair == null)
+				throw new InconsistentContextException();
+
 			addSub(pair.left, info.universe.number(pair.right));
 		} else {
 			addSub(monic, info.universe.number(value));
@@ -1950,8 +1953,9 @@ public class Context {
 					: info.numberFactory.zeroRational();
 			Pair<Monic, Number> pair = info.normalize(primitive, zero);
 
-			restrictRange(pair.left,
-					rf.complement(rf.singletonSet(pair.right)));
+			if (pair != null)
+				restrictRange(pair.left,
+						rf.complement(rf.singletonSet(pair.right)));
 		} else {
 			addSub(info.universe.equals(arg0, arg1), info.falseExpr);
 		}

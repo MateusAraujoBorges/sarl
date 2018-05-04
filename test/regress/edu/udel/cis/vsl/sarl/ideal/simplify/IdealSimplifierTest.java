@@ -11,6 +11,7 @@ import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.trueExpr;
 import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.x;
 import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xeq5;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
@@ -326,5 +327,49 @@ public class IdealSimplifierTest {
 		 * ccbv5)), universe.lessThanEquals(universe.zeroInt(), ccbv5))));
 		 * System.out.println(cxt); universe.reasoner(cxt);
 		 */
+	}
+
+	@Test
+	public void simplifyNotEqualToZero() {
+		SymbolicUniverse universe = SARL.newIdealUniverse();
+		NumericExpression x = (NumericExpression) universe.symbolicConstant(
+				universe.stringObject("X"), universe.integerType());
+		NumericExpression y = (NumericExpression) universe.symbolicConstant(
+				universe.stringObject("Y"), universe.integerType());
+		// xy = 3 * (x + x/y)
+		NumericExpression xy = universe.multiply(universe.integer(3),
+				universe.add(x, universe.divide(x, y)));
+		// context : xy > 1
+		BooleanExpression context = universe.lessThan(universe.oneInt(), xy);
+		// query : xy != 1
+		BooleanExpression neq0 = universe.neq(xy, universe.oneInt());
+
+		assertTrue(universe.reasoner(context).simplify(neq0).isTrue());
+	}
+
+	@Test
+	public void simplifyPolyEqualToZero() {
+		// (c - 1)*(c + 1) - 1*a*b != 0
+		SymbolicUniverse u = SARL.newIdealUniverse();
+		NumericExpression a = (NumericExpression) u
+				.symbolicConstant(u.stringObject("a"), u.integerType());
+		NumericExpression b = (NumericExpression) u
+				.symbolicConstant(u.stringObject("b"), u.integerType());
+		NumericExpression c = (NumericExpression) u
+				.symbolicConstant(u.stringObject("c"), u.integerType());
+
+		NumericExpression expr0 = u.multiply(u.subtract(c, u.oneInt()),
+				u.add(c, u.oneInt()));
+		NumericExpression expr1 = u.multiply(a, b);
+
+		BooleanExpression context = u.and(
+				u.lessThan(u.number(u.numberFactory().number("2")),
+						u.multiply(c, c)),
+				u.lessThan(expr1, u.number(u.numberFactory().number("1"))));
+
+		assertTrue(u.reasoner(context)
+				.simplify(u.equals(u.zeroInt(),
+						u.add(u.oneInt(), u.subtract(expr1, expr0))))
+				.isFalse());
 	}
 }
