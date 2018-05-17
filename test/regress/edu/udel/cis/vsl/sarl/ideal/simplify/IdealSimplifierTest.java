@@ -27,6 +27,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
 
 /**
@@ -371,5 +372,70 @@ public class IdealSimplifierTest {
 				.simplify(u.equals(u.zeroInt(),
 						u.add(u.oneInt(), u.subtract(expr1, expr0))))
 				.isFalse());
+	}
+
+	/**
+	 * <code> forall i0 : int . ((Y13[i0] == Y10[i0]) || (_uf_$mpi_sizeof(Y3)*Y2 - 1*i0 &lt= 0) || (i0 + 1 &lt== 0))</code>
+	 * <code> forall i0 : int . ((Y4[i0] == Y10[i0]) || (2*_uf_$mpi_sizeof(Y3)*Y2 - 1*i0 &lt= 0) || (i0 + 1 &lt== 0))</code>
+	 * <code> forall i0 : int . ((Y14[_uf_$mpi_sizeof(Y9)*Y8 + i0] == Y4[_uf_$mpi_sizeof(Y9)*Y8 + i0]) || (_uf_$mpi_sizeof(Y9)*Y8 - 1*i0 &lt== 0) || (i0 + 1 &lt== 0))</code>
+	 */
+	@Test
+	public void simplifyArraySliceAssumptions() {
+		SymbolicUniverse u = SARL.newIdealUniverse();
+		NumericExpression Y2 = (NumericExpression) u
+				.symbolicConstant(u.stringObject("Y2"), u.integerType());
+		NumericExpression Y3 = (NumericExpression) u
+				.symbolicConstant(u.stringObject("Y3"), u.integerType());
+		NumericExpression Y8 = (NumericExpression) u
+				.symbolicConstant(u.stringObject("Y8"), u.integerType());
+		NumericExpression Y9 = (NumericExpression) u
+				.symbolicConstant(u.stringObject("Y9"), u.integerType());
+		NumericExpression Y2Y3 = u.multiply(Y2, Y3);
+		NumericExpression Y8Y9 = u.multiply(Y8, Y9);
+
+		NumericExpression arraySizeY2Y3 = u.multiply(Y2Y3, u.integer(2));
+		SymbolicArrayType arrayTypeY2Y3 = u.arrayType(u.characterType(),
+				arraySizeY2Y3);
+		NumericExpression arraySizeY8Y9 = u.multiply(Y8Y9, u.integer(2));
+		SymbolicArrayType arrayTypeY8Y9 = u.arrayType(u.characterType(),
+				arraySizeY8Y9);
+
+		SymbolicExpression Y4 = u.symbolicConstant(u.stringObject("Y4"),
+				arrayTypeY2Y3);
+		SymbolicExpression Y10 = u.symbolicConstant(u.stringObject("Y10"),
+				arrayTypeY8Y9);
+		SymbolicExpression Y13 = u.symbolicConstant(u.stringObject("Y13"),
+				arrayTypeY2Y3);
+		SymbolicExpression Y14 = u.symbolicConstant(u.stringObject("Y14"),
+				arrayTypeY8Y9);
+		NumericSymbolicConstant i = (NumericSymbolicConstant) u
+				.symbolicConstant(u.stringObject("i0"), u.integerType());
+		BooleanExpression clauses[] = new BooleanExpression[3];
+
+		// Y13 == Y10 for the first half:
+		clauses[0] = u.forallInt(i, u.zeroInt(), Y2Y3,
+				u.equals(u.arrayRead(Y13, i), u.arrayRead(Y10, i)));
+		// Y4 == Y10 for all:
+		clauses[1] = u.forallInt(i, u.zeroInt(), arraySizeY2Y3,
+				u.equals(u.arrayRead(Y4, i), u.arrayRead(Y10, i)));
+		// Y14 == Y4 for the second half:
+		clauses[2] = u.forallInt(i, u.zeroInt(), Y8Y9,
+				u.equals(u.arrayRead(Y14, u.add(Y8Y9, i)),
+						u.arrayRead(Y4, u.add(Y8Y9, i))));
+
+		BooleanExpression ctx = u.and(u.equals(Y2Y3, Y8Y9),
+				u.and(Arrays.asList(clauses)));
+		Reasoner reasoner = u.reasoner(ctx);
+
+		// System.out.println(ctx);
+		// System.out.println(reasoner.getReducedContext());
+
+		// if symbolic constant Y4 is simplified away then the reduce the
+		// context shall not contain Y4 neither:
+		if (!reasoner.simplify(Y4).getFreeVars().contains(Y4)) {
+			assertTrue(
+					!reasoner.getReducedContext().getFreeVars().contains(Y4));
+		}
+
 	}
 }
