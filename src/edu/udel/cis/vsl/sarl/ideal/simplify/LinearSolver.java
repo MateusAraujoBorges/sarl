@@ -457,7 +457,7 @@ public class LinearSolver {
 
 	/**
 	 * Adds to {@link #newMap} entries corresponding to the rows of
-	 * {@link #intMatrix}, using backwards substitution. This means that they
+	 * {@link #intMatrix}, using backwards substitution. This means that the
 	 * key of an entry will correspond to the entry for the pivot column, and
 	 * the value for the entry will be obtained by summing terms corresponding
 	 * to the other columns. This method may add more entries saying that a
