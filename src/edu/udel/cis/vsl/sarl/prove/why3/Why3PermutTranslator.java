@@ -3,8 +3,10 @@ package edu.udel.cis.vsl.sarl.prove.why3;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.udel.cis.vsl.sarl.IF.UnaryOperator;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
@@ -26,8 +28,8 @@ import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
  * bag(b), where bag(array a) is defined as the following:
  * </p>
  * <p>
- * FORALL element e in array a, the number of occurence of e in a equals to the
- * number of occurence of bag(a). AND The cardinality of bag(a) equals to the
+ * FORALL element e in array a, the number of occurrence of e in a equals to the
+ * number of occurrence of bag(a). AND The cardinality of bag(a) equals to the
  * length of array a.
  * </p>
  * 
@@ -150,15 +152,7 @@ public class Why3PermutTranslator {
 			translateBag = denseArrayWriteToBag(array);
 			break;
 		default: // other cases:
-			translateBag = why3Translator.state.getBagName(array);
-
-			SymbolicType element = ((SymbolicArrayType) array.type())
-					.elementType();
-
-			why3Translator.state.addDeclaration(translateBag,
-					Why3Primitives.constantDecl(translateBag,
-							Why3Primitives.why3BagType(
-									why3Translator.translateType(element))));
+			translateBag = otherCasesToBag(array);
 			break;
 		}
 		return translateBag;
@@ -282,6 +276,18 @@ public class Why3PermutTranslator {
 		return dawBagText;
 	}
 
+	private String otherCasesToBag(SymbolicExpression array) {
+		String translateBag = why3Translator.state
+				.getBagName(arraySlice(array));
+		SymbolicType element = ((SymbolicArrayType) array.type()).elementType();
+
+		why3Translator.state.addDeclaration(translateBag,
+				Why3Primitives.constantDecl(translateBag, Why3Primitives
+						.why3BagType(why3Translator.translateType(element))));
+
+		return translateBag;
+	}
+
 	/**
 	 * @return an assertion which asserts that the given element is in the bag.
 	 */
@@ -308,6 +314,49 @@ public class Why3PermutTranslator {
 		return wrap(lowText) + Why3Primitives.lte.text
 				+ wrap(why3Translator.translate(idx)) + Why3Primitives.lt.text
 				+ wrap(highText);
+	}
+
+	/**
+	 * @param array
+	 * @return return the array slice <code>array[low .. high-1]</code>
+	 */
+	private SymbolicExpression arraySlice(SymbolicExpression array) {
+		SymbolicType elementType = ((SymbolicArrayType) array.type())
+				.elementType();
+		NumericExpression extent = su.length(array);
+		UnaryOperator<SymbolicExpression> boundCleaner = su
+				.newMinimalBoundCleaner();
+
+		if (!this.low.isZero()) {
+			NumericSymbolicConstant lambdaVar = (NumericSymbolicConstant) su
+					.symbolicConstant(su.stringObject("i"), su.integerType());
+
+			array = boundCleaner.apply(array);
+			lambdaVar = (NumericSymbolicConstant) boundCleaner.apply(lambdaVar);
+
+			SymbolicExpression function = su.lambda(lambdaVar,
+					su.arrayRead(array, su.add(lambdaVar, low)));
+
+			array = su.arrayLambda(
+					su.arrayType(elementType, su.subtract(extent, low)),
+					function);
+		}
+		if (!this.high.equals(extent)) {
+			NumericSymbolicConstant lambdaVar = (NumericSymbolicConstant) su
+					.symbolicConstant(su.stringObject("i"), su.integerType());
+
+			array = boundCleaner.apply(array);
+			lambdaVar = (NumericSymbolicConstant) boundCleaner.apply(lambdaVar);
+
+			SymbolicExpression function = su.lambda(lambdaVar,
+					su.arrayRead(array, lambdaVar));
+			NumericExpression newExtent = su.subtract(su.length(array),
+					su.subtract(extent, high));
+
+			array = su.arrayLambda(su.arrayType(elementType, newExtent),
+					function);
+		}
+		return array;
 	}
 
 	static private String wrap(String str) {

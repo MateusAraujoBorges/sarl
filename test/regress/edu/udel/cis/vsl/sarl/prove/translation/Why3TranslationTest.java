@@ -287,4 +287,56 @@ public class Why3TranslationTest {
 		assertFalse(proverFactory.newProver(validB).valid(permut)
 				.getResultType() == ResultType.YES);
 	}
+
+	/**
+	 * permut(a, a[1:=a[2], 2:=a[1], 1, 3), valid
+	 */
+	@Test
+	public void testPermutArraySlice() {
+		SymbolicExpression array = universe.symbolicConstant(
+				universe.stringObject("X"),
+				universe.arrayType(universe.integerType()));
+		NumericExpression one = universe.oneInt();
+		NumericExpression two = universe.integer(2);
+
+		SymbolicExpression swapped = universe.arrayWrite(array, one,
+				universe.arrayRead(array, two));
+
+		swapped = universe.arrayWrite(swapped, two,
+				universe.arrayRead(array, one));
+
+		BooleanExpression permut = universe.permut(array, swapped,
+				universe.oneInt(), universe.integer(3));
+
+		universe.setShowProverQueries(true);
+		assertEquals(ResultType.YES,
+				proverFactory.newProver(universe.trueExpression()).valid(permut)
+						.getResultType());
+	}
+
+	/**
+	 * permut(a, a[0:=a[2], 2:=a[0], 1, 3), cannot prove validity
+	 */
+	@Test
+	public void testPermutArraySliceBad() {
+		SymbolicExpression array = universe.symbolicConstant(
+				universe.stringObject("X"),
+				universe.arrayType(universe.integerType()));
+		NumericExpression zero = universe.zeroInt();
+		NumericExpression two = universe.integer(2);
+
+		SymbolicExpression swapped = universe.arrayWrite(array, zero,
+				universe.arrayRead(array, two));
+
+		swapped = universe.arrayWrite(swapped, two,
+				universe.arrayRead(array, zero));
+
+		BooleanExpression permut = universe.permut(array, swapped,
+				universe.oneInt(), universe.integer(3));
+
+		universe.setShowProverQueries(true);
+		assertFalse(ResultType.YES == proverFactory
+				.newProver(universe.trueExpression()).valid(permut)
+				.getResultType());
+	}
 }

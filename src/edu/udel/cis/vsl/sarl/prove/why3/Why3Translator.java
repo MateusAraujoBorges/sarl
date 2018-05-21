@@ -520,7 +520,7 @@ public class Why3Translator {
 	private String translateApply(SymbolicExpression expr) {
 		SymbolicExpression func = (SymbolicExpression) expr.argument(0);
 
-		// Special handling for sum:
+		// Special handling for reserved logic functions:
 		if (universe.isSigmaCall(expr))
 			return translateSigma(expr);
 		if (universe.isPermutCall(expr))
