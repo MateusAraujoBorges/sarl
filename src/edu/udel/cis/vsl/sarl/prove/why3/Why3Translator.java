@@ -1205,9 +1205,10 @@ public class Why3Translator {
 			formals[i + 2] = symbolicConstant2Name(extraInputs[i]);
 		}
 
+		Why3Type sigmaType = translateType(expr.type());
 		String sigmaFuncDecl = Why3Primitives.why3UninterpretedFunctionDecl(
-				sigmaName, Why3Primitives.why3FunctionType(
-						translateType(expr.type()), formalTypes));
+				sigmaName,
+				Why3Primitives.why3FunctionType(sigmaType, formalTypes));
 
 		state.addDeclaration(sigmaName, sigmaFuncDecl);
 
@@ -1216,7 +1217,7 @@ public class Why3Translator {
 		String baseHighCase = translate(universe.apply(lambda, Arrays
 				.asList(universe.subtract(sigma_high, universe.oneInt()))));
 		Axiom sigmaAxiom = Why3Primitives.sigmaAxiom(sigmaName, formals,
-				formalTypes, baseLowCase, baseHighCase);
+				formalTypes, baseLowCase, baseHighCase, sigmaType);
 
 		contexts.put(sigmaAxiom.name, sigmaAxiom);
 

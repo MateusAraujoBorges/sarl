@@ -666,10 +666,13 @@ public class Why3Primitives {
 	 *            The base case where the "lower bound" is applied.
 	 * @param baseHighCase
 	 *            The base case where the "higher bound" is applied.
+	 * @param retType
+	 *            the type of the sigma expression
 	 * @return
 	 */
 	static public Axiom sigmaAxiom(String sigmaFuncName, String[] params,
-			Why3Type[] paramTypes, String baseLowCase, String baseHighCase) {
+			Why3Type[] paramTypes, String baseLowCase, String baseHighCase,
+			Why3Type retType) {
 		String sigmaCall = Why3Primitives.why3FunctionCall(sigmaFuncName,
 				params);
 		String low = params[0], high = params[1];
@@ -679,12 +682,31 @@ public class Why3Primitives {
 				sigmaFuncName, params[0], "(" + params[1] + "-1)");
 		String axiom = keyword_forall + " "
 				+ Why3Primitives.why3BoundVarDecl(params, paramTypes);
-		String generalCases = sigmaCall + " = " + sigmaCall_l_plus_one + " + "
-				+ baseLowCase + land.text + sigmaCall + " = "
-				+ sigmaCall_h_minus_one + " + " + baseHighCase;
+		String zero = zeroOf(retType);
+		String generalCases = sigmaCall + " = "
+				+ plusOf(retType, sigmaCall_l_plus_one, baseLowCase) + land.text
+				+ sigmaCall + " = "
+				+ plusOf(retType, sigmaCall_h_minus_one, baseHighCase);
 
 		axiom += Why3Primitives.why3IfThenElse(low + " >= " + high,
-				sigmaCall + " = 0", generalCases);
+				sigmaCall + " = " + zero, generalCases);
 		return new Axiom(sigmaFuncName, axiom);
+	}
+
+	static private String plusOf(Why3Type type, String... args) {
+		if (type == real_t)
+			return real_plus.call(args);
+		else {
+			// type == int_t...
+			String result = args[0];
+
+			for (int i = 1; i < args.length; i++)
+				result += " + " + args[i];
+			return result;
+		}
+	}
+
+	static private String zeroOf(Why3Type type) {
+		return type == real_t ? "(0.0)" : "0";
 	}
 }
