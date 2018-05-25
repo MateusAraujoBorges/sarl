@@ -427,8 +427,8 @@ public class IdealSimplifierTest {
 				u.and(Arrays.asList(clauses)));
 		Reasoner reasoner = u.reasoner(ctx);
 
-		// System.out.println(ctx);
-		// System.out.println(reasoner.getReducedContext());
+		//System.out.println(ctx);
+		//System.out.println(reasoner.getReducedContext());
 
 		// if symbolic constant Y4 is simplified away then the reduce the
 		// context shall not contain Y4 neither:

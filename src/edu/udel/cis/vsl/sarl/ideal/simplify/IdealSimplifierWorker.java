@@ -2,6 +2,7 @@ package edu.udel.cis.vsl.sarl.ideal.simplify;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -920,11 +921,20 @@ public class IdealSimplifierWorker {
 		if (simplificationStack.contains(expression))
 			return expression;
 
-		SymbolicExpression result;
+		SymbolicExpression result = null;
 		SymbolicExpression originalExpression = expression;
 
 		simplificationStack.add(originalExpression);
-		while (true) {
+
+		// better: loop invariant: expression has already been
+		// run through simplifyGeneric.   Then you won't do it twice.
+		
+		// to prevent possible infinite loop:
+		Set<SymbolicExpression> seen = new HashSet<>();
+		
+
+
+		while (seen.add(expression)) {
 			result = theContext.getSub(expression);
 			if (result != null)
 				break;
@@ -945,9 +955,12 @@ public class IdealSimplifierWorker {
 				case NEQ:
 				case NOT:
 				case OR:
-					result = new SubContext((Context) theContext,
-							simplificationStack, (BooleanExpression) expression)
-									.getFullAssumption();
+					result = simplifyExpressionGeneric(expression);
+					if (result == expression)
+						result = new SubContext((Context) theContext,
+								simplificationStack,
+								(BooleanExpression) expression)
+										.getFullAssumption();
 					break;
 				default:
 					result = simplifyExpressionGeneric(expression);
