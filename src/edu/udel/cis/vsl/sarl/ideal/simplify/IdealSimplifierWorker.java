@@ -520,8 +520,13 @@ public class IdealSimplifierWorker {
 
 	/**
 	 * <p>
-	 * Attemp to decompose a power operation <code>base ^ exp</code> while the
+	 * Attempts to decompose a power operation <code>base ^ exp</code> while the
 	 * base is a monomial with a non-trivial (not one) constant.
+	 * </p>
+	 * 
+	 * <p>
+	 * Precondition and postcondition: {@code powerExpr} is generically
+	 * simplified.
 	 * </p>
 	 * 
 	 * <p>
@@ -570,11 +575,15 @@ public class IdealSimplifierWorker {
 		if (!decompose && intervalApproximation(cons).lower().signum() >= 0
 				&& intervalApproximation(monic).lower().signum() >= 0)
 			decompose = true;
-		if (decompose)
-			return idf.multiply(simplifyPowersRational(idf.power(monic, neExp)),
+		if (decompose) {
+			RationalExpression result = idf.multiply(
+					simplifyPowersRational(idf.power(monic, neExp)),
 					idf.power(cons, neExp));
-		else
-			return powerExpr;
+
+			result = (RationalExpression) simplifyExpressionGeneric(result);
+			return result;
+		}
+		return powerExpr;
 	}
 
 	/**
@@ -613,6 +622,7 @@ public class IdealSimplifierWorker {
 			result = idf.divide(
 					idf.multiply(result, numerator.monomialConstant(idf)),
 					denominator.monomialConstant(idf));
+			result = (RationalExpression) simplifyExpressionGeneric(result);
 			return result;
 		}
 		return rational;
@@ -641,6 +651,11 @@ public class IdealSimplifierWorker {
 	 * determined.
 	 * </p>
 	 * 
+	 * Precondition: {@code poly} is generically simplified
+	 * 
+	 * Postcondition: result is generically simplified and equivalent under
+	 * {@link #theContext} to {@code poly}
+	 * 
 	 * @param poly
 	 *            a {@link Polynomial} with at least 2 terms
 	 * @return a simplified version of <code>poly</code> equivalent to
@@ -655,6 +670,7 @@ public class IdealSimplifierWorker {
 
 			result = simplifyRationalExpression(result);
 			result = idf.add(result, constantTerm);
+			result = (RationalExpression) simplifyExpressionGeneric(result);
 			return result;
 		}
 
@@ -674,18 +690,25 @@ public class IdealSimplifierWorker {
 			simplified = simplified || term != simplifiedTerm;
 			terms[i] = simplifiedTerm;
 		}
+		if (simplified) {
+			RationalExpression result = idf.addMonomials(terms);
 
-		Monomial result = simplified ? idf.addMonomials(terms) : poly;
-
-		return result;
+			result = (RationalExpression) simplifyExpressionGeneric(result);
+			return result;
+		}
+		return poly;
 	}
 
 	/**
 	 * Simplifies a {@link Monic}.
 	 * 
+	 * Precondition: {@code monic} is generically simplified.
+	 * 
+	 * Postcondition: result is generically simplified, and is equivalent under
+	 * {@link #theContext} to {@code monic}
+	 * 
 	 * @param monic
-	 *            a non-<code>null</code> {@link Monic} which is not an instance
-	 *            of {@link Polynomial}.
+	 *            a non-<code>null</code> {@link Monic}
 	 * 
 	 * @return a simplified version of <code>monic</code> which is equivalent to
 	 *         <code>monic</code> under the current assumptions
@@ -697,19 +720,45 @@ public class IdealSimplifierWorker {
 
 		RationalExpression result = (RationalExpression) theContext
 				.getSub(monic);
+		// entries in the sub-map are always generically simplified
 
 		if (result != null)
 			return result;
 
-		return (Monomial) simplifyExpressionGeneric(monic);
+		return monic;
 	}
 
+	/**
+	 * Simplifies a {@link Monomial}.
+	 * 
+	 * Pre-condition: {@code monomial} is generically simplified.
+	 * 
+	 * Post-condition: result is generically simplified, and is equivalent under
+	 * {@link #theContext} to {@code monomial}
+	 * 
+	 * @param monomial
+	 *            a {@link Monomial}
+	 * @return a simplified version of {@link Monomial}
+	 */
 	private RationalExpression simplifyMonomial(Monomial monomial) {
 		if (monomial instanceof Monic)
 			return simplifyMonic((Monic) monomial);
-		return (RationalExpression) simplifyExpressionGeneric(monomial);
+		return monomial;
 	}
 
+	/**
+	 * Simplifies a {@link RationalExpression}.
+	 * 
+	 * Pre-condition: expression is generically simplified.
+	 * 
+	 * Post-condition: result is generically simplified.
+	 * 
+	 * @param expression
+	 *            an instance of {@link RationalExpression} which is already
+	 *            generically simplified
+	 * 
+	 * @return a simplified version
+	 */
 	private RationalExpression simplifyRationalExpression(
 			RationalExpression expression) {
 		if (expression instanceof Constant)
@@ -720,8 +769,7 @@ public class IdealSimplifierWorker {
 		if (expression instanceof Monomial)
 			result1 = simplifyMonomial((Monomial) expression);
 		else
-			result1 = (RationalExpression) simplifyExpressionGeneric(
-					expression);
+			result1 = expression;
 		if (result1.operator() == SymbolicOperator.POWER)
 			result1 = simplifyPowerDecompose(result1, idealFactory());
 		if (result1 instanceof Primitive || result1 instanceof Constant)
@@ -762,6 +810,18 @@ public class IdealSimplifierWorker {
 		return universe().lambda(boundVar, body2);
 	}
 
+	/**
+	 * Simplifies an array lambda expression.
+	 * 
+	 * Pre-condition: expr is generically simplified.
+	 * 
+	 * Post-condition: result is generically simplified.
+	 * 
+	 * @param expr
+	 *            an expression in which the operator is
+	 *            {@link SymbolicOperator#ARRAY_LAMBDA}.
+	 * @return the simplified expression
+	 */
 	private SymbolicExpression simplifyArrayLambda(SymbolicExpression expr) {
 		assert expr.operator() == SymbolicOperator.ARRAY_LAMBDA;
 		SymbolicArrayType arrayType = (SymbolicArrayType) expr.type();
@@ -811,6 +871,7 @@ public class IdealSimplifierWorker {
 						SymbolicOperator.ARRAY_LAMBDA, newCompleteType,
 						new SymbolicObject[] { newFunction });
 
+				result = simplifyExpressionGeneric(result);
 				return result;
 			} else {
 				// TODO: need a fresh bound variable
@@ -819,7 +880,7 @@ public class IdealSimplifierWorker {
 			// TODO: incomplete array type.
 			// Still know i>=0.
 		}
-		return simplifyExpressionGeneric(expr);
+		return expr;
 	}
 
 	/**
@@ -910,6 +971,18 @@ public class IdealSimplifierWorker {
 	 * Simplifies a non-simple-constant symbolic expression without caching the
 	 * result.
 	 * 
+	 * Post-condition: the expression returned will be generically simplified.
+	 * That means the result returned will be the output from a call to
+	 * {@link #simplifyExpressionGeneric(SymbolicExpression)} under the current
+	 * context.
+	 * 
+	 * Post-condition: under the current context, the result returned will be
+	 * equivalent to the given expression.
+	 * 
+	 * Frame condition: assigns nothing. In between entrance and return, the
+	 * {@link #simplificationStack} will change, but it should be back to its
+	 * original state upon return.
+	 * 
 	 * @param expression
 	 *            any non-<code>null</code> non-simple constant
 	 *            {@link SymbolicExpression}
@@ -918,35 +991,38 @@ public class IdealSimplifierWorker {
 	 */
 	private SymbolicExpression simplifyExpressionWork(
 			SymbolicExpression expression) {
+		assert expression != null;
 		if (simplificationStack.contains(expression))
 			return expression;
 
-		SymbolicExpression result = null;
 		SymbolicExpression originalExpression = expression;
 
 		simplificationStack.add(originalExpression);
 
-		// better: loop invariant: expression has already been
-		// run through simplifyGeneric.   Then you won't do it twice.
-		
-		// to prevent possible infinite loop:
 		Set<SymbolicExpression> seen = new HashSet<>();
-		
+		SymbolicExpression result = expression = simplifyExpressionGeneric(
+				expression);
 
-
+		// loop invariant: result == expression is non-null
+		// loop invariant: expression is generically simplified
 		while (seen.add(expression)) {
 			result = theContext.getSub(expression);
-			if (result != null)
+			if (result != null) {
+				// post-condition of getSub: result is generically simplified
 				break;
-			if (expression.operator() == SymbolicOperator.ARRAY_LAMBDA) {
+			} else if (expression.operator() == SymbolicOperator.ARRAY_LAMBDA) {
+				// simplifyArrayLambda pre-condition and post-condition:
+				// expression is g.s.
 				result = simplifyArrayLambda(expression);
 			} else if (expression instanceof RationalExpression) {
-				// the following excludes Herbrand expressions, as it should:
+				// the following excludes Herbrand expressions, as it should
 				result = simplifyRationalExpression(
 						(RationalExpression) expression);
 			} else if (expression instanceof BooleanExpression) {
-				if (expression.isTrue() || expression.isFalse())
-					return expression;
+				if (expression.isTrue() || expression.isFalse()) {
+					result = expression;
+					break;
+				}
 				switch (expression.operator()) {
 				case AND:
 				case EQUALS:
@@ -954,21 +1030,21 @@ public class IdealSimplifierWorker {
 				case LESS_THAN_EQUALS:
 				case NEQ:
 				case NOT:
-				case OR:
-					result = simplifyExpressionGeneric(expression);
-					if (result == expression)
-						result = new SubContext((Context) theContext,
-								simplificationStack,
-								(BooleanExpression) expression)
-										.getFullAssumption();
-					break;
-				default:
-					result = simplifyExpressionGeneric(expression);
+				case OR: {
+					result = new SubContext((Context) theContext,
+							simplificationStack, (BooleanExpression) expression)
+									.getFullAssumption();
+					result = simplifyExpressionGeneric(result);
+					break; // out of switch
 				}
-			} else
-				result = simplifyExpressionGeneric(expression);
+				default:
+					result = expression;
+				}
+			} else {
+				result = expression;
+			}
 			if (result == expression)
-				break;
+				break; // out of loop
 			expression = result;
 		}
 		simplificationStack.remove(originalExpression);
@@ -993,6 +1069,7 @@ public class IdealSimplifierWorker {
 				expression);
 
 		if (result == null) {
+			// TODO: generic simp here
 			result = simplifyExpressionWork(expression);
 			cacheSimplification(expression, result);
 		}
