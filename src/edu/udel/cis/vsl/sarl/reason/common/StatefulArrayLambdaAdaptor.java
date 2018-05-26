@@ -26,7 +26,7 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * 
  * @author ziqing
  */
-class StatefulArrayLambdaRemover extends ExpressionVisitor
+class StatefulArrayLambdaAdaptor extends ExpressionVisitor
 		implements UnaryOperator<SymbolicExpression> {
 
 	private static final String arrayLambdaConstantName = "_arr_const_";
@@ -47,7 +47,7 @@ class StatefulArrayLambdaRemover extends ExpressionVisitor
 
 	private PreUniverse universe;
 
-	StatefulArrayLambdaRemover(PreUniverse universe) {
+	StatefulArrayLambdaAdaptor(PreUniverse universe) {
 		super(universe);
 		this.canonicalization = new ArrayLambdaCanonicalization(universe);
 		this.universe = universe;

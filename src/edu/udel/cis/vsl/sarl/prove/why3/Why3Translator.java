@@ -1,15 +1,13 @@
 package edu.udel.cis.vsl.sarl.prove.why3;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 import edu.udel.cis.vsl.sarl.IF.SARLException;
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
+import edu.udel.cis.vsl.sarl.IF.TheoremProverException;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
@@ -22,7 +20,6 @@ import edu.udel.cis.vsl.sarl.IF.object.BooleanObject;
 import edu.udel.cis.vsl.sarl.IF.object.IntObject;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
-import edu.udel.cis.vsl.sarl.IF.object.SymbolicSequence;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicCompleteArrayType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicFunctionType;
@@ -116,17 +113,6 @@ public class Why3Translator {
 	 * which field of the union type object is significant.
 	 */
 	static private int union_flag_field = 0;
-
-	/**
-	 * Pre-defined formal parameter names for sigma
-	 */
-	private NumericSymbolicConstant sigma_low = null;
-
-	static private String sigma_low_name = "_l";
-
-	private NumericSymbolicConstant sigma_high = null;
-
-	static private String sigma_high_name = "_h";
 
 	/* ********************* private fields ************************ */
 	/**
@@ -522,7 +508,8 @@ public class Why3Translator {
 
 		// Special handling for reserved logic functions:
 		if (universe.isSigmaCall(expr))
-			return translateSigma(expr);
+			throw new TheoremProverException(
+					"why3 does not translate SARL $sigma");
 		if (universe.isPermutCall(expr))
 			return translatePermut((BooleanExpression) expr);
 
@@ -1158,82 +1145,6 @@ public class Why3Translator {
 	}
 
 	/**
-	 * SIGMA : <code>\sigma(l, h, \lambda t : integer; f(t))</code>
-	 * 
-	 * <p>
-	 * Translation: <code>
-	 * function sigma0 (low high : int) (all-bound-vars-in-f : T) : T'
-	 * 
-	 * predicate _AX_sigma0 =  
-	 * forall low high : int, all-bound-vars-in-f : T. 
-	 * if (low >= high) then (sigma0 low high ...) = 0
-	 * else (sigma0 low high ...) = (sigma0 low+1 high ...) + f(low)
-	 * 
-	 * </code>
-	 * </p>
-	 * 
-	 */
-	private String translateSigma(SymbolicExpression expr) {
-		@SuppressWarnings("unchecked")
-		SymbolicSequence<SymbolicExpression> sigmaArguments = (SymbolicSequence<SymbolicExpression>) expr
-				.argument(1);
-		// find out all additional inputs (bound vars)
-		SymbolicExpression lambda = (SymbolicExpression) sigmaArguments.get(2);
-		SymbolicConstant[] extraInputs = findBoundVarsInFunctionBody(state,
-				(SymbolicExpression) lambda.argument(1));
-
-		// creating a sum function that associates to the lambda expression
-		String sigmaName = state.getSigmaName(lambda);
-		String formals[] = new String[extraInputs.length + 2];
-		Why3Type formalTypes[] = new Why3Type[formals.length];
-
-		if (sigma_low == null)
-			sigma_low = (NumericSymbolicConstant) universe.symbolicConstant(
-					universe.stringObject(sigma_low_name),
-					universe.integerType());
-		if (sigma_high == null)
-			sigma_high = (NumericSymbolicConstant) universe.symbolicConstant(
-					universe.stringObject(sigma_high_name),
-					universe.integerType());
-		// formal parameters: low high and extras
-		formals[0] = symbolicConstant2Name(sigma_low);
-		formals[1] = symbolicConstant2Name(sigma_high);
-		formalTypes[0] = Why3Primitives.int_t;
-		formalTypes[1] = Why3Primitives.int_t;
-		for (int i = 0; i < extraInputs.length; i++) {
-			formalTypes[i + 2] = translateType(extraInputs[i].type());
-			formals[i + 2] = symbolicConstant2Name(extraInputs[i]);
-		}
-
-		Why3Type sigmaType = translateType(expr.type());
-		String sigmaFuncDecl = Why3Primitives.why3UninterpretedFunctionDecl(
-				sigmaName,
-				Why3Primitives.why3FunctionType(sigmaType, formalTypes));
-
-		state.addDeclaration(sigmaName, sigmaFuncDecl);
-
-		String baseLowCase = translate(
-				universe.apply(lambda, Arrays.asList(sigma_low)));
-		String baseHighCase = translate(universe.apply(lambda, Arrays
-				.asList(universe.subtract(sigma_high, universe.oneInt()))));
-		Axiom sigmaAxiom = Why3Primitives.sigmaAxiom(sigmaName, formals,
-				formalTypes, baseLowCase, baseHighCase, sigmaType);
-
-		contexts.put(sigmaAxiom.name, sigmaAxiom);
-
-		NumericExpression actualHigh,
-				actualLow = (NumericExpression) sigmaArguments.get(0);
-
-		// actuall parameters, SARL sigma is higher-inclusive while translation
-		// is not:
-		actualHigh = universe.add((NumericExpression) sigmaArguments.get(1),
-				universe.oneInt());
-		formals[0] = translate(actualLow);
-		formals[1] = translate(actualHigh);
-		return Why3Primitives.why3FunctionCall(sigmaName, formals);
-	}
-
-	/**
 	 * For the idea of translating permut predicate, see
 	 * {@link Why3PermutTranslator}
 	 * 
@@ -1279,31 +1190,6 @@ public class Why3Translator {
 				Why3Primitives.why3ProverPredicate(
 						originalIdentifier2Name(ppred.identifier), funcType,
 						bodyText, foramls));
-		// if (ppred.identifier.equals("gt")) {
-		// String ngtTransitiveAxiomText = "forall _t0 _t1 _t2 : int. "
-		// + "(not (_gt _t0 _t1)) && (not (_gt _t1 _t2)) -> (not (_gt _t0 _t2))
-		// ";
-		// Axiom gtTransitiveAxiom = new Axiom("gt", ngtTransitiveAxiomText);
-		//
-		// this.contexts.putIfAbsent(gtTransitiveAxiom.name,
-		// gtTransitiveAxiom);
-		// }
-	}
-
-	private SymbolicConstant[] findBoundVarsInFunctionBody(
-			Why3TranslationState state, SymbolicExpression body) {
-		Set<SymbolicConstant> allVars = universe.getFreeSymbolicConstants(body);
-		List<SymbolicConstant> results = new LinkedList<>();
-
-		for (SymbolicConstant var : allVars) {
-			if (state.inQuantifiedContext(symbolicConstant2Name(var)))
-				results.add(var);
-		}
-
-		SymbolicConstant ret[] = new SymbolicConstant[results.size()];
-
-		ret = results.toArray(ret);
-		return ret;
 	}
 
 	private String createBindingFor(String alias, String translation) {

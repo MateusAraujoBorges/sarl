@@ -27,12 +27,6 @@ import edu.udel.cis.vsl.sarl.prove.why3.Why3Primitives.Why3Type;
 public class Why3TranslationState {
 
 	/**
-	 * A sigma expression will be translated to a function. The function name is
-	 * associated with the lambda expression in the sigma expression.
-	 */
-	private Map<SymbolicExpression, String> sigmaNameMap = null;
-
-	/**
 	 * This is a map from array expressions to their corresponding bag names. A
 	 * bag name identifies a bag which contains same elements of its
 	 * corresponding array.
@@ -113,8 +107,6 @@ public class Why3TranslationState {
 	 * a counter for generated identifiers of lambda functions.
 	 */
 	private int lambdaNameCounter = 0;
-
-	private int sigmaCounter = 0;
 
 	/**
 	 * A map that maps {@link SymbolicExpression}s to temporary binding names so
@@ -332,24 +324,6 @@ public class Why3TranslationState {
 			if (var.equals(boundIdent))
 				return true;
 		return false;
-	}
-
-	/**
-	 * Return a unique sigma function name for the given lambda expression
-	 * 
-	 * @return
-	 */
-	public String getSigmaName(SymbolicExpression lambda) {
-		if (sigmaNameMap == null)
-			sigmaNameMap = new HashMap<>();
-
-		String name = sigmaNameMap.get(lambda);
-
-		if (name == null) {
-			name = "_sigma" + sigmaCounter++;
-			sigmaNameMap.put(lambda, name);
-		}
-		return name;
 	}
 
 	public void setCompressedMode(boolean enable) {

@@ -2,15 +2,22 @@ package edu.udel.cis.vsl.sarl.prove;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.udel.cis.vsl.sarl.SARL;
+import edu.udel.cis.vsl.sarl.IF.Reasoner;
+import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.config.Configurations;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
+import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
@@ -118,5 +125,74 @@ public class ProveTest {
 		comparison = universe.equals(X, Y);
 		assertEquals(proverFactory.newProver(context).valid(comparison)
 				.getResultType(), ResultType.YES);
+	}
+
+	/**
+	 * Test summation expression
+	 * {@link PreUniverse#sigma(edu.udel.cis.vsl.sarl.IF.expr.NumericExpression, edu.udel.cis.vsl.sarl.IF.expr.NumericExpression, SymbolicExpression)}
+	 */
+	@Test
+	public void testSummationExpansion() {
+		SymbolicUniverse su = SARL.newStandardUniverse();
+
+		SymbolicType intType = su.integerType();
+		NumericExpression x = (NumericExpression) su
+				.symbolicConstant(su.stringObject("X"), intType);
+		NumericExpression y = (NumericExpression) su
+				.symbolicConstant(su.stringObject("Y"), intType);
+		SymbolicExpression f = su.symbolicConstant(su.stringObject("f"), su
+				.functionType(Arrays.asList(su.integerType()), su.realType()));
+		SymbolicConstant i = su.symbolicConstant(su.stringObject("i"),
+				su.integerType());
+
+		f = su.lambda(i, su.apply(f, Arrays.asList(i)));
+
+		NumericExpression f_x_y = (NumericExpression) su.sigma(x, y, f);
+		NumericExpression f_x_yPLUS1 = (NumericExpression) su.sigma(x,
+				su.add(y, su.oneInt()), f);
+		NumericExpression f_xMINUS1_y = (NumericExpression) su
+				.sigma(su.subtract(x, su.oneInt()), y, f);
+
+		BooleanExpression rightExpansion = su.equals(f_x_yPLUS1,
+				su.add(f_x_y, (NumericExpression) su.apply(f,
+						Arrays.asList(su.add(y, su.oneInt())))));
+		BooleanExpression leftExpansion = su.equals(f_xMINUS1_y,
+				su.add(f_x_y, (NumericExpression) su.apply(f,
+						Arrays.asList(su.subtract(x, su.oneInt())))));
+		Reasoner reasoner = su.reasoner(su.trueExpression());
+
+		su.setShowProverQueries(true);
+		assertEquals(ResultType.YES,
+				reasoner.valid(rightExpansion).getResultType());
+		assertEquals(ResultType.YES,
+				reasoner.valid(leftExpansion).getResultType());
+	}
+
+	@Test
+	public void testSummationTransitive() {
+		SymbolicUniverse su = SARL.newStandardUniverse();
+
+		SymbolicType intType = su.integerType();
+		NumericExpression x = (NumericExpression) su
+				.symbolicConstant(su.stringObject("X"), intType);
+		NumericExpression y = (NumericExpression) su
+				.symbolicConstant(su.stringObject("Y"), intType);
+		NumericExpression z = (NumericExpression) su
+				.symbolicConstant(su.stringObject("Z"), intType);
+		SymbolicExpression f = su.symbolicConstant(su.stringObject("f"), su
+				.functionType(Arrays.asList(su.integerType()), su.realType()));
+		SymbolicConstant i = su.symbolicConstant(su.stringObject("i"),
+				su.integerType());
+
+		f = su.lambda(i, su.apply(f, Arrays.asList(i)));
+
+		NumericExpression f_x_y = (NumericExpression) su.sigma(x, y, f);
+		NumericExpression f_y_z = (NumericExpression) su.sigma(y, z, f);
+		NumericExpression f_x_z = (NumericExpression) su.sigma(x, z, f);
+
+		ResultType result = su.reasoner(su.trueExpression())
+				.valid(su.equals(su.add(f_x_y, f_y_z), f_x_z)).getResultType();
+
+		assertEquals(ResultType.YES, result);
 	}
 }

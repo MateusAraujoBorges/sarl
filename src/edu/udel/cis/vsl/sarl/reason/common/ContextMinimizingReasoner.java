@@ -342,15 +342,13 @@ public class ContextMinimizingReasoner implements Reasoner {
 			}
 			result = newReasoner.valid1(newPredicate, getModel);
 		} else {
-			StatefulArrayLambdaRemover arrayLambdaRemover = new StatefulArrayLambdaRemover(
+			SARLProverAdaptor adaptor = new SARLProverAdaptor(
 					simplifier.universe());
 
-			newContext = (BooleanExpression) arrayLambdaRemover
-					.apply(getReducedContext());
-			newPredicate = (BooleanExpression) arrayLambdaRemover
-					.apply(newPredicate);
+			newContext = (BooleanExpression) adaptor.apply(getReducedContext());
+			newPredicate = (BooleanExpression) adaptor.apply(newPredicate);
 			newContext = simplifier.universe().and(newContext,
-					arrayLambdaRemover.getIndependentArrayLambdaAxioms());
+					adaptor.getAxioms());
 			if (getModel) {
 				result = getProver(getReducedContext() != newContext,
 						newContext).validOrModel(newPredicate);
@@ -597,8 +595,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 
 	/**
 	 * Get a {@link ContextMinimizingReasoner} from the reasoner factory. Hide
-	 * the information of {@link ProverFunctionInterpretation}s from callers since this
-	 * reasoner does not support ProverPredicate.
+	 * the information of {@link ProverFunctionInterpretation}s from callers
+	 * since this reasoner does not support ProverPredicate.
 	 */
 	protected ContextMinimizingReasoner getReasoner(BooleanExpression context,
 			boolean useBackwardsSubstitution) {

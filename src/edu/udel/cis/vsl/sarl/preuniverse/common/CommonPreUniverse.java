@@ -3653,6 +3653,9 @@ public class CommonPreUniverse implements PreUniverse {
 		if (function.type().typeKind() != SymbolicTypeKind.FUNCTION)
 			throw new SARLException(
 					"Addends of Sigma expression must have function type");
+		if (function.operator() != SymbolicOperator.LAMBDA)
+			throw new SARLException(
+					"The third argument must be a lambda expression");
 
 		SymbolicFunctionType functionType = (SymbolicFunctionType) function
 				.type();

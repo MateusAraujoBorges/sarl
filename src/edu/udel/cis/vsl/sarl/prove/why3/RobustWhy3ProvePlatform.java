@@ -66,8 +66,8 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 	private BooleanExpression cleanedContext;
 
 	/**
-	 * A list of {@link ProverFunctionInterpretation}s, which is suppose to be used by both
-	 * context and queries
+	 * A list of {@link ProverFunctionInterpretation}s, which is suppose to be
+	 * used by both context and queries
 	 */
 	private ProverFunctionInterpretation[] ppreds;
 
@@ -125,11 +125,6 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 
 		predicate = (BooleanExpression) universe.cleanBoundVariables(predicate);
 		universe.incrementProverValidCount();
-		if (show) {
-			out.println();
-			out.print(info.getFirstAlias() + " assumptions " + id + ":\n");
-			out.flush();
-		}
 
 		ValidityResult result;
 
@@ -182,6 +177,8 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 		// Write the why3 translation into a temporary file, run process, then
 		// delete it:
 		File queryFile = new File(temporary_file_dir);
+		String executableWhy3Script = why3Translator.getExecutableOutput(id,
+				goalsTexts);
 
 		if (!queryFile.exists())
 			queryFile.mkdirs();
@@ -189,8 +186,7 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 		try {
 			FileWriter filewriter = new FileWriter(queryFile);
 
-			filewriter
-					.write(why3Translator.getExecutableOutput(id, goalsTexts));
+			filewriter.write(executableWhy3Script);
 			filewriter.close();
 		} catch (IOException e) {
 			if (info.getShowErrors())
@@ -226,15 +222,9 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 				hd.cancel(true);
 		}
 		if (show) {
-			out.print(
-					"\n" + info.getFirstAlias() + " goal        " + id + ":\n");
-			out.print(why3Translator.declarations());
-			out.print(why3Translator.context());
-			out.println();
-			for (int i = 0; i < goalsTexts.length; i++)
-				out.print(goalsTexts[i]);
-			out.println();
-			out.println();
+			out.print("\n" + info.getFirstAlias() + " script        " + id
+					+ ":\n");
+			out.println(executableWhy3Script);
 			out.flush();
 		}
 		try {

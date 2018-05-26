@@ -18,7 +18,7 @@ abstract class ExpressionVisitor {
 	/**
 	 * A reference to a {@link PreUniverse}.
 	 */
-	private PreUniverse universe;
+	protected PreUniverse universe;
 
 	ExpressionVisitor(PreUniverse universe) {
 		this.universe = universe;
@@ -34,7 +34,8 @@ abstract class ExpressionVisitor {
 	 */
 	abstract SymbolicExpression visitExpression(SymbolicExpression expr);
 
-	public SymbolicExpression visitExpressionChildren(SymbolicExpression expr) {
+	protected SymbolicExpression visitExpressionChildren(
+			SymbolicExpression expr) {
 		boolean changed = false;
 		int numArgs = expr.numArguments();
 		SymbolicObject newArgs[] = new SymbolicObject[numArgs];
