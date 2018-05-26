@@ -161,10 +161,9 @@ public class SubContext extends Context {
 		return collapse;
 	}
 
-	// collapsing is too slow and doesn't seem to make any differnece....
-
 	@Override
 	protected SymbolicExpression simplify(SymbolicExpression expr) {
+		// note: collapsing is too slow and doesn't seem to make any difference
 		return new IdealSimplifierWorker(this /* .collapse() */,
 				simplificationStack).simplifyExpression(expr);
 	}

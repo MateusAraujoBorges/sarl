@@ -847,7 +847,6 @@ public class Context {
 		IdealFactory idf = info.idealFactory;
 		RangeFactory rf = info.rangeFactory;
 		NumberFactory nf = info.numberFactory;
-		// Range baseRange = computeRange(base);
 		boolean isIntegral = base.type().isInteger();
 		Number zero = isIntegral ? info.numberFactory.zeroInteger()
 				: info.numberFactory.zeroRational();
@@ -1114,10 +1113,6 @@ public class Context {
 	 * Inconsistency can be determined if the same key is mapped to two
 	 * constants that are not equal.
 	 * </p>
-	 * 
-	 * TODO: think about replacing this with the same technique used for the
-	 * rangeMap. It can be done only during reduce time at the end of
-	 * initialization.
 	 * 
 	 * @param x
 	 *            the expression to be replaced
@@ -1593,8 +1588,6 @@ public class Context {
 		// expression being simplified to strictly decrease?
 		expr = info.universe
 				.not((BooleanExpression) simplify(info.universe.not(expr)));
-		// TODO: think about this
-
 		if (expr.operator() != SymbolicOperator.OR) {
 			addFact(expr);
 			return;
