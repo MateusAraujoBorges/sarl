@@ -13,16 +13,21 @@ import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.config.Configurations;
+import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
+import edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind;
+import edu.udel.cis.vsl.sarl.IF.config.SARLConfig;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression;
+import edu.udel.cis.vsl.sarl.IF.type.SymbolicTupleType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
+import edu.udel.cis.vsl.sarl.prove.z3.RobustZ3TheoremProverFactory;
 
 public class ProveTest {
 
@@ -192,6 +197,65 @@ public class ProveTest {
 
 		ResultType result = su.reasoner(su.trueExpression())
 				.valid(su.equals(su.add(f_x_y, f_y_z), f_x_z)).getResultType();
+
+		assertEquals(ResultType.YES, result);
+	}
+
+	// (X.0).0 != 0 ==> (X.0).0 == 0
+	// Expected: NO
+	@Test
+	public void testProverTranslationForSymbolicTuple() {
+		SARLConfig config = Configurations.getDefaultConfiguration();
+		ProverInfo z3 = config.getProverWithKind(ProverKind.Z3);
+
+		assertEquals("Z3 must be installed for passing this " + "test", true,
+				z3 != null);
+
+		SymbolicUniverse su = SARL.newStandardUniverse(config, z3);
+		SymbolicTupleType innerTupleType = su.tupleType(
+				su.stringObject("tuple_inn"), Arrays.asList(su.integerType()));
+		SymbolicTupleType tupleType = su.tupleType(su.stringObject("tuple"),
+				Arrays.asList(innerTupleType));
+		SymbolicConstant myTuple = su.symbolicConstant(su.stringObject("X"),
+				tupleType);
+
+		BooleanExpression equation = su
+				.equals(su.tupleRead(su.tupleRead(myTuple, su.intObject(0)),
+						su.intObject(0)), su.zeroInt());
+		BooleanExpression assumption = su.not(equation);
+		ResultType result = new RobustZ3TheoremProverFactory((PreUniverse) su, z3)
+				.newProver(assumption).valid(equation).getResultType();
+
+		assertEquals(ResultType.NO, result);
+	}
+
+	// (X.0).0 == 1 ==> 0 <= (X.0).0 <= 2
+	// Expected: YES
+	@Test
+	public void testProverTranslationForSymbolicTuple2() {
+		SARLConfig config = Configurations.getDefaultConfiguration();
+		ProverInfo z3 = config.getProverWithKind(ProverKind.Z3);
+
+		assertEquals("Z3 must be installed for passing this " + "test", true,
+				z3 != null);
+
+		SymbolicUniverse su = SARL.newStandardUniverse(config, z3);
+		SymbolicTupleType innerTupleType = su.tupleType(
+				su.stringObject("tuple_inn"), Arrays.asList(su.integerType()));
+		SymbolicTupleType tupleType = su.tupleType(su.stringObject("tuple"),
+				Arrays.asList(innerTupleType));
+		SymbolicConstant myTuple = su.symbolicConstant(su.stringObject("X"),
+				tupleType);
+
+		NumericExpression read = (NumericExpression) su.tupleRead(
+				su.tupleRead(myTuple, su.intObject(0)), su.intObject(0));
+		BooleanExpression assumption = su.equals(read, su.oneInt());
+		ResultType result = new RobustZ3TheoremProverFactory(
+				(PreUniverse) su, z3)
+						.newProver(assumption)
+						.valid(su.and(su.lessThan(su.zeroInt(), read),
+								su.lessThan(read, su.integer(2))))
+						.getResultType();
 
 		assertEquals(ResultType.YES, result);
 	}
