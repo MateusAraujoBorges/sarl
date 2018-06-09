@@ -814,7 +814,7 @@ public class Z3Translator {
 		SymbolicExpression tupleExpression = (SymbolicExpression) expr
 				.argument(0);
 		int index = ((IntObject) expr.argument(1)).getInt();
-		FastList<String> result = new FastList<>(tupleProjector(
+		FastList<String> result = new FastList<>("(", tupleProjector(
 				(SymbolicTupleType) tupleExpression.type(), index), " ");
 
 		result.append(translate(tupleExpression));
