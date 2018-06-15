@@ -90,6 +90,31 @@ public interface TheoremProver {
 	ValidityResult valid(BooleanExpression predicate);
 
 	/**
+	 * <p>
+	 * Attempts to determine whether the statement p(x) && q(x) is
+	 * unsatisfiable. Here, p is the "context", q is the "predicate", and x
+	 * stands for the set of all symbolic constants which occur in p or q.
+	 * </p>
+	 * 
+	 * 
+	 * <p>
+	 * A result of type YES implies <code>forall x. !(p(x) && q(x))</code>. A
+	 * result of NO implies <code>exists x. p(x)&&q(x)</code>. Nothing can be
+	 * concluded from a result of MAYBE.
+	 * </p>
+	 * 
+	 * @param predicate
+	 *            the boolean expression q(x)
+	 * @throws TheoremProverException
+	 *             if something goes wrong with the automated theorem prover
+	 *             during this call
+	 * @return a {@link ValidityResult} whose type must satisfy the constraints
+	 *         described above
+	 */
+	ValidityResult unsat(BooleanExpression predicate)
+			throws TheoremProverException;
+
+	/**
 	 * Attempts to determine whether p(x)=>q(x) is valid, and, if not, also
 	 * returns a model (counterexample). The specification is exactly the same
 	 * as for {@link #valid}, except that a {@link ModelResult} is returned in

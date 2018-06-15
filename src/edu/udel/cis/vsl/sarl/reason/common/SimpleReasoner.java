@@ -49,6 +49,8 @@ public class SimpleReasoner implements Reasoner {
 
 	private Map<BooleanExpression, ValidityResult> validityCache = new ConcurrentHashMap<BooleanExpression, ValidityResult>();
 
+	private Map<BooleanExpression, ValidityResult> unsatCache = new ConcurrentHashMap<BooleanExpression, ValidityResult>();
+
 	public SimpleReasoner(Simplifier simplifier) {
 		this.simplifier = simplifier;
 	}
@@ -141,5 +143,26 @@ public class SimpleReasoner implements Reasoner {
 			NumericExpression lhs, NumericSymbolicConstant[] limitVars,
 			int[] orders) {
 		return false;
+	}
+
+	@Override
+	public ValidityResult unsat(BooleanExpression predicate) {
+		ValidityResult result = unsatCache.get(predicate);
+
+		universe().incrementProverValidCount();
+		if (result == null) {
+			BooleanExpression simple = (BooleanExpression) simplifier
+					.apply(predicate);
+			Boolean concrete = universe().extractBoolean(simple);
+
+			if (concrete == null)
+				result = Prove.RESULT_MAYBE;
+			else if (concrete)
+				result = Prove.RESULT_NO;
+			else
+				result = Prove.RESULT_YES;
+			unsatCache.putIfAbsent(predicate, result);
+		}
+		return result;
 	}
 }

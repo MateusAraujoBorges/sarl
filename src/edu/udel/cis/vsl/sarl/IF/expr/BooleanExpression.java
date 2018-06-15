@@ -62,4 +62,29 @@ public interface BooleanExpression extends SymbolicExpression {
 	 *            the validity result to cache
 	 */
 	void setValidity(ResultType value);
+
+	/**
+	 * Is this boolean expression unsatisfiable, i.e., equivalent to
+	 * <code>false</code>,? The result is cached here for convenience, using
+	 * method {@link #setUnsatisfiable(ResultType)}. There are four possible
+	 * values: (1) <code>null</code>: nothing is known and nothing has been
+	 * tried to figure it out, (2) {@link ResultType#YES}: it is definitely
+	 * unsatisfiable, (3) {@link ResultType#NO}: it is definitely satisfiable,
+	 * and (4) {@link ResultType#MAYBE}: unknown. The difference between
+	 * <code>null</code> and {@link ResultType#MAYBE} is that with
+	 * {@link ResultType#MAYBE} you know we already tried to figure out if it is
+	 * unsatisfiable and couldn't, hence, there is no need to try again.
+	 * 
+	 * @return
+	 */
+	ResultType getUnsatisfiability();
+
+	/**
+	 * Store the unsatisfiability result for this boolean expression.
+	 * 
+	 * @see #getUnsatisfiability
+	 * @param value
+	 *            the unsatisfiability result to cache
+	 */
+	void setUnsatisfiability(ResultType value);
 }

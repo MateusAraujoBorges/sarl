@@ -9,9 +9,12 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.udel.cis.vsl.sarl.SARL;
+import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.config.Configurations;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
+import edu.udel.cis.vsl.sarl.IF.config.SARLConfig;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
@@ -21,7 +24,10 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
+import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
+import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
+import performance.PerformanceTest;
 
 public class Why3TranslationTest {
 	PreUniverse universe;
@@ -338,5 +344,46 @@ public class Why3TranslationTest {
 		assertFalse(ResultType.YES == proverFactory
 				.newProver(universe.trueExpression()).valid(permut)
 				.getResultType());
+	}
+
+	@Test
+	public void testNoUnsatWhy3() {
+		SARLConfig config = Configurations.getDefaultConfiguration();
+		ProverInfo why3 = config.getWhy3ProvePlatform();
+
+		assertEquals("Why3 must be installed for passing this " + "test", true,
+				why3 != null);
+		SymbolicUniverse su = SARL.newStandardUniverse(config, null);
+		BooleanExpression unsatFormula = PerformanceTest
+				.slowNegationFormula(false, su);
+
+		su.setShowProverQueries(true);
+		assertEquals(true,
+				su.why3Reasoner(su.trueExpression(),
+						new ProverFunctionInterpretation[0]).unsat(unsatFormula)
+						.getResultType() != ResultType.YES);
+	}
+
+	@Test
+	public void testUnsatWhy3NoSimplify() {
+		SARLConfig config = Configurations.getDefaultConfiguration();
+		ProverInfo why3 = config.getWhy3ProvePlatform();
+
+		assertEquals("Why3 must be installed for passing this " + "test", true,
+				why3 != null);
+		SymbolicUniverse su = SARL.newStandardUniverse(config, null);
+		BooleanExpression unsatFormula = PerformanceTest
+				.slowNegationFormula(true, su);
+
+		su.setShowProverQueries(true);
+
+		TheoremProver prover = Prove
+				.newWhy3ProvePlatformFactory((PreUniverse) su,
+						(ProverInfo) why3)
+				.newProver(su.trueExpression(),
+						new ProverFunctionInterpretation[0]);
+
+		assertEquals(ResultType.YES,
+				prover.unsat(unsatFormula).getResultType());
 	}
 }

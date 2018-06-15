@@ -186,8 +186,42 @@ public class RobustZ3TheoremProver implements TheoremProver {
 		}
 	}
 
-	private ValidityResult runZ3(BooleanExpression predicate, int id,
-			boolean show, PrintStream out) throws TheoremProverException {
+	/**
+	 * <p>
+	 * Run z3 to reason about the given predicate <code>p</code> under the
+	 * context <code>c</code>.
+	 * </p>
+	 * 
+	 * <p>
+	 * if the purpose is to test if <code>p</code> is unsatisfiable (the
+	 * argument testUNSAT set to true), then z3 checks if <code>c && p</code> is
+	 * UNSAT.
+	 * </p>
+	 * 
+	 * <p>
+	 * if the purpose is to test if <code>p</code> is valid under the context
+	 * (the argument testUNSAT set to false), then z3 checks if
+	 * <code>c && !p</code> is UNSAT.
+	 * </p>
+	 * 
+	 * @param predicate
+	 *            the boolean expression representing the predicate
+	 * @param testUNSAT
+	 *            a flag setting to true indicates testing unsatisfiability of
+	 *            the given predicate; setting to false indicates testing if the
+	 *            context entails the predicate.
+	 * @param id
+	 *            the ID number of this prover call
+	 * @param show
+	 *            a flag indicating whether printing the z3 script
+	 * @param out
+	 *            the output stream
+	 * @return a {@link ValidityResult}
+	 * @throws TheoremProverException
+	 */
+	private ValidityResult runZ3(BooleanExpression predicate, boolean testUNSAT,
+			int id, boolean show, PrintStream out)
+			throws TheoremProverException {
 		Process process = null;
 		ValidityResult result = null;
 
@@ -224,9 +258,19 @@ public class RobustZ3TheoremProver implements TheoremProver {
 				FastList<String> predicateText = translator.getTranslation();
 
 				predicateDecls.print(stdin);
-				stdin.print("(assert (not ");
-				predicateText.print(stdin);
-				stdin.println("))");
+				if (testUNSAT) {
+					// the conjunction of a predicate `p` and a context `c` is
+					// UNSAT, iff p && c is UNSAT
+					stdin.print("(assert  ");
+					predicateText.print(stdin);
+					stdin.println(")");
+				} else {
+					// a predicate p is valid under a context c,
+					// iff `c` && `!p` is UNSAT
+					stdin.print("(assert (not ");
+					predicateText.print(stdin);
+					stdin.println("))");
+				}
 				stdin.println("(check-sat)");
 				stdin.flush();
 				stdin.close();
@@ -282,7 +326,7 @@ public class RobustZ3TheoremProver implements TheoremProver {
 		ValidityResult result;
 
 		try {
-			result = runZ3(predicate, id, show, out);
+			result = runZ3(predicate, false, id, show, out);
 		} catch (TheoremProverException e) {
 			if (show)
 				err.println("Warning: " + e.getMessage());
@@ -316,5 +360,42 @@ public class RobustZ3TheoremProver implements TheoremProver {
 				break;
 			exp.append(errline + "\n");
 		} while (errline != null);
+	}
+
+	@Override
+	public ValidityResult unsat(BooleanExpression predicate)
+			throws TheoremProverException {
+		PrintStream out = universe.getOutputStream();
+		int id = universe.numProverValidCalls();
+		FastList<String> assumptionDecls = assumptionTranslator
+				.getDeclarations();
+		FastList<String> assumptionText = assumptionTranslator.getTranslation();
+		boolean show = universe.getShowProverQueries() || info.getShowQueries();
+
+		universe.incrementProverValidCount();
+		if (show) {
+			out.println();
+			out.print(info.getFirstAlias() + " assumptions " + id + ":\n");
+			assumptionDecls.print(out);
+			assumptionText.print(out);
+			out.println();
+			out.flush();
+		}
+
+		ValidityResult result;
+
+		try {
+			result = runZ3(predicate, true, id, show, out);
+		} catch (TheoremProverException e) {
+			if (show)
+				err.println("Warning: " + e.getMessage());
+			result = Prove.RESULT_MAYBE;
+		}
+		if (show) {
+			out.println(info.getFirstAlias() + " result      " + id + ": "
+					+ result);
+			out.flush();
+		}
+		return result;
 	}
 }

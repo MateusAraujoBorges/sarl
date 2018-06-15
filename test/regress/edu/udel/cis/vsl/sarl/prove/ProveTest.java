@@ -26,8 +26,10 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicUninterpretedType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverses;
 import edu.udel.cis.vsl.sarl.prove.IF.Prove;
+import edu.udel.cis.vsl.sarl.prove.IF.TheoremProver;
 import edu.udel.cis.vsl.sarl.prove.IF.TheoremProverFactory;
 import edu.udel.cis.vsl.sarl.prove.z3.RobustZ3TheoremProverFactory;
+import performance.PerformanceTest;
 
 public class ProveTest {
 
@@ -223,12 +225,15 @@ public class ProveTest {
 				.equals(su.tupleRead(su.tupleRead(myTuple, su.intObject(0)),
 						su.intObject(0)), su.zeroInt());
 		BooleanExpression assumption = su.not(equation);
-		ResultType result = new RobustZ3TheoremProverFactory((PreUniverse) su, z3)
-				.newProver(assumption).valid(equation).getResultType();
+		ResultType result = new RobustZ3TheoremProverFactory((PreUniverse) su,
+				z3).newProver(assumption).valid(equation).getResultType();
 
 		assertEquals(ResultType.NO, result);
 	}
 
+	/**
+	 * @author ziqingluo
+	 */
 	// (X.0).0 == 1 ==> 0 <= (X.0).0 <= 2
 	// Expected: YES
 	@Test
@@ -258,5 +263,101 @@ public class ProveTest {
 						.getResultType();
 
 		assertEquals(ResultType.YES, result);
+	}
+
+	/**
+	 * The same formula as the one in the
+	 * {@link PerformanceTest#slowNegation()}. Negating the formula is slow but
+	 * prover can directly test the unsatisfiability of it without negating it.
+	 */
+	@Test
+	public void testNoUnsatZ3() {
+		SARLConfig config = Configurations.getDefaultConfiguration();
+		ProverInfo z3 = config.getProverWithKind(ProverKind.Z3);
+
+		assertEquals("Z3 must be installed for passing this " + "test", true,
+				z3 != null);
+		SymbolicUniverse su = SARL.newStandardUniverse(config, z3);
+		BooleanExpression unsatFormula = PerformanceTest
+				.slowNegationFormula(false, su);
+
+		su.setShowProverQueries(true);
+		assertEquals(ResultType.NO, su.reasoner(su.trueExpression())
+				.unsat(unsatFormula).getResultType());
+	}
+
+	/**
+	 * The same formula as the one in the
+	 * {@link PerformanceTest#slowNegation()}. Negating the formula is slow but
+	 * prover can directly test the unsatisfiability of it without negating it.
+	 */
+	@Test
+	public void testNoUnsatCVC() {
+		SARLConfig config = Configurations.getDefaultConfiguration();
+		ProverInfo cvc = config.getProverWithKind(ProverKind.CVC3);
+
+		if (cvc == null)
+			cvc = config.getProverWithKind(ProverKind.CVC4);
+		assertEquals("CVC3/CVC4 must be installed for passing this " + "test",
+				true, cvc != null);
+		SymbolicUniverse su = SARL.newStandardUniverse(config, cvc);
+		BooleanExpression unsatFormula = PerformanceTest
+				.slowNegationFormula(false, su);
+
+		su.setShowProverQueries(true);
+		assertEquals(ResultType.NO, su.reasoner(su.trueExpression())
+				.unsat(unsatFormula).getResultType());
+	}
+
+	@Test
+	public void testUnsatZ3NoSimplify() {
+		SARLConfig config = Configurations.getDefaultConfiguration();
+		ProverInfo z3 = config.getProverWithKind(ProverKind.Z3);
+
+		assertEquals("Z3 must be installed for passing this " + "test", true,
+				z3 != null);
+		SymbolicUniverse su = SARL.newStandardUniverse(config, z3);
+		BooleanExpression unsatFormula = PerformanceTest
+				.slowNegationFormula(true, su);
+
+		su.setShowProverQueries(true);
+		TheoremProver prover = Prove.newProverFactory((PreUniverse) su, z3)
+				.newProver(su.trueExpression());
+
+		assertEquals(ResultType.YES,
+				prover.unsat(unsatFormula).getResultType());
+	}
+
+	@Test
+	public void testUnsatCVCNOSimplify() {
+		SARLConfig config = Configurations.getDefaultConfiguration();
+		ProverInfo cvc = config.getProverWithKind(ProverKind.CVC3);
+
+		if (cvc == null)
+			cvc = config.getProverWithKind(ProverKind.CVC4);
+		assertEquals("CVC3/CVC4 must be installed for passing this " + "test",
+				true, cvc != null);
+		SymbolicUniverse su = SARL.newStandardUniverse(config, cvc);
+		BooleanExpression unsatFormula = PerformanceTest
+				.slowNegationFormula(true, su);
+
+		su.setShowProverQueries(true);
+
+		TheoremProver prover = Prove.newProverFactory((PreUniverse) su, cvc)
+				.newProver(su.trueExpression());
+
+		assertEquals(ResultType.YES,
+				prover.unsat(unsatFormula).getResultType());
+	}
+
+	@Test
+	public void testUnsatSimplify() {
+		SymbolicUniverse su = SARL.newStandardUniverse();
+		BooleanExpression unsatFormula = PerformanceTest
+				.slowNegationFormula(true, su);
+
+		assertEquals(ResultType.YES, su.reasoner(su.trueExpression())
+				.unsat(unsatFormula).getResultType());
+		assertEquals(true, su.numProverValidCalls() == 0);
 	}
 }

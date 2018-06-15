@@ -184,8 +184,26 @@ public class RobustCVCTheoremProver implements TheoremProver {
 		}
 	}
 
-	private ValidityResult runCVC(BooleanExpression predicate, int id,
-			boolean show, PrintStream out) throws TheoremProverException {
+	/**
+	 * Run cvc3/cvc4 to reason about the predicate
+	 * 
+	 * @param predicate
+	 *            a boolean expression representing the predicate
+	 * @param id
+	 *            the ID number of the prover call
+	 * @param show
+	 *            true to print the CVC script
+	 * @param out
+	 *            the output stream
+	 * @param testUNSAT
+	 *            true for testing if the predicate and the context is
+	 *            unsatisfiable; false for testing if the context entails the
+	 *            predicate
+	 * @return
+	 */
+	private ValidityResult runCVC(BooleanExpression predicate,
+			boolean testUNSAT, int id, boolean show, PrintStream out)
+			throws TheoremProverException {
 		Process process = null;
 		ValidityResult result = null;
 
@@ -209,10 +227,6 @@ public class RobustCVCTheoremProver implements TheoremProver {
 				FastList<String> assumptionText = assumptionTranslator
 						.getTranslation();
 
-				assumptionDecls.print(stdin);
-				stdin.print("ASSERT ");
-				assumptionText.print(stdin);
-				stdin.println(";");
 				predicate = (BooleanExpression) universe
 						.cleanBoundVariables(predicate);
 
@@ -221,12 +235,6 @@ public class RobustCVCTheoremProver implements TheoremProver {
 				FastList<String> predicateDecls = translator.getDeclarations();
 				FastList<String> predicateText = translator.getTranslation();
 
-				predicateDecls.print(stdin);
-				stdin.print("QUERY ");
-				predicateText.print(stdin);
-				stdin.println(";\n");
-				stdin.flush();
-				stdin.close();
 				if (show) {
 					out.print("\n" + info.getFirstAlias() + " predicate   " + id
 							+ ":\n");
@@ -236,6 +244,30 @@ public class RobustCVCTheoremProver implements TheoremProver {
 					out.println();
 					out.flush();
 				}
+				if (testUNSAT) {
+					FastList<String> unsatQuery = new FastList<>("NOT(");
+
+					unsatQuery.append(assumptionText);
+					unsatQuery.add(" AND ");
+					unsatQuery.append(predicateText);
+					unsatQuery.add(")");
+					assumptionDecls.print(stdin);
+					predicateDecls.print(stdin);
+					stdin.print("QUERY ");
+					unsatQuery.print(stdin);
+					stdin.println(";\n");
+				} else {
+					assumptionDecls.print(stdin);
+					stdin.print("ASSERT ");
+					assumptionText.print(stdin);
+					stdin.println(";");
+					predicateDecls.print(stdin);
+					stdin.print("QUERY ");
+					predicateText.print(stdin);
+					stdin.println(";\n");
+				}
+				stdin.flush();
+				stdin.close();
 				if (info.getTimeout() > 0 && !ProcessControl
 						.waitForProcess(process, info.getTimeout())) {
 					if (info.getShowErrors() || info.getShowInconclusives())
@@ -279,7 +311,7 @@ public class RobustCVCTheoremProver implements TheoremProver {
 		ValidityResult result;
 
 		try {
-			result = runCVC(predicate, id, show, out);
+			result = runCVC(predicate, false, id, show, out);
 		} catch (TheoremProverException e) {
 			if (show)
 				err.println("Warning: " + e.getMessage());
@@ -313,5 +345,42 @@ public class RobustCVCTheoremProver implements TheoremProver {
 				break;
 			exp.append(errline);
 		} while (errline != null);
+	}
+
+	@Override
+	public ValidityResult unsat(BooleanExpression predicate)
+			throws TheoremProverException {
+		PrintStream out = universe.getOutputStream();
+		int id = universe.numProverValidCalls();
+		FastList<String> assumptionDecls = assumptionTranslator
+				.getDeclarations();
+		FastList<String> assumptionText = assumptionTranslator.getTranslation();
+		boolean show = universe.getShowProverQueries() || info.getShowQueries();
+
+		universe.incrementProverValidCount();
+		if (show) {
+			out.println();
+			out.print(info.getFirstAlias() + " assumptions " + id + ":\n");
+			assumptionDecls.print(out);
+			assumptionText.print(out);
+			out.println();
+			out.flush();
+		}
+
+		ValidityResult result;
+
+		try {
+			result = runCVC(predicate, true, id, show, out);
+		} catch (TheoremProverException e) {
+			if (show)
+				err.println("Warning: " + e.getMessage());
+			result = Prove.RESULT_MAYBE;
+		}
+		if (show) {
+			out.println(info.getFirstAlias() + " result      " + id + ": "
+					+ result);
+			out.flush();
+		}
+		return result;
 	}
 }

@@ -129,9 +129,9 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 		ValidityResult result;
 
 		try {
-			result = runWhy3(predicate, id, show, out, false);
+			result = runWhy3(predicate, id, show, out, false, false);
 			if (result == Prove.RESULT_MAYBE)
-				result = runWhy3(predicate, id, show, out, true);
+				result = runWhy3(predicate, id, show, out, true, false);
 		} catch (TheoremProverException e) {
 			if (show)
 				err.println("Warning: " + e.getMessage());
@@ -151,8 +151,28 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 		return valid(predicate);
 	}
 
+	/**
+	 * Run why3 to reason about the predicate
+	 * 
+	 * @param predicate
+	 *            a boolean expression representing the predicate
+	 * @param id
+	 *            the ID number of the prover call
+	 * @param show
+	 *            true to print the why3 script
+	 * @param out
+	 *            the output stream
+	 * @param doSplitGoals
+	 *            true to split the predicate into several smaller predicates
+	 * @param testUNSAT
+	 *            true for testing if the predicate and the context is
+	 *            unsatisfiable; false for testing if the context entails the
+	 *            predicate
+	 * @return
+	 */
 	private ValidityResult runWhy3(BooleanExpression predicate, int id,
-			boolean show, PrintStream out, boolean doSplitGoals) {
+			boolean show, PrintStream out, boolean doSplitGoals,
+			boolean testUNSAT) {
 		ValidityResult result = Prove.RESULT_MAYBE;
 		Why3Translator why3Translator = new Why3Translator(universe,
 				cleanedContext, ppreds);
@@ -178,7 +198,7 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 		// delete it:
 		File queryFile = new File(temporary_file_dir);
 		String executableWhy3Script = why3Translator.getExecutableOutput(id,
-				goalsTexts);
+				testUNSAT, goalsTexts);
 
 		if (!queryFile.exists())
 			queryFile.mkdirs();
@@ -266,5 +286,34 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 			BooleanExpression result[] = { predicate };
 			return result;
 		}
+	}
+
+	@Override
+	public ValidityResult unsat(BooleanExpression predicate)
+			throws TheoremProverException {
+		PrintStream out = universe.getOutputStream();
+		int id = universe.numProverValidCalls();
+		boolean show = universe.getShowProverQueries() || info.getShowQueries();
+
+		predicate = (BooleanExpression) universe.cleanBoundVariables(predicate);
+		universe.incrementProverValidCount();
+
+		ValidityResult result;
+
+		try {
+			result = runWhy3(predicate, id, show, out, false, true);
+			if (result == Prove.RESULT_MAYBE)
+				result = runWhy3(predicate, id, show, out, true, true);
+		} catch (TheoremProverException e) {
+			if (show)
+				err.println("Warning: " + e.getMessage());
+			result = Prove.RESULT_MAYBE;
+		}
+		if (show) {
+			out.println(info.getFirstAlias() + " result      " + id + ": "
+					+ result);
+			out.flush();
+		}
+		return result;
 	}
 }

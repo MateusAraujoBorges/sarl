@@ -83,6 +83,12 @@ public class CommonReasoner implements Reasoner {
 	private Map<BooleanExpression, ValidityResult> validityCache = new ConcurrentHashMap<>();
 
 	/**
+	 * The cached results of previous unsatisfiability queries, i.e., calls to
+	 * method {@link #unsat(BooleanExpression)}.
+	 */
+	private Map<BooleanExpression, ValidityResult> unsatCache = new ConcurrentHashMap<>();
+
+	/**
 	 * @param reasonerFactory
 	 *            the factory that created this {@link Reasoner}, and can be
 	 *            used to create more {@link Reasoner}s if they are needed by
@@ -278,5 +284,55 @@ public class CommonReasoner implements Reasoner {
 		return prover == null ? (prover = reasonerFactory
 				.getTheoremProverFactory().newProver(getReducedContext()))
 				: prover;
+	}
+
+	/**
+	 * @author ziqingluo
+	 */
+	@Override
+	public ValidityResult unsat(BooleanExpression predicate) {
+		boolean showQuery = universe().getShowQueries();
+
+		if (showQuery) {
+			PrintStream out = universe().getOutputStream();
+			int id = universe().numValidCalls();
+
+			out.println("UNSAT Query " + id + " assumption: "
+					+ simplifier.getFullContext());
+			out.println("UNSAT Query  " + id + " predicate :  " + predicate);
+		}
+		if (predicate == null)
+			throw new SARLException("Argument to Reasoner.valid is null.");
+		else {
+			ValidityResult result = null;
+			BooleanExpression formula = universe().and(getFullContext(),
+					predicate);
+
+			universe().incrementValidCount();
+			BooleanExpression simplifiedFormula = (BooleanExpression) simplifier
+					.apply(formula);
+
+			result = unsatCache.get(simplifiedFormula);
+			if (result == null) {
+				if (simplifiedFormula.isFalse())
+					result = Prove.RESULT_YES;
+				else if (simplifiedFormula.isTrue())
+					result = Prove.RESULT_NO;
+				else
+					result = reasonerFactory.getTheoremProverFactory()
+							.newProver(universe().trueExpression())
+							.unsat(simplifiedFormula);
+			}
+			unsatCache.putIfAbsent(predicate, result);
+			if (showQuery) {
+				int id = universe().numValidCalls() - 1;
+				PrintStream out = universe().getOutputStream();
+
+				out.println("UNSAT Query " + id + " result:     " + result);
+			}
+			if (getFullContext().isTrue())
+				predicate.setUnsatisfiability(result.getResultType());
+			return result;
+		}
 	}
 }

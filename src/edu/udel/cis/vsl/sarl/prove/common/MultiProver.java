@@ -1,5 +1,6 @@
 package edu.udel.cis.vsl.sarl.prove.common;
 
+import edu.udel.cis.vsl.sarl.IF.TheoremProverException;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult.ResultType;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
@@ -53,4 +54,15 @@ public class MultiProver implements TheoremProver {
 		return Prove.RESULT_MAYBE;
 	}
 
+	@Override
+	public ValidityResult unsat(BooleanExpression predicate)
+			throws TheoremProverException {
+		for (TheoremProver prover : provers) {
+			ValidityResult result = prover.unsat(predicate);
+
+			if (result.getResultType() != ResultType.MAYBE)
+				return result;
+		}
+		return Prove.RESULT_MAYBE;
+	}
 }

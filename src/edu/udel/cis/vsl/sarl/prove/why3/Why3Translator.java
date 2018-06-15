@@ -190,7 +190,25 @@ public class Why3Translator {
 		return goalText;
 	}
 
-	public String getExecutableOutput(int id, String... goals) {
+	/**
+	 * The executable script differs with the value of the argument "testUNSAT":
+	 * if "testUNSAT" is true, the scripts checks if <code>not (c && p)</code>
+	 * is a tautology; otherwise, the scripts checks if <code>c ==> p</code> is
+	 * a tautology where <code>c</code> is the context and <code>p</code> is the
+	 * predicate
+	 * 
+	 * @param id
+	 *            the ID number of the prover call
+	 * @param testUNSAT
+	 *            true iff for testing the given predicate and the context is
+	 *            unsatisfiable; false iff for testing the context entails the
+	 *            predicates
+	 * @param goals
+	 *            a set of predicates
+	 * @return
+	 */
+	public String getExecutableOutput(int id, boolean testUNSAT,
+			String... goals) {
 		String queryName = executable_theory_name + id;
 		String output = Why3Primitives.REAL_NAME_SPACE;
 		String allBindings = "";
@@ -206,10 +224,20 @@ public class Why3Translator {
 		output += declarations();
 		output += context(allBindings);
 		for (int i = 0; i < goals.length; i++) {
-			output += Why3Primitives.keyword_goal + " "
-					+ state.newGoalIdentifier() + ": context"
-					+ Why3Primitives.implies.text + allBindings + goals[i]
-					+ "\n";
+			if (testUNSAT) {
+				// if test the predicate p and the context c is unsatisfiable,
+				// the goal is translated as "(not c && p)"
+				String goalPred = "(context " + Why3Primitives.land.text + " "
+						+ allBindings + goals[i] + ")";
+
+				output += Why3Primitives.keyword_goal + " "
+						+ state.newGoalIdentifier() + " : "
+						+ Why3Primitives.not.call(goalPred) + "\n";
+			} else
+				output += Why3Primitives.keyword_goal + " "
+						+ state.newGoalIdentifier() + ": context"
+						+ Why3Primitives.implies.text + allBindings + goals[i]
+						+ "\n";
 		}
 		output += Why3Primitives.keyword_end + "\n";
 		return output;

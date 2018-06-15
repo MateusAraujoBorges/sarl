@@ -109,6 +109,13 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 */
 	private Map<BooleanExpression, ValidityResult> validityCache = new ConcurrentHashMap<>();
 
+	/**
+	 * Cached results of calls to {@link #unsat(BooleanExpression)}. All results
+	 * are stored here (except the most trivial ones), even if they were
+	 * obtained by delegation to a reduced context.
+	 */
+	private Map<BooleanExpression, ValidityResult> unsatCache = new ConcurrentHashMap<>();
+
 	// Constructors...
 
 	/**
@@ -194,9 +201,9 @@ public class ContextMinimizingReasoner implements Reasoner {
 	}
 
 	/**
-	 * Attempts to determine validity of <code>predicate</code> without printing
-	 * anything. Uses context-reduction, caching, simplification, and
-	 * theorem-provers as needed.
+	 * Attempts to determine validity (or unsatisfiability) of
+	 * <code>predicate</code> without printing anything. Uses context-reduction,
+	 * caching, simplification, and theorem-provers as needed.
 	 * 
 	 * @param predicate
 	 *            non-<code>null</code> boolean expression whose validity under
@@ -205,16 +212,21 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            if <code>true</code>, try to find a model (concrete
 	 *            counterexample) if the result is not valid, i.e., return an
 	 *            instance of {@link ModelResult}.
+	 * @param checkUnsat
+	 *            if <code>true</code>, try to determine if the conjunction of
+	 *            the given predicate and context is unsatisfiable; otherwise,
+	 *            try to determine if the context entails the predicate.
 	 * @return a non-<code>null</code> validity result
 	 */
-	private ValidityResult valid1(BooleanExpression predicate,
-			boolean getModel) {
+	private ValidityResult checkValidOrUnsat(BooleanExpression predicate,
+			boolean getModel, boolean checkUnsat) {
 		if (predicate.isTrue())
-			return Prove.RESULT_YES;
+			return checkUnsat ? Prove.RESULT_NO : Prove.RESULT_YES;
 		if (predicate.isFalse())
-			return Prove.RESULT_NO;
+			return checkUnsat ? Prove.RESULT_YES : Prove.RESULT_NO;
 
-		ValidityResult result = validCheckCache(predicate, getModel);
+		ValidityResult result = validCheckCache(predicate, getModel,
+				checkUnsat);
 
 		if (result != null)
 			return result;
@@ -243,12 +255,13 @@ public class ContextMinimizingReasoner implements Reasoner {
 		}
 
 		if (reducedReasoner != this) {
-			result = reducedReasoner.validCacheNoReduce(transformedPredicate,
-					getModel);
+			result = reducedReasoner.validOrUnsatCacheNoReduce(
+					transformedPredicate, getModel, checkUnsat);
 		} else {
-			result = this.validNoCacheNoReduce(transformedPredicate, getModel);
+			result = this.validOrUnsatNoCacheNoReduce(transformedPredicate,
+					getModel, checkUnsat);
 		}
-		updateCache(predicate, result);
+		updateCache(predicate, result, checkUnsat);
 		return result;
 	}
 
@@ -272,16 +285,20 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            if <code>true</code>, try to find a model (concrete
 	 *            counterexample) if the result is not valid, i.e., return an
 	 *            instance of {@link ModelResult}.
+	 * @param checkUnsat
+	 *            if <code>true</code>, check for unsatisfiability; otherwise
+	 *            check validity
 	 * @return a non-<code>null</code> validity result
 	 */
-	private ValidityResult validCacheNoReduce(BooleanExpression predicate,
-			boolean getModel) {
-		ValidityResult result = validCheckCache(predicate, getModel);
+	private ValidityResult validOrUnsatCacheNoReduce(
+			BooleanExpression predicate, boolean getModel, boolean checkUnsat) {
+		ValidityResult result = validCheckCache(predicate, getModel,
+				checkUnsat);
 
 		if (result != null)
 			return result;
-		result = validNoCacheNoReduce(predicate, getModel);
-		updateCache(predicate, result);
+		result = validOrUnsatNoCacheNoReduce(predicate, getModel, checkUnsat);
+		updateCache(predicate, result, checkUnsat);
 		return result;
 	}
 
@@ -307,10 +324,14 @@ public class ContextMinimizingReasoner implements Reasoner {
 	 *            if <code>true</code>, try to find a model (concrete
 	 *            counterexample) if the result is not valid, i.e., return an
 	 *            instance of {@link ModelResult}.
+	 * @param checkUnsat
+	 *            if <code>true</code>, try to determine if the conjunction of
+	 *            the given predicate and context is unsatisfiable; otherwise,
+	 *            try to determine if the context entails the predicate.
 	 * @return a non-<code>null</code> validity result
 	 */
-	private ValidityResult validNoCacheNoReduce(BooleanExpression predicate,
-			boolean getModel) {
+	private ValidityResult validOrUnsatNoCacheNoReduce(
+			BooleanExpression predicate, boolean getModel, boolean checkUnsat) {
 		if (debug) {
 			dbgcnt1++;
 			debugOut.println("dbgcnt1 = " + dbgcnt1);
@@ -340,7 +361,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 				debugOut.println("Simplified predicate : " + newPredicate);
 				debugOut.flush();
 			}
-			result = newReasoner.valid1(newPredicate, getModel);
+			result = newReasoner.checkValidOrUnsat(newPredicate, getModel,
+					checkUnsat);
 		} else {
 			SARLProverAdaptor adaptor = new SARLProverAdaptor(
 					simplifier.universe());
@@ -350,80 +372,100 @@ public class ContextMinimizingReasoner implements Reasoner {
 			newContext = simplifier.universe().and(newContext,
 					adaptor.getAxioms());
 			if (getModel) {
+				assert !checkUnsat : "currently unsat-checking cannot give model";
 				result = getProver(getReducedContext() != newContext,
 						newContext).validOrModel(newPredicate);
 			} else {
-				result = getProver(getReducedContext() != newContext,
-						newContext).valid(newPredicate);
+				TheoremProver prover = getProver(
+						getReducedContext() != newContext, newContext);
+
+				result = checkUnsat ? prover.unsat(newPredicate)
+						: prover.valid(newPredicate);
 			}
 		}
 		return result;
 	}
 
 	/**
-	 * Looks for cached result of validity check on predicate. For the context
-	 * "true", results are cached directly in the predicate. Otherwise, look in
-	 * the map {@link #validityCache}.
+	 * Looks for cached result of validity (or unsatisfiability) check on
+	 * predicate. For the context "true", results are cached directly in the
+	 * predicate. Otherwise, look in the map {@link #validityCache} (or #unsatCache).
 	 * 
 	 * @param predicate
 	 *            boolean expression whose validity is being checked
 	 * @param getModel
+	 * @param checUnsat
+	 *            if <code>true</code>, looking at the cache for
+	 *            unsatisfiability checking; otherwise, looking at the cache for
+	 *            validity checking
 	 * @return cached result from previous check on this predicate or
 	 *         <code>null</code> if no such result is cached
 	 */
 	private ValidityResult validCheckCache(BooleanExpression predicate,
-			boolean getModel) {
+			boolean getModel, boolean checkUnsat) {
 		BooleanExpression fullContext = getFullContext();
 		ValidityResult result;
+		ResultType contextFreeResultType = null;
 
-		if (fullContext.isTrue()) {
-			ResultType resultType = predicate.getValidity();
+		if (fullContext.isTrue())
+			contextFreeResultType = checkUnsat ? predicate.getUnsatisfiability()
+					: predicate.getValidity();
 
-			if (resultType != null) {
-				switch (resultType) {
-				case MAYBE:
-					result = Prove.RESULT_MAYBE;
-					break;
-				case NO:
-					if (getModel)
-						result = validityCache.get(predicate);
-					else
-						result = Prove.RESULT_NO;
-					break;
-				case YES:
-					result = Prove.RESULT_YES;
-					break;
-				default:
-					throw new SARLInternalException("unrechable");
-				}
-			} else {
-				result = null;
+		if (contextFreeResultType != null) {
+			switch (contextFreeResultType) {
+			case MAYBE:
+				result = Prove.RESULT_MAYBE;
+				break;
+			case NO:
+				if (getModel) {
+					assert !checkUnsat : "currently unsat-checking cannot give a model";
+					result = validityCache.get(predicate);
+				} else
+					result = Prove.RESULT_NO;
+				break;
+			case YES:
+				result = Prove.RESULT_YES;
+				break;
+			default:
+				throw new SARLInternalException("unrechable");
 			}
 		} else
-			result = validityCache.get(predicate);
+			result = checkUnsat ? unsatCache.get(predicate)
+					: validityCache.get(predicate);
 		return result;
 	}
 
 	/**
-	 * Updates the validity cache with the specified result.
+	 * Updates the validity (or unsatisfiability( cache with the specified result.
 	 * 
 	 * @param predicate
 	 *            boolean expression whose validity was checked
 	 * @param result
 	 *            the (non-<code>null</code>) result of the validity check on
 	 *            <code>predicate</code>
+	 * @param checkUnsat
+	 *            if <code>true</code>, try to determine if the conjunction of
+	 *            the given predicate and context is unsatisfiable; otherwise,
+	 *            try to determine if the context entails the predicate.
 	 */
-	private void updateCache(BooleanExpression predicate,
-			ValidityResult result) {
+	private void updateCache(BooleanExpression predicate, ValidityResult result,
+			boolean checkUnsat) {
 		BooleanExpression fullContext = getFullContext();
 
 		if (fullContext.isTrue()) {
-			predicate.setValidity(result.getResultType());
+			if (checkUnsat)
+				predicate.setUnsatisfiability(result.getResultType());
+			else
+				predicate.setValidity(result.getResultType());
 			if (result instanceof ModelResult) {
+				assert !checkUnsat : "currently unsat-checking cannot give a model";
 				validityCache.putIfAbsent(predicate, result);
 			}
 		} else {
-			validityCache.putIfAbsent(predicate, result);
+			if (checkUnsat)
+				unsatCache.putIfAbsent(predicate, result);
+			else
+				validityCache.putIfAbsent(predicate, result);
 		}
 	}
 
@@ -511,7 +553,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 			out.flush();
 		}
 
-		ValidityResult result = valid1(predicate, false);
+		ValidityResult result = checkValidOrUnsat(predicate, false, false);
 
 		if (showQuery)
 
@@ -540,7 +582,7 @@ public class ContextMinimizingReasoner implements Reasoner {
 			out.flush();
 		}
 
-		ValidityResult result = valid1(predicate, true);
+		ValidityResult result = checkValidOrUnsat(predicate, true, false);
 
 		if (showQuery) {
 			PrintStream out = universe.getOutputStream();
@@ -602,5 +644,32 @@ public class ContextMinimizingReasoner implements Reasoner {
 			boolean useBackwardsSubstitution) {
 		return factory.getReasoner(context, useBackwardsSubstitution,
 				new ProverFunctionInterpretation[0]);
+	}
+
+	@Override
+	public ValidityResult unsat(BooleanExpression predicate) {
+		PreUniverse universe = factory.getUniverse();
+		boolean showQuery = universe.getShowQueries();
+
+		if (showQuery) {
+			PrintStream out = universe.getOutputStream();
+			int id = universe.numValidCalls();
+
+			out.println("Query " + id + " context        : " + context);
+			out.println("Query " + id + " assertion      : " + predicate);
+			out.flush();
+		}
+
+		ValidityResult result = checkValidOrUnsat(predicate, false, true);
+
+		if (showQuery) {
+			PrintStream out = universe.getOutputStream();
+			int id = universe.numValidCalls();
+
+			out.println("Query " + id + " result         : " + result);
+			out.flush();
+		}
+		universe.incrementValidCount();
+		return result;
 	}
 }

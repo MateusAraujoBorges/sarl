@@ -51,6 +51,17 @@ public class BooleanPrimitive extends HomogeneousExpression<SymbolicObject>
 	private ResultType validity = null;
 
 	/**
+	 * Is this boolean expression "unsatisfiable", i.e., equivalent to false?
+	 * Result is cached here for convenience. There are four possible values:
+	 * (1) null: nothing is known and nothing has been tried to figure it out,
+	 * (2) YES: it is definitely unsatisfiable, (3) NO: it is definitely
+	 * satisfiable, and (4) MAYBE: unknown. The difference between null and
+	 * MAYBE is that with MAYBE you know we already tried to figure out if it is
+	 * unsatisfiable and couldn't, hence, there is no need to try again.
+	 */
+	private ResultType unsatisfiable = null;
+
+	/**
 	 * One of several constructors that build a CnfExpression.
 	 * 
 	 * @param kind
@@ -94,4 +105,13 @@ public class BooleanPrimitive extends HomogeneousExpression<SymbolicObject>
 		return new BooleanExpression[] { this };
 	}
 
+	@Override
+	public ResultType getUnsatisfiability() {
+		return unsatisfiable;
+	}
+
+	@Override
+	public void setUnsatisfiability(ResultType value) {
+		unsatisfiable = value;
+	}
 }

@@ -1,5 +1,6 @@
 package performance;
 
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
@@ -17,33 +18,8 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 
 public class PerformanceTest {
 
-	/**
-	 * The negation of <code>
-	 * 0 <= X_N - 1*Y6 - 1 &&
-	 * 0 <= X_N - 1*Y7 - 1 &&
-	 * 0 <= X_N - 3 &&
-	 * 0 <= Y6 &&
-	 * 0 <= Y7 &&
-	 * (is_duplet(X_a,0,X_N,Y0,Y1) || (!Y4)) &&
-	 * (is_duplet(X_a,0,X_N,Y2,Y3) || (!Y5)) &&
-	 * ((0 == X_N - 1*Y6 - 1) || Y4) &&
-	 * ((0 == X_N - 1*Y7 - 1) || Y5) &&
-	 * ((0 == Y0 - 1*Y6 + 1) || (!Y4)) &&
-	 * ((0 == Y2 - 1*Y7 + 1) || (!Y5)) &&
-	 * ((0 == Y0) || Y4) &&
-	 * ((0 == Y2) || Y5) &&
-	 * ((Y0 - 1*Y1 + 1 <= 0) || (!Y4)) &&
-	 * ((Y2 - 1*Y3 + 1 <= 0) || (!Y5)) &&
-	 * ((0 <= X_N - 1*Y1 - 1) || (!Y4)) &&
-	 * ((0 <= X_N - 1*Y3 - 1) || (!Y5)) &&
-	 * ((0 <= Y6 - 1) || (!Y4)) &&
-	 * ((0 <= Y7 - 1) || (!Y5)) &&
-	 * ((0 != X_a[Y0] - 1*X_a[Y2]) || (!Y5)) &&
-	 * </code>
-	 */
-	@Test
-	public void slowNegation() {
-		SymbolicUniverse u = SARL.newStandardUniverse();
+	static public BooleanExpression slowNegationFormula(boolean unsat,
+			SymbolicUniverse u) {
 		// types:
 		SymbolicType intType = u.integerType();
 		SymbolicArrayType arrayType = u.arrayType(intType);
@@ -74,9 +50,9 @@ public class PerformanceTest {
 		SymbolicConstant isDuplet = u
 				.symbolicConstant(u.stringObject("is_duplet"), funcType);
 		// clauses:
-		BooleanExpression clauses[] = new BooleanExpression[15];
+		BooleanExpression clauses[] = new BooleanExpression[17];
 
-		clauses[0] = u.or(u.equals(u.oneInt(), u.subtract(X_N, Y6)), Y4);
+		clauses[0] = u.lessThan(u.oneInt(), X_N);
 		clauses[1] = u.or(u.equals(u.oneInt(), u.subtract(X_N, Y7)), Y5);
 		clauses[2] = u.or(u.equals(Y6, u.add(Y0, u.oneInt())), u.not(Y4));
 		clauses[3] = u.or(u.equals(Y7, u.add(Y2, u.oneInt())), u.not(Y5));
@@ -105,7 +81,47 @@ public class PerformanceTest {
 				(BooleanExpression) u.apply(isDuplet,
 						Arrays.asList(array, u.zeroInt(), X_N, Y2, Y3)),
 				u.not(Y5));
+		clauses[15] = u.or(u.equals(u.oneInt(), u.subtract(X_N, Y6)), Y4);
+		if (unsat)
+			clauses[16] = u.lessThan(X_N, u.zeroInt());
+		else
+			clauses[16] = u.trueExpression();
+		// ret:
+		return u.and(Arrays.asList(clauses));
+	}
+
+	/**
+	 * The negation of <code>
+	 * 0 <= X_N - 1*Y7 - 1 &&
+	 * 0 <= X_N - 3 &&
+	 * 0 <= Y6 &&
+	 * 0 <= Y7 &&
+	 * (is_duplet(X_a,0,X_N,Y0,Y1) || (!Y4)) &&
+	 * (is_duplet(X_a,0,X_N,Y2,Y3) || (!Y5)) &&
+	 * ((0 == X_N - 1*Y6 - 1) || Y4) &&
+	 * ((0 == X_N - 1*Y7 - 1) || Y5) &&
+	 * ((0 == Y0 - 1*Y6 + 1) || (!Y4)) &&
+	 * ((0 == Y2 - 1*Y7 + 1) || (!Y5)) &&
+	 * ((0 == Y0) || Y4) &&
+	 * ((0 == Y2) || Y5) &&
+	 * ((Y0 - 1*Y1 + 1 <= 0) || (!Y4)) &&
+	 * ((Y2 - 1*Y3 + 1 <= 0) || (!Y5)) &&
+	 * ((0 <= X_N - 1*Y1 - 1) || (!Y4)) &&
+	 * ((0 <= X_N - 1*Y3 - 1) || (!Y5)) &&
+	 * ((0 <= Y6 - 1) || (!Y4)) &&
+	 * ((0 <= Y7 - 1) || (!Y5)) &&
+	 * ((0 != X_a[Y0] - 1*X_a[Y2]) || (!Y5)) &&
+	 * 0 <= X_N - 1*Y6 - 1 &&
+	 * X_N <= 0
+	 * </code>
+	 */
+	@Test
+	public void slowNegation() {
+		SymbolicUniverse u = SARL.newStandardUniverse();
 		// test:
-		u.not(u.and(Arrays.asList(clauses)));
+		BooleanExpression negation = u.not(slowNegationFormula(true, u));
+
+		assertEquals(u.trueExpression(),
+				u.reasoner(u.trueExpression()).simplify(negation));
 	}
 }
