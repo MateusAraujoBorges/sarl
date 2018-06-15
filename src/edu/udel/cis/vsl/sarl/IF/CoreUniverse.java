@@ -1257,29 +1257,6 @@ public interface CoreUniverse {
 	BooleanExpression falseExpression();
 
 	/**
-	 * Notifies this universe to attempt to simplify boolean expressions as they
-	 * are created, for example, by searching for clauses of the form
-	 * <code>(p || !p)</code> and replacing with <code>true</code>. This can be
-	 * expensive. Default is <code>false</code>.
-	 * 
-	 * @param value
-	 *            if <code>true</code>, from now on start trying to simplify
-	 *            boolean expressions; if <code>false</code>, from now on do not
-	 *            attempt to do so
-	 */
-	void setBooleanExpressionSimplification(boolean value);
-
-	// TODO: continue editing Java-docs from this point.....
-
-	/**
-	 * Whether or not CnfFactory methods are allowed to simplify expensive (p ||
-	 * !p) expressions.
-	 * 
-	 * @return boolean value: false = default
-	 */
-	boolean getBooleanExpressionSimplification();
-
-	/**
 	 * The symbolic expression wrapping the given boolean object (true or
 	 * false).
 	 */

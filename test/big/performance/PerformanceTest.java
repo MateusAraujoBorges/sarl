@@ -1,10 +1,12 @@
-package edu.udel.cis.vsl.sarl.IF;
+package performance;
+
 
 import java.util.Arrays;
 
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
+import edu.udel.cis.vsl.sarl.IF.SymbolicUniverse;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.NumericSymbolicConstant;
@@ -16,9 +18,7 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicType;
 public class PerformanceTest {
 
 	/**
-	 * <code>
-	 * forall l : int . ((forall k : int . ((Y6 - 1*k - 1 <= 0) || (k + 1 <= 0) || (0 <= k - 1*l) || (!is_duplet(X_a,0,X_N,k,l)))) || (X_N - 1*l <= 0)) &&
-	 * forall l : int . ((forall k : int . ((0 == X_a[Y0] - 1*X_a[k]) || (Y7 - 1*k - 1 <= 0) || (k + 1 <= 0) || (0 <= k - 1*l) || (!is_duplet(X_a,0,X_N,k,l)))) || (X_N - 1*l <= 0)) &&
+	 * The negation of <code>
 	 * 0 <= X_N - 1*Y6 - 1 &&
 	 * 0 <= X_N - 1*Y7 - 1 &&
 	 * 0 <= X_N - 3 &&
@@ -32,7 +32,6 @@ public class PerformanceTest {
 	 * ((0 == Y2 - 1*Y7 + 1) || (!Y5)) &&
 	 * ((0 == Y0) || Y4) &&
 	 * ((0 == Y2) || Y5) &&
-	 * ((forall l : int . ((X_N - 1*l <= 0) || (l <= 0) || (0 <= Y6 - 1*l - 1) || (!is_duplet(X_a,0,X_N,Y6 - 1,l)))) || Y4) &&
 	 * ((Y0 - 1*Y1 + 1 <= 0) || (!Y4)) &&
 	 * ((Y2 - 1*Y3 + 1 <= 0) || (!Y5)) &&
 	 * ((0 <= X_N - 1*Y1 - 1) || (!Y4)) &&
@@ -40,7 +39,6 @@ public class PerformanceTest {
 	 * ((0 <= Y6 - 1) || (!Y4)) &&
 	 * ((0 <= Y7 - 1) || (!Y5)) &&
 	 * ((0 != X_a[Y0] - 1*X_a[Y2]) || (!Y5)) &&
-	 * ((0 == X_a[Y7 - 1] - 1*X_a[Y0]) || (forall l : int . ((X_N - 1*l <= 0) || (l <= 0) || (0 <= Y7 - 1*l - 1) || (!is_duplet(X_a,0,X_N,Y7 - 1,l)))) || Y5)
 	 * </code>
 	 */
 	@Test

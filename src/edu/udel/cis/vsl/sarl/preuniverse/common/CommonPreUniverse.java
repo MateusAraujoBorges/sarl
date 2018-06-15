@@ -716,12 +716,10 @@ public class CommonPreUniverse implements PreUniverse {
 						.argument(1);
 
 				if (arg1.operator() == SymbolicOperator.UNION_INJECT)
-					return index.equals(arg1.argument(0))
-							? and(result,
-									equals(value0,
-											(SymbolicExpression) arg1
-													.argument(1),
-											quantifierDepth))
+					return index.equals(arg1.argument(0)) ? and(result,
+							equals(value0,
+									(SymbolicExpression) arg1.argument(1),
+									quantifierDepth))
 							: falseExpr;
 				else
 					return and(result,
@@ -1539,16 +1537,6 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public BooleanExpression bool(boolean value) {
 		return booleanFactory.symbolic(value);
-	}
-
-	@Override
-	public void setBooleanExpressionSimplification(boolean value) {
-		booleanFactory.setBooleanExpressionSimplification(value);
-	}
-
-	@Override
-	public boolean getBooleanExpressionSimplification() {
-		return booleanFactory.getBooleanExpressionSimplification();
 	}
 
 	/**

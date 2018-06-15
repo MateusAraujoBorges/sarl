@@ -69,7 +69,6 @@ public class BooleanPrimitive extends HomogeneousExpression<SymbolicObject>
 	}
 
 	protected void setNegation(BooleanExpression value) {
-		assert value.isFalse() || value.isTrue();
 		this.negation = value;
 	}
 

@@ -196,36 +196,12 @@ public class CnfFactoryTest {
 				booleanType);
 		BooleanExpression r = (BooleanExpression) ef.symbolicConstant(robject,
 				booleanType);
-		BooleanExpression falseExpr = factory.falseExpr();
-		BooleanExpression trueExpr = factory.trueExpr();
-		BooleanExpression qandtrue = factory.and(q, trueExpr);
-		BooleanExpression pandfalse = factory.and(p, falseExpr);
-		BooleanExpression qortrue = factory.or(q, factory.not(p));
-		BooleanExpression porfalse = factory.or(p, r);
-		BooleanExpression testingtrue = factory.trueExpr();
-		BooleanExpression testingfalse = factory.falseExpr();
-
 		// testing for various combinations of true and false and and or results
-		if (factory.getBooleanExpressionSimplification()) {
-			assertEquals(trueExpr, (factory.or(p,
-					factory.or(q, factory.or(factory.not(p), r)))));
-			assertEquals(trueExpr, factory.or(qortrue, porfalse));
-		}
-
-		assertEquals(falseExpr, factory.and(factory.not(p), p));
-		assertEquals(falseExpr, factory.and(p, factory.not(p)));
-		assertEquals(factory.or(factory.not(p), r),
-				(factory.or(factory.not(p), factory.and(p, r))));
-
 		assertEquals(factory.and(p, r),
 				factory.or(factory.and(p, r), factory.and(r, p)));
 		assertEquals(factory.or(factory.or(p, r), p), factory.or(r, p));
 		assertEquals(factory.or(factory.or(p, r), factory.or(q, r)),
 				factory.or(r, factory.or(q, p)));
-		assertEquals(testingtrue, factory.or(p, factory.not(p)));
-		assertEquals(testingtrue, factory.or(factory.not(p), p));
-		assertEquals(testingfalse, factory.not(factory.or(factory.not(p), p)));
-		assertEquals(q, factory.or(qandtrue, pandfalse));
 	}
 
 	/**
@@ -234,7 +210,6 @@ public class CnfFactoryTest {
 	 */
 	@Test
 	public void orSimplifyTest() {
-		factory.setBooleanExpressionSimplification(true);
 		StringObject pobject = of.stringObject("p");
 		StringObject qobject = of.stringObject("q");
 		StringObject robject = of.stringObject("r");
@@ -248,31 +223,13 @@ public class CnfFactoryTest {
 		BooleanExpression trueExpr = factory.trueExpr();
 		BooleanExpression qandtrue = factory.and(q, trueExpr);
 		BooleanExpression pandfalse = factory.and(p, falseExpr);
-		BooleanExpression qortrue = factory.or(q, factory.not(p));
-		BooleanExpression porfalse = factory.or(p, r);
-		BooleanExpression testingtrue = factory.trueExpr();
-		BooleanExpression testingfalse = factory.falseExpr();
 
 		// testing for various combinations of true and false and and or results
-		if (factory.getBooleanExpressionSimplification()) {
-			assertEquals(trueExpr, (factory.or(p,
-					factory.or(q, factory.or(factory.not(p), r)))));
-			assertEquals(trueExpr, factory.or(qortrue, porfalse));
-		}
-
-		assertEquals(falseExpr, factory.and(factory.not(p), p));
-		assertEquals(falseExpr, factory.and(p, factory.not(p)));
-		assertEquals(factory.or(factory.not(p), r),
-				(factory.or(factory.not(p), factory.and(p, r))));
-
 		assertEquals(factory.and(p, r),
 				factory.or(factory.and(p, r), factory.and(r, p)));
 		assertEquals(factory.or(factory.or(p, r), p), factory.or(r, p));
 		assertEquals(factory.or(factory.or(p, r), factory.or(q, r)),
 				factory.or(r, factory.or(q, p)));
-		assertEquals(testingtrue, factory.or(p, factory.not(p)));
-		assertEquals(testingtrue, factory.or(factory.not(p), p));
-		assertEquals(testingfalse, factory.not(factory.or(factory.not(p), p)));
 		assertEquals(q, factory.or(qandtrue, pandfalse));
 	}
 

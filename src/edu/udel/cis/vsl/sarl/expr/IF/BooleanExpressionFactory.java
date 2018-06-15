@@ -40,25 +40,6 @@ public interface BooleanExpressionFactory {
 			NumericExpressionFactory numericExpressionFactory);
 
 	/**
-	 * Allows CnfFactory to simplify expensive (p || !p) expressions as they are
-	 * created. Default is false. Setting to true will decrease performance in
-	 * certain CnfFactory methods.
-	 * 
-	 * @param boolean
-	 *            value: false = default
-	 * 
-	 */
-	void setBooleanExpressionSimplification(boolean value);
-
-	/**
-	 * Whether or not CnfFactory methods are allowed to simplify expensive (p ||
-	 * !p) expressions.
-	 * 
-	 * @return boolean value: false = default
-	 */
-	boolean getBooleanExpressionSimplification();
-
-	/**
 	 * Returns an expression, given the operator and an array of arguments
 	 * 
 	 * @param operator
