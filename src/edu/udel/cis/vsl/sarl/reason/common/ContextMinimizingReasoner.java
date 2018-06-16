@@ -389,7 +389,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 	/**
 	 * Looks for cached result of validity (or unsatisfiability) check on
 	 * predicate. For the context "true", results are cached directly in the
-	 * predicate. Otherwise, look in the map {@link #validityCache} (or #unsatCache).
+	 * predicate. Otherwise, look in the map {@link #validityCache} (or
+	 * #unsatCache).
 	 * 
 	 * @param predicate
 	 *            boolean expression whose validity is being checked
@@ -436,7 +437,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 	}
 
 	/**
-	 * Updates the validity (or unsatisfiability( cache with the specified result.
+	 * Updates the validity (or unsatisfiability( cache with the specified
+	 * result.
 	 * 
 	 * @param predicate
 	 *            boolean expression whose validity was checked
@@ -655,8 +657,8 @@ public class ContextMinimizingReasoner implements Reasoner {
 			PrintStream out = universe.getOutputStream();
 			int id = universe.numValidCalls();
 
-			out.println("Query " + id + " context        : " + context);
-			out.println("Query " + id + " assertion      : " + predicate);
+			out.println("Unsat-Query " + id + " context        : " + context);
+			out.println("Unsat-Query " + id + " assertion      : " + predicate);
 			out.flush();
 		}
 

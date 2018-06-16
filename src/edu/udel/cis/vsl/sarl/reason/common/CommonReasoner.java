@@ -297,9 +297,9 @@ public class CommonReasoner implements Reasoner {
 			PrintStream out = universe().getOutputStream();
 			int id = universe().numValidCalls();
 
-			out.println("UNSAT Query " + id + " assumption: "
+			out.println("Unsat-Query " + id + " assumption: "
 					+ simplifier.getFullContext());
-			out.println("UNSAT Query  " + id + " predicate :  " + predicate);
+			out.println("Unsat-Query  " + id + " predicate :  " + predicate);
 		}
 		if (predicate == null)
 			throw new SARLException("Argument to Reasoner.valid is null.");

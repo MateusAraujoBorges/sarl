@@ -206,7 +206,7 @@ public class RobustZ3TheoremProver implements TheoremProver {
 	 * 
 	 * @param predicate
 	 *            the boolean expression representing the predicate
-	 * @param testUNSAT
+	 * @param checkUNSAT
 	 *            a flag setting to true indicates testing unsatisfiability of
 	 *            the given predicate; setting to false indicates testing if the
 	 *            context entails the predicate.
@@ -219,8 +219,8 @@ public class RobustZ3TheoremProver implements TheoremProver {
 	 * @return a {@link ValidityResult}
 	 * @throws TheoremProverException
 	 */
-	private ValidityResult runZ3(BooleanExpression predicate, boolean testUNSAT,
-			int id, boolean show, PrintStream out)
+	private ValidityResult runZ3(BooleanExpression predicate,
+			boolean checkUNSAT, int id, boolean show, PrintStream out)
 			throws TheoremProverException {
 		Process process = null;
 		ValidityResult result = null;
@@ -258,7 +258,7 @@ public class RobustZ3TheoremProver implements TheoremProver {
 				FastList<String> predicateText = translator.getTranslation();
 
 				predicateDecls.print(stdin);
-				if (testUNSAT) {
+				if (checkUNSAT) {
 					// the conjunction of a predicate `p` and a context `c` is
 					// UNSAT, iff p && c is UNSAT
 					stdin.print("(assert  ");
@@ -275,8 +275,10 @@ public class RobustZ3TheoremProver implements TheoremProver {
 				stdin.flush();
 				stdin.close();
 				if (show) {
-					out.print("\n" + info.getFirstAlias() + " predicate   " + id
-							+ ":\n");
+					String queryKind = checkUNSAT ? "check-unsat" : "";
+
+					out.print("\n" + info.getFirstAlias() + queryKind
+							+ " predicate   " + id + ":\n");
 					predicateDecls.print(out);
 					predicateText.print(out);
 					out.println();

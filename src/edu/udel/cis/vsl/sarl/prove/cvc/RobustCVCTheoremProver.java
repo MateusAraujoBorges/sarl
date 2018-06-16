@@ -195,14 +195,14 @@ public class RobustCVCTheoremProver implements TheoremProver {
 	 *            true to print the CVC script
 	 * @param out
 	 *            the output stream
-	 * @param testUNSAT
+	 * @param checkUNSAT
 	 *            true for testing if the predicate and the context is
 	 *            unsatisfiable; false for testing if the context entails the
 	 *            predicate
 	 * @return
 	 */
 	private ValidityResult runCVC(BooleanExpression predicate,
-			boolean testUNSAT, int id, boolean show, PrintStream out)
+			boolean checkUNSAT, int id, boolean show, PrintStream out)
 			throws TheoremProverException {
 		Process process = null;
 		ValidityResult result = null;
@@ -236,15 +236,17 @@ public class RobustCVCTheoremProver implements TheoremProver {
 				FastList<String> predicateText = translator.getTranslation();
 
 				if (show) {
-					out.print("\n" + info.getFirstAlias() + " predicate   " + id
-							+ ":\n");
+					String queryKind = checkUNSAT ? "check-unsat" : "";
+
+					out.print("\n" + info.getFirstAlias() + queryKind
+							+ " predicate   " + id + ":\n");
 					predicateDecls.print(out);
 					predicateText.print(out);
 					out.println();
 					out.println();
 					out.flush();
 				}
-				if (testUNSAT) {
+				if (checkUNSAT) {
 					FastList<String> unsatQuery = new FastList<>("NOT(");
 
 					unsatQuery.append(assumptionText);
