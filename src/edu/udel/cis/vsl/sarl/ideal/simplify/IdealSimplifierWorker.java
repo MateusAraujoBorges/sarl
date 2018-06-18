@@ -1,10 +1,14 @@
 package edu.udel.cis.vsl.sarl.ideal.simplify;
 
+import static edu.udel.cis.vsl.sarl.IF.SARLConstants.polyProbThreshold;
+
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 
 import edu.udel.cis.vsl.sarl.IF.CoreUniverse;
@@ -18,6 +22,7 @@ import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.IF.number.IntegerNumber;
 import edu.udel.cis.vsl.sarl.IF.number.Interval;
 import edu.udel.cis.vsl.sarl.IF.number.NumberFactory;
+import edu.udel.cis.vsl.sarl.IF.number.RationalNumber;
 import edu.udel.cis.vsl.sarl.IF.object.NumberObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject;
 import edu.udel.cis.vsl.sarl.IF.object.SymbolicObject.SymbolicObjectKind;
@@ -53,6 +58,19 @@ import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
  * @author siegel
  */
 public class IdealSimplifierWorker {
+
+	public final static boolean debug = false;
+
+	/**
+	 * A random number generator with seed very likely to be distinct from all
+	 * other seeds.
+	 * 
+	 * Note from Java API: "Instances of java.util.Random are threadsafe.
+	 * However, the concurrent use of the same java.util.Random instance across
+	 * threads may encounter contention and consequent poor performance.
+	 * Consider instead using ThreadLocalRandom in multithreaded designs."
+	 */
+	private static Random random = new Random();
 
 	// Instance fields...
 
@@ -103,6 +121,10 @@ public class IdealSimplifierWorker {
 		return theContext.getInfo();
 	}
 
+	private PrintStream out() {
+		return theContext.info.out;
+	}
+
 	private IdealFactory idealFactory() {
 		return theContext.getInfo().idealFactory;
 	}
@@ -128,7 +150,166 @@ public class IdealSimplifierWorker {
 		theContext.cacheSimplification(object, result);
 	}
 
-	// Package-private methods...
+	private Constant getProbableConstantValue(Polynomial poly,
+			IntegerNumber totalDegree, Set<Primitive> vars,
+			RationalNumber epsilon) {
+		FastEvaluator fe = new FastEvaluator(random, numberFactory(), poly,
+				totalDegree);
+
+		if (debug)
+			fe.printTreeInformation(out());
+
+		Rat rat = fe.getConstantValue(epsilon);
+
+		return rat == null ? null
+				: (Constant) universe().rational(rat.a, rat.b);
+
+	}
+
+	// private static int count = 0;
+
+	/**
+	 * Processes an expression in which the operator is not
+	 * {@link SymbolicOperator#AND}. In the CNF form, this expression is a
+	 * clause of the outer "and" expression.
+	 * 
+	 * Does this assume expr's operator is OR, or not?
+	 * 
+	 * @param expr
+	 *            the boolean expression to process
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent
+	 */
+	private BooleanExpression simplifyOr(BooleanExpression expr) {
+		BooleanExpression result = universe().not(
+				(BooleanExpression) simplifyExpression(universe().not(expr)));
+
+		//out().println("Or result 1: " + result);
+
+		Context subContext = new SubContext(theContext, simplificationStack);
+		ContextExtractor extractor = new ContextExtractor(subContext,
+				new HashSet<>());
+		boolean success;
+
+		try {
+			success = extractor.extractNumericOr(result);
+		} catch (InconsistentContextException e) {
+			return info().falseExpr;
+		}
+		if (success)
+			result = subContext.getFullAssumption();
+
+		//out().println("Or result 2: " + result);
+		return result;
+
+		// if (debug) {
+		// out().println(
+		// "[" + count + "] Starting OR simplification on: " + expr);
+		// out().flush();
+		// count++;
+		// }
+		// order the clauses of the OR expression so that all
+		// clauses that occur somewhere else in the subMap keys
+		// occur first...
+
+		// BooleanExpression result;
+		// int numArgs = expr.numArguments();
+		// BooleanExpression[] orderedClauses = new BooleanExpression[numArgs];
+		// LinkedList<BooleanExpression> regulars = new LinkedList<>();
+		// int n = 0;
+		// Set<BooleanExpression> orClauses = theContext.getAllOrClauses();
+		//
+		// for (int i = 0; i < numArgs; i++) {
+		// BooleanExpression clause = (BooleanExpression) expr.argument(i);
+		//
+		// if (orClauses.contains(clause)) {
+		// orderedClauses[n] = clause;
+		// n++;
+		// } else {
+		// regulars.add(clause);
+		// }
+		// }
+		//
+		// int numSharedClauses = n;
+		//
+		// if (numSharedClauses == 0) {
+		// result = (BooleanExpression) simplifyExpressionGeneric(expr);
+		// } else {
+		// Context c = theContext.collapsedClone();
+		//
+		// result = info().falseExpr;
+		// for (BooleanExpression reg : regulars) {
+		// orderedClauses[n] = reg;
+		// n++;
+		// }
+		// for (int i = 0; i < numArgs; i++) {
+		// BooleanExpression clause = (BooleanExpression) orderedClauses[i];
+		//
+		// clause = (BooleanExpression) c.simplify(clause);
+		// result = universe().or(result, clause);
+		// if (i < numArgs - 1) {
+		// c.assume(universe().not(clause));
+		// c.normalize();
+		// if (c.isInconsistent())
+		// break;
+		// }
+		// }
+		// }
+		//
+		// if (debug) {
+		// count--;
+		// out().println(
+		// "[" + count + "] Finished OR simplification on: " + expr);
+		// out().println("Result: " + result);
+		// out().flush();
+		// }
+		// return result;
+	}
+
+	/**
+	 * Attempts to simplify a polynomial using probabilistic techniques. For
+	 * now, this just attempts to determine if the polynomial is constant.
+	 * Experimental and under construction.
+	 * 
+	 * @param poly
+	 * @return
+	 */
+	@SuppressWarnings("unused")
+	private RationalExpression simplifyPolyProb(Polynomial poly) {
+		RationalNumber prob = universe().getProbabilisticBound();
+
+		if (prob.isZero())
+			return poly;
+
+		NumberFactory nf = numberFactory();
+		RationalExpression result;
+		Set<Primitive> vars = poly.getTruePrimitives();
+		IntegerNumber totalDegree = poly.totalDegree(nf);
+		int numVars = vars.size();
+		IntegerNumber numVarsNumber = nf.integer(numVars);
+		IntegerNumber product = nf.multiply(totalDegree, numVarsNumber);
+
+		if (debug) {
+			out().println("Poly2: product = " + product + ", threshold = "
+					+ polyProbThreshold);
+			out().flush();
+		}
+		if (nf.compare(product, polyProbThreshold) >= 0) {
+			if (debug) {
+				out().println("Entering probabilistic mode...");
+				out().flush();
+			}
+			result = getProbableConstantValue(poly, totalDegree, vars, prob);
+			if (result != null) {
+				out().print(
+						"Warning: simplified probabilistically with probability of error < ");
+				out().println(nf.scientificString(prob, 4));
+				out().flush();
+				return result;
+			}
+		}
+		return poly;
+	}
 
 	/**
 	 * Retrieves a cached simplification result. Simplification results are
@@ -674,27 +855,27 @@ public class IdealSimplifierWorker {
 			return result;
 		}
 
+		// try simplifying the terms of this polynomial...
+
 		Monomial[] termMap = poly.termMap(idf);
 		int size = termMap.length;
-
-		// TODO: why allocate this array if you may never use it...
-
-		Monomial[] terms = new Monomial[size];
-		boolean simplified = false;
+		Monomial[] terms = null;
 
 		assert size >= 2;
 		for (int i = 0; i < size; i++) {
 			Monomial term = termMap[i];
 			Monomial simplifiedTerm = (Monomial) simplifyExpression(term);
 
-			simplified = simplified || term != simplifiedTerm;
-			terms[i] = simplifiedTerm;
-		}
-		if (simplified) {
-			RationalExpression result = idf.addMonomials(terms);
-
-			result = (RationalExpression) simplifyExpressionGeneric(result);
-			return result;
+			if (term != simplifiedTerm) { // a simplification
+				terms = new Monomial[size];
+				for (int j = 0; j < i; j++)
+					terms[j] = termMap[j];
+				terms[i] = simplifiedTerm;
+				for (int j = i + 1; j < size; j++)
+					terms[j] = (Monomial) simplifyExpression(termMap[j]);
+				return (RationalExpression) simplifyExpressionGeneric(
+						idf.addMonomials(terms));
+			}
 		}
 		return poly;
 	}
@@ -724,7 +905,6 @@ public class IdealSimplifierWorker {
 
 		if (result != null)
 			return result;
-
 		return monic;
 	}
 
@@ -747,11 +927,17 @@ public class IdealSimplifierWorker {
 	}
 
 	/**
+	 * <p>
 	 * Simplifies a {@link RationalExpression}.
+	 * </p>
 	 * 
+	 * <p>
 	 * Pre-condition: expression is generically simplified.
+	 * </p>
 	 * 
+	 * <p>
 	 * Post-condition: result is generically simplified.
+	 * </p>
 	 * 
 	 * @param expression
 	 *            an instance of {@link RationalExpression} which is already
@@ -968,6 +1154,42 @@ public class IdealSimplifierWorker {
 	}
 
 	/**
+	 * If the expression is of the form that will benefit from creating a
+	 * sub-context, this method creates the sub-context and simplifies the
+	 * expression there, and returns the result. Otherwise, it returns
+	 * {@code null}
+	 * 
+	 * @param expression
+	 * @return
+	 */
+	private SymbolicExpression simplifySpecial(SymbolicExpression expression) {
+		if (expression.type().isBoolean()) {
+			if (expression.isTrue() || expression.isFalse()) {
+				return expression;
+			}
+			switch (expression.operator()) {
+			case AND:
+			case LESS_THAN:
+			case LESS_THAN_EQUALS:
+			case NEQ:
+				return new SubContext(theContext, simplificationStack,
+						(BooleanExpression) expression).getFullAssumption();
+			case EQUALS:
+				if (((SymbolicExpression) expression.argument(0)).isNumeric())
+					return new SubContext(theContext, simplificationStack,
+							(BooleanExpression) expression).getFullAssumption();
+				else
+					break;
+			case OR:
+				return simplifyOr((BooleanExpression) expression);
+			default:
+				break;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Simplifies a non-simple-constant symbolic expression without caching the
 	 * result.
 	 * 
@@ -989,28 +1211,50 @@ public class IdealSimplifierWorker {
 	 * @return an expression guaranteed to be equivalent to the given one under
 	 *         the assumption of {@link #theContext}
 	 */
+
+	// todo : break up differently.
+
+	// for cases where new context will be created: no need for generic
+	// simplification.
+
+	// otherwise, need a loop until convergence.
+
+	// or expressions do not need generic simplification.
+
 	private SymbolicExpression simplifyExpressionWork(
 			SymbolicExpression expression) {
 		assert expression != null;
 		if (simplificationStack.contains(expression))
 			return expression;
 
+		SymbolicExpression result;
+
+		result = simplifySpecial(expression);
+		if (result != null)
+			return result;
+
 		SymbolicExpression originalExpression = expression;
+		Set<SymbolicExpression> seen = new HashSet<>();
 
 		simplificationStack.add(originalExpression);
-
-		Set<SymbolicExpression> seen = new HashSet<>();
-		SymbolicExpression result = expression = simplifyExpressionGeneric(
-				expression);
-
+		result = expression = simplifyExpressionGeneric(expression);
 		// loop invariant: result == expression is non-null
 		// loop invariant: expression is generically simplified
+
+		if (false && debug) {
+			out().println(
+					"Starting simplification loop on: " + originalExpression);
+			out().flush();
+		}
 		while (seen.add(expression)) {
 			result = theContext.getSub(expression);
-			if (result != null) {
+			if (result != null)
 				// post-condition of getSub: result is generically simplified
 				break;
-			} else if (expression.operator() == SymbolicOperator.ARRAY_LAMBDA) {
+			result = simplifySpecial(expression);
+			if (result != null)
+				break;
+			if (expression.operator() == SymbolicOperator.ARRAY_LAMBDA) {
 				// simplifyArrayLambda pre-condition and post-condition:
 				// expression is g.s.
 				result = simplifyArrayLambda(expression);
@@ -1018,28 +1262,6 @@ public class IdealSimplifierWorker {
 				// the following excludes Herbrand expressions, as it should
 				result = simplifyRationalExpression(
 						(RationalExpression) expression);
-			} else if (expression instanceof BooleanExpression) {
-				if (expression.isTrue() || expression.isFalse()) {
-					result = expression;
-					break;
-				}
-				switch (expression.operator()) {
-				case AND:
-				case EQUALS:
-				case LESS_THAN:
-				case LESS_THAN_EQUALS:
-				case NEQ:
-				case NOT:
-				case OR: {
-					result = new SubContext((Context) theContext,
-							simplificationStack, (BooleanExpression) expression)
-									.getFullAssumption();
-					result = simplifyExpressionGeneric(result);
-					break; // out of switch
-				}
-				default:
-					result = expression;
-				}
 			} else {
 				result = expression;
 			}
@@ -1048,6 +1270,13 @@ public class IdealSimplifierWorker {
 			expression = result;
 		}
 		simplificationStack.remove(originalExpression);
+		if (false && debug) {
+			out().println(
+					"Finished simplification loop on: " + originalExpression);
+			out().println("Result is: " + result);
+			out().flush();
+		}
+
 		return result;
 	}
 

@@ -111,4 +111,41 @@ public class SimplifyTest {
 		r.isValid(e);
 	}
 
+	@Test
+	public void simplifyNumericOr() {
+		NumericSymbolicConstant x = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X"), intType);
+		NumericSymbolicConstant y0 = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("Y0"), intType);
+		NumericSymbolicConstant y1 = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("Y1"), intType);
+
+		BooleanExpression e = universe.equals(y0, one);
+		NumericExpression t = universe.subtract(x, y1);
+		BooleanExpression p0 = universe.or(e, universe.lessThanEquals(t, two));
+		BooleanExpression p1 = universe.or(e, universe.lessThanEquals(one, t));
+		BooleanExpression p2 = universe.neq(t, two);
+
+		BooleanExpression p = universe.and(Arrays.asList(p0, p1, p2));
+
+		out.println("p: " + p);
+
+		Reasoner reasoner = universe.reasoner(p);
+		BooleanExpression r = reasoner.getFullContext();
+
+		out.println("r: " + r);
+	}
+
+	@Test
+	public void simplifyRange() {
+		NumericSymbolicConstant x = (NumericSymbolicConstant) universe
+				.symbolicConstant(universe.stringObject("X"), intType);
+
+		BooleanExpression p = universe.equals(x, one);
+		Reasoner reasoner = universe.reasoner(universe.not(p));
+		out.println(reasoner.getFullContext());
+		BooleanExpression q = reasoner.simplify(p);
+		out.println(q);
+	}
+
 }

@@ -13,10 +13,12 @@ import static edu.udel.cis.vsl.sarl.ideal.simplify.CommonObjects.xeq5;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;
@@ -39,6 +41,8 @@ import edu.udel.cis.vsl.sarl.simplify.IF.Simplifier;
  */
 
 public class IdealSimplifierTest {
+
+	public final static PrintStream out = System.out;
 
 	private final static boolean useBackwardSubstitution = true;
 
@@ -199,12 +203,15 @@ public class IdealSimplifierTest {
 	}
 
 	/**
-	 * context: 0 <= x && x < 5 && 0 <= y && y < 5 && $forall (int i | i == 0 ||
-	 * i == x) ($forall (int j | j == 0 || j == y) a[i][j] == 0)
+	 * Context:
 	 * 
-	 * the program "stuck" at when using a reasoner of this context simplifies
-	 * not(context).
+	 * <pre>
+	 * 0 <= x && x < 5 && 0 <= y && y < 5 &&
+	 * $forall (int i | i == 0 || i == x)
+	 *    ($forall (int j | j == 0 || j == y) a[i][j] == 0)
+	 * </pre>
 	 */
+	// @Ignore
 	@Test
 	public void verySlowSimplification() {
 		SymbolicUniverse universe = SARL.newIdealUniverse();
@@ -250,9 +257,11 @@ public class IdealSimplifierTest {
 
 		BooleanExpression context = universe.and(assumption, pred);
 		Reasoner reasoner = universe.reasoner(context);
-
-		System.out.println(reasoner.getReducedContext());
-		reasoner.isValid(universe.not(reasoner.getReducedContext()));
+		BooleanExpression p = reasoner.getReducedContext();
+		out.println("p  : " + p);
+		BooleanExpression neg = universe.not(p);
+		out.println("!p : " + neg);
+		out.println(reasoner.isValid(neg));
 	}
 
 	/*
@@ -367,11 +376,17 @@ public class IdealSimplifierTest {
 				u.lessThan(u.number(u.numberFactory().number("2")),
 						u.multiply(c, c)),
 				u.lessThan(expr1, u.number(u.numberFactory().number("1"))));
+		Reasoner reasoner = u.reasoner(context);
+		BooleanExpression p = u.equals(u.zeroInt(),
+				u.add(u.oneInt(), u.subtract(expr1, expr0)));
+		BooleanExpression pSimp = reasoner.simplify(p);
 
-		assertTrue(u.reasoner(context)
-				.simplify(u.equals(u.zeroInt(),
-						u.add(u.oneInt(), u.subtract(expr1, expr0))))
-				.isFalse());
+		out.println("Original Assumption: " + context);
+		out.println("Full Context       : " + reasoner.getFullContext());
+		out.println("p                  : " + p);
+		out.println("pSimp              : " + pSimp);
+
+		assertEquals(u.falseExpression(), pSimp);
 	}
 
 	/**
@@ -427,8 +442,8 @@ public class IdealSimplifierTest {
 				u.and(Arrays.asList(clauses)));
 		Reasoner reasoner = u.reasoner(ctx);
 
-		//System.out.println(ctx);
-		//System.out.println(reasoner.getReducedContext());
+		// System.out.println(ctx);
+		// System.out.println(reasoner.getReducedContext());
 
 		// if symbolic constant Y4 is simplified away then the reduce the
 		// context shall not contain Y4 neither:

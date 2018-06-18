@@ -23,8 +23,8 @@ import edu.udel.cis.vsl.sarl.util.Pair;
  * <li>a symbolic expression whose {@link SymbolicOperator} equals to
  * {@link SymbolicOperator#TUPLE}</li>
  * <li>recursively that each tuple component must be a concrete tuple, a
- * symbolic expression with CONCRETE operator or a
- * {@link ReferenceExpression}</li>
+ * symbolic expression with CONCRETE operator or a {@link ReferenceExpression}
+ * </li>
  * </ol>
  * </p>
  * 
@@ -109,8 +109,8 @@ public class SymbolicTupleSimplifier {
 	 * 
 	 * <p>
 	 * If all components of the tuple have concrete values (or symbolic constant
-	 * values), updates the {@link #tupleSubstitutions} map and add a new
-	 * entry<code>tuple = {...} </code> to {@link #workingEntries}.
+	 * values), updates the {@link #tupleSubstitutions} map and add a new entry
+	 * <code>tuple = {...} </code> to {@link #workingEntries}.
 	 * </p>
 	 */
 	private void simplifyTupleRead(SymbolicExpression tupleRead,
@@ -164,8 +164,6 @@ public class SymbolicTupleSimplifier {
 	 * {@link ReferenceExpression}, add Ref0 (resp. Ref1) as key and Ref1(resp.
 	 * Ref0) as value to the {@link #tupleSubstitutions} map.
 	 * </p>
-	 * 
-	 * 
 	 */
 	private void simplifyReferenceExpression(SymbolicExpression add) {
 		SymbolicExpression op0 = (SymbolicExpression) add.argument(0);

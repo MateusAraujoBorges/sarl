@@ -32,19 +32,33 @@ public class SubContext extends Context {
 	private Set<SymbolicExpression> simplificationStack;
 
 	/**
+	 * New empty sub-context (equivalent to assumption true).
+	 * 
+	 * @param superContext
+	 *            the (non-{@code null}) context containing this one
+	 * @param simplificationStack
+	 * @param simplificationStack
+	 */
+	protected SubContext(Context superContext,
+			Set<SymbolicExpression> simplificationStack) {
+		super(superContext.getInfo(), superContext.backwardsSub);
+		this.superContext = superContext;
+		this.simplificationStack = simplificationStack;
+	}
+
+	/**
 	 * Creates new sub-context and initializes it using the given assumption.
 	 * 
 	 * @param superContext
 	 *            the (non-{@code null}) context containing this one
+	 * @param simplificationStack
 	 * @param assumption
 	 *            the boolean expression to be represented by this sub-context
 	 */
 	protected SubContext(Context superContext,
 			Set<SymbolicExpression> simplificationStack,
 			BooleanExpression assumption) {
-		super(superContext.getInfo(), superContext.backwardsSub);
-		this.superContext = superContext;
-		this.simplificationStack = simplificationStack;
+		this(superContext, simplificationStack);
 		initialize(assumption);
 	}
 
@@ -95,7 +109,7 @@ public class SubContext extends Context {
 	 *         {@code null}
 	 */
 	@Override
-	protected SymbolicExpression getSub(SymbolicExpression key) {
+	SymbolicExpression getSub(SymbolicExpression key) {
 		SymbolicExpression result = super.getSub(key);
 
 		if (result != null)
@@ -119,7 +133,7 @@ public class SubContext extends Context {
 	 *         assuming all substitutions in the super context
 	 */
 	@Override
-	protected LinearSolver getLinearSolver() {
+	LinearSolver getLinearSolver() {
 		if (subMap.isEmpty())
 			return null;
 
@@ -142,7 +156,7 @@ public class SubContext extends Context {
 	 *         (overwriting) those of the parent
 	 */
 	@Override
-	protected Context collapse() {
+	Context collapse() {
 		Context superCollapsed = superContext.collapse();
 		Map<SymbolicExpression, SymbolicExpression> map1 = new TreeMap<>(
 				info.universe.comparator());
@@ -159,6 +173,11 @@ public class SubContext extends Context {
 		Context collapse = new Context(info, map1, map2, this.backwardsSub);
 
 		return collapse;
+	}
+
+	@Override
+	protected Context collapsedClone() {
+		return collapse();
 	}
 
 	@Override

@@ -70,8 +70,7 @@ import edu.udel.cis.vsl.sarl.type.IF.SymbolicTypeFactory;
 import edu.udel.cis.vsl.sarl.util.Pair;
 import edu.udel.cis.vsl.sarl.util.SequenceFactory;
 
-// TODO:
-// add to CERTAINTY: PROBABLY (with bound on probability)
+// TODO: add to CERTAINTY: PROBABLY (with bound on probability)
 // need to count the number of events. this is change in CIVL
 
 public class CommonPreUniverse implements PreUniverse {
@@ -2358,7 +2357,6 @@ public class CommonPreUniverse implements PreUniverse {
 		}
 
 		NumericExpression lengthExpression = arrayType.extent();
-		//
 
 		// if elementExpr has form lambda (i) e[i], and the type of e
 		// equals arrayType, then return e.

@@ -256,7 +256,8 @@ public class FastEvaluator {
 		for (int i = 0; i < varNodes.length; i++) {
 			int randomInt = randBits == 32 ? random.nextInt()
 					: random.nextInt(randBound);
-			BigInteger big = new BigInteger("" + randomInt);
+			BigInteger big = BigInteger.valueOf(randomInt);
+			// wasL new BigInteger("" + randomInt);
 			Rat value = new Rat(big);
 
 			this.varNodes[i].setValue(value);
@@ -284,6 +285,43 @@ public class FastEvaluator {
 			prob = nf.multiply(prob, ratio);
 		} while (nf.compare(epsilon, prob) < 0);
 		return true;
+	}
+
+	private Rat evaluateAtZero() {
+		Rat zero = new Rat(BigInteger.ZERO);
+
+		for (int i = 0; i < varNodes.length; i++) {
+			this.varNodes[i].setValue(zero);
+		}
+		return ((EvalNodeRat) root).evaluate();
+	}
+
+	/**
+	 * Attempts to determine whether the polynomial represented by this object
+	 * is equivalent to a constant value, and, if that is probably the case,
+	 * returns the constant value. Otherwise, returns {@code null}. A simple
+	 * generalization of the zero-testing case.
+	 * 
+	 * @param epsilon
+	 *            upper bound on probability of being wrong
+	 * @return if the result returned is not {@code null} then the result is the
+	 *         constant value that this polynomial probably takes on everywhere;
+	 *         otherwise, the polynomial is definitely not constant, i.e., it
+	 *         takes on at least two distinct values
+	 */
+	public Rat getConstantValue(RationalNumber epsilon) {
+		RationalNumber prob = nf.oneRational();
+		RationalNumber ratio = nf.divide(nf.rational(totalDegree), randSize);
+		EvalNodeRat rootRat = (EvalNodeRat) root;
+		Rat result = evaluateAtZero();
+
+		do {
+			next();
+			if (!rootRat.evaluate().equals(result))
+				return null;
+			prob = nf.multiply(prob, ratio);
+		} while (nf.compare(epsilon, prob) < 0);
+		return result;
 	}
 
 	/**
