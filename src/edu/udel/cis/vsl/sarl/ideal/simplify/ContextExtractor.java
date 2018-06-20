@@ -38,8 +38,23 @@ import edu.udel.cis.vsl.sarl.simplify.IF.RangeFactory;
 import edu.udel.cis.vsl.sarl.util.Pair;
 import edu.udel.cis.vsl.sarl.util.SingletonSet;
 
+/**
+ * A context extractor is used to build up a {@link Context} by consuming a
+ * {@link BooleanExpression}. The boolean expression is parsed and analyzed, and
+ * the appropriate methods of the context are invoked. A given "dirty set" of
+ * symbolic constants will be updated by adding to it any symbolic constant
+ * occurring in an entry to the context's substitution map or range map (or
+ * other state) that is created by this extractor. Hence, when this extractor is
+ * finished, the context will be updated and the dirty set will have added to it
+ * any symbolic constants involved in any new entries in the context.
+ * 
+ * @author siegel
+ */
 public class ContextExtractor {
 
+	/**
+	 * Print debugging output?
+	 */
 	public final static boolean debug = false;
 
 	/**
@@ -53,11 +68,54 @@ public class ContextExtractor {
 	 */
 	private static Random random = new Random();
 
+	/**
+	 * The symbolic constants which are currently "dirty". This is the set that
+	 * will be used as an argument to the methods in {@link Context} that
+	 * require a dirty set. Those methods will add to the dirty set any symbolic
+	 * constants which occur in new entries in the substitution map or range
+	 * map.
+	 */
 	private Set<SymbolicConstant> dirtySet;
 
+	/**
+	 * The context that is being built.
+	 */
 	private Context context;
 
+	/**
+	 * Object containing references to many shared objects.
+	 */
 	private SimplifierInfo info;
+
+	// Constructor...
+
+	/**
+	 * 
+	 * @param context
+	 * @param dirtySet
+	 */
+	public ContextExtractor(Context context, Set<SymbolicConstant> dirtySet) {
+		this.context = context;
+		this.info = context.info;
+		this.dirtySet = dirtySet;
+	}
+
+	// Types used in the intermediate state of this class ...
+
+	/**
+	 * A simple structure representing the solution to an array equation.
+	 */
+	private class ArrayEquationSolution {
+		/** The array being solved for. Has array type. */
+		SymbolicExpression array;
+
+		/**
+		 * The value of a[i], where i is the index variable (not specified in
+		 * this structure). The type is the element type of the array type of
+		 * {@code array}.
+		 */
+		SymbolicExpression rhs;
+	}
 
 	/**
 	 * A simple structure with two fields: a symbolic expression of array type
@@ -78,37 +136,6 @@ public class ContextExtractor {
 		SymbolicExpression lambda;
 	}
 
-	public ContextExtractor(Context context, Set<SymbolicConstant> dirtySet) {
-		this.context = context;
-		this.info = context.info;
-		this.dirtySet = dirtySet;
-	}
-
-	// ************************ Extraction Methods ************************
-	// These methods parse a boolean expression and update the subMap
-	// and rangeMap appropriately. They do not simplify.
-
-	/**
-	 * Processes a boolean expression, updating the state of this context
-	 * appropriately. The boolean expression must be in CNF (conjunctive normal
-	 * form).
-	 * 
-	 * @param assumption
-	 *            the boolean expression to process
-	 * @throws InconsistentContextException
-	 *             if this context is determined to be inconsistent
-	 */
-	public void extractAnd(BooleanExpression assumption)
-			throws InconsistentContextException {
-		if (assumption.operator() == SymbolicOperator.AND) {
-			for (SymbolicObject arg : assumption.getArguments()) {
-				extractOr((BooleanExpression) arg);
-			}
-		} else {
-			extractOr(assumption);
-		}
-	}
-
 	/**
 	 * Processes an expression in which the operator is not
 	 * {@link SymbolicOperator#AND}. In the CNF form, this expression is a
@@ -124,7 +151,7 @@ public class ContextExtractor {
 	 * @throws InconsistentContextException
 	 *             if this context is determined to be inconsistent
 	 */
-	public void extractOr(BooleanExpression expr)
+	private void extractOr(BooleanExpression expr)
 			throws InconsistentContextException {
 		if (expr.operator() != SymbolicOperator.OR) {
 			extractClause(expr);
@@ -158,92 +185,6 @@ public class ContextExtractor {
 		}
 		context.restrictRange(theMonic, theRange, dirtySet);
 		return true;
-	}
-
-	/**
-	 * <p>
-	 * Attempts to combine the clauses of an or-expression into a range
-	 * restriction on a single {@link Monic} and add that restriction to the
-	 * state of this {@link Context}.  If the given expression is not an
-	 * or-expression then it is treated as an or-expression with one clause.
-	 * </p>
-	 * 
-	 * Examples:
-	 * 
-	 * <pre>
-	 * x<5 && x>3 ---> x in (3,5)
-	 * x<5 ---> x in (-infty, 5)
-	 * x<5 || y>3 ---> null 
-	 * </pre>
-	 * 
-	 * @param orExpr
-	 * @return <code>true</code> if a the or expression was reduced to a single
-	 *         range restriction and the information was added to this context;
-	 *         otherwise returns <code>false</code> and the state of this
-	 *         context was not changed
-	 * @throws InconsistentContextException
-	 *             if the or expression involves a numeric constraint that
-	 *             implies some {@link Monic} has an empty range
-	 */
-	protected boolean extractNumericOr(BooleanExpression orExpr)
-			throws InconsistentContextException {
-		if (orExpr.operator() == SymbolicOperator.OR)
-			return extractNumericOr(orExpr.getArguments());
-		else
-			return extractNumericOr(
-					new SingletonSet<BooleanExpression>(orExpr));
-	}
-
-	/**
-	 * Processes a basic boolean expression --- one in which the operator is
-	 * neither {@link SymbolicOperator#AND} nor {@link SymbolicOperator#OR} ---
-	 * and updates this context accordingly.
-	 * 
-	 * @param clause
-	 *            the expression which is not an "and" or "or" expression
-	 * @throws InconsistentContextException
-	 *             if this context is determined to be inconsistent
-	 */
-	public void extractClause(BooleanExpression clause)
-			throws InconsistentContextException {
-		SymbolicOperator op = clause.operator();
-
-		switch (op) {
-		case CONCRETE:
-			if (!((BooleanObject) clause.argument(0)).getBoolean())
-				throw new InconsistentContextException();
-			break;
-		case NOT:
-			extractNot((BooleanExpression) clause.argument(0));
-			break;
-		case FORALL:
-			extractForall(clause);
-			break;
-		case EXISTS:
-			extractExists(clause);
-			break;
-		case EQUALS:
-			extractEquals(clause);
-			break;
-		case NEQ:
-			extractNEQ((SymbolicExpression) clause.argument(0),
-					(SymbolicExpression) clause.argument(1));
-			break;
-		case LESS_THAN: // 0<x or x<0
-		case LESS_THAN_EQUALS: {// 0<=x or x<=0
-			SymbolicExpression arg0 = (SymbolicExpression) clause.argument(0),
-					arg1 = (SymbolicExpression) clause.argument(1);
-
-			if (arg0.isZero()) {
-				extractIneqMonic((Monic) arg1, true, op == LESS_THAN);
-			} else {
-				extractIneqMonic((Monic) arg0, false, op == LESS_THAN);
-			}
-			break;
-		}
-		default:
-			context.addSub(clause, info.trueExpr, dirtySet);
-		}
 	}
 
 	/**
@@ -659,21 +600,6 @@ public class ContextExtractor {
 	}
 
 	/**
-	 * A simple structure representing the solution to an array equation.
-	 */
-	private class ArrayEquationSolution {
-		/** The array being solved for. Has array type. */
-		SymbolicExpression array;
-
-		/**
-		 * The value of a[i], where i is the index variable (not specified in
-		 * this structure). The type is the element type of the array type of
-		 * {@code array}.
-		 */
-		SymbolicExpression rhs;
-	}
-
-	/**
 	 * Given an equation a=b, where a and b are symbolic expressions, and an
 	 * integer symbolic constant i, attempts to find an equivalent equation of
 	 * the form e[i]=f. If this equivalent form is found, the result is returned
@@ -837,4 +763,113 @@ public class ContextExtractor {
 		context.addSub(existsExpr, info.trueExpr, dirtySet);
 	}
 
+	// Package-private methods ...
+
+	/**
+	 * Processes a boolean expression, updating the state of the context
+	 * appropriately. The boolean expression must be in CNF (conjunctive normal
+	 * form).
+	 * 
+	 * @param assumption
+	 *            the boolean expression to process
+	 * @throws InconsistentContextException
+	 *             if the context is determined to be inconsistent
+	 */
+	void extractCNF(BooleanExpression assumption)
+			throws InconsistentContextException {
+		if (assumption.operator() == SymbolicOperator.AND) {
+			for (SymbolicObject arg : assumption.getArguments()) {
+				extractOr((BooleanExpression) arg);
+			}
+		} else {
+			extractOr(assumption);
+		}
+	}
+
+	/**
+	 * <p>
+	 * Attempts to interpret a CNF clause as a range restriction on a single
+	 * {@link Monic} and add that restriction to the state of the context.
+	 * </p>
+	 * 
+	 * Examples:
+	 * 
+	 * <pre>
+	 * x<5 && x>3 ---> x in (3,5)
+	 * x<5 ---> x in (-infty, 5)
+	 * x<5 || y>3 ---> null
+	 * </pre>
+	 * 
+	 * @param clause
+	 *            a boolean expression which is not an "and" expression, i.e.,
+	 *            it should be clause in the CNF form
+	 * @return <code>true</code> if the expression was reduced to a single range
+	 *         restriction and the information was added to the context;
+	 *         otherwise returns <code>false</code> and the state of the context
+	 *         was not changed
+	 * @throws InconsistentContextException
+	 *             if the expression involves a numeric constraint that implies
+	 *             some {@link Monic} has an empty range
+	 */
+	boolean extractNumericOr(BooleanExpression clause)
+			throws InconsistentContextException {
+		if (clause.operator() == SymbolicOperator.OR)
+			return extractNumericOr(clause.getArguments());
+		else
+			return extractNumericOr(
+					new SingletonSet<BooleanExpression>(clause));
+	}
+
+	/**
+	 * Processes a basic boolean expression --- one in which the operator is
+	 * neither {@link SymbolicOperator#AND} nor {@link SymbolicOperator#OR} ---
+	 * and updates the context accordingly.
+	 * 
+	 * @param clause
+	 *            the expression which is not an "and" or "or" expression
+	 * @throws InconsistentContextException
+	 *             if this context is determined to be inconsistent in the
+	 *             process of updating it based on the given clause
+	 */
+	void extractClause(BooleanExpression clause)
+			throws InconsistentContextException {
+		SymbolicOperator op = clause.operator();
+
+		switch (op) {
+		case CONCRETE:
+			if (!((BooleanObject) clause.argument(0)).getBoolean())
+				throw new InconsistentContextException();
+			break;
+		case NOT:
+			extractNot((BooleanExpression) clause.argument(0));
+			break;
+		case FORALL:
+			extractForall(clause);
+			break;
+		case EXISTS:
+			extractExists(clause);
+			break;
+		case EQUALS:
+			extractEquals(clause);
+			break;
+		case NEQ:
+			extractNEQ((SymbolicExpression) clause.argument(0),
+					(SymbolicExpression) clause.argument(1));
+			break;
+		case LESS_THAN: // 0<x or x<0
+		case LESS_THAN_EQUALS: {// 0<=x or x<=0
+			SymbolicExpression arg0 = (SymbolicExpression) clause.argument(0),
+					arg1 = (SymbolicExpression) clause.argument(1);
+
+			if (arg0.isZero()) {
+				extractIneqMonic((Monic) arg1, true, op == LESS_THAN);
+			} else {
+				extractIneqMonic((Monic) arg0, false, op == LESS_THAN);
+			}
+			break;
+		}
+		default:
+			context.addSub(clause, info.trueExpr, dirtySet);
+		}
+	}
 }

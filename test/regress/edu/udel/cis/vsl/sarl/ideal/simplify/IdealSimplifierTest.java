@@ -18,7 +18,6 @@ import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.udel.cis.vsl.sarl.SARL;

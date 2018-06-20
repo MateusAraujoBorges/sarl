@@ -5,6 +5,15 @@ import java.io.PrintStream;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicConstant;
 
+/**
+ * A context is an abstract representation of a boolean expression suitable for
+ * normalizing (simplifying) other expressions under the assumption that the
+ * context holds. This interface for a context is under construction and is
+ * currently not used.
+ * 
+ * @author siegel
+ *
+ */
 public interface ContextIF {
 
 	/**

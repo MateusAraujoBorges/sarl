@@ -21,16 +21,37 @@ import edu.udel.cis.vsl.sarl.simplify.IF.RangeFactory;
 import edu.udel.cis.vsl.sarl.util.Pair;
 import edu.udel.cis.vsl.sarl.util.WorkMap;
 
+/**
+ * A {@link ContextNormalizer} is used to place a {@link Context} into a normal
+ * (or "simplified") form.
+ * 
+ * @author siegel
+ */
 public class ContextNormalizer {
 
+	/** The {@link Context} that is being normalized. */
 	private Context context;
 
+	/** A reference to the context's range map. */
 	private WorkMap<Monic, Range> rangeMap;
 
+	/**
+	 * A reference to the context's dirty set: the set of symbolic constants
+	 * that have been involved in entries added to the substitution map or range
+	 * map since the last normalization.
+	 */
 	private Set<SymbolicConstant> theDirtySet;
 
 	private SimplifierInfo info;
 
+	/**
+	 * Initializes a new normalizer around the given {@link Context}. No
+	 * normalization is carried out until the method {@link #normalize()} is
+	 * called.
+	 * 
+	 * @param context
+	 *            the {@link Context} to be normalized
+	 */
 	public ContextNormalizer(Context context) {
 		this.context = context;
 		this.rangeMap = context.rangeMap;
@@ -75,7 +96,7 @@ public class ContextNormalizer {
 	 *             if an inconsistency is detected when modifying the
 	 *             {@link #subMap}
 	 */
-	protected void gauss(Set<SymbolicConstant> dirtyIn,
+	private void gauss(Set<SymbolicConstant> dirtyIn,
 			Set<SymbolicConstant> dirtyOut)
 			throws InconsistentContextException {
 		// TODO: change the monic comparator to one that orders
@@ -121,22 +142,6 @@ public class ContextNormalizer {
 		return false;
 	}
 
-	// private LinkedList<Pair<SymbolicExpression, SymbolicExpression>>
-	// buildSubmapWorklist(
-	// Set<SymbolicConstant> dirtSet) {
-	// LinkedList<Pair<SymbolicExpression, SymbolicExpression>> result = new
-	// LinkedList<>();
-	//
-	// for (Entry<SymbolicExpression, SymbolicExpression> entry : subMap
-	// .entrySet()) {
-	// SymbolicExpression key = entry.getKey(), value = entry.getValue();
-	//
-	// if (intersects(key, dirtSet) || intersects(value, dirtSet))
-	// result.add(new Pair<>(key, value));
-	// }
-	// return result;
-	// }
-
 	private LinkedList<SymbolicExpression> buildSubmapWorklist(
 			Set<SymbolicConstant> dirtSet) {
 		LinkedList<SymbolicExpression> result = new LinkedList<>();
@@ -151,156 +156,10 @@ public class ContextNormalizer {
 		return result;
 	}
 
-	// private LinkedList<Pair<Monic, Range>> buildRangemapWorklist(
-	// Set<SymbolicConstant> dirtSet) {
-	// LinkedList<Pair<Monic, Range>> result = new LinkedList<>();
-	//
-	// for (Entry<Monic, Range> entry : rangeMap.entrySet()) {
-	// Monic key = entry.getKey();
-	//
-	// if (intersects(key, dirtSet))
-	// result.add(new Pair<>(key, entry.getValue()));
-	// }
-	// return result;
-	// }
-
 	@SuppressWarnings("unchecked")
 	private Set<SymbolicConstant> cloneDirtySet(Set<SymbolicConstant> set) {
 		return (Set<SymbolicConstant>) ((HashSet<SymbolicConstant>) set)
 				.clone();
-	}
-
-	public void normalize() {
-		Set<SymbolicConstant> subMapDirties = cloneDirtySet(theDirtySet);
-		Set<SymbolicConstant> rangeMapDirties = cloneDirtySet(
-				context.theDirtySet);
-		Set<SymbolicConstant> tmpDirties = new HashSet<SymbolicConstant>();
-
-		while (!subMapDirties.isEmpty() || !rangeMapDirties.isEmpty()) {
-			try {
-				normalizeSubMap(subMapDirties, tmpDirties);
-				rangeMapDirties.addAll(tmpDirties);
-				subMapDirties.clear();
-				tmpDirties.clear();
-				simplifyRangeMap(rangeMapDirties, tmpDirties);
-				subMapDirties.addAll(tmpDirties);
-				rangeMapDirties.clear();
-				tmpDirties.clear();
-			} catch (InconsistentContextException e) {
-				context.makeInconsistent();
-				break;
-			}
-		}
-		theDirtySet.clear();
-	}
-
-	private void normalizeSubMap(Set<SymbolicConstant> dirtyIn,
-			Set<SymbolicConstant> dirtyOut)
-			throws InconsistentContextException {
-		Set<SymbolicConstant> simpDirties = cloneDirtySet(dirtyIn);
-		Set<SymbolicConstant> tupleDirties = cloneDirtySet(dirtyIn);
-		Set<SymbolicConstant> gaussDirties = cloneDirtySet(dirtyIn);
-		Set<SymbolicConstant> tmpDirties = new HashSet<>();
-
-		while (!simpDirties.isEmpty() || !tupleDirties.isEmpty()
-				|| !gaussDirties.isEmpty()) {
-			if (!simpDirties.isEmpty()) {
-				simplifySubMap(simpDirties, tmpDirties);
-				simpDirties.clear();
-				tupleDirties.addAll(tmpDirties);
-				gaussDirties.addAll(tmpDirties);
-				dirtyOut.addAll(tmpDirties);
-				tmpDirties.clear();
-			}
-			if (!tupleDirties.isEmpty()) {
-				extractTuples(tupleDirties, tmpDirties);
-				tupleDirties.clear();
-				simpDirties.addAll(tmpDirties);
-				gaussDirties.addAll(tmpDirties);
-				dirtyOut.addAll(tmpDirties);
-				tmpDirties.clear();
-			}
-			if (!gaussDirties.isEmpty()) {
-				gauss(gaussDirties, tmpDirties);
-				gaussDirties.clear();
-				simpDirties.addAll(tmpDirties);
-				tupleDirties.addAll(tmpDirties);
-				dirtyOut.addAll(tmpDirties);
-				tmpDirties.clear();
-			}
-		}
-
-	}
-
-	/**
-	 * Simplifies the {@link #subMap}. When this method returns, each key-value
-	 * pair in the subMap will be simplified using all other entries.
-	 * 
-	 * Given the original dirty set which determines the initial set of entries
-	 * that must be simplified; upon return, dirtySet will contain all symbolic
-	 * constants ...
-	 * 
-	 * @param dirtyIn
-	 *            set of symbolic constants considered dirty, used to determine
-	 *            the initial set of entries in the subMap which will be
-	 *            simplified. More entries can be added as more variables become
-	 *            dirty. This set is not modified by this method.
-	 * 
-	 * @param dirtyOut
-	 *            the actual set of symbolic constants occurring in entries
-	 *            which are modified or added to the subMap
-	 *
-	 */
-	private void simplifySubMap(Set<SymbolicConstant> dirtyIn,
-			Set<SymbolicConstant> dirtyOut)
-			throws InconsistentContextException {
-		Set<SymbolicConstant> dirtyNow = new HashSet<>(dirtyIn);
-		ContextExtractor extractor = new ContextExtractor(context, dirtyNow);
-
-		while (!dirtyNow.isEmpty()) {
-			LinkedList<SymbolicExpression> worklist = buildSubmapWorklist(
-					dirtyNow);
-
-			dirtyNow.clear();
-			while (!worklist.isEmpty()) {
-				SymbolicExpression key1 = worklist.remove(),
-						value1 = context.getSub(key1);
-
-				if (value1 == null)
-					continue;
-				context.removeSubkey(key1);
-
-				SymbolicExpression key2 = context.simplify(key1),
-						value2 = context.simplify(value1);
-				Pair<SymbolicExpression, SymbolicExpression> pair = new Pair<>(
-						key2, value2);
-
-				context.standardizePair(pair);
-
-				SymbolicExpression newKey = pair.left;
-
-				if (newKey == null)
-					continue; // a trivial substitution
-
-				SymbolicExpression newValue = pair.right;
-				SymbolicExpression oldValue = context.getSub(newKey);
-
-				if (oldValue == newValue) {
-					// do nothing: the new sub is already in the subMap
-				} else if (newKey == key1 && newValue == value1) {
-					// no change: put it back, but don't count it as dirty...
-					context.putSub(key1, value1);
-				} else if (newValue.isTrue()
-						&& SimplifierInfo.isNumericRelational(newKey)) {
-					// it goes to the rangeMap...
-					extractor.extractClause((BooleanExpression) newKey);
-				} else {
-					// add the new sub, updating dirty...
-					context.addSub(newKey, newValue, dirtyNow);
-				}
-			}
-			dirtyOut.addAll(dirtyNow);
-		}
 	}
 
 	/**
@@ -386,6 +245,101 @@ public class ContextNormalizer {
 	}
 
 	/**
+	 * Simplifies the context's substitution map. When this method returns, each
+	 * key-value pair in the subMap will be simplified using all other entries.
+	 * 
+	 * Given the original dirty set which determines the initial set of entries
+	 * that must be simplified; upon return, dirtySet will contain all symbolic
+	 * constants ...
+	 * 
+	 * @param dirtyIn
+	 *            set of symbolic constants considered dirty, used to determine
+	 *            the initial set of entries in the subMap which will be
+	 *            simplified. More entries can be added as more variables become
+	 *            dirty. This set is not modified by this method.
+	 * 
+	 * @param dirtyOut
+	 *            the actual set of symbolic constants occurring in entries
+	 *            which are modified or added to the subMap
+	 *
+	 */
+	private void simplifySubMap(Set<SymbolicConstant> dirtyIn,
+			Set<SymbolicConstant> dirtyOut)
+			throws InconsistentContextException {
+		Set<SymbolicConstant> dirtyNow = new HashSet<>(dirtyIn);
+		ContextExtractor extractor = new ContextExtractor(context, dirtyNow);
+
+		while (!dirtyNow.isEmpty()) {
+			LinkedList<SymbolicExpression> worklist = buildSubmapWorklist(
+					dirtyNow);
+
+			dirtyNow.clear();
+			while (!worklist.isEmpty()) {
+				SymbolicExpression key1 = worklist.remove(),
+						value1 = context.getSub(key1);
+
+				if (value1 == null)
+					continue;
+				context.removeSubkey(key1);
+
+				SymbolicExpression key2 = context.simplify(key1),
+						value2 = context.simplify(value1);
+				Pair<SymbolicExpression, SymbolicExpression> pair = new Pair<>(
+						key2, value2);
+
+				context.standardizePair(pair);
+
+				SymbolicExpression newKey = pair.left;
+
+				if (newKey == null)
+					continue; // a trivial substitution
+
+				SymbolicExpression newValue = pair.right;
+				SymbolicExpression oldValue = context.getSub(newKey);
+
+				if (oldValue == newValue) {
+					// do nothing: the new sub is already in the subMap
+				} else if (newKey == key1 && newValue == value1) {
+					// no change: put it back, but don't count it as dirty...
+					context.putSub(key1, value1);
+				} else if (newValue.isTrue()
+						&& SimplifierInfo.isNumericRelational(newKey)) {
+					// it goes to the rangeMap...
+					extractor.extractClause((BooleanExpression) newKey);
+				} else {
+					// add the new sub, updating dirty...
+					context.addSub(newKey, newValue, dirtyNow);
+				}
+			}
+			dirtyOut.addAll(dirtyNow);
+		}
+	}
+
+	/**
+	 * <p>
+	 * Simplify non-concrete tuple type expressions to concrete tuples. A
+	 * concrete tuple is defined in {@link SymbolicTupleSimplifier}.
+	 * </p>
+	 * 
+	 * @throws InconsistentContextException
+	 *             if any new substitution from a non-concrete tuple to a
+	 *             concrete one violates the invariants of the {@link #subMap}.
+	 */
+	private void extractTuples(Set<SymbolicConstant> dirtyIn,
+			Set<SymbolicConstant> dirtyOut)
+			throws InconsistentContextException {
+		// TODO: for now, not using dirtyIn. Eventually use this to limit
+		// the search in some way.
+		Map<SymbolicExpression, SymbolicExpression> ncTuple2concrete = new SymbolicTupleSimplifier(
+				context).getTupleSubstitutionMap();
+
+		// simplify non-concrete tuples:
+		for (Entry<SymbolicExpression, SymbolicExpression> entry : ncTuple2concrete
+				.entrySet())
+			context.addSub(entry.getKey(), entry.getValue(), dirtyOut);
+	}
+
+	/**
 	 * Simplifies an entry removed from the {@link #rangeMap}. If no
 	 * simplification occurs, this method returns the same entry it was given.
 	 * Otherwise it will return a non-{@code null} {@link Entry}. The first
@@ -433,7 +387,7 @@ public class ContextNormalizer {
 	 * 
 	 * @return <code>true</code> iff any change was made
 	 */
-	private void simplifyRangeMap(Set<SymbolicConstant> dirtyIn,
+	private void normalizeRangeMap(Set<SymbolicConstant> dirtyIn,
 			Set<SymbolicConstant> dirtyOut)
 			throws InconsistentContextException {
 		// for now, not using dirtyIn. We will assume all entries
@@ -459,28 +413,68 @@ public class ContextNormalizer {
 		}
 	}
 
-	/**
-	 * <p>
-	 * Simplify non-concrete tuple type expressions to concrete tuples. A
-	 * concrete tuple is defined in {@link SymbolicTupleSimplifier}.
-	 * </p>
-	 * 
-	 * @throws InconsistentContextException
-	 *             if any new substitution from a non-concrete tuple to a
-	 *             concrete one violates the invariants of the {@link #subMap}.
-	 */
-	private void extractTuples(Set<SymbolicConstant> dirtyIn,
+	private void normalizeSubMap(Set<SymbolicConstant> dirtyIn,
 			Set<SymbolicConstant> dirtyOut)
 			throws InconsistentContextException {
-		// TODO: for now, not using dirtyIn. Eventually use this to limit
-		// the search in some way.
-		Map<SymbolicExpression, SymbolicExpression> ncTuple2concrete = new SymbolicTupleSimplifier(
-				context).getTupleSubstitutionMap();
+		Set<SymbolicConstant> simpDirties = cloneDirtySet(dirtyIn);
+		Set<SymbolicConstant> tupleDirties = cloneDirtySet(dirtyIn);
+		Set<SymbolicConstant> gaussDirties = cloneDirtySet(dirtyIn);
+		Set<SymbolicConstant> tmpDirties = new HashSet<>();
 
-		// simplify non-concrete tuples:
-		for (Entry<SymbolicExpression, SymbolicExpression> entry : ncTuple2concrete
-				.entrySet())
-			context.addSub(entry.getKey(), entry.getValue(), dirtyOut);
+		while (!simpDirties.isEmpty() || !tupleDirties.isEmpty()
+				|| !gaussDirties.isEmpty()) {
+			if (!simpDirties.isEmpty()) {
+				simplifySubMap(simpDirties, tmpDirties);
+				simpDirties.clear();
+				tupleDirties.addAll(tmpDirties);
+				gaussDirties.addAll(tmpDirties);
+				dirtyOut.addAll(tmpDirties);
+				tmpDirties.clear();
+			}
+			if (!tupleDirties.isEmpty()) {
+				extractTuples(tupleDirties, tmpDirties);
+				tupleDirties.clear();
+				simpDirties.addAll(tmpDirties);
+				gaussDirties.addAll(tmpDirties);
+				dirtyOut.addAll(tmpDirties);
+				tmpDirties.clear();
+			}
+			if (!gaussDirties.isEmpty()) {
+				gauss(gaussDirties, tmpDirties);
+				gaussDirties.clear();
+				simpDirties.addAll(tmpDirties);
+				tupleDirties.addAll(tmpDirties);
+				dirtyOut.addAll(tmpDirties);
+				tmpDirties.clear();
+			}
+		}
 	}
 
+	/**
+	 * Normalize the context. This is the "main" method for this class. It
+	 * should be invoked by the client after construction.
+	 */
+	void normalize() {
+		Set<SymbolicConstant> subMapDirties = cloneDirtySet(theDirtySet);
+		Set<SymbolicConstant> rangeMapDirties = cloneDirtySet(
+				context.theDirtySet);
+		Set<SymbolicConstant> tmpDirties = new HashSet<SymbolicConstant>();
+
+		while (!subMapDirties.isEmpty() || !rangeMapDirties.isEmpty()) {
+			try {
+				normalizeSubMap(subMapDirties, tmpDirties);
+				rangeMapDirties.addAll(tmpDirties);
+				subMapDirties.clear();
+				tmpDirties.clear();
+				normalizeRangeMap(rangeMapDirties, tmpDirties);
+				subMapDirties.addAll(tmpDirties);
+				rangeMapDirties.clear();
+				tmpDirties.clear();
+			} catch (InconsistentContextException e) {
+				context.makeInconsistent();
+				break;
+			}
+		}
+		theDirtySet.clear();
+	}
 }

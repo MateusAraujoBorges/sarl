@@ -117,22 +117,95 @@ public class IdealSimplifierWorker {
 
 	// Private methods ...
 
+	/**
+	 * Is this a simple type --- i.e., one that is its own simplification.
+	 * 
+	 * @param type
+	 *            a non-{@code null} type
+	 * @return {@code true} iff {@code type} is a simple type
+	 */
+	private static boolean isSimpleType(SymbolicType type) {
+		switch (type.typeKind()) {
+		case BOOLEAN:
+		case INTEGER:
+		case REAL:
+		case CHAR:
+		case UNINTERPRETED:
+			return true;
+		default:
+		}
+		return false;
+	}
+
+	/**
+	 * Is the object a "simple object", i.e., one which is its own
+	 * simplification?
+	 * 
+	 * @param object
+	 * @return if {@code true}, the object is a simple object
+	 */
+	private static boolean isSimpleObject(SymbolicObject object) {
+		switch (object.symbolicObjectKind()) {
+		case BOOLEAN:
+		case INT:
+		case NUMBER:
+		case STRING:
+		case CHAR:
+			return true;
+		case EXPRESSION:
+			return isSimpleConstant((SymbolicExpression) object);
+		case SEQUENCE:
+			return false;
+		case TYPE:
+			return isSimpleType((SymbolicType) object);
+		case TYPE_SEQUENCE:
+			return false;
+		default:
+			throw new SARLInternalException("unreachable");
+		}
+	}
+
+	/**
+	 * Gets the {@link SimplifierInfo} object associated to the context.
+	 * 
+	 * @return the {@link SimplifierInfo} object
+	 */
 	private SimplifierInfo info() {
 		return theContext.getInfo();
 	}
 
+	/**
+	 * Gets the stream to which debugging output is sent.
+	 * 
+	 * @return the stream to which debugging output is sent
+	 */
 	private PrintStream out() {
 		return theContext.info.out;
 	}
 
+	/**
+	 * Gets the factory responsible for creating ideal expressions
+	 * 
+	 * @return the factory responsible for creating ideal expressions
+	 */
 	private IdealFactory idealFactory() {
 		return theContext.getInfo().idealFactory;
 	}
 
+	/**
+	 * Gets the number factory used by the context.
+	 * 
+	 * @return the number factory
+	 */
 	private NumberFactory numberFactory() {
 		return theContext.getInfo().numberFactory;
 	}
 
+	/**
+	 * Gets the symbolic universe used by the context.
+	 * 
+	 * @return the symbolic universe
+	 */
 	private PreUniverse universe() {
 		return theContext.getInfo().universe;
 	}
@@ -150,41 +223,39 @@ public class IdealSimplifierWorker {
 		theContext.cacheSimplification(object, result);
 	}
 
-	private Constant getProbableConstantValue(Polynomial poly,
-			IntegerNumber totalDegree, Set<Primitive> vars,
-			RationalNumber epsilon) {
-		FastEvaluator fe = new FastEvaluator(random, numberFactory(), poly,
-				totalDegree);
-
-		if (debug)
-			fe.printTreeInformation(out());
-
-		Rat rat = fe.getConstantValue(epsilon);
-
-		return rat == null ? null
-				: (Constant) universe().rational(rat.a, rat.b);
-
+	/**
+	 * Retrieves a cached simplification result. Simplification results are
+	 * cached using method
+	 * {@link #cacheSimplification(SymbolicObject, SymbolicObject)}, which in
+	 * turns uses {@link #theContext}'s simplification cache to cache results.
+	 * Note that every time {@link #theContext} changes, its cache is cleared.
+	 * 
+	 * @param object
+	 *            the object to be simplified
+	 * @return the result of a previous simplification applied to {@code object}
+	 *         , or <code>null</code> if no such result is cached
+	 */
+	private SymbolicObject getCachedSimplification(SymbolicObject object) {
+		return theContext.getSimplification(object);
 	}
 
-	// private static int count = 0;
-
 	/**
-	 * Processes an expression in which the operator is not
-	 * {@link SymbolicOperator#AND}. In the CNF form, this expression is a
-	 * clause of the outer "and" expression.
+	 * Simplifies an expression in which the operator is
+	 * {@link SymbolicOperator#OR}. In the CNF form, this expression is a clause
+	 * of the outer "and" expression.
 	 * 
-	 * Does this assume expr's operator is OR, or not?
+	 * Note: many different techniques have been tried here. They have different
+	 * performance-benefit tradeoffs. This method should be considered under
+	 * construction
 	 * 
 	 * @param expr
-	 *            the boolean expression to process
-	 * @throws InconsistentContextException
-	 *             if this context is determined to be inconsistent
+	 *            a boolean expression with operator {@link SymbolicOperator#OR}
+	 * @return a simplified version of the expression
 	 */
 	private BooleanExpression simplifyOr(BooleanExpression expr) {
 		BooleanExpression result = universe().not(
 				(BooleanExpression) simplifyExpression(universe().not(expr)));
-
-		//out().println("Or result 1: " + result);
+		// out().println("Or result 1: " + result);
 
 		Context subContext = new SubContext(theContext, simplificationStack);
 		ContextExtractor extractor = new ContextExtractor(subContext,
@@ -198,8 +269,7 @@ public class IdealSimplifierWorker {
 		}
 		if (success)
 			result = subContext.getFullAssumption();
-
-		//out().println("Or result 2: " + result);
+		// out().println("Or result 2: " + result);
 		return result;
 
 		// if (debug) {
@@ -264,87 +334,6 @@ public class IdealSimplifierWorker {
 		// out().flush();
 		// }
 		// return result;
-	}
-
-	/**
-	 * Attempts to simplify a polynomial using probabilistic techniques. For
-	 * now, this just attempts to determine if the polynomial is constant.
-	 * Experimental and under construction.
-	 * 
-	 * @param poly
-	 * @return
-	 */
-	@SuppressWarnings("unused")
-	private RationalExpression simplifyPolyProb(Polynomial poly) {
-		RationalNumber prob = universe().getProbabilisticBound();
-
-		if (prob.isZero())
-			return poly;
-
-		NumberFactory nf = numberFactory();
-		RationalExpression result;
-		Set<Primitive> vars = poly.getTruePrimitives();
-		IntegerNumber totalDegree = poly.totalDegree(nf);
-		int numVars = vars.size();
-		IntegerNumber numVarsNumber = nf.integer(numVars);
-		IntegerNumber product = nf.multiply(totalDegree, numVarsNumber);
-
-		if (debug) {
-			out().println("Poly2: product = " + product + ", threshold = "
-					+ polyProbThreshold);
-			out().flush();
-		}
-		if (nf.compare(product, polyProbThreshold) >= 0) {
-			if (debug) {
-				out().println("Entering probabilistic mode...");
-				out().flush();
-			}
-			result = getProbableConstantValue(poly, totalDegree, vars, prob);
-			if (result != null) {
-				out().print(
-						"Warning: simplified probabilistically with probability of error < ");
-				out().println(nf.scientificString(prob, 4));
-				out().flush();
-				return result;
-			}
-		}
-		return poly;
-	}
-
-	/**
-	 * Retrieves a cached simplification result. Simplification results are
-	 * cached using method
-	 * {@link #cacheSimplification(SymbolicObject, SymbolicObject)}, which in
-	 * turns uses {@link #theContext}'s simplification cache to cache results.
-	 * Note that every time {@link #theContext} changes, its cache is cleared.
-	 * 
-	 * @param object
-	 *            the object to be simplified
-	 * @return the result of a previous simplification applied to {@code object}
-	 *         , or <code>null</code> if no such result is cached
-	 */
-	private SymbolicObject getCachedSimplification(SymbolicObject object) {
-		return theContext.getSimplification(object);
-	}
-
-	/**
-	 * Is this a simple type --- i.e., one that is its own simplification.
-	 * 
-	 * @param type
-	 *            a non-{@code null} type
-	 * @return {@code true} iff {@code type} is a simple type
-	 */
-	private static boolean isSimpleType(SymbolicType type) {
-		switch (type.typeKind()) {
-		case BOOLEAN:
-		case INTEGER:
-		case REAL:
-		case CHAR:
-		case UNINTERPRETED:
-			return true;
-		default:
-		}
-		return false;
 	}
 
 	/**
@@ -527,34 +516,6 @@ public class IdealSimplifierWorker {
 			}
 		}
 		return result;
-	}
-
-	/**
-	 * Is the object a "simple object", i.e., one which is its own
-	 * simplification?
-	 * 
-	 * @param object
-	 * @return if {@code true}, the object is a simple object
-	 */
-	private static boolean isSimpleObject(SymbolicObject object) {
-		switch (object.symbolicObjectKind()) {
-		case BOOLEAN:
-		case INT:
-		case NUMBER:
-		case STRING:
-		case CHAR:
-			return true;
-		case EXPRESSION:
-			return isSimpleConstant((SymbolicExpression) object);
-		case SEQUENCE:
-			return false;
-		case TYPE:
-			return isSimpleType((SymbolicType) object);
-		case TYPE_SEQUENCE:
-			return false;
-		default:
-			throw new SARLInternalException("unreachable");
-		}
 	}
 
 	/**
@@ -807,6 +768,88 @@ public class IdealSimplifierWorker {
 			return result;
 		}
 		return rational;
+	}
+
+	/**
+	 * Attempts to determine, using probabilistic techniques, if the given
+	 * polynomial is constant. If the method determines that the polynomial
+	 * probably is constant, it returns the constant, otherwise, it returns
+	 * {@code null}.
+	 * 
+	 * @param poly
+	 *            the polynomial
+	 * @param totalDegree
+	 *            an upper bound on the total degree of the polynomial
+	 * @param vars
+	 *            the "variables" of the polynomial, these are primitive
+	 *            expressions that are not additions, subtractions, or
+	 *            multiplications
+	 * @param epsilon
+	 *            upper bound on the probability of error
+	 * @return if this method returns a non-{@code null} {@link Constant}, the
+	 *         polynomial is probably equivalent to that constant, with
+	 *         probability of error at most {@code epsilon}; if it returns
+	 *         {@code null}, the polynomial is definitely not constant
+	 */
+	private Constant getProbableConstantValue(Polynomial poly,
+			IntegerNumber totalDegree, Set<Primitive> vars,
+			RationalNumber epsilon) {
+		FastEvaluator fe = new FastEvaluator(random, numberFactory(), poly,
+				totalDegree);
+
+		if (debug)
+			fe.printTreeInformation(out());
+
+		Rat rat = fe.getConstantValue(epsilon);
+
+		return rat == null ? null
+				: (Constant) universe().rational(rat.a, rat.b);
+	}
+
+	/**
+	 * Attempts to simplify a polynomial using probabilistic techniques. For
+	 * now, this just attempts to determine if the polynomial is constant.
+	 * Experimental and under construction.
+	 * 
+	 * @param poly
+	 *            the polynomial to simplify
+	 * @return a possibly simplified version of the given polynomial
+	 */
+	@SuppressWarnings("unused")
+	private RationalExpression simplifyPolyProb(Polynomial poly) {
+		RationalNumber prob = universe().getProbabilisticBound();
+
+		if (prob.isZero())
+			return poly;
+
+		NumberFactory nf = numberFactory();
+		RationalExpression result;
+		Set<Primitive> vars = poly.getTruePrimitives();
+		IntegerNumber totalDegree = poly.totalDegree(nf);
+		int numVars = vars.size();
+		IntegerNumber numVarsNumber = nf.integer(numVars);
+		IntegerNumber product = nf.multiply(totalDegree, numVarsNumber);
+
+		if (debug) {
+			out().println("Poly2: product = " + product + ", threshold = "
+					+ polyProbThreshold);
+			out().flush();
+		}
+		if (nf.compare(product, polyProbThreshold) >= 0) {
+			if (debug) {
+				out().println("Entering probabilistic mode...");
+				out().flush();
+			}
+			result = getProbableConstantValue(poly, totalDegree, vars, prob);
+			if (result != null) {
+				out().print(
+						"Warning: simplified probabilistically with probability of error < ");
+				out().println(nf.scientificString(prob, 4));
+				out().flush();
+				return result;
+			}
+		}
+		return poly;
 	}
 
 	/**
@@ -1160,13 +1203,13 @@ public class IdealSimplifierWorker {
 	 * {@code null}
 	 * 
 	 * @param expression
-	 * @return
+	 *            any non-{@code null} symbolic expression
+	 * @return a simplified version of the expressin or {@code null}
 	 */
 	private SymbolicExpression simplifySpecial(SymbolicExpression expression) {
 		if (expression.type().isBoolean()) {
-			if (expression.isTrue() || expression.isFalse()) {
+			if (expression.isTrue() || expression.isFalse())
 				return expression;
-			}
 			switch (expression.operator()) {
 			case AND:
 			case LESS_THAN:
@@ -1211,16 +1254,6 @@ public class IdealSimplifierWorker {
 	 * @return an expression guaranteed to be equivalent to the given one under
 	 *         the assumption of {@link #theContext}
 	 */
-
-	// todo : break up differently.
-
-	// for cases where new context will be created: no need for generic
-	// simplification.
-
-	// otherwise, need a loop until convergence.
-
-	// or expressions do not need generic simplification.
-
 	private SymbolicExpression simplifyExpressionWork(
 			SymbolicExpression expression) {
 		assert expression != null;
@@ -1238,14 +1271,14 @@ public class IdealSimplifierWorker {
 
 		simplificationStack.add(originalExpression);
 		result = expression = simplifyExpressionGeneric(expression);
-		// loop invariant: result == expression is non-null
-		// loop invariant: expression is generically simplified
 
-		if (false && debug) {
+		if (debug) {
 			out().println(
 					"Starting simplification loop on: " + originalExpression);
 			out().flush();
 		}
+		// loop invariant: result == expression is non-null
+		// loop invariant: expression is generically simplified
 		while (seen.add(expression)) {
 			result = theContext.getSub(expression);
 			if (result != null)
@@ -1256,7 +1289,7 @@ public class IdealSimplifierWorker {
 				break;
 			if (expression.operator() == SymbolicOperator.ARRAY_LAMBDA) {
 				// simplifyArrayLambda pre-condition and post-condition:
-				// expression is g.s.
+				// expression is generically simplified
 				result = simplifyArrayLambda(expression);
 			} else if (expression instanceof RationalExpression) {
 				// the following excludes Herbrand expressions, as it should
@@ -1270,40 +1303,16 @@ public class IdealSimplifierWorker {
 			expression = result;
 		}
 		simplificationStack.remove(originalExpression);
-		if (false && debug) {
+		if (debug) {
 			out().println(
 					"Finished simplification loop on: " + originalExpression);
 			out().println("Result is: " + result);
 			out().flush();
 		}
-
 		return result;
 	}
 
 	// Package-private methods...
-
-	/**
-	 * Simplifies an expression that is not a simple constant.
-	 * 
-	 * @param expression
-	 *            a non-{@code null} symbolic expression not a simple constant
-	 * @return the simplified version of the given expression
-	 */
-	SymbolicExpression simplifyNonSimpleConstant(
-			SymbolicExpression expression) {
-		// It is OK to cache simplification results even if the context
-		// is changing because the context clears its cache every time
-		// a change is made...
-		SymbolicExpression result = (SymbolicExpression) getCachedSimplification(
-				expression);
-
-		if (result == null) {
-			// TODO: generic simp here
-			result = simplifyExpressionWork(expression);
-			cacheSimplification(expression, result);
-		}
-		return result;
-	}
 
 	/**
 	 * Is the given expression a "simple constant": "NULL", a concrete boolean,
@@ -1334,6 +1343,28 @@ public class IdealSimplifierWorker {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Simplifies an expression that is not a simple constant.
+	 * 
+	 * @param expression
+	 *            a non-{@code null} symbolic expression not a simple constant
+	 * @return the simplified version of the given expression
+	 */
+	SymbolicExpression simplifyNonSimpleConstant(
+			SymbolicExpression expression) {
+		// It is OK to cache simplification results even if the context
+		// is changing because the context clears its cache every time
+		// a change is made...
+		SymbolicExpression result = (SymbolicExpression) getCachedSimplification(
+				expression);
+
+		if (result == null) {
+			result = simplifyExpressionWork(expression);
+			cacheSimplification(expression, result);
+		}
+		return result;
 	}
 
 	// public methods ...

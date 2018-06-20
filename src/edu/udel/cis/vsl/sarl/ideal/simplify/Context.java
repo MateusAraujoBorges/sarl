@@ -1319,7 +1319,7 @@ public class Context implements ContextIF {
 		ContextExtractor extractor = new ContextExtractor(this, theDirtySet);
 
 		try {
-			extractor.extractAnd(expr);
+			extractor.extractCNF(expr);
 		} catch (InconsistentContextException e) {
 			makeInconsistent();
 		}
