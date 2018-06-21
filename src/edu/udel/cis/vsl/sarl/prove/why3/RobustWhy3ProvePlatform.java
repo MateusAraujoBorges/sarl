@@ -15,6 +15,7 @@ import edu.udel.cis.vsl.sarl.IF.TheoremProverException;
 import edu.udel.cis.vsl.sarl.IF.ValidityResult;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind;
+import edu.udel.cis.vsl.sarl.IF.config.SARLConfig;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.IF.expr.SymbolicExpression.SymbolicOperator;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
@@ -71,14 +72,13 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 	 */
 	private ProverFunctionInterpretation[] ppreds;
 
-	private static String temporary_file_dir = "./SARL_Why3/";
-
-	private static String temporary_file_name = "./SARL_Why3/_sarl_why3.why";
-
 	private static String prove_command = "prove";
 
-	public RobustWhy3ProvePlatform(PreUniverse universe, ProverInfo info,
-			BooleanExpression context, ProverFunctionInterpretation[] ppreds) {
+	private File temporaryScriptFile = null;
+
+	public RobustWhy3ProvePlatform(SARLConfig config, PreUniverse universe,
+			ProverInfo info, BooleanExpression context,
+			ProverFunctionInterpretation[] ppreds) {
 		String[] command = new String[7];
 
 		assert universe != null;
@@ -93,7 +93,19 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 		command[2] = "-P";
 		command[4] = "-t";
 		command[5] = String.valueOf((int) info.getTimeout());
-		command[6] = temporary_file_name;
+
+		File outputdir = config.getOutputFileDir().toFile();
+
+		try {
+			if (!outputdir.exists())
+				outputdir.mkdirs();
+			temporaryScriptFile = File.createTempFile("_sarl_", ".why",
+					config.getOutputFileDir().toFile());
+		} catch (IOException e) {
+			throw new TheoremProverException(
+					"Why3 runner failed to create a temporary script file");
+		}
+		command[6] = temporaryScriptFile.getPath();
 
 		// Initialize process builders:
 		int proverCounter = 0;
@@ -196,15 +208,11 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 
 		// Write the why3 translation into a temporary file, run process, then
 		// delete it:
-		File queryFile = new File(temporary_file_dir);
 		String executableWhy3Script = why3Translator.getExecutableOutput(id,
 				testUNSAT, goalsTexts);
 
-		if (!queryFile.exists())
-			queryFile.mkdirs();
-		queryFile = new File(temporary_file_name);
 		try {
-			FileWriter filewriter = new FileWriter(queryFile);
+			FileWriter filewriter = new FileWriter(temporaryScriptFile);
 
 			filewriter.write(executableWhy3Script);
 			filewriter.close();
@@ -248,7 +256,7 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 			out.flush();
 		}
 		try {
-			Files.delete(queryFile.toPath());
+			Files.delete(temporaryScriptFile.toPath());
 		} catch (IOException e) {
 			for (int i = 0; i < processBuilders.length; i++)
 				while (runners[i].process().isAlive()) {
@@ -256,10 +264,10 @@ public class RobustWhy3ProvePlatform implements TheoremProver {
 				}
 			// then delete again:
 			try {
-				Files.delete(queryFile.toPath());
+				Files.delete(temporaryScriptFile.toPath());
 			} catch (IOException e1) {
-				err.print(
-						"File " + queryFile + " is not successfullt deleted.");
+				err.print("File " + temporaryScriptFile
+						+ " is not successfullt deleted.");
 			}
 		}
 		return result;

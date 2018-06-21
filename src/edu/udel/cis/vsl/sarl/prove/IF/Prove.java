@@ -149,9 +149,9 @@ public class Prove {
 	 *         why3Info is null or does not have a why3 kind.
 	 */
 	public static RobustWhy3ProvePlatformFactory newWhy3ProvePlatformFactory(
-			PreUniverse universe, ProverInfo prover) {
+			PreUniverse universe, ProverInfo prover, SARLConfig config) {
 		if (prover != null && prover.getKind() == ProverKind.Why3)
-			return new RobustWhy3ProvePlatformFactory(universe, prover);
+			return new RobustWhy3ProvePlatformFactory(universe, prover, config);
 		else
 			return null;
 	}

@@ -1,5 +1,7 @@
 package edu.udel.cis.vsl.sarl.IF.config;
 
+import java.nio.file.Path;
+
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind;
 
 /**
@@ -69,5 +71,11 @@ public interface SARLConfig {
 	 *            platform.
 	 */
 	void setWhy3ProvePlatform(ProverInfo why3Info);
+
+	/**
+	 * @return the directory where SARL should put its generated temporary files
+	 *         in
+	 */
+	Path getOutputFileDir();
 
 }

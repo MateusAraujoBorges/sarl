@@ -160,6 +160,7 @@ public class DivOrModuloTest {
 				universe.equals(universe.multiply(two, b), y));
 		ValidityResult result = universe.reasoner(assumption).valid(predicate);
 		universe.setShowProverQueries(true);
+		// Requires CVC4 with TIMEOUT > 5 seconds!
 		assertEquals(ResultType.YES, result.getResultType());
 	}
 }

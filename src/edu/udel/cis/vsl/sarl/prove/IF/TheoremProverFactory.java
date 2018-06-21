@@ -47,9 +47,9 @@ public interface TheoremProverFactory {
 	 * @param context
 	 *            boolean expression assumed to hold
 	 * @param ppreds
-	 *            A list of {@link ProverFunctionInterpretation}s. Some provers support
-	 *            factoring the common and complex parts of boolean expressions
-	 *            to predicates (e.g. why3)
+	 *            A list of {@link ProverFunctionInterpretation}s. Some provers
+	 *            support factoring the common and complex parts of boolean
+	 *            expressions to predicates (e.g. why3)
 	 * @return a theorem prover operating under the given context
 	 */
 	TheoremProver newProver(BooleanExpression context,

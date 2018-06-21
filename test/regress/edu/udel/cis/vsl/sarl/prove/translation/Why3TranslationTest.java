@@ -45,7 +45,8 @@ public class Why3TranslationTest {
 		if (why3 != null)
 			proverFactory = Prove.newWhy3ProvePlatformFactory(universe,
 					Configurations.getDefaultConfiguration()
-							.getWhy3ProvePlatform());
+							.getWhy3ProvePlatform(),
+					Configurations.getDefaultConfiguration());
 		else {
 			System.err.println(
 					"Why3 translation tests are not executed because no Why3 was found by SARL.");
@@ -379,7 +380,7 @@ public class Why3TranslationTest {
 
 		TheoremProver prover = Prove
 				.newWhy3ProvePlatformFactory((PreUniverse) su,
-						(ProverInfo) why3)
+						(ProverInfo) why3, config)
 				.newProver(su.trueExpression(),
 						new ProverFunctionInterpretation[0]);
 

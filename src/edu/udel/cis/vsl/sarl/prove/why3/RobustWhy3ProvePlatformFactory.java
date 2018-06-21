@@ -2,6 +2,7 @@ package edu.udel.cis.vsl.sarl.prove.why3;
 
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo;
 import edu.udel.cis.vsl.sarl.IF.config.ProverInfo.ProverKind;
+import edu.udel.cis.vsl.sarl.IF.config.SARLConfig;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.prove.IF.ProverFunctionInterpretation;
@@ -22,6 +23,8 @@ public class RobustWhy3ProvePlatformFactory implements TheoremProverFactory {
 	 */
 	private ProverInfo prover;
 
+	private SARLConfig config;
+
 	/**
 	 * Constructs new Why3 prover platform factory with the given symbolic
 	 * universe.
@@ -33,21 +36,22 @@ public class RobustWhy3ProvePlatformFactory implements TheoremProverFactory {
 	 *            {@link ProverKind} {@link ProverKind#Why3}
 	 */
 	public RobustWhy3ProvePlatformFactory(PreUniverse universe,
-			ProverInfo prover) {
+			ProverInfo prover, SARLConfig config) {
 		this.universe = universe;
 		this.prover = prover;
+		this.config = config;
 	}
 
 	@Override
 	public RobustWhy3ProvePlatform newProver(BooleanExpression context) {
-		return new RobustWhy3ProvePlatform(universe, prover, context,
+		return new RobustWhy3ProvePlatform(config, universe, prover, context,
 				new ProverFunctionInterpretation[0]);
 	}
 
 	@Override
 	public TheoremProver newProver(BooleanExpression context,
 			ProverFunctionInterpretation[] ppreds) {
-		RobustWhy3ProvePlatform why3prover = new RobustWhy3ProvePlatform(
+		RobustWhy3ProvePlatform why3prover = new RobustWhy3ProvePlatform(config,
 				universe, prover, context, ppreds);
 
 		return why3prover;

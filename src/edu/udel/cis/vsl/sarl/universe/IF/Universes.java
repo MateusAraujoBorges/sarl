@@ -67,7 +67,7 @@ public class Universes {
 			Why3ReasonerFactory why3ReasonerFactory = Reason
 					.newWhy3ReasonerFactory(config, universe, simplifierFactory,
 							Prove.newWhy3ProvePlatformFactory(universe,
-									config.getWhy3ProvePlatform()));
+									config.getWhy3ProvePlatform(), config));
 
 			universe.setWhy3ReasonerFactory(why3ReasonerFactory);
 		}
@@ -95,7 +95,7 @@ public class Universes {
 			Why3ReasonerFactory why3ReasonerFactory = Reason
 					.newWhy3ReasonerFactory(config, universe, simplifierFactory,
 							Prove.newWhy3ProvePlatformFactory(universe,
-									config.getWhy3ProvePlatform()));
+									config.getWhy3ProvePlatform(), config));
 
 			universe.setWhy3ReasonerFactory(why3ReasonerFactory);
 		}
@@ -132,7 +132,7 @@ public class Universes {
 			Why3ReasonerFactory why3ReasonerFactory = Reason
 					.newWhy3ReasonerFactory(config, universe, simplifierFactory,
 							Prove.newWhy3ProvePlatformFactory(universe,
-									config.getWhy3ProvePlatform()));
+									config.getWhy3ProvePlatform(), config));
 
 			universe.setWhy3ReasonerFactory(why3ReasonerFactory);
 		}

@@ -1,5 +1,7 @@
 package edu.udel.cis.vsl.sarl.config.common;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -20,13 +22,27 @@ import edu.udel.cis.vsl.sarl.IF.config.SARLConfig;
  */
 public class CommonSARLConfig implements SARLConfig {
 
+	/**
+	 * By default, the output file directory is a one named '.sarl' under the
+	 * current directory:
+	 */
+	private static String defaultOutputDir = "./.sarl/";
+
+	private static Path defaultOutputDirPath = Paths.get(defaultOutputDir);
+
 	private ProverInfo[] provers;
 
 	private Map<String, ProverInfo> aliasMap = new LinkedHashMap<>();
 
 	private ProverInfo why3Info = null;
 
+	private Path outputDir = null;
+
 	public CommonSARLConfig(Collection<ProverInfo> provers) {
+		this(provers, defaultOutputDirPath);
+	}
+
+	public CommonSARLConfig(Collection<ProverInfo> provers, Path outputDir) {
 		int size = provers.size();
 		int count = 0;
 
@@ -42,6 +58,7 @@ public class CommonSARLConfig implements SARLConfig {
 							+ " used more than once:\n" + old + "\n" + prover);
 			}
 		}
+		this.outputDir = outputDir;
 	}
 
 	@Override
@@ -81,5 +98,10 @@ public class CommonSARLConfig implements SARLConfig {
 	@Override
 	public void setWhy3ProvePlatform(ProverInfo why3Info) {
 		this.why3Info = why3Info;
+	}
+
+	@Override
+	public Path getOutputFileDir() {
+		return outputDir;
 	}
 }
