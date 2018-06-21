@@ -162,7 +162,7 @@ public interface Range {
 	 * the actual range should be [-1, -1] U [3, 9]; and its over-approximation
 	 * range should be [-1, 9].)
 	 * 
-	 * @return the over-approximation range of <code>this</code>
+	 * @return the over-approximation {@link Interval} of <code>this</code>
 	 */
 	Interval intervalOverApproximation();
 }

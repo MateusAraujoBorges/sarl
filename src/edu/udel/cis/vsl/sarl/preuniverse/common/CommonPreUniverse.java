@@ -3151,6 +3151,7 @@ public class CommonPreUniverse implements PreUniverse {
 		IntegerNumber lenNum = (IntegerNumber) extractNumber(
 				bitVectorType.extent());
 		int intVal = -1;
+		int mask = 1;
 		int length = lenNum.intValue();
 		BooleanExpression[] resultArray = new BooleanExpression[length];
 		SymbolicType elementType = ((SymbolicCompleteArrayType) bitVectorType)
@@ -3160,16 +3161,10 @@ public class CommonPreUniverse implements PreUniverse {
 		if (intNum != null) {
 			// Input integer is concrete
 			intVal = intNum.intValue();
-			if (intVal >= 0) {
-				// Greater index for lower bit
-				for (int i = length - 1; i >= 0; i--) {
-					resultArray[i] = bool(intVal % 2 == 1);
-					intVal = intVal / 2;
-				}
-			} else {
-				throw err(
-						"Argument integer to method integer2Bitvector should not be negative."
-								+ "\ninteger: " + intVal);
+			// Greater index for lower bit
+			for (int i = length-1; i >=0 ; i--) {
+				resultArray[i] = bool((intVal & mask) != 0);
+				mask = mask << 1;
 			}
 			return array(elementType, resultArray);
 		} else {

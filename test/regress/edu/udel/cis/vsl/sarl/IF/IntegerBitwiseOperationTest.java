@@ -238,7 +238,7 @@ public class IntegerBitwiseOperationTest {
 		p("ActualResult  : " + actualResult.atomString());
 		assertEquals(expectedResult, actualResult);
 	}
-	
+
 	/**
 	 * Expression: 0 ^ 0; [0x00000000] & [0x00000000] <br>
 	 * Expected: 0; [0x00000000]
@@ -260,7 +260,8 @@ public class IntegerBitwiseOperationTest {
 	 */
 	@Test
 	public void bitxor_ConcreteNumbers_Extra() {
-		NumericExpression actualResult = universe.bitxor(universe.integer(858993459), universe.integer(1431655765));
+		NumericExpression actualResult = universe.bitxor(
+				universe.integer(858993459), universe.integer(1431655765));
 		NumericExpression expectedResult = universe.integer(1717986918);
 
 		p("\nExpression: 858993459 ^ 1431655765");
@@ -355,6 +356,23 @@ public class IntegerBitwiseOperationTest {
 	}
 
 	/**
+	 * Expression: ~(-1); ~[0xffffffff]<br>
+	 * Expected: 0 = 0; [0x00000000]
+	 */
+	@Test
+	public void bitnot_intNegOne() {
+		int res = 0;
+		SymbolicExpression actualResult = universe
+				.bitnot(universe.minus(intOne));
+		NumericExpression expectedResult = universe.integer(res);
+
+		p("\nExpression: ~(-1)");
+		p("ExpectedResult: " + expectedResult.atomString());
+		p("ActualResult  : " + actualResult.atomString());
+		assertEquals(expectedResult, actualResult);
+	}
+
+	/**
 	 * Expression: ~2147483647; ~[0x7fffffff]<br>
 	 * Expected: 2147483648; [0x80000000]
 	 */
@@ -433,9 +451,11 @@ public class IntegerBitwiseOperationTest {
 
 	@Test
 	public void simplyficationTest() {
-		NumericExpression x_or_4 = universe.bitand(universe.integer(15), universe.integer(8));
+		NumericExpression x_or_4 = universe.bitand(universe.integer(15),
+				universe.integer(8));
 		SymbolicExpression actualResult = universe.bitor(x_or_4, y);
-		SymbolicExpression expectedResult = universe.bitor(universe.integer(8),y);
+		SymbolicExpression expectedResult = universe.bitor(universe.integer(8),
+				y);
 
 		p("ExpectedResult: " + expectedResult.atomString());
 		p("ActualResult  : " + actualResult.atomString());
