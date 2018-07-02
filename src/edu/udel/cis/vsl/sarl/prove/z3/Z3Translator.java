@@ -1,12 +1,5 @@
 package edu.udel.cis.vsl.sarl.prove.z3;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-
 import edu.udel.cis.vsl.sarl.IF.SARLInternalException;
 import edu.udel.cis.vsl.sarl.IF.TheoremProverException;
 import edu.udel.cis.vsl.sarl.IF.expr.BooleanExpression;
@@ -35,6 +28,13 @@ import edu.udel.cis.vsl.sarl.IF.type.SymbolicUnionType;
 import edu.udel.cis.vsl.sarl.preuniverse.IF.PreUniverse;
 import edu.udel.cis.vsl.sarl.util.FastList;
 import edu.udel.cis.vsl.sarl.util.Pair;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 
 /**
  * <p>
@@ -183,7 +183,7 @@ public class Z3Translator {
 	 * Mapping of SARL symbolic expression to corresponding Z3 expression. Used
 	 * to cache the results of translation.
 	 */
-	private Map<SymbolicExpression, FastList<String>> expressionMap;
+	protected Map<SymbolicExpression, FastList<String>> expressionMap;
 
 	/**
 	 * Mapping of pairs (t1,t2) of SARL types to the uninterpreted function
@@ -196,7 +196,7 @@ public class Z3Translator {
 	 * Map from SARL symbolic constants to corresponding Z3 expressions. Entries
 	 * are a subset of those of {@link #expressionMap}.
 	 */
-	private Map<SymbolicConstant, FastList<String>> variableMap;
+	protected Map<SymbolicConstant, FastList<String>> variableMap;
 
 	/**
 	 * Mapping of SARL symbolic type to corresponding Z3 type. Used to cache
@@ -213,7 +213,7 @@ public class Z3Translator {
 	 * The declarations section resulting from the translation. This contains
 	 * all the declarations of symbols used in the resulting CVC input.
 	 */
-	private FastList<String> z3Declarations;
+	protected FastList<String> z3Declarations;
 
 	/**
 	 * The expression which is the result of translating the given symbolic
@@ -667,8 +667,8 @@ public class Z3Translator {
 		return result;
 	}
 
-	private FastList<String> functionDeclaration(String name,
-			SymbolicFunctionType functionType) {
+	protected FastList<String> functionDeclaration(String name,
+	                                               SymbolicFunctionType functionType) {
 		FastList<String> result = new FastList<>("(declare-fun ", name, " (");
 		boolean first = true;
 
@@ -698,7 +698,7 @@ public class Z3Translator {
 	 *            is this a bound variable?
 	 * @return the name of the symbolic constant as a fast string list
 	 */
-	private FastList<String> translateSymbolicConstant(
+	protected FastList<String> translateSymbolicConstant(
 			SymbolicConstant symbolicConstant, boolean isBoundVariable) {
 		String name = symbolicConstant.name().getString();
 		FastList<String> result = new FastList<>(name);
@@ -1543,7 +1543,7 @@ public class Z3Translator {
 		return result;
 	}
 
-	private FastList<String> translateType(SymbolicType type) {
+	protected FastList<String> translateType(SymbolicType type) {
 		FastList<String> result = typeMap.get(type);
 
 		if (result != null)
